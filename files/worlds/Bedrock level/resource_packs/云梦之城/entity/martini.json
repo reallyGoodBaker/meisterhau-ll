@@ -1,0 +1,38 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "goblet:martini_entity",
+			"materials": {
+				"default": "entity_alphablend"
+			},
+			"geometry": {
+				"default": "geometry.rgb.martini_empty",
+                "full": "geometry.rgb.martini",
+                "iced": "geometry.rgb.martini",
+                "iced_full": "geometry.rgb.martini"
+			},
+            "render_controllers": [
+                "controller.render.highball"
+            ],
+			"textures": {
+				"default": "textures/entity/martini_empty",
+                "vodka": "textures/entity/martini_vodka",
+                "whiskey": "textures/entity/martini_whisky",
+                "wine": "textures/entity/martini_wine"
+			},
+            "scripts": {
+                "variables": {
+                    "variable.type": "public",
+                    "variable.full": "public",
+                    "variable.iced": "public"
+                },
+                "initialize": [
+                    "v.type = 0;",
+                    "v.full = 0;",
+                    "v.iced = 0;"
+                ]
+            }
+		}
+	}
+}

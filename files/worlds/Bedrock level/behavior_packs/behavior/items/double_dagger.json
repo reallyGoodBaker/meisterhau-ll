@@ -1,0 +1,32 @@
+{
+    "format_version": "1.16.100",
+    "minecraft:item": {
+        "description": {
+            "identifier": "weapon:double_dagger",
+            "category": "equipment"
+        },
+        "components": {
+            "minecraft:hand_equipped": true,
+            "minecraft:damage": 10,
+            "minecraft:max_stack_size": 1,
+            "minecraft:icon": {
+                "texture": "katana"
+            },
+            "minecraft:creative_category": {
+				"parent": "itemGroup.name.sword"
+			},
+            "minecraft:display_name": {
+				"value": "双持匕首"
+			},
+            "minecraft:durability": {
+				"max_durability": 600
+			},
+            "minecraft:enchantable": {
+				"value": 10,
+				"slot": "sword"
+			},
+            "minecraft:weapon": { },
+            "minecraft:can_destroy_in_creative": false
+        }
+    }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "ym-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node ./scripts/start-dev-server",
+    "build-plugin": "rollup -c --bundleConfigAsCjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://e.coding.net/yunmengserver/autoupdate/server.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@minecraft/server": "^1.4.0-beta.1.20.10-stable",
+    "@minecraft/server-admin": "^1.0.0-beta.11940b24",
+    "@minecraft/server-net": "^1.0.0-beta.11940b24",
+    "node-watch": "^0.7.3",
+    "unzipper": "^0.10.11"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3"
+  }
+}

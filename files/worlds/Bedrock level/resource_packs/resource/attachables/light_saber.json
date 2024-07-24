@@ -1,0 +1,35 @@
+{
+    "format_version": "1.20.10",
+    "minecraft:attachable": {
+        "description": {
+            "identifier": "weapon:light_saber",
+            "materials": {
+                "default": "entity_emissive_alpha",
+                "enchanted": "entity_alphatest_glint"
+            },
+            "textures": {
+                "default": "textures/entity/light_saber",
+                "white": "textures/misc/white_overlay",
+                "orange": "textures/misc/orange_overlay",
+                "blue": "textures/misc/blue_overlay"
+            },
+            "geometry": {
+                "default": "geometry.weapon.light_saber"
+            },
+            "animations": {
+                "hold": "animation.hold.light_saber"
+            },
+            "scripts": {
+                "initialize": [
+                    "v.item_status = 0;"
+                ],
+                "animate": [
+                    "hold"
+                ]
+            },
+            "render_controllers": [
+               "controller.render.weapon"
+            ]
+        }
+    }
+}

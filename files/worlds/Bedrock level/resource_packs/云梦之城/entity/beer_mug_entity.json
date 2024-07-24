@@ -1,0 +1,38 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "goblet:beer_mug_entity",
+			"materials": {
+				"default": "entity_alphablend"
+			},
+			"geometry": {
+				"default": "geometry.rgb.beer_mug_empty",
+                "full": "geometry.rgb.beer_mug",
+                "iced": "geometry.rgb.beer_mug_empty",
+                "iced_full": "geometry.rgb.beer_mug"
+			},
+            "render_controllers": [
+                "controller.render.highball"
+            ],
+			"textures": {
+				"default": "textures/entity/beer_mug_empty",
+                "vodka": "textures/entity/beer_mug_empty",
+                "whiskey": "textures/entity/beer_mug",
+                "wine": "textures/entity/beer_mug_empty"
+			},
+            "scripts": {
+                "variables": {
+                    "variable.type": "public",
+                    "variable.full": "public",
+                    "variable.iced": "public"
+                },
+                "initialize": [
+                    "v.type = 0;",
+                    "v.full = 0;",
+                    "v.iced = 0;"
+                ]
+            }
+		}
+	}
+}

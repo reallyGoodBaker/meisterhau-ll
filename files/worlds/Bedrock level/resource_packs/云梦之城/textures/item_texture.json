@@ -1,0 +1,12 @@
+{
+    "resource_pack_name": "weapon",
+    "texture_name": "atlas.items",
+    "texture_data": {
+        "smirnoff": {
+            "textures": "textures/items/smirnoff"
+        },
+        "highball": {
+            "textures": "textures/items/highball"
+        }
+    }
+}

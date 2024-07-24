@@ -1,0 +1,22 @@
+{
+    "format_version": "1.16.100",
+    "minecraft:item": {
+        "description": {
+            "identifier": "liquor:whiskey",
+            "category": "items"
+        },
+        "components": {
+            "minecraft:hand_equipped": false,
+            "minecraft:max_stack_size": 1,
+            "minecraft:icon": {
+                "texture": "smirnoff"
+            },
+            "minecraft:display_name": {
+				"value": "威士忌"
+			},
+            "minecraft:can_destroy_in_creative": false
+        },
+        "events": {
+        }
+    }
+}

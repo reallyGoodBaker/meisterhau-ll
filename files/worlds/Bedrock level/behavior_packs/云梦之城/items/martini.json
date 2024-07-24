@@ -1,0 +1,22 @@
+{
+    "format_version": "1.16.100",
+    "minecraft:item": {
+        "description": {
+            "identifier": "goblet:martini",
+            "category": "items"
+        },
+        "components": {
+            "minecraft:hand_equipped": false,
+            "minecraft:max_stack_size": 16,
+            "minecraft:icon": {
+                "texture": "highball"
+            },
+            "minecraft:display_name": {
+				"value": "martini杯"
+			},
+            "minecraft:can_destroy_in_creative": false
+        },
+        "events": {
+        }
+    }
+}

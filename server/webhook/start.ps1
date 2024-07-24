@@ -1,0 +1,1 @@
+Start-Process -WindowStyle hidden -FilePath "node index" 

@@ -1,0 +1,22 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "liquor:wine_entity",
+			"materials": {
+				"default": "entity_alphablend"
+			},
+			"geometry": {
+				"default": "geometry.liquor.wine"
+			},
+            "render_controllers": [
+                "controller.render.static"
+            ],
+			"textures": {
+				"default": "textures/entity/wine"
+			},
+            "scripts": {
+            }
+		}
+	}
+}

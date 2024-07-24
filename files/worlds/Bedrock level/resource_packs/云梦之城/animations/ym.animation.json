@@ -1,0 +1,50 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.ym.sit": {
+			"loop": true,
+			"override_previous_animation": true,
+			"bones": {
+				"root": {
+					"position": [0, -9, 0]
+				},
+				"waist": {
+					"rotation": [7.5, 0, 0]
+				},
+				"leftArm": {
+					"rotation": [-44.33416, 9.88744, 7.68615]
+				},
+				"rightArm": {
+					"rotation": [-46.81282, -8.80348, -8.90928]
+				},
+				"leftLeg": {
+					"rotation": [-79.76228, -12.3071, -2.20462]
+				},
+				"rightLeg": {
+					"rotation": [-79.91547, 7.38542, 1.30962]
+				}
+			}
+		},
+		"animation.smirnoff.stand": {
+			"loop": true,
+			"override_previous_animation": true,
+			"bones": {
+				"root": {
+					"rotation": [90, 0, 180],
+					"position": [0, 2.2, 0]
+				}
+			}
+		},
+		"animation.liquor.third.hold": {
+			"loop": true,
+			"override_previous_animation": true,
+			"bones": {
+				"rightItem": {
+					"rotation": [90, 0, 0],
+					"position": [0, -2, 0],
+					"scale": 0.8
+				}
+			}
+		}
+	}
+}

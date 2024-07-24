@@ -1,0 +1,38 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "goblet:highball_entity",
+			"materials": {
+				"default": "entity_alphablend"
+			},
+			"geometry": {
+				"default": "geometry.goblet.highball",
+                "full": "geometry.goblet.highball",
+                "iced_full": "geometry.goblet.highball",
+                "iced": "geometry.goblet.highball"
+			},
+            "render_controllers": [
+                "controller.render.highball"
+            ],
+			"textures": {
+				"default": "textures/entity/highball",
+                "vodka": "textures/entity/highball_vodka",
+                "whiskey": "textures/entity/highball_whiskey",
+                "wine": "textures/entity/highball_wine"
+			},
+            "scripts": {
+                "variables": {
+                    "variable.type": "public",
+                    "variable.full": "public",
+                    "variable.iced": "public"
+                },
+                "initialize": [
+                    "v.type = 0;",
+                    "v.full = 0;",
+                    "v.iced = 0;"
+                ]
+            }
+		}
+	}
+}

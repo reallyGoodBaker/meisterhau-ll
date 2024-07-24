@@ -1,0 +1,54 @@
+{
+    "format_version": "1.20.10",
+    "minecraft:entity": {
+        "description": {
+            "identifier": "goblet:martini_entity",
+            "is_summonable": true,
+            "is_spawnable": false,
+            "is_experimental": false
+        },
+        "components": {
+            "minecraft:knockback_resistance": {
+                "value": 1
+            },
+            "minecraft:pushable": {
+                "is_pushable": false,
+                "is_pushable_by_piston": true
+            },
+            "minecraft:push_through": {
+                "value": 1
+            },
+            "minecraft:damage_sensor": {
+                "triggers": [
+                    {
+                        "deals_damage": false,
+                        "cause": "all"
+                    }
+                ]
+            },
+            "minecraft:scale": {
+                "value": 0.6
+            },
+            "minecraft:interact": {
+                "interactions": [
+                    {
+                        "on_interact": {
+                            "event": "goblet:interact",
+                            "target": "self"
+                        },
+                        "swing": true
+                    }
+                ]
+            }
+        },
+        "events": {
+            "goblet:interact": {
+                "trigger": {
+                    "event": "goblet:interacted",
+                    "target": "other"
+                }
+            },
+            "goblet:interacted": { }
+        }
+    }
+}

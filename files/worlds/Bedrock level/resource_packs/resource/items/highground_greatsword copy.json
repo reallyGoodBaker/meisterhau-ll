@@ -1,0 +1,11 @@
+{
+    "format_version": "1.10",
+    "minecraft:item": {
+        "description": {
+            "identifier": "weapon:highground_greatsword_royal"
+        },
+        "components": {
+            "minecraft:icon": "highground_greatsword"
+        }
+    }
+}

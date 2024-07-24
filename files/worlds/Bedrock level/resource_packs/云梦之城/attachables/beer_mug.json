@@ -1,0 +1,28 @@
+{
+    "format_version": "1.10.0",
+    "minecraft:attachable": {
+        "description": {
+            "identifier": "goblet:beer_mug",
+            "materials": {
+                "default": "entity_alphablend",
+                "enchanted": "entity_alphatest_glint"
+            },
+            "textures": {
+                "default": "textures/entity/beer_mug_empty",
+                "enchanted": "textures/misc/enchanted_item_glint"
+            },
+            "geometry": {
+                "default": "geometry.rgb.beer_mug_empty"
+            },
+            "animations": {
+                "hold": "animation.liquor.third.hold"
+            },
+            "scripts": {
+                "animate": [ "hold" ]
+            },
+            "render_controllers": [
+				"controller.render.item_default"
+			]
+        }
+    }
+}

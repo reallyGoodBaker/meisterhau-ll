@@ -1,0 +1,55 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.hold.light_saber": {
+			"loop": "hold_on_last_frame",
+			"override_previous_animation": true,
+			"bones": {
+				"rightItem": {
+					"scale": 0.7
+				}
+			}
+		},
+		"animation.hold.moon_glaive": {
+			"loop": "hold_on_last_frame",
+			"override_previous_animation": true,
+			"bones": {
+				"rightItem": {
+					"rotation": [0, 0, 0],
+					"scale": 2.5
+				}
+			}
+		},
+		"animation.hold.ootachi_dragon": {
+			"loop": "hold_on_last_frame",
+			"override_previous_animation": true,
+			"bones": {
+				"rightItem": {
+					"rotation": [0, -90, 0],
+					"position": [-1.5, 0.6, -2.5],
+					"scale": [1.35, 1.2, 1.2]
+				}
+			}
+		},
+		"animation.hold.waist_weapon": {
+			"loop": "hold_on_last_frame",
+			"bones": {
+				"rightItem": {
+					"scale": "v.item_scale"
+				},
+				"waistSword": {
+					"rotation": [0, 0, 180],
+					"position": [4.25, 2, 0],
+					"scale": "v.waist_item_scale"
+				},
+				"waistSaya": {
+					"rotation": [0, 0, 180],
+					"position": [4.25, 2, 0]
+				}
+			},
+			"timeline": {
+				"0.0": "v.item_scale = 1;v.waist_item_scale = 1;"
+			}
+		}
+	}
+}

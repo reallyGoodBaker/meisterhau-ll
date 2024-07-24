@@ -1,0 +1,14 @@
+{
+    "format_version": "1.19.50",
+    "minecraft:camera_preset": {
+        "identifier": "rgb:overshoulder_right",
+        "player_effects": true,
+        "listener": "player",
+        "inherit_from": "minecraft:free",
+        "pos_x": "q.position(0)",
+        "pos_y": "q.position(1)",
+        "pos_z": "q.position(2)",
+        "rot_x": "q.head_x_rotation(0)",
+        "rot_y": "q.head_y_rotation(0)"
+    }
+}

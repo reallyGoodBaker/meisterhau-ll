@@ -1,0 +1,33 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.goblet.empty": {
+			"loop": true,
+			"override_previous_animation": true,
+			"timeline": {
+				"0.0": "v.type = 0;v.full = 0;v.iced = 0;"
+			}
+		},
+		"animation.goblet.vodka": {
+			"loop": true,
+			"override_previous_animation": true,
+			"timeline": {
+				"0.0": "v.type = 1;v.full = 1;"
+			}
+		},
+		"animation.goblet.whiskey": {
+			"loop": true,
+			"override_previous_animation": true,
+			"timeline": {
+				"0.0": "v.type = 2;v.full = 1;"
+			}
+		},
+		"animation.goblet.wine": {
+			"loop": true,
+			"override_previous_animation": true,
+			"timeline": {
+				"0.0": "v.type = 3;v.full = 1;"
+			}
+		}
+	}
+}

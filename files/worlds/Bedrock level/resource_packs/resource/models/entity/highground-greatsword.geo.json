@@ -1,0 +1,113 @@
+{
+	"format_version": "1.12.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.weapon.highground_greatsword",
+				"texture_width": 64,
+				"texture_height": 64,
+				"visible_bounds_width": 4,
+				"visible_bounds_height": 5,
+				"visible_bounds_offset": [0, 1.5, 0]
+			},
+			"bones": [
+				{
+					"name": "rightItem",
+					"pivot": [0, 0, 0]
+				},
+				{
+					"name": "sword",
+					"parent": "rightItem",
+					"pivot": [0, -1, 0],
+					"rotation": [90, 0, 90]
+				},
+				{
+					"name": "filt",
+					"parent": "sword",
+					"pivot": [0, -7.75, 0],
+					"cubes": [
+						{"origin": [-0.75, -9, -0.75], "size": [1.5, 1.5, 1.5], "uv": [46, 4]}
+					]
+				},
+				{
+					"name": "guard",
+					"parent": "filt",
+					"pivot": [0, 2.25, 0],
+					"cubes": [
+						{"origin": [-0.75, 1.25, -0.5], "size": [1.5, 2.25, 1], "uv": [53, 6]}
+					]
+				},
+				{
+					"name": "guard1",
+					"parent": "guard",
+					"pivot": [0, 2.25, 0],
+					"rotation": [0, 0, -10],
+					"cubes": [
+						{"origin": [-6.30999, 0.83403, -1.5], "size": [7.5, 3, 3], "inflate": -1, "pivot": [-0.63295, 2.535, 0], "rotation": [0, 0, 32.5], "uv": [3, 3]},
+						{"origin": [-6, 1.25, -1.5], "size": [8, 3, 3], "inflate": -1, "pivot": [0, 3.25, 0], "rotation": [0, 0, 25], "uv": [3, 3]}
+					]
+				},
+				{
+					"name": "guard2",
+					"parent": "guard",
+					"pivot": [0, 2.25, 0],
+					"rotation": [0, 0, 10],
+					"cubes": [
+						{"origin": [-1.19001, 0.83403, -1.5], "size": [7.5, 3, 3], "inflate": -1, "pivot": [0.63295, 2.535, 0], "rotation": [0, 0, -32.5], "uv": [3, 3], "mirror": true},
+						{"origin": [-2, 1.25, -1.5], "size": [8, 3, 3], "inflate": -1, "pivot": [0, 3.25, 0], "rotation": [0, 0, -25], "uv": [3, 3], "mirror": true}
+					]
+				},
+				{
+					"name": "grip",
+					"parent": "filt",
+					"pivot": [0, -7.75, 0],
+					"cubes": [
+						{"origin": [-0.33652, -7.46538, -0.5], "size": [1, 5.75, 1], "pivot": [-0.08652, -3.71538, 0], "rotation": [0, 0, 2.5], "uv": [34, 4]},
+						{"origin": [-0.66348, -7.46538, -0.5], "size": [1, 5.75, 1], "pivot": [0.08652, -3.71538, 0], "rotation": [0, 0, -2.5], "uv": [34, 4], "mirror": true},
+						{"origin": [-0.75, -1.75, -0.5], "size": [1.5, 3, 1], "uv": [34, 4]}
+					]
+				},
+				{
+					"name": "blade",
+					"parent": "sword",
+					"pivot": [0, -9, 0]
+				},
+				{
+					"name": "strong",
+					"parent": "blade",
+					"pivot": [0, -9, 0]
+				},
+				{
+					"name": "edge2",
+					"parent": "strong",
+					"pivot": [1, -9, 0],
+					"cubes": [
+						{"origin": [0, 3.25, 0], "size": [1, 27.5, 0], "pivot": [1, -9, 0], "rotation": [0, -7.5, 0], "uv": [11, 13], "mirror": true},
+						{"origin": [0, 3.25, 0], "size": [1, 27.5, 0], "pivot": [1, -9, 0], "rotation": [0, 10, 0], "uv": [11, 13], "mirror": true}
+					]
+				},
+				{
+					"name": "edge3",
+					"parent": "strong",
+					"pivot": [1, -9, 0],
+					"cubes": [
+						{"origin": [-0.98302, 3.25, 0.00099], "size": [1, 27.5, 0], "pivot": [-0.98302, -9, 0.00099], "rotation": [0, 7.5, 0], "uv": [8, 13]},
+						{"origin": [-0.96927, 3.25, 0], "size": [1, 27.5, 0], "pivot": [-0.96927, -9, 0], "rotation": [0, -10, 0], "uv": [8, 13]}
+					]
+				},
+				{
+					"name": "weak",
+					"parent": "blade",
+					"pivot": [0, 30.75, 0],
+					"cubes": [
+						{"origin": [-1.0078, 30.53356, 0.16953], "size": [1, 2.25, 0], "pivot": [-0.0078, 30.53356, 0.16953], "rotation": [2.81442, -9.76061, 12.68664], "uv": [1, 37]},
+						{"origin": [-0.49599, 32.72187, 0.06065], "size": [0.5, 1.25, 0], "pivot": [0.50401, 32.72187, 0.06065], "rotation": [2.81442, -9.76061, 12.68664], "uv": [1, 37]},
+						{"origin": [-0.00794, 30.52308, -0.1375], "size": [1, 2.25, 0], "pivot": [0.04192, 30.73584, -0.17751], "rotation": [0.29903, -7.71872, -13.54037], "uv": [1, 39], "mirror": true},
+						{"origin": [-0.0332, 32.71088, -0.14913], "size": [0.5, 1, 0], "pivot": [-0.48333, 32.92364, -0.18914], "rotation": [0.29903, -7.71872, -13.54037], "uv": [1, 37], "mirror": true},
+						{"origin": [-0.0332, 32.71088, -0.14913], "size": [0.5, 0.75, 0], "pivot": [-0.48333, 32.92364, -0.18914], "rotation": [0.29903, -7.71872, -13.54037], "uv": [1, 37], "mirror": true}
+					]
+				}
+			]
+		}
+	]
+}

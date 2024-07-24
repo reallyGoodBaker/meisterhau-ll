@@ -1,0 +1,51 @@
+{
+	"format_version": "1.12.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.weapon.katana_unsheathed",
+				"texture_width": 64,
+				"texture_height": 64,
+				"visible_bounds_width": 5,
+				"visible_bounds_height": 4,
+				"visible_bounds_offset": [0, 1, 0]
+			},
+			"bones": [
+				{
+					"name": "body",
+					"pivot": [0, 0, 0]
+				},
+				{
+					"name": "katana",
+					"parent": "body",
+					"pivot": [4, -9, 0]
+				},
+				{
+					"name": "blade2",
+					"parent": "katana",
+					"pivot": [4, -10, 1],
+					"cubes": [
+						{"origin": [3.2, -11, 3], "size": [1.4, 2, 7], "inflate": -0.38, "pivot": [4, -9.65254, 3.02852], "rotation": [-180, 0, 0], "uv": [27, 15]},
+						{"origin": [3.2, -10.91318, -4.95056], "size": [1.4, 2, 9], "inflate": -0.38, "pivot": [4, -9.65254, 3.02852], "rotation": [170, 0, 0], "uv": [34, 15]}
+					]
+				},
+				{
+					"name": "rightItem",
+					"pivot": [-2, 0, 0]
+				},
+				{
+					"name": "blade",
+					"parent": "rightItem",
+					"pivot": [-1, -2.3, -3.2],
+					"rotation": [0, -2.5, 0],
+					"cubes": [
+						{"origin": [-1.5, -3.3, -10.2], "size": [1, 2, 7], "inflate": -0.45, "uv": [11, 15]},
+						{"origin": [-1.5, -2.64941, -18.1663], "size": [1, 2, 9], "inflate": -0.46, "pivot": [1, -1.76062, -13.40126], "rotation": [-10, 0, 0], "uv": [0, 15]},
+						{"origin": [-2, -3.8, -4.2], "size": [2, 3, 1], "uv": [0, 0]},
+						{"origin": [-3, -4.8, -5.2], "size": [4, 5, 10], "inflate": -1.85, "uv": [0, 0]}
+					]
+				}
+			]
+		}
+	]
+}

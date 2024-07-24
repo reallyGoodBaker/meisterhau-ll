@@ -1,0 +1,11 @@
+{
+    "format_version": "1.10",
+    "minecraft:item": {
+        "description": {
+            "identifier": "weapon:light_saber"
+        },
+        "components": {
+            "minecraft:icon": "blaze_rod"
+        }
+    }
+}

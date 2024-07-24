@@ -1,0 +1,29 @@
+{
+    "format_version": "1.10.0",
+    "minecraft:attachable": {
+        "description": {
+            "identifier": "weapon:shield_with_sword",
+            "materials": {
+                "default": "entity_alphatest",
+                "enchanted": "entity_alphatest_glint"
+            },
+            "textures": {
+                "default": "textures/entity/shield_with_sword",
+                "white": "textures/misc/white_overlay",
+                "orange": "textures/misc/orange_overlay",
+                "blue": "textures/misc/blue_overlay"
+            },
+            "geometry": {
+                "default": "geometry.weapon.shield_with_sword"
+            },
+            "scripts": {
+                "initialize": [
+                    "v.item_status = 0;"
+                ]
+            },
+            "render_controllers": [
+                "controller.render.weapon"
+            ]
+        }
+    }
+}
