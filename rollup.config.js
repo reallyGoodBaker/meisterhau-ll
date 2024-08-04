@@ -5,7 +5,7 @@ export default [
     {
         input: './files/plugins/yuumo.js',
         output: {
-            file: './files/plugins/yuumo.ll3.js',
+            file: './build/yuumo.ll3/yuumo.ll3.js',
             format: 'cjs'
         },
         plugins: [
@@ -16,7 +16,7 @@ export default [
     {
         input: './files/plugins/meisterhau.js',
         output: {
-            file: './files/plugins/meisterhau.ll3.js',
+            file: './build/meisterhau/meisterhau.ll3.js',
             format: 'cjs'
         },
         plugins: [

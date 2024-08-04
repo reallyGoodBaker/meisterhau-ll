@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "node ./scripts/start-dev-server",
-    "build-plugin": "rollup -c --bundleConfigAsCjs"
+    "build": "rollup -c --bundleConfigAsCjs"
   },
   "repository": {
     "type": "git",

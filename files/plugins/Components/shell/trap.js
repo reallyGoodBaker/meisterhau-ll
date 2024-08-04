@@ -54,29 +54,29 @@ function listenItemUse() {
             const [cond, res] = cmd.split('|>')
             const [then, or] = (res ?? '').split(':>')
 
-            const condVal = runSequnces(cond, pos)
+            const condVal = runSequnces(cond, pos, player)
             if (then && condVal) {
-                runSequnces(then, pos)
+                runSequnces(then, pos, player)
                 continue
             }
 
             if (or && !condVal) {
-                runSequnces(or, pos)
+                runSequnces(or, pos, player)
                 continue
             }
         }
 
         cooldowns.add(id)
-        setTimeout(() => cooldowns.delete(id), 500);
+        setTimeout(() => cooldowns.delete(id), 500)
     }), 500)
 }
 
-function runSequnces(seq, pos) {
+function runSequnces(seq, pos, pl) {
     const seqs = seq.split('&&')
     let seqReturnVal = true
 
     for (const item of seqs) {
-        seqReturnVal = mc.runcmdEx(`execute positioned ${pos.x} ${pos.y} ${pos.z} run ${item}`).success
+        seqReturnVal = mc.runcmdEx(`execute positioned ${pos.x} ${pos.y} ${pos.z} as "${pl.name}" run ${item}`).success
 
         if (!seqReturnVal) {
             return seqReturnVal

@@ -738,7 +738,7 @@ function requireCommand () {
 	/**
 	 * @param {string} head 
 	 * @param {string} desc 
-	 * @param {0|1|2} [perm] 0 普通，1 管理员，2控制台
+	 * @param {0|1|2} [perm] 0 普通，1 管理员，2 控制台
 	 * @param {number} [flag] 
 	 * @param {string} [alias] 
 	 */

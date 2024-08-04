@@ -1,0 +1,10 @@
+{
+    "entry": "meisterhau.ll3.js",
+    "name": "meisterhau",
+    "type": "lse-nodejs",
+    "dependencies": [
+        {
+            "name": "legacy-script-engine-quickjs"
+        }
+    ]
+}

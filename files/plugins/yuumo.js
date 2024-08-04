@@ -14,4 +14,5 @@ const modules = [
     require('./Components/credit/setup.js'),
     require('./Components/affair/index.js'),
 ]
+
 mc.listen('onServerStarted',() => modules.forEach(m => load(m)))

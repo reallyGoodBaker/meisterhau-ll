@@ -237,7 +237,7 @@ class Registry {
 /**
  * @param {string} head 
  * @param {string} desc 
- * @param {0|1|2} [perm] 0 普通，1 管理员，2控制台
+ * @param {0|1|2} [perm] 0 普通，1 管理员，2 控制台
  * @param {number} [flag] 
  * @param {string} [alias] 
  */
@@ -3387,14 +3387,14 @@ function listenItemUse$1() {
             const [cond, res] = cmd.split('|>');
             const [then, or] = (res ?? '').split(':>');
 
-            const condVal = runSequnces(cond, pos);
+            const condVal = runSequnces(cond, pos, player);
             if (then && condVal) {
-                runSequnces(then, pos);
+                runSequnces(then, pos, player);
                 continue
             }
 
             if (or && !condVal) {
-                runSequnces(or, pos);
+                runSequnces(or, pos, player);
                 continue
             }
         }
@@ -3404,12 +3404,12 @@ function listenItemUse$1() {
     }), 500);
 }
 
-function runSequnces(seq, pos) {
+function runSequnces(seq, pos, pl) {
     const seqs = seq.split('&&');
     let seqReturnVal = true;
 
     for (const item of seqs) {
-        seqReturnVal = mc.runcmdEx(`execute positioned ${pos.x} ${pos.y} ${pos.z} run ${item}`).success;
+        seqReturnVal = mc.runcmdEx(`execute positioned ${pos.x} ${pos.y} ${pos.z} as "${pl.name}" run ${item}`).success;
 
         if (!seqReturnVal) {
             return seqReturnVal
@@ -4197,11 +4197,7 @@ function tp(suid, dx = 0, dy = 0, dz = 0, facing, isVec) {
         return
     }
 
-    const facingInfo = facing
-        ?  isVec
-            ? ` facing ${facing.x} ${facing.y} ${facing.z}`
-            : ` ${facing.pitch} ${facing.yaw}`
-        : ' true';
+    const facingInfo = ' true';
 
     return mc.runcmdEx(`execute as @e[scores={suid=${suid}}] at @s run tp @s ~${dx} ~${dy} ~${dz}${facingInfo}`)
 }
@@ -4493,6 +4489,7 @@ const modules = [
     setup_1,
     affair,
 ];
+
 mc.listen('onServerStarted',() => modules.forEach(m => load(m)));
 
 module.exports = yuumo;
