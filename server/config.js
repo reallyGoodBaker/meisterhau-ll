@@ -6,9 +6,6 @@ module.exports = {
         ll: "2.14.1"
     },
     sync: [
-        'plugins/initServer.js',
-        'plugins/Components/**/*',
-        'plugins/ServerConfig/*',
         'worlds/**/*',
         'config/**/*',
         'lib/*',

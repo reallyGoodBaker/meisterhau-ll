@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "node ./scripts/start-dev-server",
+    "dev": "npm run build && node ./scripts/start-dev-server",
     "build": "rollup -c --bundleConfigAsCjs"
   },
   "repository": {

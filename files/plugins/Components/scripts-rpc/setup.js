@@ -1,7 +1,6 @@
 const { EventEmitter } = require('../events')
 const { cmd } = require('../command')
 const { createServer } = require('./server')
-const console = require('../console/main')
 
 const em = new EventEmitter()
 const rpcChannel = []

@@ -1863,7 +1863,7 @@ var hasRequiredServer;
 function requireServer () {
 	if (hasRequiredServer) return server;
 	hasRequiredServer = 1;
-	const console = requireMain();
+	requireMain();
 
 	function handleCall(msg, em) {
 	    const { id, name, args } = msg;
@@ -1881,7 +1881,6 @@ function requireServer () {
 	    server.onPost('/rpc', (req, res) => {
 	        try {
 	            const rpcMessages = JSON.parse(req.body);
-	            console.log(rpcMessages);
 
 	            rpcMessages.forEach(msg => {
 	                if (msg.type === 'call') {
@@ -1918,7 +1917,6 @@ function requireSetup () {
 	const { EventEmitter } = requireEvents();
 	const { cmd } = requireCommand();
 	const { createServer } = requireServer();
-	requireMain();
 
 	const em = new EventEmitter();
 	const rpcChannel = [];

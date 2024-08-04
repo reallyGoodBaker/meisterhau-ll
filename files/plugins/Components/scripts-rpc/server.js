@@ -16,7 +16,6 @@ function setup(list, em) {
     server.onPost('/rpc', (req, res) => {
         try {
             const rpcMessages = JSON.parse(req.body)
-            console.log(rpcMessages)
 
             rpcMessages.forEach(msg => {
                 if (msg.type === 'call') {

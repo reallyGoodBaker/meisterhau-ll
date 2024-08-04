@@ -4,7 +4,7 @@
     "type": "lse-nodejs",
     "dependencies": [
         {
-            "name": "legacy-script-engine-quickjs"
+            "name": "legacy-script-engine-nodejs"
         }
     ]
 }

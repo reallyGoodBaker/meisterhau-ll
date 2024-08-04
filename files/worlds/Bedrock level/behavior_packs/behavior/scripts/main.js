@@ -1,5 +1,5 @@
 import { remote } from './llrpc.js'
-import { EntityDamageCause, Vector, world } from '@minecraft/server'
+import { world } from '@minecraft/server'
 
 remote.expose('cat', (str1, str2) => {
     return str1 + str2
