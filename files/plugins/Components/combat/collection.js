@@ -7,6 +7,7 @@ const mods = [
     require('./tricks/sheathed_katana'),
     require('./tricks/shield_with_sword'),
     require('./tricks/uchigatana'),
+    require('./tricks/double_blade')
 ]
 
 module.exports = mods

@@ -5,14 +5,14 @@
         "name": "Behavior Pack",
         "uuid": "573e33d6-ad9c-4993-aaca-e25434facc20",
         "version": [1, 0, 3],
-        "min_engine_version": [1, 19, 0]
+        "min_engine_version": [1, 21, 3]
     },
     "modules": [
         {
             "description": "行为",
             "type": "data",
             "uuid": "e8e111b6-196a-4e27-92bd-c51a99653eb5",
-            "version": [1, 0, 0]
+            "version": [1, 0, 1]
         },
         {
             "description": "script",

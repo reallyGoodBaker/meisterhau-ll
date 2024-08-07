@@ -27,7 +27,7 @@ function selectFromRange(pl, range) {
 
     const result = []
 
-    mc.getAllEntities().forEach(e => {
+    mc.getOnlinePlayers().concat(mc.getAllEntities()).forEach(e => {
         const dist = pl.distanceTo(e.pos)
 
         if (dist > radius) {

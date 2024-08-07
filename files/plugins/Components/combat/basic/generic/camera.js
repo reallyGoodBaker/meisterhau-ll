@@ -21,8 +21,8 @@ const battleCameraMiddlePoint = (pl, en) => {
     const enPos = en.pos
     const initVec = vec2(plPos.x, plPos.z, enPos.x, enPos.z)
     const dist = initVec.m
-    const offsetZ = 0.8
-    const offsetX = 1.5
+    const offsetZ = 1.5
+    const offsetX = 5
     const moduloScale = offsetZ / initVec.m
     
     const middlePoint = {
@@ -67,6 +67,10 @@ const battleCameraMiddlePoint = (pl, en) => {
 }
 
 const battleCamera = (pl, en) => {
+    if (!pl) {
+        return
+    }
+
     const plPos = pl.pos
     const enPos = en.pos
     const initVec = vec2(plPos.x, plPos.z, enPos.x, enPos.z)

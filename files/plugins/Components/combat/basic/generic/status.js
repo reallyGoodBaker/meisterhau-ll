@@ -36,7 +36,8 @@ class Status {
     isWaitingDeflection = false
     isDodging = false
 
-    cameraOffsets = [ 1.5, 0, 0.8 ]
+    static defaultCameraOffsets = [ 2.2, 0, 0.7 ]
+    cameraOffsets = Status.defaultCameraOffsets
 
     constructor(xuid) {
         Status.status.set(xuid, this)

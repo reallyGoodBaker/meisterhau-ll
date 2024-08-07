@@ -54,7 +54,7 @@ class OotachiMoves extends DefaultMoves {
             },
         }
 
-        this.animations.parry = 'animation.weapon.ootachi.parry'
+        this.animations.parry = 'animation.weapon.ootachi.parry.left'
         this.animations.block = 'animation.weapon.ootachi.block.left'
     }
 
@@ -66,7 +66,7 @@ class OotachiMoves extends DefaultMoves {
             if (ctx.previousStatus === 'running') {
                 ctx.task
                     .queue(() => playAnim(pl, 'animation.weapon.ootachi.trans.running.idle'), 0)
-                    .queue(() => playAnim(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle'), 80)
+                    .queue(() => playAnim(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle'), 210)
                     .run()
             } else playAnim(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle')
         },
@@ -153,7 +153,7 @@ class OotachiMoves extends DefaultMoves {
             ctx.releaseTarget(pl.xuid)
             ctx.task
                 .queue(() => playAnim(pl, 'animation.weapon.ootachi.trans.idle.running'), 0)
-                .queue(() => playAnim(pl, 'animation.weapon.ootachi.running', 'animation.weapon.ootachi.running'), 80)
+                .queue(() => playAnim(pl, 'animation.weapon.ootachi.running', 'animation.weapon.ootachi.running'), 210)
                 .run()
             
         },
@@ -257,17 +257,17 @@ class OotachiMoves extends DefaultMoves {
 
     combo1Chop = {
         cast: 11,
-        backswing: 9,
+        backswing: 13,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
+            ctx.status.isWaitingParry = true
             ctx.task.queueList([
-                { handler: () => {
-                    ctx.adsorbOrSetVelocity(pl, 0.5, 90)
-                    ctx.status.isWaitingParry = true
-                }, timeout: 0 },
+                { handler: () => ctx.adsorbOrSetVelocity(pl, 1, 90), timeout: 0 },
                 { handler: () => ctx.status.isWaitingParry = false, timeout: 150 },
-                { handler: () => ctx.adsorbOrSetVelocity(pl, 1, 90), timeout: 200 },
-                { handler: () => ctx.adsorbOrSetVelocity(pl, 0.8, 90), timeout: 550 },
+                { handler: () => {
+                    ctx.adsorbOrSetVelocity(pl, 1.2, 90)
+                }, timeout: 50 },
+                { handler: () => ctx.adsorbOrSetVelocity(pl, 0.5, 90), timeout: 400 },
             ]).run()
             playAnim(pl, 'animation.weapon.ootachi.combo1.chop')
             ctx.lookAtTarget(pl)
@@ -276,8 +276,8 @@ class OotachiMoves extends DefaultMoves {
             playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1)
             ctx.selectFromRange(pl, {
                 radius: 3,
-                angle: 30,
-                rotation: -15,
+                angle: 120,
+                rotation: -60,
             }).forEach(en => {
                 ctx.attack(pl, en, {
                     damage: 24,
@@ -295,7 +295,7 @@ class OotachiMoves extends DefaultMoves {
             10: (pl, ctx) => {
                 ctx.trap(pl, { tag: 'hlit' })
             },
-            19: (pl, ctx) => ctx.trap(pl, { tag: 'combo' })
+            17: (pl, ctx) => ctx.trap(pl, { tag: 'combo' })
         },
         transitions: {
             resumeKamae: {
@@ -352,7 +352,7 @@ class OotachiMoves extends DefaultMoves {
      * @type {Move}
      */
     combo2Cut = {
-        cast: 11,
+        cast: 9,
         backswing: 17,
         onEnter(pl, ctx) {
             ctx.lookAtTarget(pl)
@@ -360,14 +360,14 @@ class OotachiMoves extends DefaultMoves {
             playAnim(pl, `animation.weapon.ootachi.combo2.cut.${
                 ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'
             }`)
-            ctx.adsorbOrSetVelocity(pl, 1, 90)
+            ctx.adsorbOrSetVelocity(pl, 1, 90, 1.5)
         },
         onAct(pl, ctx) {
             playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1)
             ctx.selectFromRange(pl, {
-                radius: 2.6,
-                angle: 60,
-                rotation: -30
+                radius: 3.5,
+                angle: 50,
+                rotation: -25
             }).forEach(en => {
                 ctx.attack(pl, en, {
                     damage: 20,
@@ -382,7 +382,7 @@ class OotachiMoves extends DefaultMoves {
         },
         timeline: {
             7: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90),
-            20: (pl, ctx) => ctx.trap(pl, { tag: 'combo' })
+            16: (pl, ctx) => ctx.trap(pl, { tag: 'combo' })
         },
         transitions: {
             resumeKamae: {
@@ -427,8 +427,8 @@ class OotachiMoves extends DefaultMoves {
      * @type {Move}
      */
     combo2Sweap = {
-        cast: 15,
-        backswing: 13,
+        cast: 12,
+        backswing: 14,
         onEnter(pl, ctx) {
             ctx.lookAtTarget(pl)
             ctx.freeze(pl)
@@ -504,7 +504,7 @@ class OotachiMoves extends DefaultMoves {
 
     combo3Stab = {
         cast: 8,
-        backswing: 12,
+        backswing: 17,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             playAnim(pl, `animation.weapon.ootachi.combo3.stab.${

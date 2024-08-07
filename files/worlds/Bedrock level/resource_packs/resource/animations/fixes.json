@@ -26,8 +26,24 @@
 			"bones": {
 				"rightItem": {
 					"rotation": [0, -90, 0],
-					"position": [-1.5, 0.6, -2.5],
-					"scale": [1.35, 1.2, 1.2]
+					"position": [-2.5, 0.6, -4],
+					"scale": [1.5, 1.35, 1.5]
+				}
+			}
+		},
+        "animation.hold.double_blade": {
+			"loop": "hold_on_last_frame",
+			"override_previous_animation": true,
+			"bones": {
+				"rightItem": {
+					"rotation": [0, -90, 0],
+					"position": [0, 0, 0],
+					"scale": [2, 2, 2]
+				},
+                "leftItem": {
+					"rotation": [0, -90, 0],
+					"position": [0, 0, 0],
+					"scale": [2, 2, 2]
 				}
 			}
 		},

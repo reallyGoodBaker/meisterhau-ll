@@ -26,7 +26,7 @@ interface Move {
      * 前摇时间，默认`0`tick
      * @example
      * ```ts
-     * ({ cast: 1 }) //前摇20ms (1tick)
+     * ({ cast: 1 }) //前摇50ms (1tick)
      * ```
      * 
      * 若使用了 `immediately`，此项无效

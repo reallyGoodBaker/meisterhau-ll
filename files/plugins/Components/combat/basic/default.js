@@ -3,6 +3,7 @@
 const { playAnim, playSoundAll, playParticle } = require("./index")
 const console = require('../../console/main')
 const { isCollide } = require("./generic/kinematic")
+const { Status } = require("./generic/status")
 
 class DefaultMoves {
     animations = {
@@ -169,7 +170,7 @@ class DefaultMoves {
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
             ctx.status.isWaitingParry = false
-            ctx.status.cameraOffsets = [ 1.5, 0, 0.8 ]
+            ctx.status.cameraOffsets = Status.defaultCameraOffsets
         },
         timeline: {
             5: (pl, ctx) => {
@@ -181,8 +182,8 @@ class DefaultMoves {
             8: (pl, ctx) => {
                 const offsets = ctx.status.cameraOffsets
 
-                offsets[0] = 1.5
-                offsets[2] = 0.8
+                offsets[0] = 2.2
+                offsets[2] = 0.7
             },
             13: (pl, ctx) => ctx.trap(pl, { tag: 'parryCounter' })
         },

@@ -1,27 +1,28 @@
 {
-    "format_version": "1.16.100",
+    "format_version": "1.20.40",
     "minecraft:item": {
         "description": {
             "identifier": "weapon:moon_glaive",
-            "category": "equipment"
+            "menu_category": {
+                "category": "equipment",
+                "group": "itemGroup.name.sword"
+            }
         },
         "components": {
             "minecraft:hand_equipped": true,
-            "minecraft:max_stack_size": 1,
-            "minecraft:icon": {
-                "texture": "stick"
+            "minecraft:max_stack_size": {
+                "value": 1
             },
-            "minecraft:creative_category": {
-				"parent": "itemGroup.name.sword"
-			},
+            "minecraft:icon": "stick",
             "minecraft:display_name": {
 				"value": "掩月刀"
 			},
             "minecraft:durability": {
 				"max_durability": 600
 			},
-            "minecraft:weapon": { },
-            "minecraft:can_destroy_in_creative": false
+            "minecraft:can_destroy_in_creative": {
+                "value": false
+            }
         }
     }
 }

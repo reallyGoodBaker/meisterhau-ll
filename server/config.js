@@ -10,5 +10,6 @@ module.exports = {
         'config/**/*',
         'lib/*',
         'Glacie.dll',
+        'plugins/meisterhau/**/*',
     ]
 }

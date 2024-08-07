@@ -57,7 +57,12 @@ function attack(abuser, victim, damageOpt) {
 }
 
 const playerEvents = [
-    'onSneak', 'onUseItem', 'onChangeSprinting',
+    'onSneak',
+]
+const playerOverrideEvents = [
+    'onUseItem',
+    'onAttack',
+    'onChangeSprinting',
     'onJump',
 ]
 const mobEvents = [
@@ -917,7 +922,56 @@ function listenAllMcEvents(collection) {
         em.on(n, acceptableStreamHandler(n))
     })
 
-    em.on('onAttack', acceptableStreamHandler('onAttack'))
+    mc.listen('onUseItem', (...args) => {
+        const [ pl, item ] = args
+
+        if (!mods.has(item.type)) {
+            return true
+        }
+
+        if (!hasLock(pl)) {
+            const val = toggleLock(pl.xuid)
+            pl.setSprinting(false)
+            if (val) {
+                em.emitNone('onLock', pl, item.type, val)
+            }
+
+            return false
+        }
+
+        let cancelEvent = false,
+        prevent = () => cancelEvent = true
+        es.put('onUseItem', [pl, prevent, args])
+
+        return !cancelEvent
+    })
+
+    mc.listen('onChangeSprinting', (...args) => {
+        const pl = args[0]
+        if (hasLock(pl)) {
+            if (toggleLock(pl.xuid) === null) {
+                em.emitNone('onReleaseLock', pl, pl.getHand().type, null)
+            }
+
+            return false
+        }
+
+        let cancelEvent = false,
+        prevent = () => cancelEvent = true
+        es.put('onChangeSprinting', [pl, prevent, args])
+
+        return !cancelEvent
+    })
+
+    mc.listen('onJump', pl => {
+        if (hasLock(pl)) {
+            if (toggleLock(pl.xuid) === null) {
+                em.emitNone('onReleaseLock', pl, pl.getHand().type, null)
+            }
+        }
+    })
+
+    playerOverrideEvents.forEach(n => em.on(n, acceptableStreamHandler(n)))
 
     mobEvents.forEach(n => {
         mc.listen(n, (...args) => {
@@ -946,35 +1000,6 @@ function listenAllMcEvents(collection) {
         })
     })
 
-    mc.listen('onDropItem', (pl, item) => {
-        if (mods.has(item.type)) {
-            Status.get(pl.xuid)?.disableInputs([
-                'onAttack'
-            ])
-
-            setTimeout(() => {
-                Status.get(pl.xuid)?.enableInputs([
-                    'onAttack'
-                ])
-            }, 300);
-
-            if (pl.isSneaking) {
-                return true
-            }
-
-            const val = toggleLock(pl.xuid)
-
-            if (val !== false) {
-                em.emitNone(
-                    val === null ? 'onReleaseLock' : 'onLock',
-                    pl, item.type, val
-                )
-            }
-            
-            return false
-        }
-    })
-
     mc.listen('onOpenContainer', pl => {
         // console.log(pl)
     })
@@ -985,6 +1010,18 @@ function listenAllMcEvents(collection) {
             es.put('onFeint', [ pl, Function.prototype, [ pl ] ])
 
             return !cancel
+        }
+    })
+
+    mc.listen('onRide', rider => {
+        if (!rider.isPlayer()) {
+            return true
+        }
+
+        const pl = rider.toPlayer()
+
+        if (mods.has(pl.getHand().type) && !pl.isSneaking) {
+            return false
         }
     })
 
@@ -1036,6 +1073,12 @@ function listenAllMcEvents(collection) {
 
     mc.listen('onAttackEntity', pl => {
         es.put('onAttack', [pl, Function.prototype, [ pl ]])
+        const status = Status.get(pl.xuid)
+
+        status.acceptableInput('onAttack', false)
+        setTimeout(() => {
+            status.acceptableInput('onAttack', true)
+        }, 300)
         return false
     })
 
