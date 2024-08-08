@@ -54,8 +54,8 @@ class OotachiMoves extends DefaultMoves {
             },
         }
 
-        this.animations.parry = 'animation.weapon.ootachi.parry.left'
-        this.animations.block = 'animation.weapon.ootachi.block.left'
+        this.animations.parry.left = 'animation.weapon.ootachi.parry.left'
+        this.animations.block.left = 'animation.weapon.ootachi.block.left'
     }
 
     idle = {
@@ -206,6 +206,7 @@ class OotachiMoves extends DefaultMoves {
                 ctx.attack(pl, en, {
                     damage: 18,
                     knockback: 1,
+                    direction: 'left',
                 })
             })
         },
@@ -282,6 +283,7 @@ class OotachiMoves extends DefaultMoves {
                 ctx.attack(pl, en, {
                     damage: 24,
                     knockback: 1.5,
+                    direction: 'left',
                 })
             })
         },
@@ -373,6 +375,7 @@ class OotachiMoves extends DefaultMoves {
                     damage: 20,
                     knockback: 1.2,
                     trace: true,
+                    direction: 'middle',
                 })
             })
         },
@@ -452,6 +455,7 @@ class OotachiMoves extends DefaultMoves {
                 ctx.attack(pl, en, {
                     damage: 28,
                     knockback: 1.2,
+                    direction: 'right',
                 })
             })
         },
@@ -526,6 +530,7 @@ class OotachiMoves extends DefaultMoves {
                 ctx.attack(pl, en, {
                     damage: 16,
                     knockback: 0.8,
+                    direction: 'left',
                 })
             })
         },
@@ -584,6 +589,7 @@ class OotachiMoves extends DefaultMoves {
                     damage: 35,
                     permeable: true,
                     knockback: 1.2,
+                    direction: 'vertical',
                 })
             })
         },
@@ -730,6 +736,7 @@ class OotachiMoves extends DefaultMoves {
                     stiffness: 800,
                     shock: true,
                     powerful: true,
+                    direction: 'middle',
                 })
             })
         },

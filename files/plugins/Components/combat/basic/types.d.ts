@@ -470,10 +470,12 @@ interface DamageOption {
      */
     shock?: boolean
     /**
-     * 武器进攻方向
-     * 在受到攻击的一方，左右会镜像翻转
+     * 武器进攻方向 （从右往左进攻方向是左方向）
+     * 在受到攻击的一方，水平方向为受到攻击的一侧
+     * 垂直方向只能从上往下，所以不需要考虑方向
+     * 'middle' 用于刺击
      */
-    direction?: 'left' | 'right' | 'up' | 'center'
+    direction?: 'left' | 'right' | 'vertical' | 'middle'
     /**
      * 打断霸体
      */

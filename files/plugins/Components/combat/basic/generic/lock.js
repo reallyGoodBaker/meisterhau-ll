@@ -7,9 +7,15 @@ const { setVelocity } = require('./kinematic')
 const { playAnim } = require('../index')
 
 const locks = new Map()
+const cooldowns = new Set()
 
 function lockTarget(src, target) {
     const pl = mc.getPlayer(src)
+
+    if (cooldowns.has(pl.xuid)) {
+        return
+    }
+
     if (target) {
         cameraInput(pl, false)
         locks.set(src, target)
@@ -25,6 +31,8 @@ function releaseTarget(src) {
     clearCamera(pl)
     locks.delete(src)
     pl.setMovementSpeed(0.1)
+    cooldowns.add(pl.xuid)
+    setTimeout(() => cooldowns.delete(pl.xuid), 500)
 }
 
 function toggleLock(src) {

@@ -34,6600 +34,6 @@ loadModule.load = m => {
     }
 };
 
-var events$1 = {};
-
-var hasRequiredEvents$1;
-
-function requireEvents$1 () {
-	if (hasRequiredEvents$1) return events$1;
-	hasRequiredEvents$1 = 1;
-	Object.defineProperty(events$1, "__esModule", { value: true });
-	events$1.AsyncShortCircuitHook = events$1.AsyncWaterfallHook = events$1.AsyncBasicHook = events$1.ShortCircuitHook = events$1.WaterfallHook = events$1.BasicHook = events$1.EventEmitter = void 0;
-	class WillNull {
-	    val;
-	    static NullErr = Error('Null values that may cause errors.');
-	    constructor(val) {
-	        this.val = val;
-	    }
-	    setValue(val) {
-	        this.val = val;
-	    }
-	    isNull() {
-	        return this.val === null;
-	    }
-	    expect(message) {
-	        if (this.val !== null) {
-	            return this.val;
-	        }
-	        throw Error(`${message}`);
-	    }
-	    unwrap() {
-	        if (this.val !== null) {
-	            return this.val;
-	        }
-	        throw WillNull.NullErr;
-	    }
-	}
-	function Maybe(val) {
-	    return new WillNull(val);
-	}
-	function Null() {
-	    return new WillNull(null);
-	}
-	class Linked {
-	    prev = Null();
-	    next = Null();
-	    raw = Null();
-	    handler = Null();
-	    connect(linked) {
-	        linked.next.setValue(this.next.expect('Do not operate Linked alone'));
-	        this.next.expect('Do not operate Linked alone')
-	            .prev.setValue(linked);
-	        this.next.setValue(linked);
-	        linked.prev.setValue(this);
-	        return linked;
-	    }
-	    disconnect() {
-	        const prevErr = 'get prev fail at disconnect';
-	        const nextErr = 'get next fail at disconnect';
-	        this.prev.expect(prevErr)
-	            .next
-	            .setValue(this.next.expect(nextErr));
-	        this.next.expect(nextErr)
-	            .prev.setValue(this.prev.expect(prevErr));
-	        this.prev.setValue(null);
-	        this.next.setValue(null);
-	        return this;
-	    }
-	    record(listener, raw) {
-	        this.handler.setValue(listener);
-	        if (raw) {
-	            this.raw.setValue(raw);
-	        }
-	    }
-	}
-	class IndexedLinked {
-	    thisArg;
-	    rawRecord = new Map();
-	    record = new Map();
-	    Entry = new Linked();
-	    End = new Linked();
-	    _pointer = this.Entry;
-	    constructor(thisArg = () => ({})) {
-	        this.thisArg = thisArg;
-	        this.Entry.next.setValue(this.End);
-	        this.End.prev.setValue(this.Entry);
-	    }
-	    size() {
-	        return this.record.size;
-	    }
-	    _recordNode(k, v) {
-	        if (this.record.has(k)) {
-	            return false;
-	        }
-	        this.record.set(k, v);
-	        return true;
-	    }
-	    _recordRawNode(k, v) {
-	        if (this.rawRecord.has(k)) {
-	            return false;
-	        }
-	        this.rawRecord.set(k, v);
-	        this._recordNode(v.handler.unwrap(), v);
-	        return true;
-	    }
-	    _creator(listener) {
-	        let node = new Linked();
-	        node.record(listener);
-	        return node;
-	    }
-	    _onceCreator(listener) {
-	        let node = new Linked();
-	        let self = this;
-	        const wrapper = (...args) => {
-	            try {
-	                node.raw.expect('The function used to wrap is empty')
-	                    .apply(self.thisArg(), args);
-	            }
-	            finally {
-	                self.deleteNode(node);
-	            }
-	        };
-	        node.record(wrapper, listener);
-	        return node;
-	    }
-	    put(listener) {
-	        const node = this._creator(listener);
-	        if (this._recordNode(listener, node)) {
-	            this._pointer.connect(node);
-	            this._pointer = node;
-	        }
-	    }
-	    prepend(listener) {
-	        const node = this._creator(listener);
-	        if (this._recordNode(listener, node)) {
-	            this.Entry.connect(node);
-	        }
-	    }
-	    once(listener) {
-	        const node = this._onceCreator(listener);
-	        try {
-	            if (this._recordRawNode(node.raw.unwrap(), node)) {
-	                this._pointer.connect(node);
-	                this._pointer = node;
-	            }
-	        }
-	        finally { }
-	    }
-	    prependOnce(listener) {
-	        const node = this._onceCreator(listener);
-	        try {
-	            if (this._recordRawNode(node.raw.unwrap(), node)) {
-	                this.Entry.connect(node);
-	            }
-	        }
-	        finally { }
-	    }
-	    deleteNode(node) {
-	        try {
-	            if (this._pointer === node) {
-	                this._pointer = node.prev.unwrap();
-	            }
-	            if (!node.raw.isNull()) {
-	                this.rawRecord.delete(node.raw.unwrap());
-	            }
-	            this.record.delete(node.handler.unwrap());
-	            node.disconnect();
-	            return true;
-	        }
-	        catch (_) {
-	            return false;
-	        }
-	    }
-	    delete(listener) {
-	        if (this.rawRecord.has(listener)) {
-	            const linked = Maybe(this.rawRecord.get(listener) || null).expect("Don't modify Linekd outside of IndexedLinked");
-	            this.deleteNode(linked);
-	            return true;
-	        }
-	        if (this.record.has(listener)) {
-	            const linked = Maybe(this.record.get(listener) || null)
-	                .expect("Don't modify Linekd outside of IndexedLinked");
-	            this.deleteNode(linked);
-	            return true;
-	        }
-	        return false;
-	    }
-	    free() {
-	        let toDel = this.Entry.next.expect('Free error');
-	        while (toDel !== this.End) {
-	            const toDelNext = toDel.next.expect('Free error');
-	            this.deleteNode(toDel);
-	            toDel = toDelNext;
-	        }
-	        this._pointer = this.Entry;
-	    }
-	    forEach(callback) {
-	        let n = this.Entry;
-	        while ((n = n.next.unwrap()) !== this.End) {
-	            callback.call(undefined, n);
-	        }
-	    }
-	    [Symbol.iterator] = () => {
-	        let p = this.Entry;
-	        const self = this;
-	        return {
-	            next() {
-	                p = p.next.unwrap();
-	                return {
-	                    value: p,
-	                    done: p.next.unwrap() === self.End
-	                };
-	            }
-	        };
-	    };
-	}
-	class EventEmitter {
-	    /**@private*/ maxListeners = -1;
-	    /**@private*/ _events = {};
-	    /**@private*/ captureRejections = false;
-	    thisArg = {};
-	    setMaxListeners(size) {
-	        this.maxListeners = size;
-	        return this;
-	    }
-	    getMaxListeners() {
-	        return this.maxListeners;
-	    }
-	    /**@private*/
-	    _thisGetter = () => this.thisArg;
-	    /**@private*/
-	    _getEventLinked(type) {
-	        let linked;
-	        if (!(linked = this._events[type])) {
-	            linked = this._events[type] = new IndexedLinked(this._thisGetter);
-	        }
-	        return linked;
-	    }
-	    /**@private*/
-	    _canAddNew(size) {
-	        return this.maxListeners !== -1 && size === this.maxListeners;
-	    }
-	    /**@private*/
-	    _addListener(type, handler, prepend = false, once = false) {
-	        this._callWatcherMethod('add', { type, handler, prepend, once });
-	        const linked = this._getEventLinked(type);
-	        if (this._canAddNew(linked.size())) {
-	            this._emitError(RangeError('Listeners is full and cannot join a new listener, please use setMaxListeners to resize'));
-	            return;
-	        }
-	        if (prepend) {
-	            if (once) {
-	                linked.prependOnce(handler);
-	            }
-	            else {
-	                linked.prepend(handler);
-	            }
-	            return;
-	        }
-	        if (once) {
-	            linked.once(handler);
-	        }
-	        else {
-	            linked.put(handler);
-	        }
-	    }
-	    addListener(type, handler) {
-	        this._addListener(type, handler);
-	        return this;
-	    }
-	    on(type, handler) {
-	        this._addListener(type, handler);
-	        return this;
-	    }
-	    prependListener(type, handler) {
-	        this._addListener(type, handler, true);
-	        return this;
-	    }
-	    /**@private*/
-	    _removeListener(type, handler) {
-	        this._callWatcherMethod('remove', { type, handler });
-	        const eventLinked = this._getEventLinked(type);
-	        eventLinked.delete(handler);
-	        return this;
-	    }
-	    removeListener(type, handler) {
-	        return this._removeListener(type, handler);
-	    }
-	    off(type, handler) {
-	        return this._removeListener(type, handler);
-	    }
-	    removeAllListeners(type) {
-	        this._callWatcherMethod('removeAll', { type });
-	        this._getEventLinked(type).free();
-	    }
-	    /**@private*/
-	    _emit(type, nullContext = false, ...args) {
-	        this._callWatcherMethod('emit', { type, args });
-	        const l = this._getEventLinked(type);
-	        const ctx = this.thisArg;
-	        this.thisArg = nullContext
-	            ? undefined
-	            : ctx;
-	        let cur = l.Entry.next.expect('EventEmitter$_emit');
-	        while (cur !== l.End) {
-	            const nextNode = cur.next.expect('EventEmitter$_emit');
-	            try {
-	                const returned = cur.handler.unwrap().apply(this.thisArg, args);
-	                if (this.captureRejections && returned instanceof Promise) {
-	                    returned.catch(reason => this._emitError(reason));
-	                }
-	            }
-	            catch (err) {
-	                if (type === 'error') {
-	                    throw err;
-	                }
-	                else {
-	                    this._emitError(err);
-	                }
-	            }
-	            cur = nextNode;
-	        }
-	        this.thisArg = ctx;
-	    }
-	    /**@private*/
-	    _emitError(err) {
-	        const size = this.listenerCount('error');
-	        if (size > 0) {
-	            try {
-	                this._emit('error', true, err);
-	            }
-	            catch (err) {
-	                throw err;
-	            }
-	            return;
-	        }
-	        throw err;
-	    }
-	    emit(type, ...args) {
-	        this._emit(type, false, ...args);
-	    }
-	    emitNone(type, ...args) {
-	        this._emit(type, true, ...args);
-	    }
-	    once(type, handler) {
-	        this._addListener(type, handler, false, true);
-	        return this;
-	    }
-	    prependOnceListener(type, handler) {
-	        this._addListener(type, handler, true, true);
-	        return this;
-	    }
-	    listenerCount(type) {
-	        return this._getEventLinked(type).size();
-	    }
-	    listeners(type) {
-	        const ev = this._getEventLinked(type);
-	        const listeners = [];
-	        let cur = ev.Entry.next.unwrap();
-	        while (cur !== ev.End) {
-	            listeners.push(cur.handler.unwrap());
-	        }
-	        return listeners;
-	    }
-	    rawListeners(type) {
-	        const ev = this._getEventLinked(type);
-	        const listeners = [];
-	        let cur = ev.Entry.next.unwrap();
-	        while (cur !== ev.End) {
-	            try {
-	                listeners.push(cur.raw.unwrap());
-	            }
-	            catch (_) {
-	                listeners.push(cur.handler.unwrap());
-	            }
-	        }
-	        return listeners;
-	    }
-	    eventNames() {
-	        return Reflect.ownKeys(this._events);
-	    }
-	    constructor(opt) {
-	        if (opt) {
-	            this.captureRejections = opt.captureRejections || false;
-	            this.thisArg = opt.thisArg || {};
-	            this._enableWatcher = opt.enableWatcher || false;
-	        }
-	    }
-	    /**@private*/
-	    _watcher;
-	    /**@private*/
-	    _enableWatcher;
-	    connectWatcher(watcher) {
-	        if (!this._enableWatcher) {
-	            return;
-	        }
-	        this._watcher = watcher;
-	    }
-	    disconnectWatcher() {
-	        if (this._watcher) {
-	            this._watcher = null;
-	        }
-	    }
-	    /**@private*/
-	    _callWatcherMethod(name, arg) {
-	        if (!this._watcher) {
-	            return;
-	        }
-	        try {
-	            this._watcher[name]?.call(this, arg);
-	        }
-	        catch (er) {
-	            this._emitError(er);
-	        }
-	    }
-	}
-	events$1.EventEmitter = EventEmitter;
-	class AbstractHook {
-	    /**@protected*/
-	    list = new IndexedLinked(() => this);
-	    add(handler) {
-	        this.list.put(handler);
-	        return this;
-	    }
-	    remove(handler) {
-	        return this.list.delete(handler);
-	    }
-	}
-	class BasicHook extends AbstractHook {
-	    call(...args) {
-	        const foreackCallback = (n) => this._call(n, args);
-	        this.list.forEach(foreackCallback);
-	    }
-	    /**@private*/
-	    _call(node, args) {
-	        node.handler.unwrap()
-	            .apply(undefined, args);
-	    }
-	}
-	events$1.BasicHook = BasicHook;
-	class WaterfallHook extends AbstractHook {
-	    call(arg) {
-	        let prev = null;
-	        for (const n of this.list) {
-	            const val = n.handler.unwrap()
-	                .call(undefined, prev ?? arg);
-	            prev = val ?? prev;
-	        }
-	    }
-	}
-	events$1.WaterfallHook = WaterfallHook;
-	class ShortCircuitHook extends AbstractHook {
-	    call(...args) {
-	        for (const n of this.list) {
-	            const val = n.handler.unwrap()
-	                .apply(undefined, args);
-	            if (val === false) {
-	                return;
-	            }
-	        }
-	    }
-	}
-	events$1.ShortCircuitHook = ShortCircuitHook;
-	class AsyncBasicHook extends AbstractHook {
-	    async call(...args) {
-	        for (const n of this.list) {
-	            await n.handler.unwrap()
-	                .apply(undefined, args);
-	        }
-	    }
-	}
-	events$1.AsyncBasicHook = AsyncBasicHook;
-	class AsyncWaterfallHook extends AbstractHook {
-	    async call(arg) {
-	        let prev = null;
-	        for (const n of this.list) {
-	            const val = await n.handler.unwrap()
-	                .call(undefined, prev ?? arg);
-	            prev = val ?? prev;
-	        }
-	    }
-	}
-	events$1.AsyncWaterfallHook = AsyncWaterfallHook;
-	class AsyncShortCircuitHook extends AbstractHook {
-	    async call(...args) {
-	        for (const n of this.list) {
-	            const val = await n.handler.unwrap()
-	                .apply(undefined, args);
-	            if (val === false) {
-	                return;
-	            }
-	        }
-	    }
-	}
-	events$1.AsyncShortCircuitHook = AsyncShortCircuitHook;
-	return events$1;
-}
-
-/**
- * @typedef {{[p: string]: keyof typeof stringParamTypeMap | `!${keyof typeof stringParamTypeMap}`}} ParamType
- */
-
-var command$1;
-var hasRequiredCommand$1;
-
-function requireCommand$1 () {
-	if (hasRequiredCommand$1) return command$1;
-	hasRequiredCommand$1 = 1;
-	const stringParamTypeMap = {
-	    bool: 0,
-	    int: 1,
-	    float: 2,
-	    string: 3,
-	    entity: 4,
-	    player: 5,
-	    xyz: 6,
-	    pos: 7,
-	    vec: 7,
-	    text: 8,
-	    message: 9,
-	    json: 10,
-	    item: 11,
-	    block: 12,
-	    effect: 13,
-	    enum: 14,
-	    // softEnum: 15,
-	    entities: 16,
-	    command: 17
-	};
-
-	const matchers = {
-	    required: /^<([\w:]+)>$/,
-	    optional: /^\[([\w:]+)\]$/,
-	};
-
-	/**
-	 * @param {number} index 
-	 * @param {keyof typeof stringParamTypeMap} type 
-	 * @param {string} id 
-	 * @param {boolean} isOptional 
-	 */
-	function newToken(index, type='enum', id, isOptional=true) {
-	    return {
-	        index, type, id, isOptional
-	    }
-	}
-
-	/**
-	 * @param {string} str 
-	 */
-	function parseCmdStr(str) {
-	    const frags = str.split(/ +/);
-	    const tokens = [];
-
-	    frags.forEach((frag, i) => {
-	        let res, isOptional = -1;
-	        if (res = matchers.required.exec(frag)) {
-	            isOptional = 0;
-	        } else if (res = matchers.optional.exec(frag)) {
-	            isOptional = 1;
-	        }
-
-	        if (isOptional !== -1) {
-	            const data = res[1];
-	            const typeDef = data.split(':');
-	            tokens.push(newToken(
-	                i, typeDef[1], typeDef[0], !!isOptional
-	            ));
-	            return
-	        }
-
-	        tokens.push(newToken(
-	            i, 'enum', frag, false
-	        ));
-	    });
-
-	    return tokens
-	}
-
-	/**
-	 * @param {ParamType[]} arr 
-	 */
-	function parseCmdArr(arr) {
-	    const tokens = [];
-
-	    arr.forEach((el, i) => {
-	        const [id, typeDesc] = Object.entries(el)[0];
-	        let isOptional = true
-	            ,type = typeDesc;
-	        
-	        if (typeDesc.startsWith('!')) {
-	            isOptional = false;
-	            type = typeDesc.slice(1);
-	        }
-
-	        tokens.push(newToken(
-	            i, type, id, isOptional
-	        ));
-	    });
-
-	    return tokens
-	}
-
-	class Registry {
-	    /**@private*/ _cmd = null
-	    /**@private*/ _tokenListCollection = new Set()
-	    /**@private*/ _handlerCollection = []
-
-	    constructor(cmd) {
-	        this._cmd = cmd;
-	    }
-
-	    /**@private*/ getCollection(len) {
-	        return this._handlerCollection[len] ?? (this._handlerCollection[len] = [])
-	    }
-
-	    /**
-	     * @param {string | ParamType[]} cmd 
-	     * @param {(cmd: any, origin: any, output: any, result: any) => void} handler 
-	     */
-	    register(cmd, handler) {
-	        if (!cmd || !handler) {
-	            return this
-	        }
-
-	        const tokens = typeof cmd === 'string' 
-	            ? parseCmdStr(cmd)
-	            : parseCmdArr(cmd);
-
-	        this._tokenListCollection.add(tokens);
-
-	        const len = tokens.length;
-	        const finalList = tokens.reduce((pre, cur, i) => {
-	            if (cur.isOptional) {
-	                this.getCollection(pre.length)
-	                    .push([pre.map(t => t.id), handler]);
-	            }
-
-	            return pre.concat(cur)
-	        }, []);
-
-	        this.getCollection(len)
-	            .push([finalList.map(l => l.id), handler]);
-
-	        return this
-	    }
-
-	    submit() {
-	        this._tokenListCollection.forEach(tokens => {
-	            let ids = [];
-
-	            for (const {id, type, isOptional} of tokens) {
-	                this.createArg(id, type, isOptional);
-	                ids.push(id);
-	            }
-
-	            this._cmd.overload(ids);
-	        });
-
-	        this.setCallback();
-	        this._cmd.setup();
-	    }
-
-	    /**@private*/ sameArr(arr1, arr2) {
-	        if (arr1.length !== arr2.length) {
-	            return false
-	        }
-
-	        return new Set(arr1.concat(arr2)).size === arr1.length 
-	    }
-
-	    /**@private*/ setCallback() {
-	        this._cmd.setCallback((cmd, origin, out, args) => {
-	            const argv = Object
-	                .keys(args)
-	                .filter(v => args[v]);
-
-	            const pairs = this._handlerCollection[argv.length];
-	            const [_, handler] = pairs.find(([ids]) => this.sameArr(argv, ids)) || [, Function.prototype];
-	            
-	            handler.call(undefined, cmd, origin, out, args);
-	        });
-	    }
-
-	    /**@private*/ createArg(name, type, isOptional) {
-	        const createCmdVariable = enumId => {
-	            let extArgs = enumId ? [enumId, name, 1] : [];
-
-	            return isOptional
-	                ? this._cmd.optional(name, stringParamTypeMap[type], ...extArgs)
-	                : this._cmd.mandatory(name, stringParamTypeMap[type], ...extArgs)
-	        };
-	        
-	        let enumId = null;
-
-	        if (type === 'enum') {
-	            enumId = `enum_${name}`;
-	            this._cmd.setEnum(enumId, [name]);
-	        }
-
-	        return createCmdVariable(enumId)
-	    }
-	}
-
-	/**
-	 * @param {string} head 
-	 * @param {string} desc 
-	 * @param {0|1|2} [perm] 0 普通，1 管理员，2 控制台
-	 * @param {number} [flag] 
-	 * @param {string} [alias] 
-	 */
-	function cmd(head, desc, perm=1) {
-	    const command = mc.newCommand(head, desc, perm);
-	    const registry = new Registry(command);
-
-	    return {
-	        /**
-	         * @param {(registry: Registry) => void | Promise<void>} executor 
-	         */
-	        setup: executor => {
-	            executor.call(
-	                undefined, registry
-	            );
-	        }
-	    }
-	}
-
-	command$1 = {
-	    cmd, Registry
-	};
-	return command$1;
-}
-
-var main$1 = {exports: {}};
-
-var console_1$1;
-var hasRequiredConsole$1;
-
-function requireConsole$1 () {
-	if (hasRequiredConsole$1) return console_1$1;
-	hasRequiredConsole$1 = 1;
-	let formatting = 'minecraft';
-
-	/**
-	 * @param {'minecraft'|'ansiEscapeSeq'} type 
-	 */
-	function setFormatting(type) {
-	    formatting = type;
-	}
-
-	const Formatting = {
-	    black: "§0",
-	    dark_blue: "§1",
-	    dark_green: "§2",
-	    dark_aqua: "§3",
-	    dark_red: "§4",
-	    dark_purple: "§5",
-	    gold: "§6",
-	    gray: "§7",
-	    dark_gray: "§8",
-	    blue: "§9",
-	    green: "§a",
-	    aqua: "§b",
-	    red: "§c",
-	    light_purple: "§d",
-	    yellow: "§e",
-	    white: "§f",
-	    minecoin_gold: "§g",
-	    obfuscated: "§k",
-	    bold: "§l",
-	    italic: "§o",
-	    reset: "§r",
-	    normal: ''
-	};
-
-	const FormattingANSLEscapeSequences = {
-	    black: "\x1b[30m",
-	    dark_blue: "\x1b[34m",
-	    dark_green: "\x1b[32m",
-	    dark_aqua: "\x1b[36m",
-	    dark_red: "\x1b[31m",
-	    dark_purple: "\x1b[35m",
-	    dark_gray: "\x1b[90m",
-	    gold: "\x1b[93m",
-	    gray: "\x1b[37m",
-	    blue: "\x1b[94m",
-	    green: "\x1b[92m",
-	    aqua: "\x1b[96m",
-	    red: "\x1b[91m",
-	    light_purple: "\x1b[95m",
-	    yellow: "\x1b[33m",
-	    white: "\x1b[97m",
-	    minecoin_gold: "\x1b[93m",
-	    obfuscated: "\x1b[7m",
-	    bold: "\x1b[1m",
-	    italic: "\x1b[3m",
-	    reset: "\x1b[0m",
-	    normal: ''
-	};
-
-	function style(key) {
-	    if (formatting === 'minecraft') {
-	        console.trace();
-	    }
-	    return formatting === 'minecraft'? Formatting[key]
-	        : FormattingANSLEscapeSequences[key]
-	}
-
-	function proxify(obj) {
-	    return new Proxy(obj, {
-	        get(t, p) {
-	            return style(t[p])
-	        },
-	        set() {
-	            return false
-	        }
-	    })
-	}
-
-	const basic = proxify({
-	    undefined: 'dark_blue',
-	    boolean: 'dark_blue',
-	    function: 'yellow',
-	    number: 'aqua',
-	    string: 'light_purple',
-	    symbol: 'minecoin_gold'
-	});
-
-	const objectProp = proxify({
-	    setterGetter: 'dark_green',
-	    innenumerable: 'green',
-	    preview: 'gray',
-	    normal: 'blue',
-	    prototype: 'dark_gray',
-	    symbol: 'minecoin_gold'
-	});
-
-	const {EventEmitter} = requireEvents$1();
-
-	let commandRegistry = {};
-
-	/**
-	 * @param {string} command 
-	 * @param {(em: EventEmitter)=>void} handler 
-	 * @param {any} [opt]
-	 */
-	function register(command, handler, opt = {}) {
-	    let em = new EventEmitter({ captureRejections: true });
-	    commandRegistry[command] = [em, opt];
-	    handler(em);
-	}
-
-	function unregister(command) {
-	    commandRegistry[command][0].emit('unregister');
-	    delete commandRegistry[command];
-	}
-
-	function exec(commandStr, onerror = () => null) {
-	    return new Promise(resolve => {
-	        let [commandResolver, ...args] = splitRegular(commandStr);
-	        const [em, opt] = commandRegistry[commandResolver];
-	        let shouldStopFlowing = false;
-
-	        em.on('error', onerror);
-	        em.once('error', () => {
-	            shouldStopFlowing = true;
-	            resolve(false);
-	        });
-
-	        em.emit('exec', ...args);
-	        if (shouldStopFlowing) return;
-
-	        let argCur;
-	        let unspecializedArgs = [];
-
-	        for (let i = 0; i < args.length;) {
-	            argCur = args[i];
-	            if (argCur.startsWith('-')) {
-	                let resCount = opt[argCur];
-	                if (resCount) {
-	                    let _args = args.slice(i + 1, i += resCount + 1);
-	                    em.emit(argCur, ..._args);
-	                } else {
-	                    em.emit(argCur);
-	                    i++;
-	                }
-	                if (shouldStopFlowing) return;
-	                continue;
-	            }
-
-	            i++;
-	            unspecializedArgs.push(argCur);
-	        }
-	        em.emit('default', ...unspecializedArgs);
-	        if (shouldStopFlowing) return;
-
-	        resolve(true);
-	        em.off('error', onerror);
-	    })
-	}
-
-	const states = {
-	    blank: 0,
-	    string: 1
-	};
-
-	/**
-	 * @param {string} str 
-	 */
-	function splitRegular(str) {
-	    str = str.trim();
-	    const len = str.length;
-	    let data = '';
-	    let res = [];
-	    let state = states.blank;
-
-	    for (let i = 0; i < len; i++) {
-	        const char = str[i];
-
-	        if (state === states.string && char === '"') {
-	            data += char;
-	            res.push(data);
-	            data = '';
-	            state = states.blank;
-	            continue;
-	        }
-
-	        if (state !== states.string && char === '"') {
-	            if (data) {
-	                res.push(data);
-	                data = '';
-	            }
-	            state = states.string;
-	            data += char;
-	            continue;
-	        }
-
-	        if (state === states.blank && char === ' ') {
-	            if (data) {
-	                res.push(data);
-	                data = '';
-	            }
-	        } else {
-	            if (char !== '"') {
-	                data += char;
-	            }
-	        }
-
-	        if (i === len - 1) {
-	            res.push(data);
-	            data = '';
-	        }
-	    }
-
-	    return res;
-	}
-
-	class TConsole {
-	    static tConsole = null;
-	    static __emitter__ = new EventEmitter();
-	    static console = null;
-
-	    static showDetail = true;
-	    static tabSize = 2;
-
-	    constructor(opt) {
-	        this.console = opt.console;
-	        this.update = opt.update;
-	        this.unregister = unregister;
-	        this.register = register;
-	        this.exec = exec;
-	        (function () {
-	            TConsole.tConsole = this;
-	        })();
-	    }
-
-	    getConsole() {
-	        return this.console;
-	    }
-
-	    injectConsole() {
-	        let Global = typeof window !== 'undefined' ? window :
-	            typeof commonjsGlobal !== 'undefined' ? commonjsGlobal :
-	                typeof globalThis !== 'undefined' ? globalThis :
-	                    typeof self !== 'undefined' ? self : {};
-
-	        Global.console = this.console;
-	    }
-
-	    showDetail(bool = true) {
-	        TConsole.showDetail = bool;
-	    }
-
-	    tabSize(count = 2) {
-	        TConsole.tabSize = count;
-	    }
-
-	    /**
-	     * @param {'minecraft'|'ansiEscapeSeq'} type 
-	     */
-	    setFormatting(type) {
-	        setFormatting(type);
-	    }
-
-	    update() { }
-
-	    on(type, handler) {
-	        TConsole.__emitter__.on(type, handler);
-	        return this;
-	    }
-
-	    off(type, handler) {
-	        TConsole.__emitter__.on(type, handler);
-	    }
-
-
-	}
-
-	const tab = () => new Array(TConsole.tabSize).fill(' ').join('');
-	const getTab = (count = 1) => new Array(count).fill(tab()).join('');
-
-	class MsgBlock extends Array {
-	    static get defaultColor() {
-	        return style('white')
-	    }
-	    static get defaultStyle() {
-	        return style('normal')
-	    }
-
-	    toTellrawString(tabCount = 0) {
-	        let [_style, color, ...msgs] = this;
-
-	        _style = _style || MsgBlock.defaultStyle;
-	        color = color || MsgBlock.defaultColor;
-
-	        let msg = msgs.reduce((pre, cur) => {
-	            if (typeof cur === 'string') {
-	                return pre + cur;
-	            }
-
-	            if (typeof cur === 'object' && cur instanceof MsgBlock) {
-	                return pre + cur.toTellrawString();
-	            }
-	        }, '');
-
-	        let returnVal = getTab(tabCount) + (color + _style + msg + style('reset')).trim();
-
-	        return returnVal
-	    }
-
-	    toString(tabCount = 0) {
-	        return this.toTellrawString(tabCount);
-	    }
-
-	}
-
-	function mbf(...iterable) {
-	    return MsgBlock.from(iterable);
-	}
-
-	function safeString(string) {
-	    return string.replace(/"/g, '\\"');
-	}
-
-	function basicTypeMsg(data) {
-	    const basicType = typeof data;
-	    if (basicType in basic) return basicTypeParser(data, basicType);
-	}
-
-	function functionMsg(data, color) {
-	    let str = safeString(data.toString());
-	    let firstBlank = str.indexOf(' ');
-	    if (str === '(') return str;
-	    return mbf(style('italic'), color, str.slice(0, firstBlank), mbf('', style('normal'), str.slice(firstBlank)));
-	}
-
-	function getFunctionSignature(func, color) {
-	    let str = safeString(func.toString());
-	    let signEnd = /\)[\s]*\{/.exec(func).index + 1;
-	    let firstBlank = str.indexOf(' ');
-
-	    if (str[0] === '(') return `<Anonymous>${str.slice(0, signEnd)}`;
-	    return mbf(style('italic'), color, str.slice(0, firstBlank), mbf('', style('normal'), str.slice(firstBlank, signEnd)));
-	}
-
-	function basicTypeParser(data, type) {
-	    let color = basic[type];
-	    if (type === 'function') {
-	        return functionMsg(data, color);
-	    }
-
-	    if (type === 'undefined') {
-	        return mbf('', color, 'undefined');
-	    }
-
-	    if (type === 'string') {
-	        return mbf('', color, safeString(`'${data.toString()}'`));
-	    }
-
-	    return mbf('', color, data.toString());
-	}
-
-	function fakeNativeToString(name, ...args) {
-	    function toString() { return `function ${name}(${args.join(', ')}) { [native code] }` }
-	    return toString;
-	}
-
-	class RawTeller {
-	    static sender = null;
-	    /**
-	     * @type {[string, string][]}
-	     */
-	    msgQueue = [];
-	    pending = false;
-
-	    static header = '';
-	    /**
-	     * @type {RawTeller}
-	     */
-	    static rawTeller;
-
-	    constructor(header) {
-	        this.header = header || RawTeller.header;
-	        RawTeller.rawTeller = this;
-	    }
-
-	    send(msg) {
-	        this.msgQueue.push(msg);
-	    }
-
-	    pend() {
-	        this.pending = true;
-	    }
-
-	    active() {
-	        if (this.pending) return;
-
-	        this.msgQueue.forEach(msg => {
-	            RawTeller.sender(`${this.header}${msg}`);
-	        });
-
-	        this.msgQueue = [];
-	    }
-
-	    setSender(func) {
-	        RawTeller.sender = func;
-	    }
-
-	}
-
-	/**
-	 * @param {any} commander 
-	 * @returns {Function}
-	 */
-	function getRawTeller(commander) {
-
-	    let sender = new RawTeller();
-	    sender.setSender(commander);
-
-	    function send(msg) {
-	        sender.send(msg);
-	    }
-
-	    send.toString = fakeNativeToString('send', 'msg');
-
-	    send.update = () => {
-	        sender.active();
-	    };
-
-	    let senderProxy = new Proxy(send, {
-	        get(t, p) {
-	            return t[p];
-	        },
-
-	        set() { return false }
-	    });
-
-	    return senderProxy;
-	}
-
-	const UNTRUSTED_HEADER = 'Untrusted >';
-	const UNTRUSTED_HEADER_PREFIX = () => mbf(style('italic'), style('red'), UNTRUSTED_HEADER);
-
-	function sendUntrusted(msg) {
-	    RawTeller.rawTeller.send(UNTRUSTED_HEADER_PREFIX() + getTab() + msg);
-	}
-
-	function send(msg) {
-	    RawTeller.rawTeller.send(msg);
-	}
-
-	const ConsoleSpecified = {
-	    '-o': 1,
-	    '-b': 0,
-	    '--open': 1,
-	    '--back': 0,
-	    '-p': 1
-	};
-
-	async function _openLogic(terminal, index, msgBuilder) {
-	    let data = terminal.get(index);
-	    let msg = await msgBuilder('normal', data);
-	    terminal.pushContext();
-
-	    send(msg);
-	}
-
-	async function _backLogic(terminal, msgBuilder) {
-	    if (!terminal.index) return;
-
-	    let data = terminal.clearContext();
-	    let msg = await msgBuilder('normal', data);
-
-	    send(msg);
-	}
-
-	class Context {
-	    data = null;
-	    previews = [];
-	    constructor(data, previews) {
-	        this.data = data;
-	        this.previews = previews;
-	    }
-	}
-
-	class ConsoleTerminal {
-	    static contexts = [];
-	    static counter = -1;
-	    context = null;
-	    index = 0;
-
-	    constructor(msgBuilder) {
-
-	        const openLogic = index => {
-	            _openLogic(this, index, msgBuilder);
-	        };
-
-	        const backLogic = () => {
-	            _backLogic(this, msgBuilder);
-	        };
-
-	        register('con', em => {
-	            em.on('-o', openLogic);
-	            em.on('--open', openLogic);
-	            em.on('-b', backLogic);
-	            em.on('--back', backLogic);
-	            em.on('-p', async data => sendUntrusted(await msgBuilder('normal', data)));
-
-	            em.on('unregister', () => {
-	                em.removeAllListeners('-o');
-	                em.removeAllListeners('--open');
-	                em.removeAllListeners('-b');
-	                em.removeAllListeners('--back');
-	                em.removeAllListeners('-p');
-	            });
-	        }, ConsoleSpecified);
-
-	        let arr = [];
-	        TConsole.__emitter__.on('--object', data => {
-	            ConsoleTerminal.counter = -1;
-	            this.context = new Context(data, [...arr]);
-	            if (!ConsoleTerminal.contexts.length) this.pushContext();
-	        });
-
-	        TConsole.__emitter__.on('--preview', data => {
-	            ConsoleTerminal.counter++;
-	            arr.push(data);
-	        });
-
-	    }
-
-	    clearContext() {
-	        ConsoleTerminal.contexts.length = this.index;
-	        this.index--;
-	        this.updateContext();
-	        return this.context.data;
-	    }
-
-	    pushContext() {
-	        this.index = ConsoleTerminal.contexts.length;
-	        ConsoleTerminal.contexts.push(this.context);
-	        this.updateContext();
-	    }
-
-	    updateContext() {
-	        this.context = ConsoleTerminal.contexts[this.index];
-	    }
-
-	    get(index = 0) {
-	        return this.context.previews[index];
-	    }
-
-	}
-
-	async function toString(obj, showDetails = false) {
-	    let returnVal;
-	    if (!showDetails) {
-	        returnVal = await getPreviewMsg(obj);
-	    }
-	    returnVal = await getDetailsMsg(obj);
-
-	    TConsole.__emitter__.emit('--object', obj);
-
-	    return returnVal;
-	}
-
-	function getProto(obj) {
-	    return Object.getPrototypeOf(obj);
-	}
-
-	function getClassPrefix(obj) {
-	    let __proto__ = getProto(obj);
-	    let constructor;
-
-	    if (!__proto__) return '';
-
-	    constructor = __proto__.constructor;
-	    return constructor.name;
-	}
-
-	function getObjPropNames(obj) {
-	    let arr = [];
-	    for (const k in obj) {
-	        arr.push(k);
-	    }
-	    return arr;
-	}
-
-	function getObjSymbols(obj) {
-	    return Object.getOwnPropertySymbols(obj);
-	}
-
-	function getObjDescriptors(obj) {
-	    return Object.getOwnPropertyDescriptors(obj);
-	}
-
-	async function keyValTile(obj, k, propColor) {
-	    let ks;
-	    let vs;
-
-	    if (k === '[[Prototype]]') {
-	        let prefix = getClassPrefix(obj);
-	        if (!prefix) return '';
-	        return mbf('', objectProp.prototype, k, ':  ', prefix);
-	    }
-
-	    ks = typeof k === 'symbol' ?
-	        mbf(style('italic'), objectProp.symbol, safeString(k.toString())) :
-	        mbf(style('italic'), propColor, safeString(k));
-
-	    vs = typeof obj[k] === 'object' ?
-	        (await parseObjValue(obj[k])) : basicTypeMsg(obj[k]);
-
-	    if (typeof obj[k] === 'object' && obj[k]) {
-	        TConsole.__emitter__.emit('--preview', obj[k]);
-	        vs.push(getTab() + `$${ConsoleTerminal.counter}`);
-	    }
-
-	    return mbf('', style('normal'), ks, ':  ', vs);
-
-	}
-
-	async function parseExtend(obj, showInnenumerable = true) {
-	    const objDesc = getObjDescriptors(obj);
-	    let res = mbf();
-
-	    for (const k in objDesc) {
-	        const desc = objDesc[k];
-	        const { set, get, enumerable } = desc;
-	        const propName = safeString(typeof k === 'symbol' ? k.toString() : k);
-	        let msg = mbf();
-
-	        if (typeof get === 'function') {
-	            msg.push('\n');
-	            msg.push('', objectProp.setterGetter, `get ${propName}: `, await parseValPreview(get));
-	        }
-
-	        if (typeof set === 'function') {
-	            msg.push('\n');
-	            msg.push('', objectProp.setterGetter, `set ${propName}: `, await parseValPreview(set));
-	        }
-
-	        if (!enumerable && showInnenumerable) {
-	            msg.push('\n');
-	            msg.push('', objectProp.innenumerable, k, ': ', await parseValPreview(obj[k]));
-	        }
-
-	        if (msg.length) res.push(...msg);
-	    }
-
-	    if (res.length) return res;
-	    return '';
-	}
-
-	async function paresePrototype(obj) {
-
-	    let res = mbf();
-	    let __proto__ = obj;
-
-	    while ((__proto__ = getProto(__proto__)) !== Object.prototype && __proto__) {
-	        res.push(await parseExtend(__proto__, false));
-	    }
-
-	    return res;
-	}
-
-	async function getDetailsMsg(obj) {
-	    let propColor = objectProp.normal;
-	    let classPrefix = getClassPrefix(obj);
-	    let props = [];
-
-	    let msg = mbf('\n', style('normal'), `${await parseValPreview(obj, classPrefix)}:`);
-	    props = props.concat(getObjPropNames(obj)).concat(getObjSymbols(obj));
-
-	    for (const cur of props) {
-	        msg.push('\n', await keyValTile(obj, cur, propColor));
-	    }
-
-	    let extend = await parseExtend(obj);
-	    if (extend.length > 2) {
-	        msg.push(extend);
-	    }
-
-	    msg.push(await paresePrototype(obj));
-
-	    const prototypeClassPrefix = await keyValTile(obj, '[[Prototype]]', propColor);
-	    if (prototypeClassPrefix) msg.push('\n', prototypeClassPrefix);
-
-	    return msg;
-	}
-
-	async function getPreviewMsg(obj) {
-	    let propColor = objectProp.preview;
-	    let classPrefix = getClassPrefix(obj);
-
-	    let msg = mbf(style('italic'), style('normal'), `${classPrefix} {`);
-	    let props = getObjPropNames(obj);
-	    for (const cur of props) {
-	        msg.push('\n', await keyValTile(obj, cur, propColor));
-	    }
-	    msg.push('}');
-
-	    return msg;
-	}
-
-	async function parseObjValue(obj) {
-	    let classPrefix = getClassPrefix(obj);
-	    if (obj === null) {
-	        return mbf('', basic.undefined, 'null');
-	    }
-
-	    if (obj instanceof Array) {
-	        return await parseArray(obj, classPrefix);
-	    }
-
-	    return await parseValPreview(obj, classPrefix);
-	}
-
-	async function parseArray(obj, classPrefix) {
-	    if (classPrefix === 'Array') classPrefix = '';
-	    let res = mbf(style('italic'), '', `${classPrefix}(${obj.length}) [`);
-	    let i = 0;
-	    for (const cur of obj) {
-	        if (typeof cur === 'object') {
-	            if (cur === null) res.push(mbf('', basic.undefined, 'null'));
-	            else res.push(await parseValPreview(cur, classPrefix));
-	        } else {
-	            res.push(basicTypeMsg(cur));
-	        }
-	        if (i < obj.length - 1) {
-	            res.push(', ');
-	        }
-	        i++;
-	    }
-	    res.push(']');
-	    return res;
-	}
-
-	async function parseValPreview(obj, classPrefix) {
-
-	    const keys = specClassParsers.keys();
-	    for (const k of keys) {
-	        if (obj instanceof k) {
-	            return await getSpecParser(k).call(undefined, obj, classPrefix);
-	        }
-	    }
-
-	    if (typeof obj !== 'object') {
-	        return basicTypeMsg(obj);
-	    }
-
-	    classPrefix = classPrefix ? classPrefix + ' ' : '';
-	    return mbf('', objectProp.preview, `${classPrefix}{ ... }`,);
-	}
-
-	/**
-	 * @type {Map<Function, Function>}
-	 */
-	let specClassParsers = new Map();
-
-	function getSpecParser(instanceClass) {
-	    if (specClassParsers.has(instanceClass)) {
-	        return specClassParsers.get(instanceClass);
-	    }
-
-	    return null;
-	}
-
-	function registerSpecParser(instanceClass, handler) {
-	    specClassParsers.set(instanceClass, handler);
-	}
-
-	const getPromiseState = (() => {
-	    let obj = {};
-	    let promiseState = Symbol('promiseState');
-	    let promiseValue = Symbol('promiseValue');
-
-	    return p => {
-	        let _p = Promise.race([p, obj]);
-	        _p[promiseState] = 'pending';
-
-	        _p.then(v => {
-	            if (v === obj) _p[promiseState] = 'pending';
-	            else _p[promiseState] = 'fulfilled', _p[promiseValue] = v;
-	        }, reason => (_p[promiseState] = 'rejected', _p[promiseValue] = reason));
-
-	        return { promiseState, promiseValue, p: _p };
-	    };
-
-	})();
-
-	function doRegisterSpecParsers() {
-	    registerSpecParser(Array, (obj, classPrefix) => {
-	        return mbf(style('italic'), objectProp.preview, `${classPrefix}`, '(', basicTypeMsg(obj.length), style('italic'), objectProp.preview, ')');
-	    });
-
-	    registerSpecParser(Promise, async (obj, classPrefix) => {
-	        let { promiseState, promiseValue, p } = getPromiseState(obj);
-	        let state = p[promiseState];
-	        let value = p[promiseValue];
-	        let message;
-
-	        let msg = async () => {
-	            state = p[promiseState];
-	            value = p[promiseValue];
-	            return mbf(style('italic'), objectProp.preview, `${classPrefix}`, ` { <${state}>${state === 'pending' ? '' : ': ' + (typeof value === 'object' ? await parseValPreview(value, classPrefix) : basicTypeMsg(value))} }`);
-	        };
-
-	        try {
-	            await p;
-	        } catch (error) { }
-
-	        message = await msg();
-
-	        return message;
-	    });
-
-
-	    registerSpecParser(Error, obj => {
-	        return mbf('', style('normal'), obj.stack);
-	    });
-
-	    registerSpecParser(Function, obj => {
-	        const msg = getFunctionSignature(obj, basic.function);
-	        return mbf('', basic.function, msg);
-	    });
-
-
-	}
-
-	class Format {
-	    /**
-	     * @type {Format[]}
-	     */
-	    static formats = [];
-
-	    constructor(opt) {
-	        this.checker = opt.checker;
-	        this.parse = opt.parse;
-
-	        Format.formats.push(this);
-	    }
-
-	}
-
-	function check(str) {
-	    let i = 0;
-	    for (const format of Format.formats) {
-	        if (format.checker.test(str)) {
-	            return i;
-	        }
-	        i++;
-	    }
-	    return false;
-	}
-
-	/**
-	 * @param {{checker: RegExp, parse: (value: any) => any}} opt 
-	 */
-	function addFormat(opt) {
-	    return new Format(opt);
-	}
-
-	async function parseFormat(str, value, format) {
-	    const res = format.checker.exec(str);
-	    const args = [...res];
-	    const returnVal = await format.parse(value, ...args);
-
-	    return str.replace(format.checker, returnVal);
-	}
-
-	async function getfstr(formatStr, ...args) {
-	    let _args = [...args];
-	    let index;
-	    let returnVal;
-
-	    while (typeof (index = check(await returnVal || formatStr)) === 'number') {
-	        let value = _args.shift();
-	        let format = Format.formats[index];
-
-	        returnVal = await parseFormat(returnVal || formatStr, value, format);
-	    }
-
-	    return returnVal;
-	}
-
-	function initfstring() {
-
-	    addFormat({
-	        checker: /%d/,
-	        parse(value) {
-	            return mbf('', basic.number, new Number(value).toFixed(0));
-	        }
-	    });
-
-	    addFormat({
-	        checker: /%[o|O]/,
-	        async parse(v) {
-	            return mbf(style('italic'), style('normal'), await toString(v, TConsole.showDetail));
-	        }
-	    });
-
-	    addFormat({
-	        checker: /%(.*?)f/,
-	        parse(v, $, $1) {
-	            if ($1.startsWith('.')) {
-	                $1 = $1.slice(1);
-	                return mbf('', basic.number, new Number(v).toFixed(+$1));
-	            }
-	            return mbf('', basic.number, new Number(v));
-	        }
-	    });
-
-	}
-
-	/**
-	 * @param {(msg: string) => void} receiver 
-	 * @returns {TConsole}
-	 */
-	function initConsole(receiver) {
-
-	    doRegisterSpecParsers();
-	    initfstring();
-
-
-	    const rawSend = getRawTeller(receiver);
-	    const send = async msg => rawSend(await msg);
-
-	    async function buildMsg(s = 'white', ...args) {
-	        let res = mbf('', style(s));
-	        let i = -1;
-
-	        if (typeof args[0] === 'string') {
-	            let fstr = await getfstr(...args);
-	            if (fstr) return fstr;
-	        }
-
-	        for (const cur of args) {
-	            i++;
-	            let msg = typeof cur === 'object' ? await toString(cur, TConsole.showDetail) :
-	                typeof cur === 'string' ? mbf('', style(s), safeString(cur)) : basicTypeMsg(cur);
-
-	            if (i) res.push(getTab());
-	            res.push(msg);
-	        }
-
-	        return res;
-	    }
-
-	    new ConsoleTerminal(buildMsg);
-
-	    function log(...args) {
-	        let res;
-	        try {
-	            res = buildMsg('white', ...args);
-	        } catch (e) {
-	            error(e);
-	        }
-
-	        send(res);
-	    }
-
-	    function error(...args) {
-	        let err;
-	        try {
-	            err = buildMsg('red', ...args);
-	        } catch (e) {
-	            send(mbf('', style('red'), 'Fatal Error: You should have crashed your game!'));
-	        }
-
-	        send(err);
-	    }
-
-	    function warn(...args) {
-	        let res;
-	        try {
-	            res = buildMsg('yellow', ...args);
-	        } catch (e) {
-	            error(e);
-	        }
-
-	        send(res);
-	    }
-
-	    function getTraceStack(sliceStart = 0) {
-	        return Error('').stack.split('\n').slice(sliceStart + 2).join('\n');
-	    }
-
-	    function trace() {
-	        let stack = getTraceStack(1);
-	        stack = 'trace():\n' + stack;
-
-	        send(buildMsg('white', stack));
-	    }
-
-	    function assert(condition, ...data) {
-	        if (!condition) {
-	            error('Assertion failed: ', ...data, getTraceStack(1));
-	        }
-	    }
-
-	    let _counts = {};
-	    function count(label = 'default') {
-	        _counts[label] ? _counts[label]++ : _counts[label] = 1;
-	        log(`${label}: ${_counts[label]}`);
-	    }
-
-	    function countReset(label = 'default') {
-	        if (_counts[label]) {
-	            delete _counts[label];
-	        }
-	    }
-
-
-	    let _tickNow = 1;
-	    let _timers = {};
-	    function updateTimer() {
-	        _tickNow++;
-	    }
-
-	    function time(label = 'default') {
-	        _timers[label] = _tickNow;
-	    }
-
-	    function timeLog(label = 'default') {
-	        let tkNow = _tickNow;
-	        let tkBefore = _timers[label];
-
-	        if (!tkBefore) {
-	            warn(`Timer '${label}' does not exist`, getTraceStack(1));
-	            return;
-	        }
-
-	        let res = tkNow - tkBefore;
-	        log(`${label}: ${res} ticks (${res * 50} ms)`);
-	    }
-
-	    function timeEnd(label = 'default') {
-	        timeLog(label);
-	        if (_timers[label]) {
-	            delete _timers[label];
-	        }
-	    }
-
-
-	    function updateRawTeller() {
-	        rawSend.update();
-	    }
-
-	    function update() {
-	        updateTimer();
-	        updateRawTeller();
-	    }
-
-	    const _console = {
-	        log, error, warn, trace, assert, count, countReset,
-	        time, timeLog, timeEnd
-	    };
-
-	    return new TConsole({ update, console: _console });
-
-	}
-
-	console_1$1 = { initConsole };
-	return console_1$1;
-}
-
-var hasRequiredMain$1;
-
-function requireMain$1 () {
-	if (hasRequiredMain$1) return main$1.exports;
-	hasRequiredMain$1 = 1;
-	(function (module, exports) {
-		const {initConsole} = requireConsole$1();
-
-		const tConsole = initConsole(msg => log(`${msg}`));
-		tConsole.setFormatting('ansiEscapeSeq');
-
-		setInterval(() => tConsole.update(), 20);
-
-		module.exports = tConsole.getConsole();
-		exports.tConsole = tConsole; 
-	} (main$1, main$1.exports));
-	return main$1.exports;
-}
-
-var server$1;
-var hasRequiredServer$1;
-
-function requireServer$1 () {
-	if (hasRequiredServer$1) return server$1;
-	hasRequiredServer$1 = 1;
-	requireMain$1();
-
-	function handleCall(msg, em) {
-	    const { id, name, args } = msg;
-	    em.emitNone('call', id, name, args);
-	}
-
-	function handleReturn(msg, em) {
-	    const { id, success, val } = msg;
-	    em.emitNone('return', id, success, val);
-	}
-
-	function setup(list, em) {
-	    const server = new HttpServer();
-
-	    server.onPost('/rpc', (req, res) => {
-	        try {
-	            const rpcMessages = JSON.parse(req.body);
-
-	            rpcMessages.forEach(msg => {
-	                if (msg.type === 'call') {
-	                    return handleCall(msg, em)
-	                }
-
-	                if (msg.type === 'return') {
-	                    return handleReturn(msg, em)
-	                }
-	            });
-	        } finally {
-	            res.status = 200;
-	            res.reason = "OK";
-	            res.write(JSON.stringify(list.splice(0, list.length)));
-	        }
-	    })
-	    .listen('localhost', 19999);
-
-	    return server
-	}
-
-	server$1 = {
-	    createServer: setup
-	};
-	return server$1;
-}
-
-var setup_1$1;
-var hasRequiredSetup$1;
-
-function requireSetup$1 () {
-	if (hasRequiredSetup$1) return setup_1$1;
-	hasRequiredSetup$1 = 1;
-	const { EventEmitter } = requireEvents$1();
-	const { cmd } = requireCommand$1();
-	const { createServer } = requireServer$1();
-
-	const em = new EventEmitter();
-	const rpcChannel = [];
-	const remoteFuncs = new Map();
-	const server = createServer(rpcChannel, em);
-
-	function rpcCall(id, name, args) {
-	    return {
-	        type: 'call',
-	        id, name, args
-	    }
-	}
-
-	function rpcReturn(id, success, val) {
-	    return {
-	        type: 'return',
-	        id, success, val
-	    }
-	}
-	function remoteCall(name, ...args) {
-	    const id = Math.random().toString(36).slice(2);
-	    const rpcMsg = rpcCall(id, name, args);
-
-	    rpcChannel.push(rpcMsg);
-
-	    return new Promise((res, rej) => {
-	        em.once(id, (success, val) => {
-	            const done = success ? res : rej;
-	            done(val);
-	        });
-	    })
-	}
-
-	function remoteFunction(name, func) {
-	    remoteFuncs.set(name, func);
-	}
-
-	function setupCallHandler() {
-	    em.on('call', (id, name, args) => {
-	        let func = remoteFuncs.get(name);
-	        if (!func) {
-	            return rpcChannel.push(rpcReturn(id, false, 'null'))
-	        }
-
-	        let val, success = true;
-	        try {
-	            val = func.apply(null, args);
-	        } catch (error) {
-	            val = error;
-	            success = false;
-	        }
-
-	        return rpcChannel.push(rpcReturn(id, success, val))
-	    });
-	}
-
-	function setupReturnHandler() {
-	    em.on('return', (id, success, val) => {
-	        em.emitNone(id, success, val);
-	    });
-	}
-
-
-	function setup() {
-	    setupCallHandler();
-	    setupReturnHandler();
-	    cmd('func', '函数', 1).setup(registry => {
-	        registry.register('<name:string> <args:string>', async (cmd, origin, output, res) => {
-	            const pl = origin.player;
-	            remoteCall(res.name, ...res.args.split(' '))
-	                .then(v => pl.tell(v.toString()))
-	                .catch(e => pl.tell(e.toString()));
-	        }).submit();
-	    });
-	}
-
-	function unload() {
-	    server.stop();
-	}
-
-	const remote = {
-	    call: remoteCall,
-	    expose: remoteFunction
-	};
-
-	setup_1$1 = {
-	    setup, unload, remote
-	};
-	return setup_1$1;
-}
-
-var basic$1;
-var hasRequiredBasic$1;
-
-function requireBasic$1 () {
-	if (hasRequiredBasic$1) return basic$1;
-	hasRequiredBasic$1 = 1;
-	requireMain$1();
-
-	function playAnim(pl, anim, nextAnim, time, stopExp, controller) {
-	    mc.runcmdEx(`/playanimation "${pl.name}" ` + [anim, nextAnim, time, stopExp, controller].filter(x => x).join(' '));
-	}
-
-	function playSound(pl, sound, pos, volume, pitch, minVolume) {
-	    mc.runcmdEx(`/playsound ${sound} ${pl.name} ` + [
-	        pos.x, pos.y, pos.z, volume, pitch, minVolume
-	    ].join(' '));
-	}
-
-	function playSoundAll(sound, pos, volume, pitch, minVolume) {
-	    mc.runcmdEx(`/playsound ${sound} @a ` + [
-	        pos.x, pos.y, pos.z, volume, pitch, minVolume
-	    ].join(' '));
-	}
-
-	function playParticle(particle, pos) {
-	    mc.runcmdEx(`/particle ${particle} ` + [
-	        pos.x, pos.y, pos.z
-	    ].join(' '));
-	}
-
-	basic$1 = {
-	    playAnim, playSound, playSoundAll, playParticle,
-	};
-	return basic$1;
-}
-
-var kinematics$1;
-var hasRequiredKinematics$1;
-
-function requireKinematics$1 () {
-	if (hasRequiredKinematics$1) return kinematics$1;
-	hasRequiredKinematics$1 = 1;
-	const { remote } = requireSetup$1();
-
-	async function knockback(en, x, z, h, v) {
-	    return await remote.call('knockback', en.uniqueId, x, z, h, v)
-	}
-
-	async function impulse(en, x, y, z) {
-	    return await remote.call('impulse', en.uniqueId, x, y, z)
-	}
-
-	async function clearVelocity(en) {
-	    return await remote.call('clearVelocity', en.uniqueId)
-	}
-
-	async function applyKnockbackAtVelocityDirection(en, h, v) {
-	    return await remote.call('applyKnockbackAtVelocityDirection', en.uniqueId, h, v)
-	}
-
-	async function rotate(en, pitch, yaw) {
-	    return await remote.call('rotate', en.uniqueId, pitch, yaw)
-	}
-
-	async function faceTo(src, t) {
-	    return await remote.call('faceTo', src.uniqueId, t.uniqueId)
-	}
-
-	kinematics$1 = {
-	    knockback, impulse, clearVelocity, applyKnockbackAtVelocityDirection, rotate, faceTo
-	};
-	return kinematics$1;
-}
-
-var kinematic$1;
-var hasRequiredKinematic$1;
-
-function requireKinematic$1 () {
-	if (hasRequiredKinematic$1) return kinematic$1;
-	hasRequiredKinematic$1 = 1;
-	const { knockback } = requireKinematics$1();
-	requireMain$1();
-
-
-	const setVelocity = (pl, rotation, h, v) => {
-	    const { yaw } = pl.direction;
-	    const rad = (yaw + rotation) * Math.PI / 180.0;
-	    knockback(pl, Math.cos(rad), Math.sin(rad), h, v);
-	};
-
-	function isCollide(pl) {
-	    const { x: _x, z: _z } = pl.pos;
-	    const x = Math.abs(_x);
-	    const z = Math.abs(_z);
-
-	    let mayCollide = x - Math.floor(x) < 0.301 ? 1
-	        : x - Math.floor(x) > 0.699 ? 2
-	            : z - Math.floor(z) < 0.301 ? 3
-	                : z - Math.floor(z) > 0.699 ? 4 : 0;
-
-	    const bPos = pl.blockPos;
-
-	    switch (mayCollide) {
-	        default:
-	            return false
-	    
-	        case 1:
-	            const nx = mc.getBlock(bPos.x - 1, bPos.y, bPos.z, bPos.dimid);
-	            return !nx.isAir && !nx.thickness
-
-	        case 2:
-	            const px = mc.getBlock(bPos.x + 1, bPos.y, bPos.z, bPos.dimid);
-	            return !px.isAir && !px.thickness
-	        
-	        case 3:
-	            const nz = mc.getBlock(bPos.x, bPos.y, bPos.z - 1, bPos.dimid);
-	            return !nz.isAir && !nz.thickness
-	        
-	        case 4:
-	            const pz = mc.getBlock(bPos.x, bPos.y, bPos.z + 1, bPos.dimid);
-	            return !pz.isAir && !pz.thickness 
-	    }
-	}
-
-	kinematic$1 = {
-	    setVelocity, isCollide
-	};
-	return kinematic$1;
-}
-
-var status_1;
-var hasRequiredStatus;
-
-function requireStatus () {
-	if (hasRequiredStatus) return status_1;
-	hasRequiredStatus = 1;
-	/// <reference path="../types.d.ts"/>
-	requireMain$1();
-
-	const defaultAcceptableInputs = [
-	    'onJump', 'onSneak', 'onAttack', 'onUseItem',
-	    'onChangeSprinting', 'onFeint'
-	];
-
-	/**@type {PlayerStatus}*/
-	class Status {
-	    /**
-	     * @type {Map<string, PlayerStatus>}
-	     */
-	    static status = new Map()
-	    /**
-	     * @param {string} xuid 
-	     * @returns {PlayerStatus}
-	     */
-	    static get(xuid) {
-	        return this.status.get(xuid) ?? new Status(xuid)
-	    }
-
-	    hand = 'minecraft:air'
-	    status = 'unknown'
-	    duration = 0
-	    repulsible = true
-	    acceptableInputs = new Set(defaultAcceptableInputs)
-	    stamina = 0
-	    shocked = false
-	    preInput = null
-	    hegemony = false
-	    #preInputTimer = null
-
-	    isBlocking = false
-	    isWaitingParry = false
-	    isWaitingDeflection = false
-	    isDodging = false
-
-	    static defaultCameraOffsets = [ 2.2, 0, 0.7 ]
-	    cameraOffsets = Status.defaultCameraOffsets
-
-	    constructor(xuid) {
-	        Status.status.set(xuid, this);
-	        this.clear();
-	    }
-
-	    clear() {
-	        this.hand = 'minecraft:air';
-	        this.status = 'unknown';
-	        this.duration = 0;
-	        this.repulsible = true;
-	        this.isBlocking = false;
-	        this.isWaitingParry = false;
-	        this.acceptableInputs = new Set(defaultAcceptableInputs);
-	        this.stamina = 0;
-	        this.stiffness = 0;
-	    }
-
-	    edit(obj) {
-	        for (const k in obj) {
-	            if (k in this) {
-	                this[k] = obj[k];
-	            }
-	        }
-	    }
-
-	    acceptableInput(name, accept) {
-	        if (accept !== undefined) {
-	            accept
-	                ? this.acceptableInputs.add(name)
-	                : this.acceptableInputs.delete(name);
-	            return
-	        }
-
-	        return this.acceptableInputs.has(name)
-	    }
-
-	    /**
-	     * @param {AcceptbleInputTypes[]} inputs 
-	     */
-	    enableInputs(inputs) {
-	        inputs.forEach(type => this.acceptableInputs.add(type));
-	    }
-
-	    /**
-	     * @param {AcceptbleInputTypes[]} inputs 
-	     */
-	    disableInputs(inputs) {
-	        inputs.forEach(type => this.acceptableInputs.delete(type));
-	    }
-
-	    /**
-	     * @param {AcceptbleInputTypes} input 
-	     */
-	    setPreInput(input) {
-	        if (this.#preInputTimer) {
-	            clearInterval(this.#preInputTimer);
-	        }
-
-	        this.preInput = input;
-	        this.#preInputTimer = setTimeout(() => {
-	            this.#preInputTimer = null;
-	            this.preInput = null;
-	        }, 500);
-	    }
-	}
-
-	status_1 = {
-	    Status, defaultAcceptableInputs
-	};
-	return status_1;
-}
-
-var _default$1;
-var hasRequired_default$1;
-
-function require_default$1 () {
-	if (hasRequired_default$1) return _default$1;
-	hasRequired_default$1 = 1;
-	/// <reference path="../basic/types.d.ts"/>
-
-	const { playAnim, playSoundAll, playParticle } = requireBasic$1();
-	requireMain$1();
-	requireKinematic$1();
-	const { Status } = requireStatus();
-
-	class DefaultMoves {
-	    animations = {
-	        parried: 'animation.general.parried.right',
-	        hit: 'animation.general.hit',
-	        parry: '',
-	        knockdown: 'animation.general.fell',
-	        blocked: 'animation.general.blocked.right',
-	        block: '',
-	    }
-
-	    sounds = {
-	        parry: 'weapon.parry',
-	        blocked: 'weapon.sword.hit3',
-	        block: 'weapon.sword.hit2',
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    blocked = {
-	        cast: 9,
-	        onEnter: (pl, ctx) => {
-	            playAnim(pl, this.animations.blocked);
-	            playSoundAll(this.sounds.blocked, pl.pos, 1);
-	            ctx.movementInput(pl, false);
-	            ctx.freeze(pl);
-	            ctx.setVelocity(pl, -100, 0.8, -2);
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.movementInput(pl, true);
-	            ctx.unfreeze(pl);
-	        },
-	        timeline: {
-	            8: (pl, ctx) => ctx.trap(pl, { tag: 'blockedCounter' })
-	        },
-	        transitions: {}
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    block = {
-	        cast: 5,
-	        onEnter: (pl, ctx) => {
-	            ctx.status.isBlocking = true;
-	            playAnim(pl, this.animations.block);
-	            playSoundAll(this.sounds.block, pl.pos, 1);
-	            ctx.movementInput(pl, false);
-	            ctx.freeze(pl);
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.movementInput(pl, true);
-	            ctx.unfreeze(pl);
-	            ctx.status.isBlocking = false;
-	        },
-	        timeline: {
-	            4: (pl, ctx) => ctx.trap(pl, { tag: 'blockCounter' })
-	        },
-	        transitions: {}
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    hurt = {
-	        cast: Infinity,
-	        onEnter: (pl, ctx) => {
-	            ctx.movementInput(pl, false);
-	            ctx.freeze(pl);
-	            ctx.status.disableInputs([
-	                'onAttack',
-	                'onUseItem',
-	            ]);
-	            const [ ,, { stiffness, customHurtAnimation } ] = ctx.rawArgs;
-	            const hurtAnim = customHurtAnimation ?? this.animations.hit;
-
-	            playAnim(pl, hurtAnim);
-	            ctx.task.queue(() => {
-	                ctx.trap(pl, { tag: 'recover' });
-	            }, stiffness).run();
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.status.shocked = false;
-	            ctx.status.enableInputs([
-	                'onAttack',
-	                'onUseItem',
-	            ]);
-	            ctx.unfreeze(pl);
-	        },
-	        onTick(pl, ctx) {
-	            if (ctx.status.shocked) {
-	                ctx.trap(pl, { tag: 'hitWall' });
-	            }
-	        },
-	        transitions: { }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    hitWall = {
-	        cast: 25,
-	        onEnter: (pl, ctx) => {
-	            ctx.movementInput(pl, false);
-	            ctx.freeze(pl);
-	            ctx.status.disableInputs([
-	                'onAttack',
-	                'onUseItem',
-	            ]);
-	            playAnim(pl, 'animation.general.hit_wall');
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	            ctx.status.enableInputs([
-	                'onAttack',
-	                'onUseItem',
-	            ]);
-	        },
-	        transitions: { }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    parried = {
-	        cast: 35,
-	        onEnter: (pl, ctx) => {
-	            ctx.movementInput(pl, false);
-	            ctx.freeze(pl);
-	            ctx.status.disableInputs([
-	                'onAttack',
-	                'onUseItem',
-	            ]);
-	            playAnim(pl, this.animations.parried);
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	            ctx.status.enableInputs([
-	                'onAttack',
-	                'onUseItem'
-	            ]);
-	        },
-	        timeline: {
-	            4: (pl, ctx) => ctx.setVelocity(pl, -140, 1.5, -2),
-	            12: (pl, ctx) => ctx.lookAtTarget(pl),
-	        },
-	        transitions: { }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    parry = {
-	        cast: 10,
-	        backswing: 11,
-	        onEnter: (pl, ctx) => {
-	            ctx.movementInput(pl, false);
-	            playSoundAll(this.sounds.parry, pl.pos, 1);
-	            ctx.status.isWaitingParry = true;
-	            playAnim(pl, this.animations.parry);
-	            ctx.lookAtTarget(pl);
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	            ctx.status.isWaitingParry = false;
-	            ctx.status.cameraOffsets = Status.defaultCameraOffsets;
-	        },
-	        timeline: {
-	            5: (pl, ctx) => {
-	                const offsets = ctx.status.cameraOffsets;
-
-	                offsets[0] = 0.6;
-	                offsets[2] = 0.6;
-	            },
-	            8: (pl, ctx) => {
-	                const offsets = ctx.status.cameraOffsets;
-
-	                offsets[0] = 2.2;
-	                offsets[2] = 0.7;
-	            },
-	            13: (pl, ctx) => ctx.trap(pl, { tag: 'parryCounter' })
-	        },
-	        transitions: { }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    knockdown = {
-	        cast: 30,
-	        onEnter: (pl, ctx) => {
-	            ctx.freeze(pl);
-	            ctx.status.disableInputs([
-	                'onAttack',
-	                'onUseItem'
-	            ]);
-	            playAnim(pl, this.animations.knockdown);
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	            playAnim(pl, 'animation.general.stand');
-	            ctx.status.enableInputs([
-	                'onAttack',
-	                'onUseItem'
-	            ]);
-	        },
-	        transitions: { }
-	    }
-
-	    setup(init) {
-	        this.hitWall.transitions = {
-	            hurt: {
-	                onHurt: null
-	            },
-	            [init]: {
-	                onEndOfLife: null
-	            },
-	        };
-
-	        this.parry.transitions = {
-	            parry: {
-	                onParry: null
-	            },
-	            [init]: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: null
-	            },
-	        };
-
-	        this.parried.transitions = {
-	            [init]: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: { allowedState: 'both' }
-	            },
-	        };
-
-	        this.hurt.transitions = {
-	            [init]: {
-	                onTrap: {
-	                    tag: 'recover'
-	                }
-	            },
-	            hurt: {
-	                onHurt: { allowedState: 'both' }
-	            },
-	            hitWall: {
-	                onTrap: {
-	                    tag: 'hitWall',
-	                    allowedState: 'both',
-	                    isCollide: true,
-	                }
-	            },
-	        };
-
-	        this.blocked.transitions = {
-	            [init]: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: { allowedState: 'both' }
-	            },
-	        };
-
-	        this.block.transitions = {
-	            [init]: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: { allowedState: 'both' }
-	            },
-	            block: {
-	                onBlock: null
-	            }
-	        };
-	    }
-
-	    /**
-	     * @param {keyof this} state 
-	     * @param {Move} obj 
-	     */
-	    mixin(state, obj) {
-	        this[state] = Object.assign(this[state], obj);
-	    }
-
-	    /**
-	     * @param {keyof this} state 
-	     * @param {string} state 
-	     * @param {TransitionTypeOption} obj 
-	     */
-	    setTransition(state, transitionName, obj) {
-	        const _state = this[state];
-	        if (!_state) {
-	            return
-	        }
-
-	        _state.transitions[transitionName] = obj;
-	    }
-	}
-
-	/**
-	 * @implements {TrickModule}
-	 */
-	class DefaultTrickModule {
-	    /**
-	     * @param {string} sid 
-	     * @param {string} entry 
-	     * @param {string|string[]} bind 
-	     * @param {Moves} moves
-	     */
-	    constructor(sid, entry, bind, moves) {
-	        this.sid = sid;
-	        this.entry = entry;
-	        this.bind = bind;
-	        this.moves = moves;
-	    }
-
-	}
-
-	_default$1 = {
-	    DefaultTrickModule, DefaultMoves
-	};
-	return _default$1;
-}
-
-var double_dagger;
-var hasRequiredDouble_dagger;
-
-function requireDouble_dagger () {
-	if (hasRequiredDouble_dagger) return double_dagger;
-	hasRequiredDouble_dagger = 1;
-	/// <reference path="../basic/types.d.ts"/>
-
-	const { playAnim, playSoundAll } = requireBasic$1();
-	const { DefaultMoves, DefaultTrickModule } = require_default$1();
-
-	class DoubleDaggerMoves extends DefaultMoves {
-	    constructor() {
-	        super();
-
-	        this.animations.parry = 'animation.double_dagger.parry';
-	        this.animations.block = 'animation.double_dagger.block';
-	        this.setup('resumeHold');
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    resumeHold = {
-	        transitions: {
-	            hold: {
-	                onEndOfLife: {
-	                    hasTarget: true
-	                }
-	            },
-	            init: {
-	                onEndOfLife: {
-	                    hasTarget: false
-	                }
-	            },
-	            dodge: {
-	                onEndOfLife: {
-	                    hasTarget: true,
-	                    isSneaking: true
-	                },
-	            },
-	            hurt: {
-	                onHurt: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    init = {
-	        cast: Infinity,
-	        onEnter(pl) {
-	            playAnim(pl, 'animation.posture.clear');
-	        },
-	        transitions: {
-	            hold: {
-	                onLock: null
-	            },
-	            hurt: {
-	                onHurt: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    hold = {
-	        cast: Infinity,
-	        onEnter(pl, ctx) {
-	            playAnim(pl, 'animation.double_dagger.hold', 'animation.double_dagger.hold');
-	        },
-	        transitions: {
-	            init: {
-	                onReleaseLock: null
-	            },
-	            hurt: {
-	                onHurt: null
-	            },
-	            horizontalSwing: {
-	                onAttack: null,
-	            },
-	            stab: {
-	                onUseItem: null
-	            },
-	            dodge: {
-	                onSneak: {
-	                    isSneaking: true
-	                },
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    horizontalSwing = {
-	        cast: 9,
-	        backswing: 11,
-	        onEnter(pl, ctx) {
-	            ctx.status.isBlocking = true;
-	            ctx.freeze(pl);
-	            playAnim(pl, 'animation.double_dagger.horizontal_swing');
-	            ctx.lookAtTarget(pl);
-	        },
-	        onAct(pl, ctx) {
-	            playSoundAll('weapon.woosh.1', pl.pos, 1);
-	            ctx.selectFromRange(pl, {
-	                angle: 90,
-	                radius: 2,
-	                rotation: 30
-	            }).forEach(e => {
-	                ctx.attack(pl, e, {
-	                    damage: 16,
-	                    knockback: 0.8,
-	                });
-	            });
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        timeline: {
-	            0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 120, 1),
-	            4: (_, ctx) =>  ctx.status.isBlocking = false,
-	            6: (pl, ctx) => ctx.trap(pl, { tag: 'chop' }),
-	            7: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 3, 80, 0.8),
-	            11: (pl, ctx) => ctx.trap(pl, { tag: 'dodge' }),
-	        },
-	        transitions: {
-	            resumeHold: {
-	                onEndOfLife: null,
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            horizontalSwingToVeticalChop: {
-	                onTrap: {
-	                    tag: 'chop',
-	                    preInput: 'onUseItem',
-	                }
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'backswing'
-	                }
-	            },
-	            dodge: {
-	                onSneak: {
-	                    allowedState: 'backswing',
-	                    isSneaking: true
-	                },
-	                onTrap: {
-	                    tag: 'dodge',
-	                    preInput: 'onSneak',
-	                    isSneaking: true
-	                }
-	            },
-	            blocked: {
-	                onBlocked: {
-	                    allowedState: 'backswing',
-	                }
-	            },
-	            block: {
-	                onBlock: null
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    horizontalSwingToVeticalChop = {
-	        cast: 10,
-	        backswing: 11,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            playAnim(pl, 'animation.double_dagger.horizontal_swing.to.vertical_chop');
-	            ctx.lookAtTarget(pl);
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                angle: 60,
-	                radius: 2.5,
-	                rotation: 30
-	            }).forEach(e => {
-	                ctx.attack(pl, e, {
-	                    damage: 22,
-	                    knockback: 1.8,
-	                    permeable: true,
-	                });
-	            });
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        timeline: {
-	            0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
-	            4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8),
-	            9: pl => playSoundAll('weapon.woosh.3', pl.pos, 1),
-	            10: (pl, ctx) => ctx.trap(pl)
-	        },
-	        transitions: {
-	            resumeHold: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'backswing'
-	                }
-	            },
-	            dodge: {
-	                onSneak: {
-	                    allowedState: 'backswing',
-	                    isSneaking: true
-	                },
-	                onTrap: {
-	                    tag: 'dodge',
-	                    preInput: 'onSneak',
-	                    isSneaking: true
-	                }
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    stab = {
-	        cast: 10,
-	        backswing: 12,
-	        onEnter(pl, ctx) {
-	            ctx.status.isWaitingParry = true;
-	            ctx.freeze(pl);
-	            ctx.lookAtTarget(pl);
-	            playAnim(pl, 'animation.double_dagger.stab');
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                angle: 60,
-	                radius: 3,
-	                rotation: 30
-	            }).forEach(e => {
-	                ctx.attack(pl, e, {
-	                    damage: 18,
-	                    knockback: 1.8,
-	                });
-	            });
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.status.isBlocking = false;
-	            ctx.unfreeze(pl);
-	        },
-	        timeline: {
-	            3: (_, ctx) => ctx.status.isWaitingParry = false,
-	            6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8),
-	            8: (_, ctx) => ctx.status.isBlocking = true,
-	            9: pl => playSoundAll('weapon.woosh.2', pl.pos, 1),
-	            12: (_, ctx) => ctx.status.isBlocking = false,
-	            14: (pl, ctx) => ctx.trap(pl)
-	        },
-	        transitions: {
-	            resumeHold: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: null
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'backswing'
-	                }
-	            },
-	            parry: {
-	                onParry: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            dodge: {
-	                onSneak: {
-	                    allowedState: 'backswing',
-	                    isSneaking: true
-	                },
-	                onTrap: {
-	                    tag: 'dodge',
-	                    preInput: 'onSneak',
-	                    isSneaking: true
-	                }
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    dodge = {
-	        cast: 4,
-	        backswing: 14,
-	        onEnter(pl, ctx) {
-	            ctx.status.isWaitingDeflection = true;
-	            ctx.freeze(pl);
-	            playAnim(pl, 'animation.double_dagger.dodge.front');
-	            ctx.lookAtTarget(pl);
-	        },
-	        onAct(_, ctx) {
-	            ctx.status.isWaitingDeflection = false;
-	            ctx.status.isDodging = true;
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.status.isWaitingDeflection = false;
-	            ctx.status.isDodging = false;
-	            ctx.unfreeze(pl);
-	        },
-	        timeline: {
-	            1: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 3, 90, 2),
-	            8: (_, ctx) => ctx.status.isDodging = false,
-	            10: (pl, ctx) => ctx.trap(pl)
-	        },
-	        transitions: {
-	            resumeHold: {
-	                onEndOfLife: null
-	            },
-	            deflection: {
-	                onDeflection: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            deflectionPunch: {
-	                onTrap: {
-	                    preInput: 'onUseItem'
-	                }
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    deflection = {
-	        cast: 8,
-	        backswing: 8,
-	        onEnter(pl, ctx) {
-	            ctx.status.isDodging = true;
-	            ctx.freeze(pl);
-	            ctx.lookAtTarget(pl);
-	            playSoundAll('weapon.deflection', pl.pos, 1);
-	            playAnim(pl, 'animation.double_dagger.deflection');
-	        },
-	        onAct(_, ctx) {
-	            ctx.status.isDodging = false;
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.status.isDodging = false;
-	            ctx.unfreeze(pl);
-	        },
-	        timeline: {
-	            1: (pl, ctx) => ctx.setVelocity(pl, 180, 0.6, 0),
-	            7: (pl, ctx) => ctx.trap(pl, { tag: 'counter' }),
-	        },
-	        transitions: {
-	            deflection: {
-	                onDodge: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            resumeHold: {
-	                onEndOfLife: null
-	            },
-	            catchTargrt: {
-	                onTrap: {
-	                    tag: 'counter',
-	                    preInput: 'onUseItem'
-	                }
-	            },
-	            quickStab: {
-	                onTrap: {
-	                    tag: 'counter',
-	                    preInput: 'onAttack'
-	                }
-	            },
-	            dodge: {
-	                onSneak: {
-	                    isSneaking: true,
-	                    allowedState: 'backswing',
-	                }
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    deflectionStab = {
-	        cast: 7,
-	        backswing: 9,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            playAnim(pl, 'animation.double_dagger.deflection.stab');
-	        },
-	        onAct(pl, ctx) {
-	            ctx.lookAtTarget(pl);
-	            ctx.selectFromRange(pl, {
-	                radius: 2.5,
-	                angle: 60,
-	                rotation: -30,
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 22,
-	                    knockback: 1,
-	                });
-	            });
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        timeline: {
-	            5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 60, 0),
-	            6: pl => playSoundAll('weapon.woosh.2', pl.pos, 1)
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'backswing'
-	                }
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'backswing'
-	                }
-	            },
-	            resumeHold: {
-	                onEndOfLife: null
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    deflectionPunch = {
-	        cast: 3,
-	        backswing: 9,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            ctx.adsorbOrSetVelocity(pl, 1.5, 90, 0.8);
-	            playAnim(pl, 'animation.double_dagger.deflection.punch');
-	        },
-	        onAct(pl, ctx) {
-	            ctx.lookAtTarget(pl);
-	            ctx.selectFromRange(pl, {
-	                radius: 2,
-	                angle: 60,
-	                rotation: -30,
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 4,
-	                    parryable: false,
-	                    permeable: true,
-	                    knockback: 2,
-	                });
-	            });
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'backswing'
-	                }
-	            },
-	            resumeHold: {
-	                onEndOfLife: null
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    catchTargrt = {
-	        cast: 5,
-	        backswing: 15,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            playAnim(pl, 'animation.double_dagger.dodge.catch');
-	            ctx.adsorbOrSetVelocity(pl, 3, 90, 0.8);
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                angle: 120,
-	                rotation: -60,
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 2,
-	                    knockback: 0.1,
-	                    permeable: true,
-	                    parryable: false,
-	                    stiffness: 1500,
-	                    powerful: true,
-	                });
-	            });
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        timeline: {
-	            15: (pl, ctx) => ctx.trap(pl)
-	        },
-	        transitions: {
-	            resumeHold: {
-	                onEndOfLife: null
-	            },
-	            catched: {
-	                onHit: null
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    catched = {
-	        cast: 10,
-	        backswing: 5,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	        },
-	        onAct(pl, ctx) {
-	            ctx.trap(pl);
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        transitions: {
-	            resumeHold: {
-	                onEndOfLife: null
-	            },
-	            deflectionStab: {
-	                onTrap: {
-	                    preInput: 'onUseItem',
-	                    allowedState: 'both'
-	                }
-	            },
-	            kick: {
-	                onTrap: {
-	                    preInput: 'onAttack',
-	                    allowedState: 'both'
-	                }
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    quickStab = {
-	        cast: 4,
-	        backswing: 12,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            playAnim(pl, 'animation.double_dagger.catch.stab');
-	            ctx.adsorbOrSetVelocity(pl, 3, 90, 0.8);
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 18,
-	                    knockback: 2,
-	                    parryable: false,
-	                });
-	            });
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        transitions: {
-	            resumeHold: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            dodge: {
-	                onSneak: {
-	                    isSneaking: true,
-	                    allowedState: 'backswing'
-	                }
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    kick = {
-	        cast: 5,
-	        backswing: 11,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            playAnim(pl, 'animation.double_dagger.catch.kick');
-	            ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8);
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 8,
-	                    knockback: 5,
-	                    parryable: false,
-	                    permeable: true,
-	                    shock: true,
-	                    powerful: true,
-	                });
-	            });
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        transitions: {
-	            resumeHold: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            }
-	        }
-	    }
-	}
-
-	class DoubleDaggerTricks extends DefaultTrickModule {
-	    constructor() {
-	        super(
-	            'rgb:double_dagger',
-	            'init',
-	            [ 'weapon:double_dagger' ]
-	        );
-	    }
-
-	    moves = new DoubleDaggerMoves()
-	}
-
-	double_dagger = new DoubleDaggerTricks();
-	return double_dagger;
-}
-
-var emptyHand;
-var hasRequiredEmptyHand;
-
-function requireEmptyHand () {
-	if (hasRequiredEmptyHand) return emptyHand;
-	hasRequiredEmptyHand = 1;
-	/// <reference path="../basic/types.d.ts"/>
-
-	const { playAnim } = requireBasic$1();
-	const { DefaultMoves, DefaultTrickModule } = require_default$1();
-	requireMain$1();
-
-	class EmptyHandMoves extends DefaultMoves {
-	    /**
-	     * @type {Move}
-	     */
-	    blocking = {
-	        cast: Infinity,
-	        onEnter(pl) {
-	            playAnim(pl, 'animation.general.empty_hand');
-	        },
-	        transitions: {
-	            cast: {
-	                onEndOfLife: null
-	            }
-	        }
-	    }
-
-	    constructor() {
-	        super();
-
-	        this.setup('blocking');
-	    }
-	}
-
-	class EmptyHandTricks extends DefaultTrickModule {
-	    constructor() {
-	        super(
-	            'rgb39.weapon.empty_hand',
-	            'blocking',
-	            [ '*' ]
-	        );
-	    }
-
-	    moves = new EmptyHandMoves()
-	}
-
-	/**
-	 * @type {TrickModule}
-	 */
-	emptyHand = new EmptyHandTricks();
-	return emptyHand;
-}
-
-var math = {};
-
-/**
- * @param {number} start 
- * @param {number} end 
- * @param {() => number} calcFn 
- * @returns 
- */
-
-var hasRequiredMath;
-
-function requireMath () {
-	if (hasRequiredMath) return math;
-	hasRequiredMath = 1;
-	function constrictCalc(start, end, calcFn) {
-	    let result = 0;
-
-	    try {
-	        result = calcFn.call(null);
-	        if (isNaN(result)) throw ''
-	    } catch {
-	        return start
-	    }
-
-	    return result > end ? end
-	            : result < start ? start
-	                : result
-	}
-
-	math.constrictCalc = constrictCalc;
-
-	function randomRange(min=0, max=1, integer=false) {
-	    const num = Math.random() * (max - min) + min;
-
-	    return integer ? Math.round(num) : num
-	}
-
-	math.randomRange = randomRange;
-	return math;
-}
-
-var hud_1;
-var hasRequiredHud;
-
-function requireHud () {
-	if (hasRequiredHud) return hud_1;
-	hasRequiredHud = 1;
-	function hud(progress, size, style=['', '§6▮', '§4▯', '']) {
-	    const duration = Math.ceil(size * progress);
-	    const [ left, bar, empty, right ] = style;
-
-	    return left +
-	        bar.repeat(duration) +
-	        empty.repeat(size - duration) + right
-	}
-
-
-	hud_1 = {
-	    hud
-	};
-	return hud_1;
-}
-
-var lightSaber;
-var hasRequiredLightSaber;
-
-function requireLightSaber () {
-	if (hasRequiredLightSaber) return lightSaber;
-	hasRequiredLightSaber = 1;
-	const { playAnim, playSoundAll } = requireBasic$1();
-	const { DefaultMoves, DefaultTrickModule } = require_default$1();
-	requireMain$1();
-	const { constrictCalc, randomRange } = requireMath();
-	const { hud } = requireHud();
-
-	class LightSaberMoves extends DefaultMoves {
-	    /**
-	     * @type {Move}
-	     */
-	    hold = {
-	        cast: Infinity,
-	        onEnter(pl, ctx) {
-	            playAnim(pl, 'animation.weapon.light_saber.hold', 'animation.weapon.light_saber.hold');
-	        },
-	        onTick(pl, ctx) {
-	            const { status } = ctx;
-	            status.stamina = constrictCalc(0, 100, () => status.stamina + 1);
-	            pl.tell(
-	                hud(status.stamina/100, 20),
-	                5
-	            );
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: null
-	            },
-	            running: {
-	                onChangeSprinting: {
-	                    sprinting: true
-	                }
-	            },
-	            attack1: {
-	                onAttack: {
-	                    stamina: v => v >= 10
-	                }
-	            },
-	            beforeBlocking: {
-	                onSneak: {
-	                    isSneaking: true,
-	                    stamina: v => v > 20
-	                },
-	            },
-	            jump: {
-	                onJump: null
-	            },
-	            dodge: {
-	                onUseItem: null
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    dodge = {
-	        cast: 15,
-	        onEnter(pl, ctx) {
-	            playAnim(pl, 'animation.weapon.light_saber.dodge');
-	            ctx.movement(pl, false);
-	            ctx.setVelocity(pl, -90, 2, 0);
-	            ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 10);
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        onTick(pl, ctx) {
-	            pl.tell(hud(ctx.status.stamina/100, 20), 5);
-	        },
-	        timeline: {
-	            8: (pl, ctx) => ctx.setVelocity(pl, -90, 1, 0)
-	        },
-	        transitions: {
-	            hold: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: null
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    jump = {
-	        cast: 6,
-	        transitions: {
-	            hold: {
-	                onEndOfLife: null,
-	            },
-	            jumpAttack: {
-	                onAttack: {
-	                    stamina: v => v > 20
-	                }
-	            },
-	            hurt: {
-	                onHurt: null
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    jumpAttack = {
-	        cast: 10,
-	        backswing: 10,
-	        onEnter(pl, ctx) {
-	            pl.setSprinting(false);
-	            playAnim(pl, 'animation.weapon.light_saber.jump_attack');
-	            ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 15);
-	            ctx.freeze(pl);
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                angle: 25,
-	                rotation: -12,
-	                radius: 3.2
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 26,
-	                    knockback: 1.5,
-	                    permeable: true,
-	                });
-	            });
-
-	            ctx.status.repulsible = true;
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        onTick(pl, ctx) {
-	            const { status } = ctx;
-	            status.stamina = constrictCalc(0, 100, () => status.stamina);
-	            pl.tell(hud(status.stamina/100, 20), 5);
-	        },
-	        timeline: {
-	            2: (_, ctx) => ctx.status.repulsible = false,
-	            8: (pl, ctx) => {
-	                ctx.adsorbOrSetVelocity(pl, 2, 90);
-	            }
-	        },
-	        transitions: {
-	            hold: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: null
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'both'
-	                }
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    beforeBlocking = {
-	        cast: 4,
-	        onEnter(pl, ctx) {
-	            playAnim(pl, 'animation.weapon.light_saber.blocking', 'animation.weapon.light_saber.blocking');
-	            ctx.status.isWaitingParry = true;
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.status.isWaitingParry = false;
-	        },
-	        transitions: {
-	            blocking: {
-	                onEndOfLife: {
-	                    isSneaking: true
-	                }
-	            },
-	            parry: {
-	                onParry: null
-	            },
-	            afterBlocking: {
-	                onEndOfLife: {
-	                    isSneaking: false
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    blocking = {
-	        cast: Infinity,
-	        onEnter(pl, ctx) {
-	            ctx.status.isBlocking = true;
-	        },
-	        onLeave(_, ctx) {
-	            ctx.status.isBlocking = false;
-	        },
-	        onTick(pl, ctx) {
-	            pl.tell(hud(ctx.status.stamina/100, 20), 5);
-	        },
-	        transitions: {
-	            afterBlocking: {
-	                onSneak: { isSneaking:false }
-	            },
-	            hurt: {
-	                onHurt: null
-	            },
-	            block: {
-	                onBlock: null
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    afterBlocking = {
-	        cast: 3,
-	        transitions: {
-	            hold: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: null
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    block = {
-	        onEnter(pl, ctx) {
-	            const damageOpt = ctx.rawArgs[2];
-	            const result = ctx.status.stamina - (damageOpt.damage || 0);
-	            ctx.status.stamina = result < 0 ? 0 : result;
-	            playSoundAll(`weapon.sword.hit${randomRange(1, 4, true)}`, pl.pos, 1);
-	        },
-	        transitions: {
-	            blocking: {
-	                onEndOfLife: {
-	                    stamina: v => v > 0
-	                }
-	            },
-	            hold: {
-	                onEndOfLife: {
-	                    stamina: 0
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    running = {
-	        cast: Infinity,
-	        onEnter(pl) {
-	            playAnim(pl, 'animation.weapon.light_saber.run', 'animation.weapon.light_saber.run');
-	        },
-	        onTick(pl, ctx) {
-	            pl.tell(hud(ctx.status.stamina/100, 20), 5);
-	        },
-	        transitions: {
-	            hurt: {
-	                onHit: null
-	            },
-	            hold: {
-	                onChangeSprinting: {
-	                    sprinting: false
-	                },
-	            },
-	            runningJump: {
-	                onJump: null
-	            },
-	            strike: {
-	                onAttack: {
-	                    stamina: v => v > 30
-	                }
-	            },
-	            dash: {
-	                onUseItem: {
-	                    stamina: v => v > 10
-	                }
-	            },
-	            blocking: {
-	                onSneak: {
-	                    isSneaking: true
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    dash = {
-	        cast: 15,
-	        onEnter(pl, ctx) {
-	            ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 10);
-	            ctx.movement(pl, false);
-	            ctx.setVelocity(pl, 90, 3, 0);
-	            pl.setSprinting(false);
-	            playAnim(pl, 'animation.weapon.light_saber.dash');
-	        },
-	        onTick(pl, ctx) {
-	            pl.tell(hud(ctx.status.stamina/100, 20), 5);
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        timeline: {
-	            8: (pl, ctx) => {
-	                ctx.trap(pl);
-	                ctx.setVelocity(pl, 90, 1, 0);
-	            },
-	        },
-	        transitions: {
-	            strike: {
-	                onTrap: {
-	                    preInput: 'onAttack',
-	                    stamina: v => v >= 20
-	                }
-	            },
-	            hold: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: null
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    runningJump = {
-	        cast: 6,
-	        timeline: {
-	            6: (pl, ctx) => {
-	                ctx.trap(pl);
-	            }
-	        },
-	        transitions: {
-	            running: {
-	                onEndOfLife: null
-	            },
-	            hold: {
-	                onTrap: {
-	                    preInput: 'onChangeSprinting',
-	                },
-	                onAttack: {
-	                    stamina: v => v < 30
-	                }
-	            },
-	            strike: {
-	                onAttack: {
-	                    stamina: v => v > 30
-	                }
-	            },
-	            hurt: {
-	                onHurt: null
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    strike = {
-	        cast: 10,
-	        backswing: 10,
-	        onEnter(pl, ctx) {
-	            playAnim(pl, 'animation.weapon.light_saber.strike');
-	            ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 20);
-	            ctx.freeze(pl);
-	            ctx.adsorbOrSetVelocity(pl, 1, 90);
-	        },
-	        onTick(pl, ctx) {
-	            const { status } = ctx;
-	            status.stamina = constrictCalc(0, 100, () => status.stamina);
-	            pl.tell(hud(status.stamina/100, 20), 5);
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                radius: 3.2,
-	                angle: 20,
-	                rotation: -10
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 25,
-	                    knockback: 2,
-	                });
-	            });
-	        },
-	        timeline: {
-	            6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2.5, 90)
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                },
-	            },
-	            hold: {
-	                onEndOfLife: null
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'both'
-	                }
-	            },
-	        },
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    attack1 = {
-	        cast: 9,
-	        backswing: 11,
-	        onEnter(pl, ctx) {
-	            ctx.movement(pl, false);
-	            playAnim(pl, 'animation.weapon.light_saber.attack1');
-	            ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 10);
-	        },
-	        onTick(pl, ctx) {
-	            pl.tell(hud(ctx.status.stamina/100, 20), 5);
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                angle: 45,
-	                rotation: -22.5,
-	                radius: 2.5
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 18,
-	                    knockback: 1,
-	                });
-	            });
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        timeline: {
-	            2: (_, ctx) => ctx.status.isBlocking = true,
-	            5: (pl, ctx) => ctx.setVelocity(pl, 90, 1, 0),
-	            6: (_, ctx) => ctx.status.isBlocking = false,
-	            14: (pl, ctx) => ctx.trap(pl)
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            hold: {
-	                onEndOfLife: null
-	            },
-	            attack2: {
-	                onTrap: {
-	                    preInput: 'onAttack',
-	                    allowedState: 'backswing',
-	                    stamina: v => v >= 12,
-	                }
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    attack2 = {
-	        cast: 11,
-	        backswing: 12,
-	        onEnter(pl, ctx) {
-	            ctx.movement(pl, false);
-	            playAnim(pl, 'animation.weapon.light_saber.attack2');
-	            ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 12);
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                angle: 45,
-	                rotation: -22.5,
-	                radius: 2.5
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 22,
-	                    knockback: 1,
-	                });
-	            });
-	        },
-	        onTick(pl, ctx) {
-	            pl.tell(hud(ctx.status.stamina/100, 20), 5);
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        timeline: {
-	            2: (_, ctx) => ctx.status.isBlocking = true,
-	            6: (pl, ctx) => {
-	                ctx.setVelocity(pl, 90, 1, 0);
-	                ctx.status.isBlocking = false;
-	            },
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            hold: {
-	                onEndOfLife: null
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    constructor() {
-	        super();
-
-	        this.animations.parry = 'animation.weapon.light_saber.parry';
-
-	        this.knockdown.transitions = {
-	            hold: {
-	                onEndOfLife: null
-	            }
-	        };
-
-	        this.setup('hold');
-	    }
-	}
-
-	class LightSaberTrick extends DefaultTrickModule {
-	    constructor() {
-	        super(
-	            'rgb39.weapon.light_saber',
-	            'hold',
-	            [ 'weapon:light_saber' ]
-	        );
-	    }
-
-	    moves = new LightSaberMoves()
-	}
-
-	lightSaber = new LightSaberTrick();
-	return lightSaber;
-}
-
-var moon_glaive;
-var hasRequiredMoon_glaive;
-
-function requireMoon_glaive () {
-	if (hasRequiredMoon_glaive) return moon_glaive;
-	hasRequiredMoon_glaive = 1;
-	const { playAnim } = requireBasic$1();
-	const { DefaultMoves, DefaultTrickModule } = require_default$1();
-	requireMain$1();
-	requireMath();
-	requireHud();
-
-	class MoonGlaiveTricks extends DefaultTrickModule {
-	    constructor() {
-	        super(
-	            'rgb39.weapon.moon_glaive',
-	            'hold',
-	            [ 'weapon:moon_glaive' ]
-	        );
-	    }
-
-	    moves = new MoonGlaiveMoves()
-	}
-
-	class MoonGlaiveMoves extends DefaultMoves {
-
-	    constructor() {
-	        super();
-
-	        this.setup('backToDefault');
-	        this.animations.parry = 'animation.weapon.moon_glaive.parry';
-
-	        this.setTransition('parry', 'parryKnock', {
-	            onTrap: {
-	                tag: 'parryCounter',
-	                preInput: 'onAttack',
-	                allowedState: 'both'
-	            }
-	        });
-
-	        this.setTransition('parry', 'parryChop', {
-	            onTrap: {
-	                tag: 'parryCounter',
-	                preInput: 'onUseItem',
-	                allowedState: 'both'
-	            }
-	        });
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    hold = {
-	        cast: Infinity,
-	        onEnter(pl, ctx) {
-	            ctx.releaseTarget(pl.xuid);
-	            playAnim(pl, 'animation.weapon.moon_glaive.hold', 'animation.weapon.moon_glaive.hold');
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: null
-	            },
-	            running: {
-	                onChangeSprinting: {
-	                    sprinting: true
-	                }
-	            },
-	            holdLocked: {
-	                onLock: {
-	                    isOnGround: true
-	                }
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    running = {
-	        cast: Infinity,
-	        onEnter(pl, ctx) {
-	            ctx.releaseTarget(pl.xuid);
-	            playAnim(pl, 'animation.weapon.moon_glaive.running', 'animation.weapon.moon_glaive.running');
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: null
-	            },
-	            hold: {
-	                onChangeSprinting: {
-	                    sprinting: false
-	                }
-	            },
-	            holdLocked: {
-	                onLock: {
-	                    isOnGround: true,
-	                }
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    retentionSpinning = {
-	        cast: 13,
-	        backswing: 14,
-	        onEnter(pl, ctx) {
-	            ctx.setSpeed(pl, 0);
-	            ctx.camera(pl, false);
-	            playAnim(pl, 'animation.weapon.moon_glaive.retention.negative_spinning');
-	            ctx.adsorbOrSetVelocity(pl, 1, 90, 1);
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                radius: 2.5,
-	                angle: 120,
-	                rotation: -60
-	            }).forEach(en => ctx.attack(pl, en, {
-	                damage: 24,
-	                knockback: 2.5,
-	                permeable: true,
-	            }));
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	            ctx.setSpeed(pl, 0.04);
-	        },
-	        timeline: {
-	            4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
-	            8: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 120, 1),
-	            26: (pl, ctx) => ctx.trap(pl),
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: { allowedState: 'both' }
-	            },
-	            parried: {
-	                onParried: { allowedState: 'both' }
-	            },
-	            dodge: {
-	                onTrap: {
-	                    preInput: 'onUseItem',
-	                }
-	            },
-	            retention: {
-	                onEndOfLife: {
-	                    hasTarget: true
-	                }
-	            },
-	            hold: {
-	                onEndOfLife: {
-	                    hasTarget: false
-	                }
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    retention = {
-	        cast: Infinity,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            playAnim(pl, 'animation.weapon.moon_glaive.retention', 'animation.weapon.moon_glaive.retention');
-	        },
-	        onTick(pl, ctx) {
-	            ctx.lookAtTarget(pl);
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        timeline: {
-	            1: (pl, ctx) => ctx.trap(pl)
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: null
-	            },
-	            hold: {
-	                onReleaseLock: null
-	            },
-	            retentionSpinning: {
-	                onAttack: null
-	            },
-	            dodge: {
-	                onUseItem: null
-	            },
-	            fromRetention: {
-	                onSneak: { isSneaking: false },
-	                onTrap: { isSneaking: false },
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    toRetention = {
-	        cast: 5,
-	        onEnter(pl, ctx) {
-	            ctx.camera(pl, false);
-	            playAnim(pl, 'animation.weapon.moon_glaive.to_retention');
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        timeline: {
-	            4: (pl, ctx) => ctx.trap(pl)
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: null
-	            },
-	            retention: {
-	                onEndOfLife: {
-	                    isSneaking: true
-	                },
-	            },
-	            fromRetention: {
-	                onEndOfLife: {
-	                    isSneaking: false
-	                }
-	            },
-	            dodge: {
-	                onTrap: {
-	                    preInput: 'onUseItem'
-	                }
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    fromRetention = {
-	        cast: 5,
-	        onEnter(pl, ctx) {
-	            ctx.camera(pl, false);
-	            playAnim(pl, 'animation.weapon.moon_glaive.from_retention');
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: null
-	            },
-	            backToDefault: {
-	                onEndOfLife: null
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    holdLocked = {
-	        cast: Infinity,
-	        onEnter(pl, ctx) {
-	            pl.setSprinting(false);
-	            playAnim(pl, 'animation.weapon.moon_glaive.hold_locked', 'animation.weapon.moon_glaive.hold_locked');
-	            ctx.trap(pl);
-	        },
-	        transitions: {
-	            toRetention: {
-	                onSneak: {
-	                    isSneaking: true,
-	                },
-	                onTrap: {
-	                    isSneaking: true
-	                }
-	            },
-	            hold: {
-	                onReleaseLock: null,
-	                onJump: null
-	            },
-	            running: {
-	                onChangeSprinting: {
-	                    sprinting: true
-	                }
-	            },
-	            push: {
-	                onAttack: null
-	            },
-	            sweap: {
-	                onUseItem: null,
-	            },
-	            hurt: {
-	                onHurt: { allowedState: 'both' }
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    backToDefault = {
-	        transitions: {
-	            holdLocked: {
-	                onEndOfLife: {
-	                    hasTarget: true
-	                }
-	            },
-	            hold: {
-	                onEndOfLife: {
-	                    hasTarget: false
-	                }
-	            },
-	            hurt: {
-	                onHurt: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    dodge = {
-	        cast: 11,
-	        onEnter(pl, ctx) {
-	            ctx.status.isDodging = true;
-	            ctx.setSpeed(pl, 0);
-	            ctx.camera(pl);
-	            playAnim(pl, 'animation.weapon.moon_glaive.dodge');
-	            ctx.setVelocity(pl, -90, 2.5, 0);
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	            ctx.setSpeed(pl, 0.04);
-	        },
-	        timeline: {
-	            4: (pl, ctx) => ctx.status.isDodging = false,
-	            10: (pl, ctx) => ctx.trap(pl)
-	        },
-	        transitions: {
-	            retention: {
-	                onEndOfLife: {
-	                    hasTarget: true
-	                }
-	            },
-	            backToDefault: {
-	                onEndOfLife: {
-	                    hasTarget: false
-	                }
-	            },
-	            retentionSpinning: {
-	                onTrap: {
-	                    preInput: 'onAttack'
-	                }
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    push = {
-	        cast: 9,
-	        backswing: 10,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            ctx.lookAtTarget(pl);
-	            playAnim(pl, 'animation.weapon.moon_glaive.push');
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                angle: 50,
-	                rotation: -25,
-	                radius: 2.6,
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 16
-	                });
-	            });
-	        },
-	        timeline: {
-	            0: (_, c) => c.status.isBlocking = true,
-	            4: (_, c) => c.status.isBlocking = false,
-	            7: (pl, ctx) => ctx.adsorbToTarget(pl, 2),
-	            15: (pl, ctx) => ctx.trap(pl)
-	        },
-	        transitions: {
-	            backToDefault: {
-	                onEndOfLife: null
-	            },
-	            chop: {
-	                onTrap: {
-	                    preInput: 'onAttack',
-	                    hasTarget: true,
-	                    allowedState: 'both',
-	                }
-	            },
-	            verticalChop : {
-	                onTrap: {
-	                    preInput: 'onUseItem',
-	                    hasTarget: true,
-	                    allowedState: 'both',
-	                }
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'both',
-	                }
-	            },
-	            hurt: {
-	                onHurt: { allowedState: 'both' }
-	            },
-	            blocked: {
-	                onBlocked: {
-	                    allowedState: 'backswing',
-	                }
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    chop = {
-	        cast: 10,
-	        backswing: 8,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            ctx.lookAtTarget(pl);
-	            playAnim(pl, 'animation.weapon.moon_glaive.chop');
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        timeline: {
-	            4: (pl, ctx) => ctx.adsorbToTarget(pl, 1.2),
-	            8: (pl, ctx) => ctx.adsorbToTarget(pl, 1.2),
-	            11: (pl, ctx) => ctx.adsorbToTarget(pl, 0.5),
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                angle: 70,
-	                rotation: -35,
-	                radius: 2.6,
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 18
-	                });
-	            });
-	        },
-	        transitions: {
-	            backToDefault: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: null,
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'both',
-	                }
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    verticalChop = {
-	        cast: 15,
-	        backswing: 10,
-	        onEnter(pl, ctx) {
-	            ctx.status.hegemony = true;
-	            ctx.freeze(pl);
-	            ctx.lookAtTarget(pl);
-	            ctx.status.repulsible = false;
-	            playAnim(pl, 'animation.weapon.moon_glaive.vertical_chop');
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.status.hegemony = true;
-	            ctx.status.repulsible = true;
-	            ctx.unfreeze(pl);
-	        },
-	        timeline: {
-	            3: (pl, ctx) => ctx.adsorbToTarget(pl, 2),
-	            6: (pl, ctx) => ctx.adsorbToTarget(pl, 4),
-	            13: (pl, ctx) => ctx.trap(pl),
-	            18: (pl, ctx) => ctx.adsorbToTarget(pl, 0.5),
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                angle: 46,
-	                rotation: -23,
-	                radius: 2.8,
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 32,
-	                    permeable: true,
-	                    knockback: 1,
-	                });
-	            });
-	        },
-	        transitions: {
-	            backToDefault: {
-	                onEndOfLife: null,
-	                onTrap: {
-	                    preInput: 'onFeint',
-
-	                },
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'both',
-	                }
-	            },
-	            hurt: {
-	                onInterrupted: {
-	                    allowedState: 'both'
-	                }
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    sweap = {
-	        cast: 16,
-	        backswing: 14,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            ctx.lookAtTarget(pl);
-	            playAnim(pl, 'animation.weapon.moon_glaive.heavy_sweap');
-	            ctx.status.isWaitingParry = true;
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.status.repulsible = true;
-	            ctx.unfreeze(pl);
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                angle: 90,
-	                rotation: -50,
-	                radius: 2.8,
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 22,
-	                    knockback: 0.4,
-	                });
-	            });
-	        },
-	        timeline: {
-	            2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
-	            3: (_, ctx) => ctx.status.isWaitingParry = false,
-	            6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.5, 90),
-	            8: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
-	            12: (_, ctx) => ctx.status.repulsible = false,
-	            14: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90),
-	            21: (pl, ctx) => {
-	                ctx.status.repulsible = true;
-	                ctx.trap(pl, { tag: 'combo' });
-	            },
-	        },
-	        transitions: {
-	            backToDefault: {
-	                onEndOfLife: null,
-	                onTrap: {
-	                    tag: 'feint',
-	                    preInput: 'onFeint',
-	                },
-	            },
-	            sweapCombo: {
-	                onTrap: {
-	                    tag: 'combo',
-	                    preInput: 'onAttack',
-	                    allowedState: 'backswing',
-	                }
-	            },
-	            sweapComboSpinning: {
-	                onTrap: {
-	                    tag: 'combo',
-	                    preInput: 'onUseItem',
-	                    allowedState: 'backswing',
-	                }
-	            },
-	            hurt: {
-	                onHurt: {
-	                    repulsible: true,
-	                }
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'both',
-	                }
-	            },
-	            parry: {
-	                onParry: {
-	                    allowedState: 'both',
-	                }
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    sweapCombo = {
-	        cast: 10,
-	        backswing: 8,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            ctx.lookAtTarget(pl);
-	            playAnim(pl, 'animation.weapon.moon_glaive.chop.combo');
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        timeline: {
-	            4: (pl, ctx) => ctx.adsorbToTarget(pl, 1.2),
-	            8: (pl, ctx) => ctx.adsorbToTarget(pl, 1.2),
-	            11: (pl, ctx) => ctx.adsorbToTarget(pl, 0.5),
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                angle: 70,
-	                rotation: -35,
-	                radius: 2.6,
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 18,
-	                });
-	            });
-	        },
-	        transitions: {
-	            backToDefault: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: null,
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'both',
-	                }
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    sweapComboSpinning = {
-	        cast: 15,
-	        backswing: 14,
-	        onEnter(pl, ctx) {
-	            ctx.status.hegemony = true;
-	            ctx.freeze(pl);
-	            ctx.lookAtTarget(pl);
-	            playAnim(pl, 'animation.weapon.moon_glaive.positive_spinning');
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.status.hegemony = false;
-	            ctx.unfreeze(pl);
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                angle: 120,
-	                rotation: -60,
-	                radius: 2.8,
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 30,
-	                    knockback: 1.5,
-	                    permeable: true,
-	                });
-	            });
-	        },
-	        timeline: {
-	            0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
-	            8: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 4, 90),
-	            13: (pl, ctx) => ctx.trap(pl),
-	        },
-	        transitions: {
-	            parried: {
-	                onParried: {
-	                    allowedState: 'both'
-	                },
-	            },
-	            backToDefault: {
-	                onEndOfLife: null,
-	                onTrap: {
-	                    preInput: 'onFeint',
-	                }
-	            },
-	            hurt: {
-	                onInterrupted: {
-	                    allowedState: 'both'
-	                }
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    parryKnock = {
-	        cast: 7,
-	        backswing: 11,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            ctx.lookAtTarget(pl);
-	            playAnim(pl, 'animation.weapon.moon_glaive.parry.knock');
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                angle: 60,
-	                rotation: -30,
-	                radius: 2.6,
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 18,
-	                    knockback: 4,
-	                    shock: true,
-	                    parryable: false,
-	                });
-	            });
-	        },
-	        timeline: {
-	            0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
-	            6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
-	        },
-	        transitions: {
-	            backToDefault: {
-	                onEndOfLife: null,
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    parryChop = {
-	        cast: 13,
-	        backswing: 13,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            ctx.lookAtTarget(pl);
-	            ctx.status.repulsible = false;
-	            playAnim(pl, 'animation.weapon.moon_glaive.parry.chop');
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.status.repulsible = true;
-	            ctx.unfreeze(pl);
-	        },
-	        timeline: {
-	            5: (pl, ctx) => ctx.adsorbToTarget(pl, 2),
-	            8: (pl, ctx) => ctx.adsorbToTarget(pl, 4, 1),
-	            20: (pl, ctx) => ctx.adsorbToTarget(pl, 0.5),
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                angle: 46,
-	                rotation: -23,
-	                radius: 2.8,
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 22,
-	                    permeable: true,
-	                    knockback: 2,
-	                });
-	            });
-	        },
-	        transitions: {
-	            backToDefault: {
-	                onEndOfLife: null,
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'both',
-	                }
-	            },
-	        }
-	    }
-	}
-
-	moon_glaive = new MoonGlaiveTricks();
-	return moon_glaive;
-}
-
-var ootachi;
-var hasRequiredOotachi;
-
-function requireOotachi () {
-	if (hasRequiredOotachi) return ootachi;
-	hasRequiredOotachi = 1;
-	/// <reference path="../basic/types.d.ts"/>
-
-	const { playAnim, playSoundAll } = requireBasic$1();
-	requireMain$1();
-	const { randomRange } = requireMath();
-	const { DefaultMoves, DefaultTrickModule } = require_default$1();
-
-	class OotachiMoves extends DefaultMoves {
-	    constructor() {
-	        super();
-
-	        this.setup('resumeKamae');
-
-	        this.parry.timeline = {
-	            14: (pl, ctx) => ctx.trap(pl)
-	        };
-	        this.parry.transitions = {
-	            combo2Cut: {
-	                onTrap: {
-	                    preInput: 'onAttack',
-	                    allowedState: 'both'
-	                },
-	            },
-	            combo2Sweap: {
-	                onTrap: {
-	                    preInput: 'onUseItem',
-	                    allowedState: 'both'
-	                },
-	            },
-	            resumeKamae: {
-	                onEndOfLife: null
-	            },
-	            parry: {
-	                onParry: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: { allowedState: 'both' }
-	            },
-	        };
-
-	        this.parried.transitions = {
-	            resumeKamae: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: { allowedState: 'both' }
-	            },
-	        };
-
-	        this.animations.parry = 'animation.weapon.ootachi.parry.left';
-	        this.animations.block = 'animation.weapon.ootachi.block.left';
-	    }
-
-	    idle = {
-	        cast: Infinity,
-	        onEnter(pl, ctx) {
-	            ctx.unfreeze(pl);
-	            ctx.releaseTarget(pl.xuid);
-	            if (ctx.previousStatus === 'running') {
-	                ctx.task
-	                    .queue(() => playAnim(pl, 'animation.weapon.ootachi.trans.running.idle'), 0)
-	                    .queue(() => playAnim(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle'), 210)
-	                    .run();
-	            } else playAnim(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle');
-	        },
-	        onLeave(_, ctx) {
-	            ctx.task.cancel();
-	        },
-	        transitions: {
-	            innoKamae: {
-	                onLock: {
-	                    isOnGround: true
-	                }
-	            },
-	            running: {
-	                onChangeSprinting: { sprinting: true }
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            combo1Attack: {
-	                onAttack: null
-	            },
-	            knockdown: {
-	                onKnockdown: { allowedState: 'both' }
-	            },
-	        }
-	    }
-
-	    innoKamae = {
-	        cast: Infinity,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            playAnim(pl, 'animation.weapon.ootachi.kamae.inno', 'animation.weapon.ootachi.kamae.inno');
-	        },
-	        onTick(pl, ctx) {
-	            ctx.lookAtTarget(pl);
-	        },
-	        transitions: {
-	            idle: {
-	                onReleaseLock: { allowedState: 'both' },
-	                onJump: { allowedState: 'both' },
-	            },
-	            running: {
-	                onChangeSprinting: {
-	                    sprinting: true,
-	                    allowedState: 'both'
-	                }
-	            },
-	            combo1Attack: {
-	                onAttack: { allowedState: 'both' }
-	            },
-	            combo1Chop: {
-	                onUseItem: { allowedState: 'both' }
-	            },
-	            dodgePrepare: {
-	                onSneak: { allowedState: 'both' }
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: { allowedState: 'both' }
-	            },
-	        }
-	    }
-
-	    resumeKamae = {
-	        transitions: {
-	            idle: {
-	                onEndOfLife: { hasTarget: false }
-	            },
-	            innoKamae: {
-	                onEndOfLife: { hasTarget: true }
-	            },
-	        }
-	    }
-
-	    running = {
-	        cast: Infinity,
-	        onEnter(pl, ctx) {
-	            ctx.releaseTarget(pl.xuid);
-	            ctx.task
-	                .queue(() => playAnim(pl, 'animation.weapon.ootachi.trans.idle.running'), 0)
-	                .queue(() => playAnim(pl, 'animation.weapon.ootachi.running', 'animation.weapon.ootachi.running'), 210)
-	                .run();
-	            
-	        },
-	        onLeave(_, ctx) {
-	            ctx.task.cancel();
-	        },
-	        transitions: {
-	            idle: {
-	                onChangeSprinting: { sprinting: false }
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: { allowedState: 'both' }
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    combo1Attack = {
-	        cast: 7,
-	        backswing: 13,
-	        timeline: {
-	            5: (_, ctx) => ctx.status.isBlocking = false,
-	            7: pl => playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1),
-	            14: (pl, ctx) => ctx.trap(pl, { tag: 'combo' })
-	        },
-	        onEnter(pl, ctx) {
-	            ctx.status.isBlocking = true;
-	            ctx.freeze(pl);
-	            ctx.task.queueList([
-	                { handler: () => ctx.adsorbOrSetVelocity(pl, 0.5, 90), timeout: 0 },
-	                { handler: () => ctx.adsorbOrSetVelocity(pl, 1, 90), timeout: 100 },
-	                { handler: () => ctx.adsorbOrSetVelocity(pl, 0.8, 90), timeout: 300 },
-	            ]).run();
-	            playAnim(pl, 'animation.weapon.ootachi.combo1.attack');
-	            ctx.lookAtTarget(pl);
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                radius: 3,
-	                angle: 45,
-	                rotation: -20,
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 18,
-	                    knockback: 1,
-	                });
-	            });
-	        },
-	        onLeave(_, ctx) {
-	            ctx.task.cancel();
-	        },
-	        transitions: {
-	            resumeKamae: {
-	                onEndOfLife: null,
-	                onBlock: null,
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'backswing'
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: { allowedState: 'both' }
-	            },
-	            combo2Cut: {
-	                onTrap: {
-	                    tag: 'combo',
-	                    hasTarget: true,
-	                    preInput: 'onAttack'
-	                }
-	            },
-	            combo2Sweap: {
-	                onTrap: {
-	                    tag: 'combo',
-	                    hasTarget: true,
-	                    preInput: 'onUseItem'
-	                }
-	            },
-	            blocked: {
-	                onBlocked: {
-	                    allowedState: 'backswing',
-	                }
-	            },
-	            block: {
-	                onBlock: null
-	            }
-	        }
-	    }
-
-	    combo1Chop = {
-	        cast: 11,
-	        backswing: 13,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            ctx.status.isWaitingParry = true;
-	            ctx.task.queueList([
-	                { handler: () => ctx.adsorbOrSetVelocity(pl, 1, 90), timeout: 0 },
-	                { handler: () => ctx.status.isWaitingParry = false, timeout: 150 },
-	                { handler: () => {
-	                    ctx.adsorbOrSetVelocity(pl, 1.2, 90);
-	                }, timeout: 50 },
-	                { handler: () => ctx.adsorbOrSetVelocity(pl, 0.5, 90), timeout: 400 },
-	            ]).run();
-	            playAnim(pl, 'animation.weapon.ootachi.combo1.chop');
-	            ctx.lookAtTarget(pl);
-	        },
-	        onAct(pl, ctx) {
-	            playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1);
-	            ctx.selectFromRange(pl, {
-	                radius: 3,
-	                angle: 120,
-	                rotation: -60,
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 24,
-	                    knockback: 1.5,
-	                });
-	            });
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.task.cancel();
-	        },
-	        timeline: {
-	            8: (pl, ctx) => {
-	                ctx.trap(pl, { tag: 'feint' });
-	            },
-	            10: (pl, ctx) => {
-	                ctx.trap(pl, { tag: 'hlit' });
-	            },
-	            17: (pl, ctx) => ctx.trap(pl, { tag: 'combo' })
-	        },
-	        transitions: {
-	            resumeKamae: {
-	                onTrap: {
-	                    tag: 'feint',
-	                    isOnGround: true,
-	                    preInput: 'onFeint'
-	                },
-	                onEndOfLife: null,
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            parry: {
-	                onParry: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'backswing'
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: { allowedState: 'both' }
-	            },
-	            combo2Cut: {
-	                onTrap: {
-	                    tag: 'combo',
-	                    hasTarget: true,
-	                    preInput: 'onAttack'
-	                }
-	            },
-	            combo2Sweap: {
-	                onTrap: {
-	                    tag: 'combo',
-	                    hasTarget: true,
-	                    preInput: 'onUseItem'
-	                }
-	            },
-	            hlitStrike: {
-	                onTrap: {
-	                    tag: 'hlit',
-	                    hasTarget: true,
-	                    preInput: 'onAttack'
-	                }
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    combo2Cut = {
-	        cast: 9,
-	        backswing: 17,
-	        onEnter(pl, ctx) {
-	            ctx.lookAtTarget(pl);
-	            ctx.freeze(pl);
-	            playAnim(pl, `animation.weapon.ootachi.combo2.cut.${
-	                ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'
-	            }`);
-	            ctx.adsorbOrSetVelocity(pl, 1, 90, 1.5);
-	        },
-	        onAct(pl, ctx) {
-	            playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1);
-	            ctx.selectFromRange(pl, {
-	                radius: 3.5,
-	                angle: 50,
-	                rotation: -25
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 20,
-	                    knockback: 1.2,
-	                    trace: true,
-	                });
-	            });
-	        },
-	        onLeave(_, ctx) {
-	            ctx.unfreeze(_);
-	            ctx.task.cancel();
-	        },
-	        timeline: {
-	            7: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90),
-	            16: (pl, ctx) => ctx.trap(pl, { tag: 'combo' })
-	        },
-	        transitions: {
-	            resumeKamae: {
-	                onEndOfLife: null,
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'backswing'
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: { allowedState: 'both' }
-	            },
-	            combo3Stab: {
-	                onTrap: {
-	                    tag: 'combo',
-	                    preInput: 'onAttack',
-	                    hasTarget: true,
-	                }
-	            },
-	            combo3Sweap: {
-	                onTrap: {
-	                    tag: 'combo',
-	                    preInput: 'onUseItem',
-	                    hasTarget: true,
-	                }
-	            },
-	            blocked: {
-	                onBlocked: {
-	                    allowedState: 'backswing',
-	                }
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    combo2Sweap = {
-	        cast: 12,
-	        backswing: 14,
-	        onEnter(pl, ctx) {
-	            ctx.lookAtTarget(pl);
-	            ctx.freeze(pl);
-	            ctx.status.hegemony = true;
-	            ctx.status.repulsible = false;
-	            playAnim(pl, `animation.weapon.ootachi.combo2.sweap.${
-	                ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'
-	            }`);
-	            ctx.adsorbOrSetVelocity(pl, 0.2, 90);
-	            ctx.task
-	                .queue(() => ctx.adsorbOrSetVelocity(pl, 1.2, 90), 200)
-	                .run();
-	        },
-	        onAct(pl, ctx) {
-	            playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1);
-	            ctx.selectFromRange(pl, {
-	                radius: 3,
-	                angle: 80,
-	                rotation: -40
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 28,
-	                    knockback: 1.2,
-	                });
-	            });
-	        },
-	        onLeave(_, ctx) {
-	            ctx.status.hegemony = false;
-	            ctx.status.repulsible = true;
-	            ctx.task.cancel();
-	            ctx.unfreeze(_);
-	        },
-	        timeline: {
-	            10: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
-	            20: (pl, ctx) => ctx.trap(pl, { tag: 'combo' }),
-	        },
-	        transitions: {
-	            resumeKamae: {
-	                onTrap: {
-	                    tag: 'feint',
-	                    isOnGround: true,
-	                    preInput: 'onFeint'
-	                },
-	                onEndOfLife: null,
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'backswing'
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: { allowedState: 'both' }
-	            },
-	            hurt: {
-	                onInterrupted: { allowedState: 'both' }
-	            },
-	            combo3Stab: {
-	                onTrap: {
-	                    tag: 'combo',
-	                    preInput: 'onAttack',
-	                    hasTarget: true,
-	                }
-	            },
-	            combo3Sweap: {
-	                onTrap: {
-	                    tag: 'combo',
-	                    preInput: 'onUseItem',
-	                    hasTarget: true,
-	                }
-	            },
-	        }
-	    }
-
-	    combo3Stab = {
-	        cast: 8,
-	        backswing: 17,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            playAnim(pl, `animation.weapon.ootachi.combo3.stab.${
-	                ctx.previousStatus === 'combo2Cut' ? 'l' : 'r'
-	            }`);
-	            ctx.task
-	                .queue(() => ctx.adsorbOrSetVelocity(pl, 0.5, 90), 0)
-	                .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 200)
-	                .run();
-	        },
-	        onAct(pl, ctx) {
-	            ctx.lookAtTarget(pl);
-	            playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1);
-	            ctx.selectFromRange(pl, {
-	                radius: 3.5,
-	                angle: 30,
-	                rotation: -15
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 16,
-	                    knockback: 0.8,
-	                });
-	            });
-	        },
-	        onLeave(_, ctx) {
-	            ctx.task.cancel();
-	            ctx.unfreeze(_);
-	        },
-	        transitions: {
-	            resumeKamae: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'backswing'
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: { allowedState: 'both' }
-	            },
-	            blocked: {
-	                onBlocked: {
-	                    allowedState: 'backswing',
-	                }
-	            },
-	        }
-	    }
-
-	    combo3Sweap = {
-	        cast: 16,
-	        backswing: 19,
-	        onEnter(pl, ctx) {
-	            ctx.lookAtTarget(pl);
-	            ctx.freeze(pl);
-	            ctx.adsorbOrSetVelocity(pl, 1, 90);
-	            playAnim(pl, `animation.weapon.ootachi.combo3.sweap.${
-	                ctx.previousStatus === 'combo2Cut' ? 'l' : 'r'
-	            }`);
-	            ctx.task
-	                .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 200)
-	                .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 280)
-	                .run();
-	        },
-	        onAct(pl, ctx) {
-	            playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1);
-	            ctx.selectFromRange(pl, {
-	                radius: 3.5,
-	                angle: 90,
-	                rotation: -45
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 35,
-	                    permeable: true,
-	                    knockback: 1.2,
-	                });
-	            });
-	        },
-	        onLeave(_, ctx) {
-	            ctx.task.cancel();
-	            ctx.unfreeze(_);
-	        },
-	        timeline: {
-	            10: (pl, ctx) => ctx.trap(pl)
-	        },
-	        transitions: {
-	            resumeKamae: {
-	                onEndOfLife: null,
-	                onTrap: {
-	                    isOnGround: true,
-	                    preInput: 'onFeint'
-	                }
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'backswing'
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: { allowedState: 'both' }
-	            },
-	        }
-	    }
-
-	    dodgePrepare = {
-	        cast: 0,
-	        backswing: 1,
-	        onEnter(pl, ctx) {
-	            ctx.movement(pl);
-	            ctx.getMoveDir(pl).then(direct => {
-	                direct = direct || 1;
-	                if (direct !== 1) {
-	                    ctx.setVelocity(pl, direct * 90, 2);
-	                } else {
-	                    ctx.adsorbToTarget(pl, 2);
-	                }
-	                direct !== 3 && ctx.adsorbToTarget(pl, 0.3);
-
-	                if (direct !== 3) {
-	                    playAnim(pl, 'animation.weapon.ootachi.dodge.front');
-	                } else {
-	                    playAnim(pl, 'animation.weapon.ootachi.dodge.back');
-	                }
-	            });
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.movement(pl, false);
-	        },
-	        transitions: {
-	            dodge: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            }
-	        }
-	    }
-
-	    dodge = {
-	        cast: 3,
-	        backswing: 5,
-	        onEnter(_, ctx) {
-	            ctx.status.isBlocking = true;
-	        },
-	        onAct(_, ctx) {
-	            ctx.status.isBlocking = false;
-	            ctx.status.isDodging = true;
-	        },
-	        onLeave(_, ctx) {
-	            ctx.status.isBlocking = false;
-	            ctx.status.isDodging = false;
-	        },
-	        timeline: {
-	            7: (_, ctx) => ctx.status.isDodging = false
-	        },
-	        transitions: {
-	            resumeKamae: {
-	                onEndOfLife: null
-	            },
-	            dodgeBlocking: {
-	                onBlock: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            hurt: {
-	                onHurt: { allowedState: 'both' }
-	            }
-	        }
-	    }
-
-	    dodgeBlocking = {
-	        cast: 0,
-	        onEnter(pl, ctx) {
-	            mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^^1^0.5`);
-	            mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^-0.1^1^0.5`);
-	            mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^0.1^1^0.5`);
-	            playSoundAll('weapon.heavy', pl.pos, 1);
-	        },
-	        transitions: {
-	            hlitStrike: {
-	                onEndOfLife: null
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    hlitStrike = {
-	        cast: 6,
-	        backswing: 4,
-	        onEnter(pl, ctx) {
-	            playAnim(pl, 'animation.weapon.ootachi.hlit');
-	            ctx.adsorbOrSetVelocity(pl, 3, 90, 0.5);
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                radius: 1.5,
-	                angle: 60,
-	                rotation: -30
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 8,
-	                    knockback: 3,
-	                    parryable: false,
-	                    permeable: true,
-	                    stiffness: 800,
-	                    shock: true,
-	                    powerful: true,
-	                });
-	            });
-	        },
-	        timeline: {
-	            9: (pl, ctx) => ctx.trap(pl)
-	        },
-	        transitions: {
-	            resumeKamae: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: { allowedState: 'both' }
-	            },
-	            combo3Stab: {
-	                onTrap: {
-	                    preInput: 'onAttack',
-	                    hasTarget: true,
-	                }
-	            },
-	            combo3Sweap: {
-	                onTrap: {
-	                    preInput: 'onUseItem',
-	                    hasTarget: true,
-	                }
-	            },
-	        }
-	    }
-	}
-
-	class OotachiTricks extends DefaultTrickModule {
-	    constructor() {
-	        super(
-	            'rgb39.weapon.ootachi',
-	            'idle',
-	            [ 'weapon:ootachi', 'weapon:ootachi_akaoni', 'weapon:ootachi_dragon' ]
-	        );
-	    }
-
-	    moves = new OotachiMoves()
-	}
-
-	ootachi = new OotachiTricks();
-	return ootachi;
-}
-
-var sheathed_katana;
-var hasRequiredSheathed_katana;
-
-function requireSheathed_katana () {
-	if (hasRequiredSheathed_katana) return sheathed_katana;
-	hasRequiredSheathed_katana = 1;
-	/// <reference path="../basic/types.d.ts"/>
-
-	const { playAnim } = requireBasic$1();
-
-	/**
-	 * @type {TrickModule}
-	 */
-	sheathed_katana = {
-	    sid: 'rgb39.weapon.katana',
-	    bind: 'weapon:katana',
-	    entry: 'default',
-	    moves: {
-	        default: {
-	            cast: Infinity,
-	            onEnter(pl, ctx) {
-	                ctx.status.isBlocking = true;
-	                playAnim(pl, 'animation.general.stand');
-	            },
-	            transitions: {
-	                blocking: {
-	                    onBlock: null
-	                },
-	                knockdown: {
-	                    onKnockdown: { allowedState: 'both' }
-	                },
-	            }
-	        },
-
-	        blocking: {
-	            cast: 5,
-	            onEnter(pl) {
-	                const side = Math.random() > 0.5 ? 'left' : 'right';
-	                playAnim(pl, 'animation.twohanded.block.' + side, 'animation.twohanded.block.' + side);
-	            },
-	            transitions: {
-	                default: { onEndOfLife: null },
-	                blocking: { onBlock: null },
-	                knockdown: {
-	                    onKnockdown: { allowedState: 'both' }
-	                },
-	            }
-	        },
-
-	        knockdown: {
-	            cast: 30,
-	            onEnter: (pl, ctx) => {
-	                ctx.freeze(pl);
-	                ctx.status.disableInputs([
-	                    'onAttack',
-	                    'onUseItem'
-	                ]);
-	                playAnim(pl, 'animation.general.fell');
-	            },
-	            onLeave(pl, ctx) {
-	                ctx.unfreeze(pl);
-	                playAnim(pl, 'animation.general.stand');
-	                ctx.status.enableInputs([
-	                    'onAttack',
-	                    'onUseItem'
-	                ]);
-	            },
-	            transitions: {
-	                default: {
-	                    onEndOfLife: null
-	                }
-	            }
-	        },
-	    }
-	};
-	return sheathed_katana;
-}
-
-var shield_with_sword;
-var hasRequiredShield_with_sword;
-
-function requireShield_with_sword () {
-	if (hasRequiredShield_with_sword) return shield_with_sword;
-	hasRequiredShield_with_sword = 1;
-	const { playAnim, playSoundAll } = requireBasic$1();
-	const { DefaultMoves, DefaultTrickModule } = require_default$1();
-	requireMain$1();
-	const { constrictCalc, randomRange } = requireMath();
-	requireHud();
-
-	class ShieldSwordTricks extends DefaultTrickModule {
-	    constructor() {
-	        super(
-	            'rgb39.weapon.shield_sword',
-	            'idle',
-	            [ 'weapon:shield_with_sword' ]
-	        );
-	    }
-
-	    moves = new ShieldSwordMoves()
-	}
-
-	class ShieldSwordMoves extends DefaultMoves {
-	    constructor() {
-	        super();
-
-	        this.animations.parry = 'animation.weapon.shield_with_sword.parry';
-
-	        this.setup('idle');
-
-	        this.setTransition('parry', 'draw', {
-	            draw: {
-	                onTrap: {
-	                    tag: 'parryCounter',
-	                    preInput: 'onUseItem',
-	                }
-	            }
-	        });
-
-	        this.setTransition('parry', 'shieldStrike', {
-	            onTrap: {
-	                tag: 'parryCounter',
-	                preInput: 'onAttack',
-	            }
-	        });
-
-	        this.block =  {
-	            cast: 7,
-	            onEnter(pl, ctx) {
-	                playSoundAll(`weapon.sheild.hit${randomRange(1, 3, true)}`, pl.pos, 1);
-	                ctx.status.isBlocking = true;
-	                ctx.freeze(pl);
-	                ctx.lookAtTarget(pl);
-	                playAnim(pl, 'animation.weapon.shield_with_sword.block');
-	            },
-	            onLeave(pl, ctx) {
-	                ctx.status.isBlocking = false;
-	                ctx.unfreeze(pl);
-	            },
-	            timeline: {
-	                6: (pl, ctx) => ctx.trap(pl)
-	            },
-	            transitions: {
-	                hurt: {
-	                    onHurt: null,
-	                },
-	                block: {
-	                    onBlock: null
-	                },
-	                blocking: {
-	                    onEndOfLife: {
-	                        isSneaking: true
-	                    }
-	                },
-	                afterBlocking: {
-	                    onEndOfLife: {
-	                        isSneaking: false
-	                    }
-	                },
-	                swordCounter: {
-	                    onTrap: {
-	                        preInput: 'onAttack',
-	                        allowedState: 'both',
-	                        hasTarget: true,
-	                    }
-	                },
-	                knockdown: {
-	                    onKnockdown: null
-	                },
-	            },
-	        };
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    draw = {
-	        cast: 10,
-	        backswing: 11,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            playAnim(pl, 'animation.weapon.shield_with_sword.draw');
-	            ctx.task.queueList([
-	                { handler() { ctx.status.isWaitingParry = true; }, timeout: 0 },
-	                { handler() { ctx.status.isWaitingParry = false; }, timeout: 150 },
-	            ]).run();
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	            ctx.task.cancel();
-	        },
-	        onAct(pl, ctx) {
-	            playSoundAll(`weapon.woosh.${randomRange(1, 3, true)}`, pl.pos, 1);
-	            ctx.selectFromRange(pl, {
-	                radius: 2.8,
-	                angle: 60,
-	                rotation: -30
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 14,
-	                    knockback: 0.5
-	                });
-	            });
-	        },
-	        timeline: {
-	            0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.5, 90),
-	            3: (pl, ctx) => ctx.lookAtTarget(pl),
-	            4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
-	            16: (pl, ctx) => ctx.trap(pl)
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: null
-	            },
-	            idle: {
-	                onEndOfLife: null
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'backswing'
-	                }
-	            },
-	            punch: {
-	                onTrap: {
-	                    preInput: 'onAttack',
-	                    allowedState: 'backswing',
-	                }
-	            },
-	            heavyChopPre: {
-	                onTrap: {
-	                    preInput: 'onUseItem',
-	                    allowedState: 'backswing',
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	            parry: {
-	                onParry: null
-	            },
-	            blocked: {
-	                onBlocked: {
-	                    allowedState: 'backswing',
-	                }
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    heavyChopPre = {
-	        cast: 5,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            playAnim(pl, 'animation.weapon.shield_with_sword.heavy_chop_pre');
-	            ctx.adsorbToTarget(pl, 5, 1);
-	        },
-	        timeline: {
-	            4: (pl, ctx) => ctx.trap(pl)
-	        },
-	        transitions: {
-	            idle: {
-	                onTrap: {
-	                    preInput: 'onFeint',
-	                    allowedState: 'both',
-	                }
-	            },
-	            heavyChopAct: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: null
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    heavyChopAct = {
-	        cast: 5,
-	        backswing: 8,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            ctx.adsorbOrSetVelocity(pl, 1, 90);
-	            playAnim(pl, 'animation.weapon.shield_with_sword.heavy_chop_act');
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        onAct(pl, ctx) {
-	            playSoundAll(`weapon.woosh.${randomRange(3, 5, true)}`, pl.pos, 1);
-	            ctx.selectFromRange(pl, {
-	                angle: 40,
-	                rotation: -20,
-	                radius: 3.2
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 20,
-	                    knockback: 1.5,
-	                    trace: true,
-	                });
-	            });
-	        },
-	        timeline: {
-	            3: (pl, ctx) => ctx.lookAtTarget(pl)
-	        },
-	        transitions: {
-	            idle: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: null
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'backswing'
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    shieldStrike = {
-	        cast: 10,
-	        backswing: 15,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            playAnim(pl, 'animation.weapon.shield_with_sword.shield_strike');
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                radius: 2.2,
-	                angle: 120,
-	                rotation: -60
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 4,
-	                    permeable: true,
-	                    parryable: false,
-	                    knockback: 0,
-	                });
-	            });
-	        },
-	        timeline: {
-	            2: (pl, ctx) => ctx.lookAtTarget(pl),
-	            0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.8, 90, 1),
-	            6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2.6, 90, 1),
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: null
-	            },
-	            punchSomeone: {
-	                onHit: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            idle: {
-	                onEndOfLife: null
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    punch = {
-	        cast: 10,
-	        backswing: 15,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            playAnim(pl, 'animation.weapon.shield_with_sword.punch');
-	            
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                radius: 2.2,
-	                angle: 120,
-	                rotation: -60
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 4,
-	                    permeable: true,
-	                    parryable: false,
-	                    knockback: 0.05,
-	                });
-	            });
-	        },
-	        timeline: {
-	            0: (pl, ctx) => ctx.lookAtTarget(pl),
-	            2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 3, 90, 1),
-	            12: (pl, ctx) => ctx.trap(pl),
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: null,
-	            },
-	            idle: {
-	                onEndOfLife: null
-	            },
-	            punchSomeone: {
-	                onHit: {
-	                    allowedState: 'backswing'
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    punchSomeone = {
-	        cast: 15,
-	        onEnter(pl, ctx) {
-	            playSoundAll(`weapon.sheild.hit${randomRange(1, 3, true)}`, pl.pos, 0.5);
-	            ctx.trap(pl);
-	        },
-	        transitions: {
-	            chopCombo: {
-	                onTrap: {
-	                    preInput: 'onUseItem',
-	                    allowedState: 'both'
-	                }
-	            },
-	            idle: {
-	                onEndOfLife: null
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    chopCombo = {
-	        cast: 5,
-	        backswing: 7,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            playAnim(pl, 'animation.weapon.shield_with_sword.chop_combo');
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        onAct(pl, ctx) {
-	            playSoundAll(`weapon.woosh.${randomRange(1, 2, true)}`, pl.pos, 1);
-	            ctx.selectFromRange(pl, {
-	                radius: 3,
-	                angle: 46,
-	                rotation: -23
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 14,
-	                    knockback: 0.5
-	                });
-	            });
-	        },
-	        timeline: {
-	            2: (pl, ctx) => ctx.adsorbToTarget(pl),
-	            0: (pl, ctx) => ctx.lookAtTarget(pl),
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: null
-	            },
-	            idle: {
-	                onEndOfLife: null
-	            },
-	            parried: {
-	                onParried: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    idle = {
-	        cast: Infinity,
-	        onEnter(pl, ctx) {
-	            ctx.trap(pl);
-	            ctx.unfreeze(pl);
-	            playAnim(pl, 'animation.weapon.shield_with_sword.idle', 'animation.weapon.shield_with_sword.idle');
-	            pl.setSprinting(false);
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: null,
-	            },
-	            running: {
-	                onChangeSprinting: { sprinting: true }
-	            },
-	            beforeBlocking: {
-	                onSneak: {
-	                    isSneaking: true,
-	                },
-	                onTrap: {
-	                    preInput: 'onSneak',
-	                    isSneaking: true,
-	                }
-	            },
-	            draw: {
-	                onUseItem: {
-	                    hasTarget: true,
-	                }
-	            },
-	            shieldStrike: {
-	                onAttack: null
-	            },
-	            jump: {
-	                onJump: null
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    jump = {
-	        onEnter(pl, ctx) {
-	            ctx.releaseTarget(pl.xuid);
-	        },
-	        transitions: {
-	            idle: {
-	                onEndOfLife: null
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    running = {
-	        cast: Infinity,
-	        onEnter(pl, ctx) {
-	            playAnim(pl, 'animation.weapon.shield_with_sword.running', 'animation.weapon.shield_with_sword.running');
-	            ctx.releaseTarget(pl.xuid);
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: null,
-	            },
-	            idle: {
-	                onChangeSprinting: { sprinting: false }
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    beforeBlocking = {
-	        cast: 2,
-	        onEnter(pl) {
-	            playAnim(pl, 'animation.weapon.shield_with_sword.idle_to_blocking');
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: null,
-	            },
-	            blocking: {
-	                onEndOfLife: {
-	                    isSneaking: true
-	                }
-	            },
-	            afterBlocking: {
-	                onEndOfLife: {
-	                    isSneaking: false
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    blocking = {
-	        cast: Infinity,
-	        onEnter(pl, ctx) {
-	            ctx.status.isBlocking = true;
-	            playAnim(pl, 'animation.weapon.shield_with_sword.blocking', 'animation.weapon.shield_with_sword.blocking');
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.status.isBlocking = false;
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: null,
-	            },
-	            running: {
-	                onChangeSprinting: { sprinting: true }
-	            },
-	            afterBlocking: {
-	                onSneak: {
-	                    isSneaking: false
-	                },
-	            },
-	            block: {
-	                onBlock: null
-	            },
-	            rockSolid: {
-	                onUseItem: {
-	                    hasTarget: true
-	                }
-	            },
-	            jump: {
-	                onJump: null
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    rockSolid = {
-	        cast: 4,
-	        backswing: 7,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            ctx.status.repulsible = false;
-	            playAnim(pl, 'animation.weapon.shield_with_sword.rock_solid');
-	        },
-	        onAct(pl, ctx) {
-	            ctx.status.repulsible = true;
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        transitions: {
-	            idle: {
-	                onEndOfLife: {
-	                    isSneaking: false
-	                }
-	            },
-	            sweapCounter: {
-	                onHurt: {
-	                    allowedState: 'cast',
-	                    prevent: true,
-	                },
-	                onKnockdown: {
-	                    allowedState: 'cast'
-	                },
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'backswing'
-	                }
-	            },
-	            knockdown: {
-	                onKnockdown: {
-	                    allowedState: 'backswing'
-	                }
-	            },
-	            beforeBlocking: {
-	                onEndOfLife: {
-	                    isSneaking: true
-	                }
-	            }
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    sweapCounter = {
-	        cast: 11,
-	        backswing: 10,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            ctx.adsorbToTarget(pl, 4, 0.5);
-	            playAnim(pl, 'animation.weapon.shield_with_sword.sweap_counter');
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        onAct(pl, ctx) {
-	            ctx.lookAtTarget(pl);
-	            ctx.selectFromRange(pl, {
-	                radius: 3,
-	                angle: 120,
-	                rotation: -90,
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 24,
-	                    parryable: false,
-	                    permeable: true,
-	                    knockback: 1.5,
-	                });
-	            });
-	        },
-	        timeline: {
-	            4: (pl, ctx) => {
-	                ctx.selectFromRange(pl, {
-	                    radius: 2.5,
-	                    angle: 120,
-	                    rotation: -60,
-	                }).forEach(en => {
-	                    ctx.attack(pl, en, {
-	                        damage: 4,
-	                        parryable: false,
-	                        permeable: true,
-	                        knockback: 0.05,
-	                    });
-	                });
-	            },
-
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: null
-	            },
-	            idle: {
-	                onEndOfLife: null
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    afterBlocking = {
-	        cast: 3,
-	        onEnter(pl) {
-	            playAnim(pl, 'animation.weapon.shield_with_sword.blocking_to_idle');
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: null,
-	            },
-	            idle: {
-	                onEndOfLife: null
-	            },
-	            knockdown: {
-	                onKnockdown: null
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    swordCounter = {
-	        cast: 6,
-	        backswing: 7,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            ctx.lookAtTarget(pl);
-	            playAnim(pl, 'animation.weapon.shield_with_sword.sword_counter');
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        onAct(pl, ctx) {
-	            playSoundAll(`weapon.woosh.${randomRange(1,3, true)}`, pl.pos, 1);
-	            ctx.selectFromRange(pl, {
-	                angle: 30,
-	                rotation: -15,
-	                radius: 3.5,
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 12,
-	                    knockback: 1,
-	                    parryable: false,
-	                    permeable: true,
-	                });
-	            });
-	        },
-	        timeline: {
-	            3: (pl, ctx) => {
-	                ctx.adsorbToTarget(pl, 2, 0.8);
-	            }
-	        },
-	        transitions: {
-	            hurt: {
-	                onHurt: null,
-	            },
-	            idle: {
-	                onEndOfLife: {
-	                    isSneaking: false
-	                },
-	            },
-	            blocking: {
-	                onEndOfLife: {
-	                    isSneaking: true
-	                },
-	            }
-	        }
-	    }
-	}
-
-	shield_with_sword = new ShieldSwordTricks();
-	return shield_with_sword;
-}
-
-var uchigatana;
-var hasRequiredUchigatana;
-
-function requireUchigatana () {
-	if (hasRequiredUchigatana) return uchigatana;
-	hasRequiredUchigatana = 1;
-	/// <reference path="../basic/types.d.ts"/>
-
-	const { playAnim } = requireBasic$1();
-	const { DefaultMoves, DefaultTrickModule } = require_default$1();
-	requireMain$1();
-
-	class UchigatanaMoves extends DefaultMoves {
-	    /**
-	     * @type {Move}
-	     */
-	    hold = {
-	        cast: Infinity,
-	        onEnter(pl, ctx) {
-	            ctx.releaseTarget(pl.xuid);
-	            playAnim(pl, 'animation.weapon.uchigatana.hold', 'animation.weapon.uchigatana.hold');
-	        },
-	        transitions: {
-	            kamae: {
-	                onLock: null,
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    kamae = {
-	        cast: Infinity,
-	        onEnter(pl) {
-	            playAnim(pl, 'animation.weapon.uchigatana.kamae', 'animation.weapon.uchigatana.kamae');
-	        },
-	        transitions: {
-	            hold: {
-	                onReleaseLock: null,
-	                onChangeSprinting: null,
-	                onJump: null,
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            attack1: {
-	                onAttack: {
-	                    hasTarget: true
-	                },
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    resume = {
-	        transitions: {
-	            hold: {
-	                onEndOfLife: {
-	                    hasTarget: false
-	                }
-	            },
-	            kamae: {
-	                onEndOfLife: {
-	                    hasTarget: true
-	                }
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    attack1 = {
-	        cast: 8,
-	        backswing: 13,
-	        onEnter(pl, ctx) {
-	            ctx.status.isBlocking = true;
-	            ctx.freeze(pl);
-	            ctx.lookAtTarget(pl);
-	            playAnim(pl, 'animation.weapon.uchigatana.attack1');
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 12,
-	                });
-	            });
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	            ctx.status.isBlocking = false;
-	        },
-	        timeline: {
-	            0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.5, 90),
-	            4: (_, ctx) => ctx.status.isBlocking = false,
-	            5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
-	            12: (pl, ctx) => ctx.trap(pl)
-	        },
-	        transitions: {
-	            block: {
-	                onBlock: null
-	            },
-	            resume: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            attack2: {
-	                onTrap: {
-	                    preInput: 'onUseItem',
-	                }
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            blocked: {
-	                onBlocked: {
-	                    allowedState: 'both'
-	                }
-	            },
-	        }
-	    }
-
-	    /**
-	     * @type {Move}
-	     */
-	    attack2 = {
-	        cast: 12,
-	        backswing: 14,
-	        onEnter(pl, ctx) {
-	            ctx.freeze(pl);
-	            ctx.lookAtTarget(pl);
-	            playAnim(pl, 'animation.weapon.uchigatana.attack2');
-	        },
-	        onAct(pl, ctx) {
-	            ctx.selectFromRange(pl, {
-	                radius: 3,
-	                angle: 180,
-	                rotation: -90,
-	            }).forEach(en => {
-	                ctx.attack(pl, en, {
-	                    damage: 24,
-	                });
-	            });
-	        },
-	        onLeave(pl, ctx) {
-	            ctx.unfreeze(pl);
-	        },
-	        timeline: {
-	            3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
-	            8: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2.2, 90),
-	        },
-	        transitions: {
-	            block: {
-	                onBlock: null
-	            },
-	            resume: {
-	                onEndOfLife: null
-	            },
-	            hurt: {
-	                onHurt: {
-	                    allowedState: 'both'
-	                }
-	            },
-	            parried: {
-	                onParried: {
-	                    allowedState: 'both'
-	                }
-	            },
-	        }
-	    }
-
-	    constructor() {
-	        super();
-
-	        this.setup('resume');
-	    }
-	}
-
-	class UchigatanaModule extends DefaultTrickModule {
-	    constructor() {
-	        super(
-	            'rgb39.weapon.empty_hand',
-	            'hold',
-	            [ 'weapon:uchigatana' ]
-	        );
-	    }
-
-	    moves = new UchigatanaMoves()
-	}
-
-	/**
-	 * @type {TrickModule}
-	 */
-	uchigatana = new UchigatanaModule();
-	return uchigatana;
-}
-
-var main = {exports: {}};
-
 var events = {};
 
 var hasRequiredEvents;
@@ -7122,6 +528,243 @@ function requireEvents () {
 	events.AsyncShortCircuitHook = AsyncShortCircuitHook;
 	return events;
 }
+
+/**
+ * @typedef {{[p: string]: keyof typeof stringParamTypeMap | `!${keyof typeof stringParamTypeMap}`}} ParamType
+ */
+
+var command;
+var hasRequiredCommand;
+
+function requireCommand () {
+	if (hasRequiredCommand) return command;
+	hasRequiredCommand = 1;
+	const stringParamTypeMap = {
+	    bool: 0,
+	    int: 1,
+	    float: 2,
+	    string: 3,
+	    entity: 4,
+	    player: 5,
+	    xyz: 6,
+	    pos: 7,
+	    vec: 7,
+	    text: 8,
+	    message: 9,
+	    json: 10,
+	    item: 11,
+	    block: 12,
+	    effect: 13,
+	    enum: 14,
+	    // softEnum: 15,
+	    entities: 16,
+	    command: 17
+	};
+
+	const matchers = {
+	    required: /^<([\w:]+)>$/,
+	    optional: /^\[([\w:]+)\]$/,
+	};
+
+	/**
+	 * @param {number} index 
+	 * @param {keyof typeof stringParamTypeMap} type 
+	 * @param {string} id 
+	 * @param {boolean} isOptional 
+	 */
+	function newToken(index, type='enum', id, isOptional=true) {
+	    return {
+	        index, type, id, isOptional
+	    }
+	}
+
+	/**
+	 * @param {string} str 
+	 */
+	function parseCmdStr(str) {
+	    const frags = str.split(/ +/);
+	    const tokens = [];
+
+	    frags.forEach((frag, i) => {
+	        let res, isOptional = -1;
+	        if (res = matchers.required.exec(frag)) {
+	            isOptional = 0;
+	        } else if (res = matchers.optional.exec(frag)) {
+	            isOptional = 1;
+	        }
+
+	        if (isOptional !== -1) {
+	            const data = res[1];
+	            const typeDef = data.split(':');
+	            tokens.push(newToken(
+	                i, typeDef[1], typeDef[0], !!isOptional
+	            ));
+	            return
+	        }
+
+	        tokens.push(newToken(
+	            i, 'enum', frag, false
+	        ));
+	    });
+
+	    return tokens
+	}
+
+	/**
+	 * @param {ParamType[]} arr 
+	 */
+	function parseCmdArr(arr) {
+	    const tokens = [];
+
+	    arr.forEach((el, i) => {
+	        const [id, typeDesc] = Object.entries(el)[0];
+	        let isOptional = true
+	            ,type = typeDesc;
+	        
+	        if (typeDesc.startsWith('!')) {
+	            isOptional = false;
+	            type = typeDesc.slice(1);
+	        }
+
+	        tokens.push(newToken(
+	            i, type, id, isOptional
+	        ));
+	    });
+
+	    return tokens
+	}
+
+	class Registry {
+	    /**@private*/ _cmd = null
+	    /**@private*/ _tokenListCollection = new Set()
+	    /**@private*/ _handlerCollection = []
+
+	    constructor(cmd) {
+	        this._cmd = cmd;
+	    }
+
+	    /**@private*/ getCollection(len) {
+	        return this._handlerCollection[len] ?? (this._handlerCollection[len] = [])
+	    }
+
+	    /**
+	     * @param {string | ParamType[]} cmd 
+	     * @param {(cmd: any, origin: any, output: any, result: any) => void} handler 
+	     */
+	    register(cmd, handler) {
+	        if (!cmd || !handler) {
+	            return this
+	        }
+
+	        const tokens = typeof cmd === 'string' 
+	            ? parseCmdStr(cmd)
+	            : parseCmdArr(cmd);
+
+	        this._tokenListCollection.add(tokens);
+
+	        const len = tokens.length;
+	        const finalList = tokens.reduce((pre, cur, i) => {
+	            if (cur.isOptional) {
+	                this.getCollection(pre.length)
+	                    .push([pre.map(t => t.id), handler]);
+	            }
+
+	            return pre.concat(cur)
+	        }, []);
+
+	        this.getCollection(len)
+	            .push([finalList.map(l => l.id), handler]);
+
+	        return this
+	    }
+
+	    submit() {
+	        this._tokenListCollection.forEach(tokens => {
+	            let ids = [];
+
+	            for (const {id, type, isOptional} of tokens) {
+	                this.createArg(id, type, isOptional);
+	                ids.push(id);
+	            }
+
+	            this._cmd.overload(ids);
+	        });
+
+	        this.setCallback();
+	        this._cmd.setup();
+	    }
+
+	    /**@private*/ sameArr(arr1, arr2) {
+	        if (arr1.length !== arr2.length) {
+	            return false
+	        }
+
+	        return new Set(arr1.concat(arr2)).size === arr1.length 
+	    }
+
+	    /**@private*/ setCallback() {
+	        this._cmd.setCallback((cmd, origin, out, args) => {
+	            const argv = Object
+	                .keys(args)
+	                .filter(v => args[v]);
+
+	            const pairs = this._handlerCollection[argv.length];
+	            const [_, handler] = pairs.find(([ids]) => this.sameArr(argv, ids)) || [, Function.prototype];
+	            
+	            handler.call(undefined, cmd, origin, out, args);
+	        });
+	    }
+
+	    /**@private*/ createArg(name, type, isOptional) {
+	        const createCmdVariable = enumId => {
+	            let extArgs = enumId ? [enumId, name, 1] : [];
+
+	            return isOptional
+	                ? this._cmd.optional(name, stringParamTypeMap[type], ...extArgs)
+	                : this._cmd.mandatory(name, stringParamTypeMap[type], ...extArgs)
+	        };
+	        
+	        let enumId = null;
+
+	        if (type === 'enum') {
+	            enumId = `enum_${name}`;
+	            this._cmd.setEnum(enumId, [name]);
+	        }
+
+	        return createCmdVariable(enumId)
+	    }
+	}
+
+	/**
+	 * @param {string} head 
+	 * @param {string} desc 
+	 * @param {0|1|2} [perm] 0 普通，1 管理员，2 控制台
+	 * @param {number} [flag] 
+	 * @param {string} [alias] 
+	 */
+	function cmd(head, desc, perm=1) {
+	    const command = mc.newCommand(head, desc, perm);
+	    const registry = new Registry(command);
+
+	    return {
+	        /**
+	         * @param {(registry: Registry) => void | Promise<void>} executor 
+	         */
+	        setup: executor => {
+	            executor.call(
+	                undefined, registry
+	            );
+	        }
+	    }
+	}
+
+	command = {
+	    cmd, Registry
+	};
+	return command;
+}
+
+var main = {exports: {}};
 
 var console_1;
 var hasRequiredConsole;
@@ -8214,277 +1857,6 @@ function requireMain () {
 	return main.exports;
 }
 
-var basic;
-var hasRequiredBasic;
-
-function requireBasic () {
-	if (hasRequiredBasic) return basic;
-	hasRequiredBasic = 1;
-	requireMain();
-
-	function playAnim(pl, anim, nextAnim, time, stopExp, controller) {
-	    mc.runcmdEx(`/playanimation "${pl.name}" ` + [anim, nextAnim, time, stopExp, controller].filter(x => x).join(' '));
-	}
-
-	function playSound(pl, sound, pos, volume, pitch, minVolume) {
-	    mc.runcmdEx(`/playsound ${sound} ${pl.name} ` + [
-	        pos.x, pos.y, pos.z, volume, pitch, minVolume
-	    ].join(' '));
-	}
-
-	function playSoundAll(sound, pos, volume, pitch, minVolume) {
-	    mc.runcmdEx(`/playsound ${sound} @a ` + [
-	        pos.x, pos.y, pos.z, volume, pitch, minVolume
-	    ].join(' '));
-	}
-
-	function playParticle(particle, pos) {
-	    mc.runcmdEx(`/particle ${particle} ` + [
-	        pos.x, pos.y, pos.z
-	    ].join(' '));
-	}
-
-	basic = {
-	    playAnim, playSound, playSoundAll, playParticle,
-	};
-	return basic;
-}
-
-/**
- * @typedef {{[p: string]: keyof typeof stringParamTypeMap | `!${keyof typeof stringParamTypeMap}`}} ParamType
- */
-
-var command;
-var hasRequiredCommand;
-
-function requireCommand () {
-	if (hasRequiredCommand) return command;
-	hasRequiredCommand = 1;
-	const stringParamTypeMap = {
-	    bool: 0,
-	    int: 1,
-	    float: 2,
-	    string: 3,
-	    entity: 4,
-	    player: 5,
-	    xyz: 6,
-	    pos: 7,
-	    vec: 7,
-	    text: 8,
-	    message: 9,
-	    json: 10,
-	    item: 11,
-	    block: 12,
-	    effect: 13,
-	    enum: 14,
-	    // softEnum: 15,
-	    entities: 16,
-	    command: 17
-	};
-
-	const matchers = {
-	    required: /^<([\w:]+)>$/,
-	    optional: /^\[([\w:]+)\]$/,
-	};
-
-	/**
-	 * @param {number} index 
-	 * @param {keyof typeof stringParamTypeMap} type 
-	 * @param {string} id 
-	 * @param {boolean} isOptional 
-	 */
-	function newToken(index, type='enum', id, isOptional=true) {
-	    return {
-	        index, type, id, isOptional
-	    }
-	}
-
-	/**
-	 * @param {string} str 
-	 */
-	function parseCmdStr(str) {
-	    const frags = str.split(/ +/);
-	    const tokens = [];
-
-	    frags.forEach((frag, i) => {
-	        let res, isOptional = -1;
-	        if (res = matchers.required.exec(frag)) {
-	            isOptional = 0;
-	        } else if (res = matchers.optional.exec(frag)) {
-	            isOptional = 1;
-	        }
-
-	        if (isOptional !== -1) {
-	            const data = res[1];
-	            const typeDef = data.split(':');
-	            tokens.push(newToken(
-	                i, typeDef[1], typeDef[0], !!isOptional
-	            ));
-	            return
-	        }
-
-	        tokens.push(newToken(
-	            i, 'enum', frag, false
-	        ));
-	    });
-
-	    return tokens
-	}
-
-	/**
-	 * @param {ParamType[]} arr 
-	 */
-	function parseCmdArr(arr) {
-	    const tokens = [];
-
-	    arr.forEach((el, i) => {
-	        const [id, typeDesc] = Object.entries(el)[0];
-	        let isOptional = true
-	            ,type = typeDesc;
-	        
-	        if (typeDesc.startsWith('!')) {
-	            isOptional = false;
-	            type = typeDesc.slice(1);
-	        }
-
-	        tokens.push(newToken(
-	            i, type, id, isOptional
-	        ));
-	    });
-
-	    return tokens
-	}
-
-	class Registry {
-	    /**@private*/ _cmd = null
-	    /**@private*/ _tokenListCollection = new Set()
-	    /**@private*/ _handlerCollection = []
-
-	    constructor(cmd) {
-	        this._cmd = cmd;
-	    }
-
-	    /**@private*/ getCollection(len) {
-	        return this._handlerCollection[len] ?? (this._handlerCollection[len] = [])
-	    }
-
-	    /**
-	     * @param {string | ParamType[]} cmd 
-	     * @param {(cmd: any, origin: any, output: any, result: any) => void} handler 
-	     */
-	    register(cmd, handler) {
-	        if (!cmd || !handler) {
-	            return this
-	        }
-
-	        const tokens = typeof cmd === 'string' 
-	            ? parseCmdStr(cmd)
-	            : parseCmdArr(cmd);
-
-	        this._tokenListCollection.add(tokens);
-
-	        const len = tokens.length;
-	        const finalList = tokens.reduce((pre, cur, i) => {
-	            if (cur.isOptional) {
-	                this.getCollection(pre.length)
-	                    .push([pre.map(t => t.id), handler]);
-	            }
-
-	            return pre.concat(cur)
-	        }, []);
-
-	        this.getCollection(len)
-	            .push([finalList.map(l => l.id), handler]);
-
-	        return this
-	    }
-
-	    submit() {
-	        this._tokenListCollection.forEach(tokens => {
-	            let ids = [];
-
-	            for (const {id, type, isOptional} of tokens) {
-	                this.createArg(id, type, isOptional);
-	                ids.push(id);
-	            }
-
-	            this._cmd.overload(ids);
-	        });
-
-	        this.setCallback();
-	        this._cmd.setup();
-	    }
-
-	    /**@private*/ sameArr(arr1, arr2) {
-	        if (arr1.length !== arr2.length) {
-	            return false
-	        }
-
-	        return new Set(arr1.concat(arr2)).size === arr1.length 
-	    }
-
-	    /**@private*/ setCallback() {
-	        this._cmd.setCallback((cmd, origin, out, args) => {
-	            const argv = Object
-	                .keys(args)
-	                .filter(v => args[v]);
-
-	            const pairs = this._handlerCollection[argv.length];
-	            const [_, handler] = pairs.find(([ids]) => this.sameArr(argv, ids)) || [, Function.prototype];
-	            
-	            handler.call(undefined, cmd, origin, out, args);
-	        });
-	    }
-
-	    /**@private*/ createArg(name, type, isOptional) {
-	        const createCmdVariable = enumId => {
-	            let extArgs = enumId ? [enumId, name, 1] : [];
-
-	            return isOptional
-	                ? this._cmd.optional(name, stringParamTypeMap[type], ...extArgs)
-	                : this._cmd.mandatory(name, stringParamTypeMap[type], ...extArgs)
-	        };
-	        
-	        let enumId = null;
-
-	        if (type === 'enum') {
-	            enumId = `enum_${name}`;
-	            this._cmd.setEnum(enumId, [name]);
-	        }
-
-	        return createCmdVariable(enumId)
-	    }
-	}
-
-	/**
-	 * @param {string} head 
-	 * @param {string} desc 
-	 * @param {0|1|2} [perm] 0 普通，1 管理员，2 控制台
-	 * @param {number} [flag] 
-	 * @param {string} [alias] 
-	 */
-	function cmd(head, desc, perm=1) {
-	    const command = mc.newCommand(head, desc, perm);
-	    const registry = new Registry(command);
-
-	    return {
-	        /**
-	         * @param {(registry: Registry) => void | Promise<void>} executor 
-	         */
-	        setup: executor => {
-	            executor.call(
-	                undefined, registry
-	            );
-	        }
-	    }
-	}
-
-	command = {
-	    cmd, Registry
-	};
-	return command;
-}
-
 var server;
 var hasRequiredServer;
 
@@ -8545,7 +1917,6 @@ function requireSetup () {
 	const { EventEmitter } = requireEvents();
 	const { cmd } = requireCommand();
 	const { createServer } = requireServer();
-	requireMain();
 
 	const em = new EventEmitter();
 	const rpcChannel = [];
@@ -8635,6 +2006,42 @@ function requireSetup () {
 	    setup, unload, remote
 	};
 	return setup_1;
+}
+
+var basic;
+var hasRequiredBasic;
+
+function requireBasic () {
+	if (hasRequiredBasic) return basic;
+	hasRequiredBasic = 1;
+	requireMain();
+
+	function playAnim(pl, anim, nextAnim, time, stopExp, controller) {
+	    mc.runcmdEx(`/playanimation "${pl.name}" ` + [anim, nextAnim, time, stopExp, controller].filter(x => x).join(' '));
+	}
+
+	function playSound(pl, sound, pos, volume, pitch, minVolume) {
+	    mc.runcmdEx(`/playsound ${sound} ${pl.name} ` + [
+	        pos.x, pos.y, pos.z, volume, pitch, minVolume
+	    ].join(' '));
+	}
+
+	function playSoundAll(sound, pos, volume, pitch, minVolume) {
+	    mc.runcmdEx(`/playsound ${sound} @a ` + [
+	        pos.x, pos.y, pos.z, volume, pitch, minVolume
+	    ].join(' '));
+	}
+
+	function playParticle(particle, pos) {
+	    mc.runcmdEx(`/particle ${particle} ` + [
+	        pos.x, pos.y, pos.z
+	    ].join(' '));
+	}
+
+	basic = {
+	    playAnim, playSound, playSoundAll, playParticle,
+	};
+	return basic;
 }
 
 var kinematics;
@@ -8731,6 +2138,125 @@ function requireKinematic () {
 	return kinematic;
 }
 
+var status_1;
+var hasRequiredStatus;
+
+function requireStatus () {
+	if (hasRequiredStatus) return status_1;
+	hasRequiredStatus = 1;
+	/// <reference path="../types.d.ts"/>
+	requireMain();
+
+	const defaultAcceptableInputs = [
+	    'onJump', 'onSneak', 'onAttack', 'onUseItem',
+	    'onChangeSprinting', 'onFeint'
+	];
+
+	/**@type {PlayerStatus}*/
+	class Status {
+	    /**
+	     * @type {Map<string, PlayerStatus>}
+	     */
+	    static status = new Map()
+	    /**
+	     * @param {string} xuid 
+	     * @returns {PlayerStatus}
+	     */
+	    static get(xuid) {
+	        return this.status.get(xuid) ?? new Status(xuid)
+	    }
+
+	    hand = 'minecraft:air'
+	    status = 'unknown'
+	    duration = 0
+	    repulsible = true
+	    acceptableInputs = new Set(defaultAcceptableInputs)
+	    stamina = 0
+	    shocked = false
+	    preInput = null
+	    hegemony = false
+	    #preInputTimer = null
+
+	    isBlocking = false
+	    isWaitingParry = false
+	    isWaitingDeflection = false
+	    isDodging = false
+
+	    static defaultCameraOffsets = [ 2.2, 0, 0.7 ]
+	    cameraOffsets = Status.defaultCameraOffsets
+
+	    constructor(xuid) {
+	        Status.status.set(xuid, this);
+	        this.clear();
+	    }
+
+	    clear() {
+	        this.hand = 'minecraft:air';
+	        this.status = 'unknown';
+	        this.duration = 0;
+	        this.repulsible = true;
+	        this.isBlocking = false;
+	        this.isWaitingParry = false;
+	        this.acceptableInputs = new Set(defaultAcceptableInputs);
+	        this.stamina = 0;
+	        this.stiffness = 0;
+	    }
+
+	    edit(obj) {
+	        for (const k in obj) {
+	            if (k in this) {
+	                this[k] = obj[k];
+	            }
+	        }
+	    }
+
+	    acceptableInput(name, accept) {
+	        if (accept !== undefined) {
+	            accept
+	                ? this.acceptableInputs.add(name)
+	                : this.acceptableInputs.delete(name);
+	            return
+	        }
+
+	        return this.acceptableInputs.has(name)
+	    }
+
+	    /**
+	     * @param {AcceptbleInputTypes[]} inputs 
+	     */
+	    enableInputs(inputs) {
+	        inputs.forEach(type => this.acceptableInputs.add(type));
+	    }
+
+	    /**
+	     * @param {AcceptbleInputTypes[]} inputs 
+	     */
+	    disableInputs(inputs) {
+	        inputs.forEach(type => this.acceptableInputs.delete(type));
+	    }
+
+	    /**
+	     * @param {AcceptbleInputTypes} input 
+	     */
+	    setPreInput(input) {
+	        if (this.#preInputTimer) {
+	            clearInterval(this.#preInputTimer);
+	        }
+
+	        this.preInput = input;
+	        this.#preInputTimer = setTimeout(() => {
+	            this.#preInputTimer = null;
+	            this.preInput = null;
+	        }, 500);
+	    }
+	}
+
+	status_1 = {
+	    Status, defaultAcceptableInputs
+	};
+	return status_1;
+}
+
 var _default;
 var hasRequired_default;
 
@@ -8742,15 +2268,81 @@ function require_default () {
 	const { playAnim, playSoundAll, playParticle } = requireBasic();
 	requireMain();
 	requireKinematic();
+	const { Status } = requireStatus();
+
+	function getAnim(animCategory, direction) {
+	    const anim = animCategory[direction];
+
+	    if (!anim) {
+	        switch (direction) {
+	            case 'middle':
+	                return animCategory.right ?? animCategory.left
+
+	            default:
+	                return animCategory.left
+	        }
+	    }
+
+	    return anim
+	}
 
 	class DefaultMoves {
 	    animations = {
-	        parried: 'animation.general.parried.right',
-	        hit: 'animation.general.hit',
-	        parry: '',
+	        parried: {
+	            /**
+	             * left and vertical
+	             */
+	            left: 'animation.general.parried.left',
+	            vertical: 'animation.general.parried.left',
+	            /**
+	             * right and stab
+	             */
+	            right: 'animation.general.parried.right',
+	            middle: 'animation.general.parried.right',
+	        },
+	        hit: {
+	            left: 'animation.general.hit.left',
+	            right: 'animation.general.hit.right',
+	            vertical: 'animation.general.hit.vertical',
+	            middle: 'animation.general.hit.middle',
+	        },
+	        parry: {
+	            /**
+	             * left and vertical
+	             */
+	            left: '',
+	            vertical: '',
+	            /**
+	             * right and stab
+	             */
+	            right: '',
+	            middle: '',
+	        },
 	        knockdown: 'animation.general.fell',
-	        blocked: 'animation.general.blocked.right',
-	        block: '',
+	        blocked: {
+	            /**
+	             * left and vertical
+	             */
+	            left: 'animation.general.blocked.left',
+	            vertical: 'animation.general.blocked.left',
+	            /**
+	             * right and stab
+	             */
+	            right: 'animation.general.blocked.right',
+	            middle: 'animation.general.blocked.right',
+	        },
+	        block: {
+	            /**
+	             * left and vertical
+	             */
+	            left: '',
+	            vertical: '',
+	            /**
+	             * right and stab
+	             */
+	            right: '',
+	            middle: '',
+	        },
 	    }
 
 	    sounds = {
@@ -8765,7 +2357,9 @@ function require_default () {
 	    blocked = {
 	        cast: 9,
 	        onEnter: (pl, ctx) => {
-	            playAnim(pl, this.animations.blocked);
+	            const { direction } = ctx.rawArgs[2];
+
+	            playAnim(pl, getAnim(this.animations.blocked, direction));
 	            playSoundAll(this.sounds.blocked, pl.pos, 1);
 	            ctx.movementInput(pl, false);
 	            ctx.freeze(pl);
@@ -8787,8 +2381,10 @@ function require_default () {
 	    block = {
 	        cast: 5,
 	        onEnter: (pl, ctx) => {
+	            const { direction } = ctx.rawArgs[2];
+
 	            ctx.status.isBlocking = true;
-	            playAnim(pl, this.animations.block);
+	            playAnim(pl, playAnim(this.animations.block, direction));
 	            playSoundAll(this.sounds.block, pl.pos, 1);
 	            ctx.movementInput(pl, false);
 	            ctx.freeze(pl);
@@ -8816,8 +2412,8 @@ function require_default () {
 	                'onAttack',
 	                'onUseItem',
 	            ]);
-	            const [ ,, { stiffness, customHurtAnimation } ] = ctx.rawArgs;
-	            const hurtAnim = customHurtAnimation ?? this.animations.hit;
+	            const { stiffness, customHurtAnimation, direction } = ctx.rawArgs[2];
+	            const hurtAnim = customHurtAnimation ?? this.animations.hit[direction];
 
 	            playAnim(pl, hurtAnim);
 	            ctx.task.queue(() => {
@@ -8876,7 +2472,8 @@ function require_default () {
 	                'onAttack',
 	                'onUseItem',
 	            ]);
-	            playAnim(pl, this.animations.parried);
+	            const { direction } = ctx.rawArgs[2];
+	            playAnim(pl, getAnim(this.animations.parried, direction));
 	        },
 	        onLeave(pl, ctx) {
 	            ctx.unfreeze(pl);
@@ -8899,16 +2496,18 @@ function require_default () {
 	        cast: 10,
 	        backswing: 11,
 	        onEnter: (pl, ctx) => {
+	            const { direction } = ctx.rawArgs[2];
+
 	            ctx.movementInput(pl, false);
 	            playSoundAll(this.sounds.parry, pl.pos, 1);
 	            ctx.status.isWaitingParry = true;
-	            playAnim(pl, this.animations.parry);
+	            playAnim(pl, getAnim(this.animations.parry, direction));
 	            ctx.lookAtTarget(pl);
 	        },
 	        onLeave(pl, ctx) {
 	            ctx.unfreeze(pl);
 	            ctx.status.isWaitingParry = false;
-	            ctx.status.cameraOffsets = [ 1.5, 0, 0.8 ];
+	            ctx.status.cameraOffsets = Status.defaultCameraOffsets;
 	        },
 	        timeline: {
 	            5: (pl, ctx) => {
@@ -8920,8 +2519,8 @@ function require_default () {
 	            8: (pl, ctx) => {
 	                const offsets = ctx.status.cameraOffsets;
 
-	                offsets[0] = 1.5;
-	                offsets[2] = 0.8;
+	                offsets[0] = 2.2;
+	                offsets[2] = 0.7;
 	            },
 	            13: (pl, ctx) => ctx.trap(pl, { tag: 'parryCounter' })
 	        },
@@ -9071,6 +2670,4060 @@ function require_default () {
 	return _default;
 }
 
+var double_dagger;
+var hasRequiredDouble_dagger;
+
+function requireDouble_dagger () {
+	if (hasRequiredDouble_dagger) return double_dagger;
+	hasRequiredDouble_dagger = 1;
+	/// <reference path="../basic/types.d.ts"/>
+
+	const { playAnim, playSoundAll } = requireBasic();
+	const { DefaultMoves, DefaultTrickModule } = require_default();
+
+	class DoubleDaggerMoves extends DefaultMoves {
+	    constructor() {
+	        super();
+
+	        this.animations.parry.left = 'animation.double_dagger.parry';
+	        this.animations.block.left = 'animation.double_dagger.block';
+	        this.setup('resumeHold');
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    resumeHold = {
+	        transitions: {
+	            hold: {
+	                onEndOfLife: {
+	                    hasTarget: true
+	                }
+	            },
+	            init: {
+	                onEndOfLife: {
+	                    hasTarget: false
+	                }
+	            },
+	            dodge: {
+	                onEndOfLife: {
+	                    hasTarget: true,
+	                    isSneaking: true
+	                },
+	            },
+	            hurt: {
+	                onHurt: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    init = {
+	        cast: Infinity,
+	        onEnter(pl) {
+	            playAnim(pl, 'animation.posture.clear');
+	        },
+	        transitions: {
+	            hold: {
+	                onLock: null
+	            },
+	            hurt: {
+	                onHurt: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    hold = {
+	        cast: Infinity,
+	        onEnter(pl, ctx) {
+	            playAnim(pl, 'animation.double_dagger.hold', 'animation.double_dagger.hold');
+	        },
+	        transitions: {
+	            init: {
+	                onReleaseLock: null
+	            },
+	            hurt: {
+	                onHurt: null
+	            },
+	            horizontalSwing: {
+	                onAttack: null,
+	            },
+	            stab: {
+	                onUseItem: null
+	            },
+	            dodge: {
+	                onSneak: {
+	                    isSneaking: true
+	                },
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    horizontalSwing = {
+	        cast: 9,
+	        backswing: 11,
+	        onEnter(pl, ctx) {
+	            ctx.status.isBlocking = true;
+	            ctx.freeze(pl);
+	            playAnim(pl, 'animation.double_dagger.horizontal_swing');
+	            ctx.lookAtTarget(pl);
+	        },
+	        onAct(pl, ctx) {
+	            playSoundAll('weapon.woosh.1', pl.pos, 1);
+	            ctx.selectFromRange(pl, {
+	                angle: 90,
+	                radius: 2,
+	                rotation: 30
+	            }).forEach(e => {
+	                ctx.attack(pl, e, {
+	                    damage: 16,
+	                    knockback: 0.8,
+	                });
+	            });
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        timeline: {
+	            0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 120, 1),
+	            4: (_, ctx) =>  ctx.status.isBlocking = false,
+	            6: (pl, ctx) => ctx.trap(pl, { tag: 'chop' }),
+	            7: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 3, 80, 0.8),
+	            11: (pl, ctx) => ctx.trap(pl, { tag: 'dodge' }),
+	        },
+	        transitions: {
+	            resumeHold: {
+	                onEndOfLife: null,
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            horizontalSwingToVeticalChop: {
+	                onTrap: {
+	                    tag: 'chop',
+	                    preInput: 'onUseItem',
+	                }
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'backswing'
+	                }
+	            },
+	            dodge: {
+	                onSneak: {
+	                    allowedState: 'backswing',
+	                    isSneaking: true
+	                },
+	                onTrap: {
+	                    tag: 'dodge',
+	                    preInput: 'onSneak',
+	                    isSneaking: true
+	                }
+	            },
+	            blocked: {
+	                onBlocked: {
+	                    allowedState: 'backswing',
+	                }
+	            },
+	            block: {
+	                onBlock: null
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    horizontalSwingToVeticalChop = {
+	        cast: 10,
+	        backswing: 11,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            playAnim(pl, 'animation.double_dagger.horizontal_swing.to.vertical_chop');
+	            ctx.lookAtTarget(pl);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                angle: 60,
+	                radius: 2.5,
+	                rotation: 30
+	            }).forEach(e => {
+	                ctx.attack(pl, e, {
+	                    damage: 22,
+	                    knockback: 1.8,
+	                    permeable: true,
+	                });
+	            });
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        timeline: {
+	            0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
+	            4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8),
+	            9: pl => playSoundAll('weapon.woosh.3', pl.pos, 1),
+	            10: (pl, ctx) => ctx.trap(pl)
+	        },
+	        transitions: {
+	            resumeHold: {
+	                onEndOfLife: null
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'backswing'
+	                }
+	            },
+	            dodge: {
+	                onSneak: {
+	                    allowedState: 'backswing',
+	                    isSneaking: true
+	                },
+	                onTrap: {
+	                    tag: 'dodge',
+	                    preInput: 'onSneak',
+	                    isSneaking: true
+	                }
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    stab = {
+	        cast: 10,
+	        backswing: 12,
+	        onEnter(pl, ctx) {
+	            ctx.status.isWaitingParry = true;
+	            ctx.freeze(pl);
+	            ctx.lookAtTarget(pl);
+	            playAnim(pl, 'animation.double_dagger.stab');
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                angle: 60,
+	                radius: 3,
+	                rotation: 30
+	            }).forEach(e => {
+	                ctx.attack(pl, e, {
+	                    damage: 18,
+	                    knockback: 1.8,
+	                    direction: 'middle',
+	                });
+	            });
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.status.isBlocking = false;
+	            ctx.unfreeze(pl);
+	        },
+	        timeline: {
+	            3: (_, ctx) => ctx.status.isWaitingParry = false,
+	            6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8),
+	            8: (_, ctx) => ctx.status.isBlocking = true,
+	            9: pl => playSoundAll('weapon.woosh.2', pl.pos, 1),
+	            12: (_, ctx) => ctx.status.isBlocking = false,
+	            14: (pl, ctx) => ctx.trap(pl)
+	        },
+	        transitions: {
+	            resumeHold: {
+	                onEndOfLife: null
+	            },
+	            hurt: {
+	                onHurt: null
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'backswing'
+	                }
+	            },
+	            parry: {
+	                onParry: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            dodge: {
+	                onSneak: {
+	                    allowedState: 'backswing',
+	                    isSneaking: true
+	                },
+	                onTrap: {
+	                    tag: 'dodge',
+	                    preInput: 'onSneak',
+	                    isSneaking: true
+	                }
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    dodge = {
+	        cast: 4,
+	        backswing: 14,
+	        onEnter(pl, ctx) {
+	            ctx.status.isWaitingDeflection = true;
+	            ctx.freeze(pl);
+	            playAnim(pl, 'animation.double_dagger.dodge.front');
+	            ctx.lookAtTarget(pl);
+	        },
+	        onAct(_, ctx) {
+	            ctx.status.isWaitingDeflection = false;
+	            ctx.status.isDodging = true;
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.status.isWaitingDeflection = false;
+	            ctx.status.isDodging = false;
+	            ctx.unfreeze(pl);
+	        },
+	        timeline: {
+	            1: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 3, 90, 2),
+	            8: (_, ctx) => ctx.status.isDodging = false,
+	            10: (pl, ctx) => ctx.trap(pl)
+	        },
+	        transitions: {
+	            resumeHold: {
+	                onEndOfLife: null
+	            },
+	            deflection: {
+	                onDeflection: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            deflectionPunch: {
+	                onTrap: {
+	                    preInput: 'onUseItem'
+	                }
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    deflection = {
+	        cast: 8,
+	        backswing: 8,
+	        onEnter(pl, ctx) {
+	            ctx.status.isDodging = true;
+	            ctx.freeze(pl);
+	            ctx.lookAtTarget(pl);
+	            playSoundAll('weapon.deflection', pl.pos, 1);
+	            playAnim(pl, 'animation.double_dagger.deflection');
+	        },
+	        onAct(_, ctx) {
+	            ctx.status.isDodging = false;
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.status.isDodging = false;
+	            ctx.unfreeze(pl);
+	        },
+	        timeline: {
+	            1: (pl, ctx) => ctx.setVelocity(pl, 180, 0.6, 0),
+	            7: (pl, ctx) => ctx.trap(pl, { tag: 'counter' }),
+	        },
+	        transitions: {
+	            deflection: {
+	                onDodge: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            resumeHold: {
+	                onEndOfLife: null
+	            },
+	            catchTargrt: {
+	                onTrap: {
+	                    tag: 'counter',
+	                    preInput: 'onUseItem'
+	                }
+	            },
+	            quickStab: {
+	                onTrap: {
+	                    tag: 'counter',
+	                    preInput: 'onAttack'
+	                }
+	            },
+	            dodge: {
+	                onSneak: {
+	                    isSneaking: true,
+	                    allowedState: 'backswing',
+	                }
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    deflectionStab = {
+	        cast: 7,
+	        backswing: 9,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            playAnim(pl, 'animation.double_dagger.deflection.stab');
+	        },
+	        onAct(pl, ctx) {
+	            ctx.lookAtTarget(pl);
+	            ctx.selectFromRange(pl, {
+	                radius: 2.5,
+	                angle: 60,
+	                rotation: -30,
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 22,
+	                    knockback: 1,
+	                    direction: 'middle',
+	                });
+	            });
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        timeline: {
+	            5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 60, 0),
+	            6: pl => playSoundAll('weapon.woosh.2', pl.pos, 1)
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'backswing'
+	                }
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'backswing'
+	                }
+	            },
+	            resumeHold: {
+	                onEndOfLife: null
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    deflectionPunch = {
+	        cast: 3,
+	        backswing: 9,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            ctx.adsorbOrSetVelocity(pl, 1.5, 90, 0.8);
+	            playAnim(pl, 'animation.double_dagger.deflection.punch');
+	        },
+	        onAct(pl, ctx) {
+	            ctx.lookAtTarget(pl);
+	            ctx.selectFromRange(pl, {
+	                radius: 2,
+	                angle: 60,
+	                rotation: -30,
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 4,
+	                    parryable: false,
+	                    permeable: true,
+	                    knockback: 2,
+	                    direction: 'middle',
+	                });
+	            });
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'backswing'
+	                }
+	            },
+	            resumeHold: {
+	                onEndOfLife: null
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    catchTargrt = {
+	        cast: 5,
+	        backswing: 15,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            playAnim(pl, 'animation.double_dagger.dodge.catch');
+	            ctx.adsorbOrSetVelocity(pl, 3, 90, 0.8);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                angle: 120,
+	                rotation: -60,
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 2,
+	                    knockback: 0.1,
+	                    permeable: true,
+	                    parryable: false,
+	                    stiffness: 1500,
+	                    powerful: true,
+	                });
+	            });
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        timeline: {
+	            15: (pl, ctx) => ctx.trap(pl)
+	        },
+	        transitions: {
+	            resumeHold: {
+	                onEndOfLife: null
+	            },
+	            catched: {
+	                onHit: null
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    catched = {
+	        cast: 10,
+	        backswing: 5,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.trap(pl);
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        transitions: {
+	            resumeHold: {
+	                onEndOfLife: null
+	            },
+	            deflectionStab: {
+	                onTrap: {
+	                    preInput: 'onUseItem',
+	                    allowedState: 'both'
+	                }
+	            },
+	            kick: {
+	                onTrap: {
+	                    preInput: 'onAttack',
+	                    allowedState: 'both'
+	                }
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    quickStab = {
+	        cast: 4,
+	        backswing: 12,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            playAnim(pl, 'animation.double_dagger.catch.stab');
+	            ctx.adsorbOrSetVelocity(pl, 3, 90, 0.8);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 18,
+	                    knockback: 2,
+	                    parryable: false,
+	                });
+	            });
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        transitions: {
+	            resumeHold: {
+	                onEndOfLife: null
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            dodge: {
+	                onSneak: {
+	                    isSneaking: true,
+	                    allowedState: 'backswing'
+	                }
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    kick = {
+	        cast: 5,
+	        backswing: 11,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            playAnim(pl, 'animation.double_dagger.catch.kick');
+	            ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 8,
+	                    knockback: 5,
+	                    parryable: false,
+	                    permeable: true,
+	                    shock: true,
+	                    powerful: true,
+	                });
+	            });
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        transitions: {
+	            resumeHold: {
+	                onEndOfLife: null
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            }
+	        }
+	    }
+	}
+
+	class DoubleDaggerTricks extends DefaultTrickModule {
+	    constructor() {
+	        super(
+	            'rgb:double_dagger',
+	            'init',
+	            [ 'weapon:double_dagger' ]
+	        );
+	    }
+
+	    moves = new DoubleDaggerMoves()
+	}
+
+	double_dagger = new DoubleDaggerTricks();
+	return double_dagger;
+}
+
+var emptyHand;
+var hasRequiredEmptyHand;
+
+function requireEmptyHand () {
+	if (hasRequiredEmptyHand) return emptyHand;
+	hasRequiredEmptyHand = 1;
+	/// <reference path="../basic/types.d.ts"/>
+
+	const { playAnim } = requireBasic();
+	const { DefaultMoves, DefaultTrickModule } = require_default();
+	requireMain();
+
+	class EmptyHandMoves extends DefaultMoves {
+	    /**
+	     * @type {Move}
+	     */
+	    blocking = {
+	        cast: Infinity,
+	        onEnter(pl) {
+	            playAnim(pl, 'animation.general.empty_hand');
+	        },
+	        transitions: {
+	            cast: {
+	                onEndOfLife: null
+	            }
+	        }
+	    }
+
+	    constructor() {
+	        super();
+
+	        this.setup('blocking');
+	    }
+	}
+
+	class EmptyHandTricks extends DefaultTrickModule {
+	    constructor() {
+	        super(
+	            'rgb39.weapon.empty_hand',
+	            'blocking',
+	            [ '*' ]
+	        );
+	    }
+
+	    moves = new EmptyHandMoves()
+	}
+
+	/**
+	 * @type {TrickModule}
+	 */
+	emptyHand = new EmptyHandTricks();
+	return emptyHand;
+}
+
+var math = {};
+
+/**
+ * @param {number} start 
+ * @param {number} end 
+ * @param {() => number} calcFn 
+ * @returns 
+ */
+
+var hasRequiredMath;
+
+function requireMath () {
+	if (hasRequiredMath) return math;
+	hasRequiredMath = 1;
+	function constrictCalc(start, end, calcFn) {
+	    let result = 0;
+
+	    try {
+	        result = calcFn.call(null);
+	        if (isNaN(result)) throw ''
+	    } catch {
+	        return start
+	    }
+
+	    return result > end ? end
+	            : result < start ? start
+	                : result
+	}
+
+	math.constrictCalc = constrictCalc;
+
+	function randomRange(min=0, max=1, integer=false) {
+	    const num = Math.random() * (max - min) + min;
+
+	    return integer ? Math.round(num) : num
+	}
+
+	math.randomRange = randomRange;
+	return math;
+}
+
+var hud_1;
+var hasRequiredHud;
+
+function requireHud () {
+	if (hasRequiredHud) return hud_1;
+	hasRequiredHud = 1;
+	function hud(progress, size, style=['', '§6▮', '§4▯', '']) {
+	    const duration = Math.ceil(size * progress);
+	    const [ left, bar, empty, right ] = style;
+
+	    return left +
+	        bar.repeat(duration) +
+	        empty.repeat(size - duration) + right
+	}
+
+
+	hud_1 = {
+	    hud
+	};
+	return hud_1;
+}
+
+var lightSaber;
+var hasRequiredLightSaber;
+
+function requireLightSaber () {
+	if (hasRequiredLightSaber) return lightSaber;
+	hasRequiredLightSaber = 1;
+	const { playAnim, playSoundAll } = requireBasic();
+	const { DefaultMoves, DefaultTrickModule } = require_default();
+	requireMain();
+	const { constrictCalc, randomRange } = requireMath();
+	const { hud } = requireHud();
+
+	class LightSaberMoves extends DefaultMoves {
+	    /**
+	     * @type {Move}
+	     */
+	    hold = {
+	        cast: Infinity,
+	        onEnter(pl, ctx) {
+	            playAnim(pl, 'animation.weapon.light_saber.hold', 'animation.weapon.light_saber.hold');
+	        },
+	        onTick(pl, ctx) {
+	            const { status } = ctx;
+	            status.stamina = constrictCalc(0, 100, () => status.stamina + 1);
+	            pl.tell(
+	                hud(status.stamina/100, 20),
+	                5
+	            );
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: null
+	            },
+	            running: {
+	                onChangeSprinting: {
+	                    sprinting: true
+	                }
+	            },
+	            attack1: {
+	                onAttack: {
+	                    stamina: v => v >= 10
+	                }
+	            },
+	            beforeBlocking: {
+	                onSneak: {
+	                    isSneaking: true,
+	                    stamina: v => v > 20
+	                },
+	            },
+	            jump: {
+	                onJump: null
+	            },
+	            dodge: {
+	                onUseItem: null
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    dodge = {
+	        cast: 15,
+	        onEnter(pl, ctx) {
+	            playAnim(pl, 'animation.weapon.light_saber.dodge');
+	            ctx.movement(pl, false);
+	            ctx.setVelocity(pl, -90, 2, 0);
+	            ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 10);
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        onTick(pl, ctx) {
+	            pl.tell(hud(ctx.status.stamina/100, 20), 5);
+	        },
+	        timeline: {
+	            8: (pl, ctx) => ctx.setVelocity(pl, -90, 1, 0)
+	        },
+	        transitions: {
+	            hold: {
+	                onEndOfLife: null
+	            },
+	            hurt: {
+	                onHurt: null
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    jump = {
+	        cast: 6,
+	        transitions: {
+	            hold: {
+	                onEndOfLife: null,
+	            },
+	            jumpAttack: {
+	                onAttack: {
+	                    stamina: v => v > 20
+	                }
+	            },
+	            hurt: {
+	                onHurt: null
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    jumpAttack = {
+	        cast: 10,
+	        backswing: 10,
+	        onEnter(pl, ctx) {
+	            pl.setSprinting(false);
+	            playAnim(pl, 'animation.weapon.light_saber.jump_attack');
+	            ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 15);
+	            ctx.freeze(pl);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                angle: 25,
+	                rotation: -12,
+	                radius: 3.2
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 26,
+	                    knockback: 1.5,
+	                    permeable: true,
+	                });
+	            });
+
+	            ctx.status.repulsible = true;
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        onTick(pl, ctx) {
+	            const { status } = ctx;
+	            status.stamina = constrictCalc(0, 100, () => status.stamina);
+	            pl.tell(hud(status.stamina/100, 20), 5);
+	        },
+	        timeline: {
+	            2: (_, ctx) => ctx.status.repulsible = false,
+	            8: (pl, ctx) => {
+	                ctx.adsorbOrSetVelocity(pl, 2, 90);
+	            }
+	        },
+	        transitions: {
+	            hold: {
+	                onEndOfLife: null
+	            },
+	            hurt: {
+	                onHurt: null
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'both'
+	                }
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    beforeBlocking = {
+	        cast: 4,
+	        onEnter(pl, ctx) {
+	            playAnim(pl, 'animation.weapon.light_saber.blocking', 'animation.weapon.light_saber.blocking');
+	            ctx.status.isWaitingParry = true;
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.status.isWaitingParry = false;
+	        },
+	        transitions: {
+	            blocking: {
+	                onEndOfLife: {
+	                    isSneaking: true
+	                }
+	            },
+	            parry: {
+	                onParry: null
+	            },
+	            afterBlocking: {
+	                onEndOfLife: {
+	                    isSneaking: false
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    blocking = {
+	        cast: Infinity,
+	        onEnter(pl, ctx) {
+	            ctx.status.isBlocking = true;
+	        },
+	        onLeave(_, ctx) {
+	            ctx.status.isBlocking = false;
+	        },
+	        onTick(pl, ctx) {
+	            pl.tell(hud(ctx.status.stamina/100, 20), 5);
+	        },
+	        transitions: {
+	            afterBlocking: {
+	                onSneak: { isSneaking:false }
+	            },
+	            hurt: {
+	                onHurt: null
+	            },
+	            block: {
+	                onBlock: null
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    afterBlocking = {
+	        cast: 3,
+	        transitions: {
+	            hold: {
+	                onEndOfLife: null
+	            },
+	            hurt: {
+	                onHurt: null
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    block = {
+	        onEnter(pl, ctx) {
+	            const damageOpt = ctx.rawArgs[2];
+	            const result = ctx.status.stamina - (damageOpt.damage || 0);
+	            ctx.status.stamina = result < 0 ? 0 : result;
+	            playSoundAll(`weapon.sword.hit${randomRange(1, 4, true)}`, pl.pos, 1);
+	        },
+	        transitions: {
+	            blocking: {
+	                onEndOfLife: {
+	                    stamina: v => v > 0
+	                }
+	            },
+	            hold: {
+	                onEndOfLife: {
+	                    stamina: 0
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    running = {
+	        cast: Infinity,
+	        onEnter(pl) {
+	            playAnim(pl, 'animation.weapon.light_saber.run', 'animation.weapon.light_saber.run');
+	        },
+	        onTick(pl, ctx) {
+	            pl.tell(hud(ctx.status.stamina/100, 20), 5);
+	        },
+	        transitions: {
+	            hurt: {
+	                onHit: null
+	            },
+	            hold: {
+	                onChangeSprinting: {
+	                    sprinting: false
+	                },
+	            },
+	            runningJump: {
+	                onJump: null
+	            },
+	            strike: {
+	                onAttack: {
+	                    stamina: v => v > 30
+	                }
+	            },
+	            dash: {
+	                onUseItem: {
+	                    stamina: v => v > 10
+	                }
+	            },
+	            blocking: {
+	                onSneak: {
+	                    isSneaking: true
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    dash = {
+	        cast: 15,
+	        onEnter(pl, ctx) {
+	            ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 10);
+	            ctx.movement(pl, false);
+	            ctx.setVelocity(pl, 90, 3, 0);
+	            pl.setSprinting(false);
+	            playAnim(pl, 'animation.weapon.light_saber.dash');
+	        },
+	        onTick(pl, ctx) {
+	            pl.tell(hud(ctx.status.stamina/100, 20), 5);
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        timeline: {
+	            8: (pl, ctx) => {
+	                ctx.trap(pl);
+	                ctx.setVelocity(pl, 90, 1, 0);
+	            },
+	        },
+	        transitions: {
+	            strike: {
+	                onTrap: {
+	                    preInput: 'onAttack',
+	                    stamina: v => v >= 20
+	                }
+	            },
+	            hold: {
+	                onEndOfLife: null
+	            },
+	            hurt: {
+	                onHurt: null
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    runningJump = {
+	        cast: 6,
+	        timeline: {
+	            6: (pl, ctx) => {
+	                ctx.trap(pl);
+	            }
+	        },
+	        transitions: {
+	            running: {
+	                onEndOfLife: null
+	            },
+	            hold: {
+	                onTrap: {
+	                    preInput: 'onChangeSprinting',
+	                },
+	                onAttack: {
+	                    stamina: v => v < 30
+	                }
+	            },
+	            strike: {
+	                onAttack: {
+	                    stamina: v => v > 30
+	                }
+	            },
+	            hurt: {
+	                onHurt: null
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    strike = {
+	        cast: 10,
+	        backswing: 10,
+	        onEnter(pl, ctx) {
+	            playAnim(pl, 'animation.weapon.light_saber.strike');
+	            ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 20);
+	            ctx.freeze(pl);
+	            ctx.adsorbOrSetVelocity(pl, 1, 90);
+	        },
+	        onTick(pl, ctx) {
+	            const { status } = ctx;
+	            status.stamina = constrictCalc(0, 100, () => status.stamina);
+	            pl.tell(hud(status.stamina/100, 20), 5);
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                radius: 3.2,
+	                angle: 20,
+	                rotation: -10
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 25,
+	                    knockback: 2,
+	                });
+	            });
+	        },
+	        timeline: {
+	            6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2.5, 90)
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                },
+	            },
+	            hold: {
+	                onEndOfLife: null
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'both'
+	                }
+	            },
+	        },
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    attack1 = {
+	        cast: 9,
+	        backswing: 11,
+	        onEnter(pl, ctx) {
+	            ctx.movement(pl, false);
+	            playAnim(pl, 'animation.weapon.light_saber.attack1');
+	            ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 10);
+	        },
+	        onTick(pl, ctx) {
+	            pl.tell(hud(ctx.status.stamina/100, 20), 5);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                angle: 45,
+	                rotation: -22.5,
+	                radius: 2.5
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 18,
+	                    knockback: 1,
+	                });
+	            });
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        timeline: {
+	            2: (_, ctx) => ctx.status.isBlocking = true,
+	            5: (pl, ctx) => ctx.setVelocity(pl, 90, 1, 0),
+	            6: (_, ctx) => ctx.status.isBlocking = false,
+	            14: (pl, ctx) => ctx.trap(pl)
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            hold: {
+	                onEndOfLife: null
+	            },
+	            attack2: {
+	                onTrap: {
+	                    preInput: 'onAttack',
+	                    allowedState: 'backswing',
+	                    stamina: v => v >= 12,
+	                }
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    attack2 = {
+	        cast: 11,
+	        backswing: 12,
+	        onEnter(pl, ctx) {
+	            ctx.movement(pl, false);
+	            playAnim(pl, 'animation.weapon.light_saber.attack2');
+	            ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 12);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                angle: 45,
+	                rotation: -22.5,
+	                radius: 2.5
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 22,
+	                    knockback: 1,
+	                });
+	            });
+	        },
+	        onTick(pl, ctx) {
+	            pl.tell(hud(ctx.status.stamina/100, 20), 5);
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        timeline: {
+	            2: (_, ctx) => ctx.status.isBlocking = true,
+	            6: (pl, ctx) => {
+	                ctx.setVelocity(pl, 90, 1, 0);
+	                ctx.status.isBlocking = false;
+	            },
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            hold: {
+	                onEndOfLife: null
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    constructor() {
+	        super();
+
+	        this.animations.parry = 'animation.weapon.light_saber.parry';
+
+	        this.knockdown.transitions = {
+	            hold: {
+	                onEndOfLife: null
+	            }
+	        };
+
+	        this.setup('hold');
+	    }
+	}
+
+	class LightSaberTrick extends DefaultTrickModule {
+	    constructor() {
+	        super(
+	            'rgb39.weapon.light_saber',
+	            'hold',
+	            [ 'weapon:light_saber' ]
+	        );
+	    }
+
+	    moves = new LightSaberMoves()
+	}
+
+	lightSaber = new LightSaberTrick();
+	return lightSaber;
+}
+
+var moon_glaive;
+var hasRequiredMoon_glaive;
+
+function requireMoon_glaive () {
+	if (hasRequiredMoon_glaive) return moon_glaive;
+	hasRequiredMoon_glaive = 1;
+	const { playAnim } = requireBasic();
+	const { DefaultMoves, DefaultTrickModule } = require_default();
+	requireMain();
+	requireMath();
+	requireHud();
+
+	class MoonGlaiveTricks extends DefaultTrickModule {
+	    constructor() {
+	        super(
+	            'rgb39.weapon.moon_glaive',
+	            'hold',
+	            [ 'weapon:moon_glaive' ]
+	        );
+	    }
+
+	    moves = new MoonGlaiveMoves()
+	}
+
+	class MoonGlaiveMoves extends DefaultMoves {
+
+	    constructor() {
+	        super();
+
+	        this.setup('backToDefault');
+	        this.animations.parry.left = 'animation.weapon.moon_glaive.parry';
+
+	        this.setTransition('parry', 'parryKnock', {
+	            onTrap: {
+	                tag: 'parryCounter',
+	                preInput: 'onAttack',
+	                allowedState: 'both'
+	            }
+	        });
+
+	        this.setTransition('parry', 'parryChop', {
+	            onTrap: {
+	                tag: 'parryCounter',
+	                preInput: 'onUseItem',
+	                allowedState: 'both'
+	            }
+	        });
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    hold = {
+	        cast: Infinity,
+	        onEnter(pl, ctx) {
+	            ctx.releaseTarget(pl.xuid);
+	            playAnim(pl, 'animation.weapon.moon_glaive.hold', 'animation.weapon.moon_glaive.hold');
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: null
+	            },
+	            running: {
+	                onChangeSprinting: {
+	                    sprinting: true
+	                }
+	            },
+	            holdLocked: {
+	                onLock: {
+	                    isOnGround: true
+	                }
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    running = {
+	        cast: Infinity,
+	        onEnter(pl, ctx) {
+	            ctx.releaseTarget(pl.xuid);
+	            playAnim(pl, 'animation.weapon.moon_glaive.running', 'animation.weapon.moon_glaive.running');
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: null
+	            },
+	            hold: {
+	                onChangeSprinting: {
+	                    sprinting: false
+	                }
+	            },
+	            holdLocked: {
+	                onLock: {
+	                    isOnGround: true,
+	                }
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    retentionSpinning = {
+	        cast: 13,
+	        backswing: 14,
+	        onEnter(pl, ctx) {
+	            ctx.setSpeed(pl, 0);
+	            ctx.camera(pl, false);
+	            playAnim(pl, 'animation.weapon.moon_glaive.retention.negative_spinning');
+	            ctx.adsorbOrSetVelocity(pl, 1, 90, 1);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                radius: 2.5,
+	                angle: 120,
+	                rotation: -60
+	            }).forEach(en => ctx.attack(pl, en, {
+	                damage: 24,
+	                knockback: 2.5,
+	                permeable: true,
+	                direction: 'right'
+	            }));
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	            ctx.setSpeed(pl, 0.04);
+	        },
+	        timeline: {
+	            4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
+	            8: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 120, 1),
+	            26: (pl, ctx) => ctx.trap(pl),
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: { allowedState: 'both' }
+	            },
+	            parried: {
+	                onParried: { allowedState: 'both' }
+	            },
+	            dodge: {
+	                onTrap: {
+	                    preInput: 'onUseItem',
+	                }
+	            },
+	            retention: {
+	                onEndOfLife: {
+	                    hasTarget: true
+	                }
+	            },
+	            hold: {
+	                onEndOfLife: {
+	                    hasTarget: false
+	                }
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    retention = {
+	        cast: Infinity,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            playAnim(pl, 'animation.weapon.moon_glaive.retention', 'animation.weapon.moon_glaive.retention');
+	        },
+	        onTick(pl, ctx) {
+	            ctx.lookAtTarget(pl);
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        timeline: {
+	            1: (pl, ctx) => ctx.trap(pl)
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: null
+	            },
+	            hold: {
+	                onReleaseLock: null
+	            },
+	            retentionSpinning: {
+	                onAttack: null
+	            },
+	            dodge: {
+	                onUseItem: null
+	            },
+	            fromRetention: {
+	                onSneak: { isSneaking: false },
+	                onTrap: { isSneaking: false },
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    toRetention = {
+	        cast: 5,
+	        onEnter(pl, ctx) {
+	            ctx.camera(pl, false);
+	            playAnim(pl, 'animation.weapon.moon_glaive.to_retention');
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        timeline: {
+	            4: (pl, ctx) => ctx.trap(pl)
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: null
+	            },
+	            retention: {
+	                onEndOfLife: {
+	                    isSneaking: true
+	                },
+	            },
+	            fromRetention: {
+	                onEndOfLife: {
+	                    isSneaking: false
+	                }
+	            },
+	            dodge: {
+	                onTrap: {
+	                    preInput: 'onUseItem'
+	                }
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    fromRetention = {
+	        cast: 5,
+	        onEnter(pl, ctx) {
+	            ctx.camera(pl, false);
+	            playAnim(pl, 'animation.weapon.moon_glaive.from_retention');
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: null
+	            },
+	            backToDefault: {
+	                onEndOfLife: null
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    holdLocked = {
+	        cast: Infinity,
+	        onEnter(pl, ctx) {
+	            pl.setSprinting(false);
+	            playAnim(pl, 'animation.weapon.moon_glaive.hold_locked', 'animation.weapon.moon_glaive.hold_locked');
+	            ctx.trap(pl);
+	        },
+	        transitions: {
+	            toRetention: {
+	                onSneak: {
+	                    isSneaking: true,
+	                },
+	                onTrap: {
+	                    isSneaking: true
+	                }
+	            },
+	            hold: {
+	                onReleaseLock: null,
+	                onJump: null
+	            },
+	            running: {
+	                onChangeSprinting: {
+	                    sprinting: true
+	                }
+	            },
+	            push: {
+	                onAttack: null
+	            },
+	            sweap: {
+	                onUseItem: null,
+	            },
+	            hurt: {
+	                onHurt: { allowedState: 'both' }
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    backToDefault = {
+	        transitions: {
+	            holdLocked: {
+	                onEndOfLife: {
+	                    hasTarget: true
+	                }
+	            },
+	            hold: {
+	                onEndOfLife: {
+	                    hasTarget: false
+	                }
+	            },
+	            hurt: {
+	                onHurt: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    dodge = {
+	        cast: 11,
+	        onEnter(pl, ctx) {
+	            ctx.status.isDodging = true;
+	            ctx.setSpeed(pl, 0);
+	            ctx.camera(pl);
+	            playAnim(pl, 'animation.weapon.moon_glaive.dodge');
+	            ctx.setVelocity(pl, -90, 2.5, 0);
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	            ctx.setSpeed(pl, 0.04);
+	        },
+	        timeline: {
+	            4: (pl, ctx) => ctx.status.isDodging = false,
+	            10: (pl, ctx) => ctx.trap(pl)
+	        },
+	        transitions: {
+	            retention: {
+	                onEndOfLife: {
+	                    hasTarget: true
+	                }
+	            },
+	            backToDefault: {
+	                onEndOfLife: {
+	                    hasTarget: false
+	                }
+	            },
+	            retentionSpinning: {
+	                onTrap: {
+	                    preInput: 'onAttack'
+	                }
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    push = {
+	        cast: 9,
+	        backswing: 10,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            ctx.lookAtTarget(pl);
+	            playAnim(pl, 'animation.weapon.moon_glaive.push');
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                angle: 50,
+	                rotation: -25,
+	                radius: 2.6,
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 16,
+	                    direction: 'middle'
+	                });
+	            });
+	        },
+	        timeline: {
+	            0: (_, c) => c.status.isBlocking = true,
+	            4: (_, c) => c.status.isBlocking = false,
+	            7: (pl, ctx) => ctx.adsorbToTarget(pl, 2),
+	            15: (pl, ctx) => ctx.trap(pl)
+	        },
+	        transitions: {
+	            backToDefault: {
+	                onEndOfLife: null
+	            },
+	            chop: {
+	                onTrap: {
+	                    preInput: 'onAttack',
+	                    hasTarget: true,
+	                    allowedState: 'both',
+	                }
+	            },
+	            verticalChop : {
+	                onTrap: {
+	                    preInput: 'onUseItem',
+	                    hasTarget: true,
+	                    allowedState: 'both',
+	                }
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'both',
+	                }
+	            },
+	            hurt: {
+	                onHurt: { allowedState: 'both' }
+	            },
+	            blocked: {
+	                onBlocked: {
+	                    allowedState: 'backswing',
+	                }
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    chop = {
+	        cast: 10,
+	        backswing: 8,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            ctx.lookAtTarget(pl);
+	            playAnim(pl, 'animation.weapon.moon_glaive.chop');
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        timeline: {
+	            4: (pl, ctx) => ctx.adsorbToTarget(pl, 1.2),
+	            8: (pl, ctx) => ctx.adsorbToTarget(pl, 1.2),
+	            11: (pl, ctx) => ctx.adsorbToTarget(pl, 0.5),
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                angle: 70,
+	                rotation: -35,
+	                radius: 2.6,
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 18,
+	                    direction: 'vertical'
+	                });
+	            });
+	        },
+	        transitions: {
+	            backToDefault: {
+	                onEndOfLife: null
+	            },
+	            hurt: {
+	                onHurt: null,
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'both',
+	                }
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    verticalChop = {
+	        cast: 15,
+	        backswing: 10,
+	        onEnter(pl, ctx) {
+	            ctx.status.hegemony = true;
+	            ctx.freeze(pl);
+	            ctx.lookAtTarget(pl);
+	            ctx.status.repulsible = false;
+	            playAnim(pl, 'animation.weapon.moon_glaive.vertical_chop');
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.status.hegemony = true;
+	            ctx.status.repulsible = true;
+	            ctx.unfreeze(pl);
+	        },
+	        timeline: {
+	            3: (pl, ctx) => ctx.adsorbToTarget(pl, 2),
+	            6: (pl, ctx) => ctx.adsorbToTarget(pl, 4),
+	            13: (pl, ctx) => ctx.trap(pl),
+	            18: (pl, ctx) => ctx.adsorbToTarget(pl, 0.5),
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                angle: 46,
+	                rotation: -23,
+	                radius: 2.8,
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 32,
+	                    permeable: true,
+	                    knockback: 1,
+	                    direction: 'vertical',
+	                });
+	            });
+	        },
+	        transitions: {
+	            backToDefault: {
+	                onEndOfLife: null,
+	                onTrap: {
+	                    preInput: 'onFeint',
+
+	                },
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'both',
+	                }
+	            },
+	            hurt: {
+	                onInterrupted: {
+	                    allowedState: 'both'
+	                }
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    sweap = {
+	        cast: 16,
+	        backswing: 14,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            ctx.lookAtTarget(pl);
+	            playAnim(pl, 'animation.weapon.moon_glaive.heavy_sweap');
+	            ctx.status.isWaitingParry = true;
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.status.repulsible = true;
+	            ctx.unfreeze(pl);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                angle: 90,
+	                rotation: -50,
+	                radius: 2.8,
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 22,
+	                    knockback: 0.4,
+	                    direction: 'left',
+	                });
+	            });
+	        },
+	        timeline: {
+	            2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
+	            3: (_, ctx) => ctx.status.isWaitingParry = false,
+	            6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.5, 90),
+	            8: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
+	            12: (_, ctx) => ctx.status.repulsible = false,
+	            14: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90),
+	            21: (pl, ctx) => {
+	                ctx.status.repulsible = true;
+	                ctx.trap(pl, { tag: 'combo' });
+	            },
+	        },
+	        transitions: {
+	            backToDefault: {
+	                onEndOfLife: null,
+	                onTrap: {
+	                    tag: 'feint',
+	                    preInput: 'onFeint',
+	                },
+	            },
+	            sweapCombo: {
+	                onTrap: {
+	                    tag: 'combo',
+	                    preInput: 'onAttack',
+	                    allowedState: 'backswing',
+	                }
+	            },
+	            sweapComboSpinning: {
+	                onTrap: {
+	                    tag: 'combo',
+	                    preInput: 'onUseItem',
+	                    allowedState: 'backswing',
+	                }
+	            },
+	            hurt: {
+	                onHurt: {
+	                    repulsible: true,
+	                }
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'both',
+	                }
+	            },
+	            parry: {
+	                onParry: {
+	                    allowedState: 'both',
+	                }
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    sweapCombo = {
+	        cast: 10,
+	        backswing: 8,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            ctx.lookAtTarget(pl);
+	            playAnim(pl, 'animation.weapon.moon_glaive.chop.combo');
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        timeline: {
+	            4: (pl, ctx) => ctx.adsorbToTarget(pl, 1.2),
+	            8: (pl, ctx) => ctx.adsorbToTarget(pl, 1.2),
+	            11: (pl, ctx) => ctx.adsorbToTarget(pl, 0.5),
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                angle: 70,
+	                rotation: -35,
+	                radius: 2.6,
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 18,
+	                    direction: 'right',
+	                });
+	            });
+	        },
+	        transitions: {
+	            backToDefault: {
+	                onEndOfLife: null
+	            },
+	            hurt: {
+	                onHurt: null,
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'both',
+	                }
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    sweapComboSpinning = {
+	        cast: 15,
+	        backswing: 14,
+	        onEnter(pl, ctx) {
+	            ctx.status.hegemony = true;
+	            ctx.freeze(pl);
+	            ctx.lookAtTarget(pl);
+	            playAnim(pl, 'animation.weapon.moon_glaive.positive_spinning');
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.status.hegemony = false;
+	            ctx.unfreeze(pl);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                angle: 120,
+	                rotation: -60,
+	                radius: 2.8,
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 30,
+	                    knockback: 1.5,
+	                    permeable: true,
+	                    direction: 'left',
+	                });
+	            });
+	        },
+	        timeline: {
+	            0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
+	            8: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 4, 90),
+	            13: (pl, ctx) => ctx.trap(pl),
+	        },
+	        transitions: {
+	            parried: {
+	                onParried: {
+	                    allowedState: 'both'
+	                },
+	            },
+	            backToDefault: {
+	                onEndOfLife: null,
+	                onTrap: {
+	                    preInput: 'onFeint',
+	                }
+	            },
+	            hurt: {
+	                onInterrupted: {
+	                    allowedState: 'both'
+	                }
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    parryKnock = {
+	        cast: 7,
+	        backswing: 11,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            ctx.lookAtTarget(pl);
+	            playAnim(pl, 'animation.weapon.moon_glaive.parry.knock');
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                angle: 60,
+	                rotation: -30,
+	                radius: 2.6,
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 18,
+	                    knockback: 4,
+	                    shock: true,
+	                    parryable: false,
+	                    direction: 'middle',
+	                });
+	            });
+	        },
+	        timeline: {
+	            0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
+	            6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
+	        },
+	        transitions: {
+	            backToDefault: {
+	                onEndOfLife: null,
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    parryChop = {
+	        cast: 13,
+	        backswing: 13,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            ctx.lookAtTarget(pl);
+	            ctx.status.repulsible = false;
+	            playAnim(pl, 'animation.weapon.moon_glaive.parry.chop');
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.status.repulsible = true;
+	            ctx.unfreeze(pl);
+	        },
+	        timeline: {
+	            5: (pl, ctx) => ctx.adsorbToTarget(pl, 2),
+	            8: (pl, ctx) => ctx.adsorbToTarget(pl, 4, 1),
+	            20: (pl, ctx) => ctx.adsorbToTarget(pl, 0.5),
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                angle: 46,
+	                rotation: -23,
+	                radius: 2.8,
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 22,
+	                    permeable: true,
+	                    knockback: 2,
+	                    direction: 'right',
+	                });
+	            });
+	        },
+	        transitions: {
+	            backToDefault: {
+	                onEndOfLife: null,
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'both',
+	                }
+	            },
+	        }
+	    }
+	}
+
+	moon_glaive = new MoonGlaiveTricks();
+	return moon_glaive;
+}
+
+var ootachi;
+var hasRequiredOotachi;
+
+function requireOotachi () {
+	if (hasRequiredOotachi) return ootachi;
+	hasRequiredOotachi = 1;
+	/// <reference path="../basic/types.d.ts"/>
+
+	const { playAnim, playSoundAll } = requireBasic();
+	requireMain();
+	const { randomRange } = requireMath();
+	const { DefaultMoves, DefaultTrickModule } = require_default();
+
+	class OotachiMoves extends DefaultMoves {
+	    constructor() {
+	        super();
+
+	        this.setup('resumeKamae');
+
+	        this.parry.timeline = {
+	            14: (pl, ctx) => ctx.trap(pl)
+	        };
+	        this.parry.transitions = {
+	            combo2Cut: {
+	                onTrap: {
+	                    preInput: 'onAttack',
+	                    allowedState: 'both'
+	                },
+	            },
+	            combo2Sweap: {
+	                onTrap: {
+	                    preInput: 'onUseItem',
+	                    allowedState: 'both'
+	                },
+	            },
+	            resumeKamae: {
+	                onEndOfLife: null
+	            },
+	            parry: {
+	                onParry: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: { allowedState: 'both' }
+	            },
+	        };
+
+	        this.parried.transitions = {
+	            resumeKamae: {
+	                onEndOfLife: null
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: { allowedState: 'both' }
+	            },
+	        };
+
+	        this.animations.parry.left = 'animation.weapon.ootachi.parry.left';
+	        this.animations.block.left = 'animation.weapon.ootachi.block.left';
+	    }
+
+	    idle = {
+	        cast: Infinity,
+	        onEnter(pl, ctx) {
+	            ctx.unfreeze(pl);
+	            ctx.releaseTarget(pl.xuid);
+	            if (ctx.previousStatus === 'running') {
+	                ctx.task
+	                    .queue(() => playAnim(pl, 'animation.weapon.ootachi.trans.running.idle'), 0)
+	                    .queue(() => playAnim(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle'), 210)
+	                    .run();
+	            } else playAnim(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle');
+	        },
+	        onLeave(_, ctx) {
+	            ctx.task.cancel();
+	        },
+	        transitions: {
+	            innoKamae: {
+	                onLock: {
+	                    isOnGround: true
+	                }
+	            },
+	            running: {
+	                onChangeSprinting: { sprinting: true }
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            combo1Attack: {
+	                onAttack: null
+	            },
+	            knockdown: {
+	                onKnockdown: { allowedState: 'both' }
+	            },
+	        }
+	    }
+
+	    innoKamae = {
+	        cast: Infinity,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            playAnim(pl, 'animation.weapon.ootachi.kamae.inno', 'animation.weapon.ootachi.kamae.inno');
+	        },
+	        onTick(pl, ctx) {
+	            ctx.lookAtTarget(pl);
+	        },
+	        transitions: {
+	            idle: {
+	                onReleaseLock: { allowedState: 'both' },
+	                onJump: { allowedState: 'both' },
+	            },
+	            running: {
+	                onChangeSprinting: {
+	                    sprinting: true,
+	                    allowedState: 'both'
+	                }
+	            },
+	            combo1Attack: {
+	                onAttack: { allowedState: 'both' }
+	            },
+	            combo1Chop: {
+	                onUseItem: { allowedState: 'both' }
+	            },
+	            dodgePrepare: {
+	                onSneak: { allowedState: 'both' }
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: { allowedState: 'both' }
+	            },
+	        }
+	    }
+
+	    resumeKamae = {
+	        transitions: {
+	            idle: {
+	                onEndOfLife: { hasTarget: false }
+	            },
+	            innoKamae: {
+	                onEndOfLife: { hasTarget: true }
+	            },
+	        }
+	    }
+
+	    running = {
+	        cast: Infinity,
+	        onEnter(pl, ctx) {
+	            ctx.releaseTarget(pl.xuid);
+	            ctx.task
+	                .queue(() => playAnim(pl, 'animation.weapon.ootachi.trans.idle.running'), 0)
+	                .queue(() => playAnim(pl, 'animation.weapon.ootachi.running', 'animation.weapon.ootachi.running'), 210)
+	                .run();
+	            
+	        },
+	        onLeave(_, ctx) {
+	            ctx.task.cancel();
+	        },
+	        transitions: {
+	            idle: {
+	                onChangeSprinting: { sprinting: false }
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: { allowedState: 'both' }
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    combo1Attack = {
+	        cast: 7,
+	        backswing: 13,
+	        timeline: {
+	            5: (_, ctx) => ctx.status.isBlocking = false,
+	            7: pl => playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1),
+	            14: (pl, ctx) => ctx.trap(pl, { tag: 'combo' })
+	        },
+	        onEnter(pl, ctx) {
+	            ctx.status.isBlocking = true;
+	            ctx.freeze(pl);
+	            ctx.task.queueList([
+	                { handler: () => ctx.adsorbOrSetVelocity(pl, 0.5, 90), timeout: 0 },
+	                { handler: () => ctx.adsorbOrSetVelocity(pl, 1, 90), timeout: 100 },
+	                { handler: () => ctx.adsorbOrSetVelocity(pl, 0.8, 90), timeout: 300 },
+	            ]).run();
+	            playAnim(pl, 'animation.weapon.ootachi.combo1.attack');
+	            ctx.lookAtTarget(pl);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                radius: 3,
+	                angle: 45,
+	                rotation: -20,
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 18,
+	                    knockback: 1,
+	                    direction: 'left',
+	                });
+	            });
+	        },
+	        onLeave(_, ctx) {
+	            ctx.task.cancel();
+	        },
+	        transitions: {
+	            resumeKamae: {
+	                onEndOfLife: null,
+	                onBlock: null,
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'backswing'
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: { allowedState: 'both' }
+	            },
+	            combo2Cut: {
+	                onTrap: {
+	                    tag: 'combo',
+	                    hasTarget: true,
+	                    preInput: 'onAttack'
+	                }
+	            },
+	            combo2Sweap: {
+	                onTrap: {
+	                    tag: 'combo',
+	                    hasTarget: true,
+	                    preInput: 'onUseItem'
+	                }
+	            },
+	            blocked: {
+	                onBlocked: {
+	                    allowedState: 'backswing',
+	                }
+	            },
+	            block: {
+	                onBlock: null
+	            }
+	        }
+	    }
+
+	    combo1Chop = {
+	        cast: 11,
+	        backswing: 13,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            ctx.status.isWaitingParry = true;
+	            ctx.task.queueList([
+	                { handler: () => ctx.adsorbOrSetVelocity(pl, 1, 90), timeout: 0 },
+	                { handler: () => ctx.status.isWaitingParry = false, timeout: 150 },
+	                { handler: () => {
+	                    ctx.adsorbOrSetVelocity(pl, 1.2, 90);
+	                }, timeout: 50 },
+	                { handler: () => ctx.adsorbOrSetVelocity(pl, 0.5, 90), timeout: 400 },
+	            ]).run();
+	            playAnim(pl, 'animation.weapon.ootachi.combo1.chop');
+	            ctx.lookAtTarget(pl);
+	        },
+	        onAct(pl, ctx) {
+	            playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1);
+	            ctx.selectFromRange(pl, {
+	                radius: 3,
+	                angle: 120,
+	                rotation: -60,
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 24,
+	                    knockback: 1.5,
+	                    direction: 'left',
+	                });
+	            });
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.task.cancel();
+	        },
+	        timeline: {
+	            8: (pl, ctx) => {
+	                ctx.trap(pl, { tag: 'feint' });
+	            },
+	            10: (pl, ctx) => {
+	                ctx.trap(pl, { tag: 'hlit' });
+	            },
+	            17: (pl, ctx) => ctx.trap(pl, { tag: 'combo' })
+	        },
+	        transitions: {
+	            resumeKamae: {
+	                onTrap: {
+	                    tag: 'feint',
+	                    isOnGround: true,
+	                    preInput: 'onFeint'
+	                },
+	                onEndOfLife: null,
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            parry: {
+	                onParry: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'backswing'
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: { allowedState: 'both' }
+	            },
+	            combo2Cut: {
+	                onTrap: {
+	                    tag: 'combo',
+	                    hasTarget: true,
+	                    preInput: 'onAttack'
+	                }
+	            },
+	            combo2Sweap: {
+	                onTrap: {
+	                    tag: 'combo',
+	                    hasTarget: true,
+	                    preInput: 'onUseItem'
+	                }
+	            },
+	            hlitStrike: {
+	                onTrap: {
+	                    tag: 'hlit',
+	                    hasTarget: true,
+	                    preInput: 'onAttack'
+	                }
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    combo2Cut = {
+	        cast: 9,
+	        backswing: 17,
+	        onEnter(pl, ctx) {
+	            ctx.lookAtTarget(pl);
+	            ctx.freeze(pl);
+	            playAnim(pl, `animation.weapon.ootachi.combo2.cut.${
+	                ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'
+	            }`);
+	            ctx.adsorbOrSetVelocity(pl, 1, 90, 1.5);
+	        },
+	        onAct(pl, ctx) {
+	            playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1);
+	            ctx.selectFromRange(pl, {
+	                radius: 3.5,
+	                angle: 50,
+	                rotation: -25
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 20,
+	                    knockback: 1.2,
+	                    trace: true,
+	                    direction: 'middle',
+	                });
+	            });
+	        },
+	        onLeave(_, ctx) {
+	            ctx.unfreeze(_);
+	            ctx.task.cancel();
+	        },
+	        timeline: {
+	            7: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90),
+	            16: (pl, ctx) => ctx.trap(pl, { tag: 'combo' })
+	        },
+	        transitions: {
+	            resumeKamae: {
+	                onEndOfLife: null,
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'backswing'
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: { allowedState: 'both' }
+	            },
+	            combo3Stab: {
+	                onTrap: {
+	                    tag: 'combo',
+	                    preInput: 'onAttack',
+	                    hasTarget: true,
+	                }
+	            },
+	            combo3Sweap: {
+	                onTrap: {
+	                    tag: 'combo',
+	                    preInput: 'onUseItem',
+	                    hasTarget: true,
+	                }
+	            },
+	            blocked: {
+	                onBlocked: {
+	                    allowedState: 'backswing',
+	                }
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    combo2Sweap = {
+	        cast: 12,
+	        backswing: 14,
+	        onEnter(pl, ctx) {
+	            ctx.lookAtTarget(pl);
+	            ctx.freeze(pl);
+	            ctx.status.hegemony = true;
+	            ctx.status.repulsible = false;
+	            playAnim(pl, `animation.weapon.ootachi.combo2.sweap.${
+	                ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'
+	            }`);
+	            ctx.adsorbOrSetVelocity(pl, 0.2, 90);
+	            ctx.task
+	                .queue(() => ctx.adsorbOrSetVelocity(pl, 1.2, 90), 200)
+	                .run();
+	        },
+	        onAct(pl, ctx) {
+	            playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1);
+	            ctx.selectFromRange(pl, {
+	                radius: 3,
+	                angle: 80,
+	                rotation: -40
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 28,
+	                    knockback: 1.2,
+	                    direction: 'right',
+	                });
+	            });
+	        },
+	        onLeave(_, ctx) {
+	            ctx.status.hegemony = false;
+	            ctx.status.repulsible = true;
+	            ctx.task.cancel();
+	            ctx.unfreeze(_);
+	        },
+	        timeline: {
+	            10: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
+	            20: (pl, ctx) => ctx.trap(pl, { tag: 'combo' }),
+	        },
+	        transitions: {
+	            resumeKamae: {
+	                onTrap: {
+	                    tag: 'feint',
+	                    isOnGround: true,
+	                    preInput: 'onFeint'
+	                },
+	                onEndOfLife: null,
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'backswing'
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: { allowedState: 'both' }
+	            },
+	            hurt: {
+	                onInterrupted: { allowedState: 'both' }
+	            },
+	            combo3Stab: {
+	                onTrap: {
+	                    tag: 'combo',
+	                    preInput: 'onAttack',
+	                    hasTarget: true,
+	                }
+	            },
+	            combo3Sweap: {
+	                onTrap: {
+	                    tag: 'combo',
+	                    preInput: 'onUseItem',
+	                    hasTarget: true,
+	                }
+	            },
+	        }
+	    }
+
+	    combo3Stab = {
+	        cast: 8,
+	        backswing: 17,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            playAnim(pl, `animation.weapon.ootachi.combo3.stab.${
+	                ctx.previousStatus === 'combo2Cut' ? 'l' : 'r'
+	            }`);
+	            ctx.task
+	                .queue(() => ctx.adsorbOrSetVelocity(pl, 0.5, 90), 0)
+	                .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 200)
+	                .run();
+	        },
+	        onAct(pl, ctx) {
+	            ctx.lookAtTarget(pl);
+	            playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1);
+	            ctx.selectFromRange(pl, {
+	                radius: 3.5,
+	                angle: 30,
+	                rotation: -15
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 16,
+	                    knockback: 0.8,
+	                    direction: 'left',
+	                });
+	            });
+	        },
+	        onLeave(_, ctx) {
+	            ctx.task.cancel();
+	            ctx.unfreeze(_);
+	        },
+	        transitions: {
+	            resumeKamae: {
+	                onEndOfLife: null
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'backswing'
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: { allowedState: 'both' }
+	            },
+	            blocked: {
+	                onBlocked: {
+	                    allowedState: 'backswing',
+	                }
+	            },
+	        }
+	    }
+
+	    combo3Sweap = {
+	        cast: 16,
+	        backswing: 19,
+	        onEnter(pl, ctx) {
+	            ctx.lookAtTarget(pl);
+	            ctx.freeze(pl);
+	            ctx.adsorbOrSetVelocity(pl, 1, 90);
+	            playAnim(pl, `animation.weapon.ootachi.combo3.sweap.${
+	                ctx.previousStatus === 'combo2Cut' ? 'l' : 'r'
+	            }`);
+	            ctx.task
+	                .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 200)
+	                .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 280)
+	                .run();
+	        },
+	        onAct(pl, ctx) {
+	            playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1);
+	            ctx.selectFromRange(pl, {
+	                radius: 3.5,
+	                angle: 90,
+	                rotation: -45
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 35,
+	                    permeable: true,
+	                    knockback: 1.2,
+	                    direction: 'vertical',
+	                });
+	            });
+	        },
+	        onLeave(_, ctx) {
+	            ctx.task.cancel();
+	            ctx.unfreeze(_);
+	        },
+	        timeline: {
+	            10: (pl, ctx) => ctx.trap(pl)
+	        },
+	        transitions: {
+	            resumeKamae: {
+	                onEndOfLife: null,
+	                onTrap: {
+	                    isOnGround: true,
+	                    preInput: 'onFeint'
+	                }
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'backswing'
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: { allowedState: 'both' }
+	            },
+	        }
+	    }
+
+	    dodgePrepare = {
+	        cast: 0,
+	        backswing: 1,
+	        onEnter(pl, ctx) {
+	            ctx.movement(pl);
+	            ctx.getMoveDir(pl).then(direct => {
+	                direct = direct || 1;
+	                if (direct !== 1) {
+	                    ctx.setVelocity(pl, direct * 90, 2);
+	                } else {
+	                    ctx.adsorbToTarget(pl, 2);
+	                }
+	                direct !== 3 && ctx.adsorbToTarget(pl, 0.3);
+
+	                if (direct !== 3) {
+	                    playAnim(pl, 'animation.weapon.ootachi.dodge.front');
+	                } else {
+	                    playAnim(pl, 'animation.weapon.ootachi.dodge.back');
+	                }
+	            });
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.movement(pl, false);
+	        },
+	        transitions: {
+	            dodge: {
+	                onEndOfLife: null
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            }
+	        }
+	    }
+
+	    dodge = {
+	        cast: 3,
+	        backswing: 5,
+	        onEnter(_, ctx) {
+	            ctx.status.isBlocking = true;
+	        },
+	        onAct(_, ctx) {
+	            ctx.status.isBlocking = false;
+	            ctx.status.isDodging = true;
+	        },
+	        onLeave(_, ctx) {
+	            ctx.status.isBlocking = false;
+	            ctx.status.isDodging = false;
+	        },
+	        timeline: {
+	            7: (_, ctx) => ctx.status.isDodging = false
+	        },
+	        transitions: {
+	            resumeKamae: {
+	                onEndOfLife: null
+	            },
+	            dodgeBlocking: {
+	                onBlock: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            hurt: {
+	                onHurt: { allowedState: 'both' }
+	            }
+	        }
+	    }
+
+	    dodgeBlocking = {
+	        cast: 0,
+	        onEnter(pl, ctx) {
+	            mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^^1^0.5`);
+	            mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^-0.1^1^0.5`);
+	            mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^0.1^1^0.5`);
+	            playSoundAll('weapon.heavy', pl.pos, 1);
+	        },
+	        transitions: {
+	            hlitStrike: {
+	                onEndOfLife: null
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    hlitStrike = {
+	        cast: 6,
+	        backswing: 4,
+	        onEnter(pl, ctx) {
+	            playAnim(pl, 'animation.weapon.ootachi.hlit');
+	            ctx.adsorbOrSetVelocity(pl, 3, 90, 0.5);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                radius: 1.5,
+	                angle: 60,
+	                rotation: -30
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 8,
+	                    knockback: 3,
+	                    parryable: false,
+	                    permeable: true,
+	                    stiffness: 800,
+	                    shock: true,
+	                    powerful: true,
+	                    direction: 'middle',
+	                });
+	            });
+	        },
+	        timeline: {
+	            9: (pl, ctx) => ctx.trap(pl)
+	        },
+	        transitions: {
+	            resumeKamae: {
+	                onEndOfLife: null
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: { allowedState: 'both' }
+	            },
+	            combo3Stab: {
+	                onTrap: {
+	                    preInput: 'onAttack',
+	                    hasTarget: true,
+	                }
+	            },
+	            combo3Sweap: {
+	                onTrap: {
+	                    preInput: 'onUseItem',
+	                    hasTarget: true,
+	                }
+	            },
+	        }
+	    }
+	}
+
+	class OotachiTricks extends DefaultTrickModule {
+	    constructor() {
+	        super(
+	            'rgb39.weapon.ootachi',
+	            'idle',
+	            [ 'weapon:ootachi', 'weapon:ootachi_akaoni', 'weapon:ootachi_dragon' ]
+	        );
+	    }
+
+	    moves = new OotachiMoves()
+	}
+
+	ootachi = new OotachiTricks();
+	return ootachi;
+}
+
+var sheathed_katana;
+var hasRequiredSheathed_katana;
+
+function requireSheathed_katana () {
+	if (hasRequiredSheathed_katana) return sheathed_katana;
+	hasRequiredSheathed_katana = 1;
+	/// <reference path="../basic/types.d.ts"/>
+
+	const { playAnim } = requireBasic();
+
+	/**
+	 * @type {TrickModule}
+	 */
+	sheathed_katana = {
+	    sid: 'rgb39.weapon.katana',
+	    bind: 'weapon:katana',
+	    entry: 'default',
+	    moves: {
+	        default: {
+	            cast: Infinity,
+	            onEnter(pl, ctx) {
+	                ctx.status.isBlocking = true;
+	                playAnim(pl, 'animation.general.stand');
+	            },
+	            transitions: {
+	                blocking: {
+	                    onBlock: null
+	                },
+	                knockdown: {
+	                    onKnockdown: { allowedState: 'both' }
+	                },
+	            }
+	        },
+
+	        blocking: {
+	            cast: 5,
+	            onEnter(pl) {
+	                const side = Math.random() > 0.5 ? 'left' : 'right';
+	                playAnim(pl, 'animation.twohanded.block.' + side, 'animation.twohanded.block.' + side);
+	            },
+	            transitions: {
+	                default: { onEndOfLife: null },
+	                blocking: { onBlock: null },
+	                knockdown: {
+	                    onKnockdown: { allowedState: 'both' }
+	                },
+	            }
+	        },
+
+	        knockdown: {
+	            cast: 30,
+	            onEnter: (pl, ctx) => {
+	                ctx.freeze(pl);
+	                ctx.status.disableInputs([
+	                    'onAttack',
+	                    'onUseItem'
+	                ]);
+	                playAnim(pl, 'animation.general.fell');
+	            },
+	            onLeave(pl, ctx) {
+	                ctx.unfreeze(pl);
+	                playAnim(pl, 'animation.general.stand');
+	                ctx.status.enableInputs([
+	                    'onAttack',
+	                    'onUseItem'
+	                ]);
+	            },
+	            transitions: {
+	                default: {
+	                    onEndOfLife: null
+	                }
+	            }
+	        },
+	    }
+	};
+	return sheathed_katana;
+}
+
+var shield_with_sword;
+var hasRequiredShield_with_sword;
+
+function requireShield_with_sword () {
+	if (hasRequiredShield_with_sword) return shield_with_sword;
+	hasRequiredShield_with_sword = 1;
+	const { playAnim, playSoundAll } = requireBasic();
+	const { DefaultMoves, DefaultTrickModule } = require_default();
+	requireMain();
+	const { constrictCalc, randomRange } = requireMath();
+	requireHud();
+
+	class ShieldSwordTricks extends DefaultTrickModule {
+	    constructor() {
+	        super(
+	            'rgb39.weapon.shield_sword',
+	            'idle',
+	            [ 'weapon:shield_with_sword' ]
+	        );
+	    }
+
+	    moves = new ShieldSwordMoves()
+	}
+
+	class ShieldSwordMoves extends DefaultMoves {
+	    constructor() {
+	        super();
+
+	        this.animations.parry.left = 'animation.weapon.shield_with_sword.parry';
+
+	        this.setup('idle');
+
+	        this.setTransition('parry', 'draw', {
+	            draw: {
+	                onTrap: {
+	                    tag: 'parryCounter',
+	                    preInput: 'onUseItem',
+	                }
+	            }
+	        });
+
+	        this.setTransition('parry', 'shieldStrike', {
+	            onTrap: {
+	                tag: 'parryCounter',
+	                preInput: 'onAttack',
+	            }
+	        });
+
+	        this.block =  {
+	            cast: 7,
+	            onEnter(pl, ctx) {
+	                playSoundAll(`weapon.sheild.hit${randomRange(1, 3, true)}`, pl.pos, 1);
+	                ctx.status.isBlocking = true;
+	                ctx.freeze(pl);
+	                ctx.lookAtTarget(pl);
+	                playAnim(pl, 'animation.weapon.shield_with_sword.block');
+	            },
+	            onLeave(pl, ctx) {
+	                ctx.status.isBlocking = false;
+	                ctx.unfreeze(pl);
+	            },
+	            timeline: {
+	                6: (pl, ctx) => ctx.trap(pl)
+	            },
+	            transitions: {
+	                hurt: {
+	                    onHurt: null,
+	                },
+	                block: {
+	                    onBlock: null
+	                },
+	                blocking: {
+	                    onEndOfLife: {
+	                        isSneaking: true
+	                    }
+	                },
+	                afterBlocking: {
+	                    onEndOfLife: {
+	                        isSneaking: false
+	                    }
+	                },
+	                swordCounter: {
+	                    onTrap: {
+	                        preInput: 'onAttack',
+	                        allowedState: 'both',
+	                        hasTarget: true,
+	                    }
+	                },
+	                knockdown: {
+	                    onKnockdown: null
+	                },
+	            },
+	        };
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    draw = {
+	        cast: 10,
+	        backswing: 11,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            playAnim(pl, 'animation.weapon.shield_with_sword.draw');
+	            ctx.task.queueList([
+	                { handler() { ctx.status.isWaitingParry = true; }, timeout: 0 },
+	                { handler() { ctx.status.isWaitingParry = false; }, timeout: 150 },
+	            ]).run();
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	            ctx.task.cancel();
+	        },
+	        onAct(pl, ctx) {
+	            playSoundAll(`weapon.woosh.${randomRange(1, 3, true)}`, pl.pos, 1);
+	            ctx.selectFromRange(pl, {
+	                radius: 2.8,
+	                angle: 60,
+	                rotation: -30
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 14,
+	                    knockback: 0.5,
+	                    direction: 'left'
+	                });
+	            });
+	        },
+	        timeline: {
+	            0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.5, 90),
+	            3: (pl, ctx) => ctx.lookAtTarget(pl),
+	            4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
+	            16: (pl, ctx) => ctx.trap(pl)
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: null
+	            },
+	            idle: {
+	                onEndOfLife: null
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'backswing'
+	                }
+	            },
+	            punch: {
+	                onTrap: {
+	                    preInput: 'onAttack',
+	                    allowedState: 'backswing',
+	                }
+	            },
+	            heavyChopPre: {
+	                onTrap: {
+	                    preInput: 'onUseItem',
+	                    allowedState: 'backswing',
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	            parry: {
+	                onParry: null
+	            },
+	            blocked: {
+	                onBlocked: {
+	                    allowedState: 'backswing',
+	                }
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    heavyChopPre = {
+	        cast: 5,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            playAnim(pl, 'animation.weapon.shield_with_sword.heavy_chop_pre');
+	            ctx.adsorbToTarget(pl, 5, 1);
+	        },
+	        timeline: {
+	            4: (pl, ctx) => ctx.trap(pl)
+	        },
+	        transitions: {
+	            idle: {
+	                onTrap: {
+	                    preInput: 'onFeint',
+	                    allowedState: 'both',
+	                }
+	            },
+	            heavyChopAct: {
+	                onEndOfLife: null
+	            },
+	            hurt: {
+	                onHurt: null
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    heavyChopAct = {
+	        cast: 5,
+	        backswing: 8,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            ctx.adsorbOrSetVelocity(pl, 1, 90);
+	            playAnim(pl, 'animation.weapon.shield_with_sword.heavy_chop_act');
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        onAct(pl, ctx) {
+	            playSoundAll(`weapon.woosh.${randomRange(3, 5, true)}`, pl.pos, 1);
+	            ctx.selectFromRange(pl, {
+	                angle: 40,
+	                rotation: -20,
+	                radius: 3.2
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 20,
+	                    knockback: 1.5,
+	                    trace: true,
+	                    direction: 'vertical'
+	                });
+	            });
+	        },
+	        timeline: {
+	            3: (pl, ctx) => ctx.lookAtTarget(pl)
+	        },
+	        transitions: {
+	            idle: {
+	                onEndOfLife: null
+	            },
+	            hurt: {
+	                onHurt: null
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'backswing'
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    shieldStrike = {
+	        cast: 10,
+	        backswing: 15,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            playAnim(pl, 'animation.weapon.shield_with_sword.shield_strike');
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                radius: 2.2,
+	                angle: 120,
+	                rotation: -60
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 4,
+	                    permeable: true,
+	                    parryable: false,
+	                    knockback: 0,
+	                    direction: 'middle'
+	                });
+	            });
+	        },
+	        timeline: {
+	            2: (pl, ctx) => ctx.lookAtTarget(pl),
+	            0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.8, 90, 1),
+	            6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2.6, 90, 1),
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: null
+	            },
+	            punchSomeone: {
+	                onHit: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            idle: {
+	                onEndOfLife: null
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    punch = {
+	        cast: 10,
+	        backswing: 15,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            playAnim(pl, 'animation.weapon.shield_with_sword.punch');
+	            
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                radius: 2.2,
+	                angle: 120,
+	                rotation: -60
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 4,
+	                    permeable: true,
+	                    parryable: false,
+	                    knockback: 0.05,
+	                    direction: 'middle',
+	                });
+	            });
+	        },
+	        timeline: {
+	            0: (pl, ctx) => ctx.lookAtTarget(pl),
+	            2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 3, 90, 1),
+	            12: (pl, ctx) => ctx.trap(pl),
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: null,
+	            },
+	            idle: {
+	                onEndOfLife: null
+	            },
+	            punchSomeone: {
+	                onHit: {
+	                    allowedState: 'backswing'
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    punchSomeone = {
+	        cast: 15,
+	        onEnter(pl, ctx) {
+	            playSoundAll(`weapon.sheild.hit${randomRange(1, 3, true)}`, pl.pos, 0.5);
+	            ctx.trap(pl);
+	        },
+	        transitions: {
+	            chopCombo: {
+	                onTrap: {
+	                    preInput: 'onUseItem',
+	                    allowedState: 'both'
+	                }
+	            },
+	            idle: {
+	                onEndOfLife: null
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    chopCombo = {
+	        cast: 5,
+	        backswing: 7,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            playAnim(pl, 'animation.weapon.shield_with_sword.chop_combo');
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        onAct(pl, ctx) {
+	            playSoundAll(`weapon.woosh.${randomRange(1, 2, true)}`, pl.pos, 1);
+	            ctx.selectFromRange(pl, {
+	                radius: 3,
+	                angle: 46,
+	                rotation: -23
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 14,
+	                    knockback: 0.5,
+	                    direction: 'vertical'
+	                });
+	            });
+	        },
+	        timeline: {
+	            2: (pl, ctx) => ctx.adsorbToTarget(pl),
+	            0: (pl, ctx) => ctx.lookAtTarget(pl),
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: null
+	            },
+	            idle: {
+	                onEndOfLife: null
+	            },
+	            parried: {
+	                onParried: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    idle = {
+	        cast: Infinity,
+	        onEnter(pl, ctx) {
+	            ctx.trap(pl);
+	            ctx.unfreeze(pl);
+	            playAnim(pl, 'animation.weapon.shield_with_sword.idle', 'animation.weapon.shield_with_sword.idle');
+	            pl.setSprinting(false);
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: null,
+	            },
+	            running: {
+	                onChangeSprinting: { sprinting: true }
+	            },
+	            beforeBlocking: {
+	                onSneak: {
+	                    isSneaking: true,
+	                },
+	                onTrap: {
+	                    preInput: 'onSneak',
+	                    isSneaking: true,
+	                }
+	            },
+	            draw: {
+	                onUseItem: {
+	                    hasTarget: true,
+	                }
+	            },
+	            shieldStrike: {
+	                onAttack: null
+	            },
+	            jump: {
+	                onJump: null
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    jump = {
+	        onEnter(pl, ctx) {
+	            ctx.releaseTarget(pl.xuid);
+	        },
+	        transitions: {
+	            idle: {
+	                onEndOfLife: null
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    running = {
+	        cast: Infinity,
+	        onEnter(pl, ctx) {
+	            playAnim(pl, 'animation.weapon.shield_with_sword.running', 'animation.weapon.shield_with_sword.running');
+	            ctx.releaseTarget(pl.xuid);
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: null,
+	            },
+	            idle: {
+	                onChangeSprinting: { sprinting: false }
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    beforeBlocking = {
+	        cast: 2,
+	        onEnter(pl) {
+	            playAnim(pl, 'animation.weapon.shield_with_sword.idle_to_blocking');
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: null,
+	            },
+	            blocking: {
+	                onEndOfLife: {
+	                    isSneaking: true
+	                }
+	            },
+	            afterBlocking: {
+	                onEndOfLife: {
+	                    isSneaking: false
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    blocking = {
+	        cast: Infinity,
+	        onEnter(pl, ctx) {
+	            ctx.status.isBlocking = true;
+	            playAnim(pl, 'animation.weapon.shield_with_sword.blocking', 'animation.weapon.shield_with_sword.blocking');
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.status.isBlocking = false;
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: null,
+	            },
+	            running: {
+	                onChangeSprinting: { sprinting: true }
+	            },
+	            afterBlocking: {
+	                onSneak: {
+	                    isSneaking: false
+	                },
+	            },
+	            block: {
+	                onBlock: null
+	            },
+	            rockSolid: {
+	                onUseItem: {
+	                    hasTarget: true
+	                }
+	            },
+	            jump: {
+	                onJump: null
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    rockSolid = {
+	        cast: 4,
+	        backswing: 7,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            ctx.status.repulsible = false;
+	            playAnim(pl, 'animation.weapon.shield_with_sword.rock_solid');
+	        },
+	        onAct(pl, ctx) {
+	            ctx.status.repulsible = true;
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        transitions: {
+	            idle: {
+	                onEndOfLife: {
+	                    isSneaking: false
+	                }
+	            },
+	            sweapCounter: {
+	                onHurt: {
+	                    allowedState: 'cast',
+	                    prevent: true,
+	                },
+	                onKnockdown: {
+	                    allowedState: 'cast'
+	                },
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'backswing'
+	                }
+	            },
+	            knockdown: {
+	                onKnockdown: {
+	                    allowedState: 'backswing'
+	                }
+	            },
+	            beforeBlocking: {
+	                onEndOfLife: {
+	                    isSneaking: true
+	                }
+	            }
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    sweapCounter = {
+	        cast: 11,
+	        backswing: 10,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            ctx.adsorbToTarget(pl, 4, 0.5);
+	            playAnim(pl, 'animation.weapon.shield_with_sword.sweap_counter');
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.lookAtTarget(pl);
+	            ctx.selectFromRange(pl, {
+	                radius: 3,
+	                angle: 120,
+	                rotation: -90,
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 24,
+	                    parryable: false,
+	                    permeable: true,
+	                    knockback: 1.5,
+	                });
+	            });
+	        },
+	        timeline: {
+	            4: (pl, ctx) => {
+	                ctx.selectFromRange(pl, {
+	                    radius: 2.5,
+	                    angle: 120,
+	                    rotation: -60,
+	                }).forEach(en => {
+	                    ctx.attack(pl, en, {
+	                        damage: 4,
+	                        parryable: false,
+	                        permeable: true,
+	                        knockback: 0.05,
+	                        direction: 'left'
+	                    });
+	                });
+	            },
+
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: null
+	            },
+	            idle: {
+	                onEndOfLife: null
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    afterBlocking = {
+	        cast: 3,
+	        onEnter(pl) {
+	            playAnim(pl, 'animation.weapon.shield_with_sword.blocking_to_idle');
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: null,
+	            },
+	            idle: {
+	                onEndOfLife: null
+	            },
+	            knockdown: {
+	                onKnockdown: null
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    swordCounter = {
+	        cast: 6,
+	        backswing: 7,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            ctx.lookAtTarget(pl);
+	            playAnim(pl, 'animation.weapon.shield_with_sword.sword_counter');
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        onAct(pl, ctx) {
+	            playSoundAll(`weapon.woosh.${randomRange(1,3, true)}`, pl.pos, 1);
+	            ctx.selectFromRange(pl, {
+	                angle: 30,
+	                rotation: -15,
+	                radius: 3.5,
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 12,
+	                    knockback: 1,
+	                    parryable: false,
+	                    permeable: true,
+	                    direction: 'middle',
+	                });
+	            });
+	        },
+	        timeline: {
+	            3: (pl, ctx) => {
+	                ctx.adsorbToTarget(pl, 2, 0.8);
+	            }
+	        },
+	        transitions: {
+	            hurt: {
+	                onHurt: null,
+	            },
+	            idle: {
+	                onEndOfLife: {
+	                    isSneaking: false
+	                },
+	            },
+	            blocking: {
+	                onEndOfLife: {
+	                    isSneaking: true
+	                },
+	            }
+	        }
+	    }
+	}
+
+	shield_with_sword = new ShieldSwordTricks();
+	return shield_with_sword;
+}
+
+var uchigatana;
+var hasRequiredUchigatana;
+
+function requireUchigatana () {
+	if (hasRequiredUchigatana) return uchigatana;
+	hasRequiredUchigatana = 1;
+	/// <reference path="../basic/types.d.ts"/>
+
+	const { playAnim } = requireBasic();
+	const { DefaultMoves, DefaultTrickModule } = require_default();
+	requireMain();
+
+	class UchigatanaMoves extends DefaultMoves {
+	    /**
+	     * @type {Move}
+	     */
+	    hold = {
+	        cast: Infinity,
+	        onEnter(pl, ctx) {
+	            ctx.releaseTarget(pl.xuid);
+	            playAnim(pl, 'animation.weapon.uchigatana.hold', 'animation.weapon.uchigatana.hold');
+	        },
+	        transitions: {
+	            kamae: {
+	                onLock: null,
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    kamae = {
+	        cast: Infinity,
+	        onEnter(pl) {
+	            playAnim(pl, 'animation.weapon.uchigatana.kamae', 'animation.weapon.uchigatana.kamae');
+	        },
+	        transitions: {
+	            hold: {
+	                onReleaseLock: null,
+	                onChangeSprinting: null,
+	                onJump: null,
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            attack1: {
+	                onAttack: {
+	                    hasTarget: true
+	                },
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    resume = {
+	        transitions: {
+	            hold: {
+	                onEndOfLife: {
+	                    hasTarget: false
+	                }
+	            },
+	            kamae: {
+	                onEndOfLife: {
+	                    hasTarget: true
+	                }
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    attack1 = {
+	        cast: 8,
+	        backswing: 13,
+	        onEnter(pl, ctx) {
+	            ctx.status.isBlocking = true;
+	            ctx.freeze(pl);
+	            ctx.lookAtTarget(pl);
+	            playAnim(pl, 'animation.weapon.uchigatana.attack1');
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 12,
+	                });
+	            });
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	            ctx.status.isBlocking = false;
+	        },
+	        timeline: {
+	            0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.5, 90),
+	            4: (_, ctx) => ctx.status.isBlocking = false,
+	            5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
+	            12: (pl, ctx) => ctx.trap(pl)
+	        },
+	        transitions: {
+	            block: {
+	                onBlock: null
+	            },
+	            resume: {
+	                onEndOfLife: null
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            attack2: {
+	                onTrap: {
+	                    preInput: 'onUseItem',
+	                }
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            blocked: {
+	                onBlocked: {
+	                    allowedState: 'both'
+	                }
+	            },
+	        }
+	    }
+
+	    /**
+	     * @type {Move}
+	     */
+	    attack2 = {
+	        cast: 12,
+	        backswing: 14,
+	        onEnter(pl, ctx) {
+	            ctx.freeze(pl);
+	            ctx.lookAtTarget(pl);
+	            playAnim(pl, 'animation.weapon.uchigatana.attack2');
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                radius: 3,
+	                angle: 180,
+	                rotation: -90,
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 24,
+	                });
+	            });
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
+	        },
+	        timeline: {
+	            3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
+	            8: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2.2, 90),
+	        },
+	        transitions: {
+	            block: {
+	                onBlock: null
+	            },
+	            resume: {
+	                onEndOfLife: null
+	            },
+	            hurt: {
+	                onHurt: {
+	                    allowedState: 'both'
+	                }
+	            },
+	            parried: {
+	                onParried: {
+	                    allowedState: 'both'
+	                }
+	            },
+	        }
+	    }
+
+	    constructor() {
+	        super();
+
+	        this.setup('resume');
+	    }
+	}
+
+	class UchigatanaModule extends DefaultTrickModule {
+	    constructor() {
+	        super(
+	            'rgb39.weapon.empty_hand',
+	            'hold',
+	            [ 'weapon:uchigatana' ]
+	        );
+	    }
+
+	    moves = new UchigatanaMoves()
+	}
+
+	/**
+	 * @type {TrickModule}
+	 */
+	uchigatana = new UchigatanaModule();
+	return uchigatana;
+}
+
 var double_blade;
 var hasRequiredDouble_blade;
 
@@ -9086,8 +6739,8 @@ function requireDouble_blade () {
 	    constructor() {
 	        super();
 
-	        this.animations.parry = 'animation.double_blade.parry.left';
-	        this.animations.block = 'animation.double_blade.block.left';
+	        this.animations.parry.left = 'animation.double_blade.parry.left';
+	        this.animations.block.left = 'animation.double_blade.block.left';
 	        this.setup('resume');
 	    }
 
@@ -9208,7 +6861,7 @@ function requireDouble_blade () {
 	    /** @type {Move} */
 	    startSweap = {
 	        cast: 8,
-	        backswing: 12,
+	        backswing: 13,
 	        onEnter(pl, ctx) {
 	            ctx.freeze(pl);
 	            ctx.lookAtTarget(pl);
@@ -9217,6 +6870,7 @@ function requireDouble_blade () {
 	            ctx.adsorbOrSetVelocity(pl, 0.5, 90, 1);
 	        },
 	        onLeave(pl, ctx) { 
+	            ctx.status.isBlocking = false;
 	            ctx.unfreeze(pl);
 	        },
 	        onAct(pl, ctx) {
@@ -9226,15 +6880,62 @@ function requireDouble_blade () {
 	                rotation: -20
 	            }).forEach(en => {
 	                ctx.attack(pl, en, {
-	                    damage: 14,
+	                    damage: 17,
 	                    damageType: 'entityAttack',
 	                    knockback: 0.8,
+	                    direction: 'left'
 	                });
 	            });
 	        },
 	        timeline: {
 	            3: (_, ctx) => ctx.status.isBlocking = false,
 	            4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90, 1)
+	        },
+	        transitions: {
+	            resume: {
+	                onEndOfLife: null
+	            },
+	            hurt: {
+	                onHurt: null
+	            },
+	            parried: {
+	                onParried: null
+	            },
+	            blocked: {
+	                onBlocked: null
+	            },
+	            startMasterHit: {
+	                onBlock: null
+	            },
+	        }
+	    }
+
+	    /** @type {Move} */
+	    startMasterHit = {
+	        cast: 6,
+	        backswing: 13,
+	        onEnter(pl, ctx) {
+	            playSoundAll('weapon.sword.hit2', pl.pos, 1);
+	            ctx.freeze(pl);
+	            ctx.adsorbOrSetVelocity(pl, 1.4, 90, 1);
+	        },
+	        onAct(pl, ctx) {
+	            ctx.selectFromRange(pl, {
+	                angle: 40,
+	                radius: 2.2,
+	                rotation: -20
+	            }).forEach(en => {
+	                ctx.attack(pl, en, {
+	                    damage: 20,
+	                    damageType: 'entityAttack',
+	                    knockback: 0.8,
+	                    permeable: true,
+	                    direction: 'left'
+	                });
+	            });
+	        },
+	        onLeave(pl, ctx) {
+	            ctx.unfreeze(pl);
 	        },
 	        transitions: {
 	            resume: {
@@ -9250,16 +6951,8 @@ function requireDouble_blade () {
 	                    allowedState: 'backswing'
 	                }
 	            },
-	            blocked: {
-	                onBlocked: {
-	                    allowedState: 'backswing'
-	                }
-	            }
 	        }
 	    }
-
-	    /** @type {Move} */
-	    
 	}
 
 	class DoubleBlade extends DefaultTrickModule {
@@ -9336,7 +7029,7 @@ var hasRequiredCombat;
 function requireCombat () {
 	if (hasRequiredCombat) return combat;
 	hasRequiredCombat = 1;
-	const { remote } = requireSetup$1();
+	const { remote } = requireSetup();
 
 	async function damage(victim, damage, cause, abuser, projectile) {
 	    return await remote.call(
@@ -9366,7 +7059,7 @@ var hasRequiredFunc;
 function requireFunc () {
 	if (hasRequiredFunc) return func;
 	hasRequiredFunc = 1;
-	const kinematics = requireKinematics$1();
+	const kinematics = requireKinematics();
 	const combat = requireCombat();
 
 	func = {
@@ -9507,7 +7200,7 @@ var hasRequiredCamera;
 function requireCamera () {
 	if (hasRequiredCamera) return camera_1;
 	hasRequiredCamera = 1;
-	requireMain$1();
+	requireMain();
 	const { Status } = requireStatus();
 	const { rotate2, vec2, multiply2 } = requireVec();
 
@@ -9634,18 +7327,24 @@ var hasRequiredLock;
 function requireLock () {
 	if (hasRequiredLock) return lock;
 	hasRequiredLock = 1;
-	requireSetup$1();
-	requireMain$1();
+	requireSetup();
+	requireMain();
 	const { selectFromRange } = requireRange();
 	const { battleCamera, cameraInput, clearCamera } = requireCamera();
-	const { knockback, faceTo } = requireKinematics$1();
-	const { setVelocity } = requireKinematic$1();
-	requireBasic$1();
+	const { knockback, faceTo } = requireKinematics();
+	const { setVelocity } = requireKinematic();
+	requireBasic();
 
 	const locks = new Map();
+	const cooldowns = new Set();
 
 	function lockTarget(src, target) {
 	    const pl = mc.getPlayer(src);
+
+	    if (cooldowns.has(pl.xuid)) {
+	        return
+	    }
+
 	    if (target) {
 	        cameraInput(pl, false);
 	        locks.set(src, target);
@@ -9661,6 +7360,8 @@ function requireLock () {
 	    clearCamera(pl);
 	    locks.delete(src);
 	    pl.setMovementSpeed(0.1);
+	    cooldowns.add(pl.xuid);
+	    setTimeout(() => cooldowns.delete(pl.xuid), 500);
 	}
 
 	function toggleLock(src) {
@@ -9939,7 +7640,7 @@ function requireEventStream () {
 	hasRequiredEventStream = 1;
 	/// <reference path="../types.d.ts"/>
 
-	requireEvents$1();
+	requireEvents();
 
 	class EventInputStream {
 	    static #ends = new Map()
@@ -10020,13 +7721,13 @@ function requireCore () {
 	hasRequiredCore = 1;
 	/// <reference path="./types.d.ts"/>
 
-	const { EventEmitter } = requireEvents$1();
-	requireMain$1();
-	const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = requireKinematics$1();
+	const { EventEmitter } = requireEvents();
+	requireMain();
+	const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = requireKinematics();
 	const { combat: { damage: _damage } } = requireFunc();
-	const { playAnim } = requireBasic$1();
+	const { playAnim } = requireBasic();
 	const { movement, camera, movementInput } = requireGeneric();
-	requireCommand$1();
+	requireCommand();
 	const { selectFromRange } = requireRange();
 	const { Status, defaultAcceptableInputs } = requireStatus();
 	const { Task } = requireTask();
@@ -10035,7 +7736,7 @@ function requireCore () {
 	    lookAt, lookAtTarget, distanceToTarget, adsorbToTarget, adsorbTo,
 	    onTick, toggleLock, hasLock, releaseTarget, adsorbOrSetVelocity
 	} = requireLock();
-	const { setVelocity, isCollide } = requireKinematic$1();
+	const { setVelocity, isCollide } = requireKinematic();
 	const { vec2, vec2ToAngle } = requireVec();
 	const { clearCamera } = requireCamera();
 
@@ -10582,7 +8283,7 @@ function requireCore () {
 	        shock: false,
 	        powerful: false,
 	        direction: 'left',
-	        stiffness: 600,
+	        stiffness: 500,
 	        trace: false,
 	    };
 
@@ -10987,6 +8688,9 @@ function requireCore () {
 	        if (hasLock(pl)) {
 	            if (toggleLock(pl.xuid) === null) {
 	                em.emitNone('onReleaseLock', pl, pl.getHand().type, null);
+	                pl.tell('不要在锁定后跳跃');
+	                clearCamera(pl);
+	                initCombatComponent(pl, getMod(getHandedItemType(pl)), Status.get(pl.xuid));
 	            }
 	        }
 	    });
@@ -11142,7 +8846,7 @@ function requireLoader () {
 	/// <reference path="./types.d.ts"/>
 
 	const collection = requireCollection();
-	const console = requireMain$1();
+	const console = requireMain();
 	const { checkCompleteness } = requireCompleteness();
 	const {
 	    listenAllMcEvents
@@ -11194,7 +8898,7 @@ function requireInit () {
 const { load } = loadModule;
 
 mc.listen('onServerStarted',() => [
-    requireSetup$1(),
+    requireSetup(),
     requireInit(),
 ].forEach(m => load(m)));
 

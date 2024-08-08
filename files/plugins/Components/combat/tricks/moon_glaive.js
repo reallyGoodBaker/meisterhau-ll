@@ -22,7 +22,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         super()
 
         this.setup('backToDefault')
-        this.animations.parry = 'animation.weapon.moon_glaive.parry'
+        this.animations.parry.left = 'animation.weapon.moon_glaive.parry'
 
         this.setTransition('parry', 'parryKnock', {
             onTrap: {
@@ -114,6 +114,7 @@ class MoonGlaiveMoves extends DefaultMoves {
                 damage: 24,
                 knockback: 2.5,
                 permeable: true,
+                direction: 'right'
             }))
         },
         onLeave(pl, ctx) {
@@ -373,7 +374,8 @@ class MoonGlaiveMoves extends DefaultMoves {
                 radius: 2.6,
             }).forEach(en => {
                 ctx.attack(pl, en, {
-                    damage: 16
+                    damage: 16,
+                    direction: 'middle'
                 })
             })
         },
@@ -443,7 +445,8 @@ class MoonGlaiveMoves extends DefaultMoves {
                 radius: 2.6,
             }).forEach(en => {
                 ctx.attack(pl, en, {
-                    damage: 18
+                    damage: 18,
+                    direction: 'vertical'
                 })
             })
         },
@@ -496,6 +499,7 @@ class MoonGlaiveMoves extends DefaultMoves {
                     damage: 32,
                     permeable: true,
                     knockback: 1,
+                    direction: 'vertical',
                 })
             })
         },
@@ -545,6 +549,7 @@ class MoonGlaiveMoves extends DefaultMoves {
                 ctx.attack(pl, en, {
                     damage: 22,
                     knockback: 0.4,
+                    direction: 'left',
                 })
             })
         },
@@ -627,6 +632,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             }).forEach(en => {
                 ctx.attack(pl, en, {
                     damage: 18,
+                    direction: 'right',
                 })
             })
         },
@@ -671,6 +677,7 @@ class MoonGlaiveMoves extends DefaultMoves {
                     damage: 30,
                     knockback: 1.5,
                     permeable: true,
+                    direction: 'left',
                 })
             })
         },
@@ -724,6 +731,7 @@ class MoonGlaiveMoves extends DefaultMoves {
                     knockback: 4,
                     shock: true,
                     parryable: false,
+                    direction: 'middle',
                 })
             })
         },
@@ -769,6 +777,7 @@ class MoonGlaiveMoves extends DefaultMoves {
                     damage: 22,
                     permeable: true,
                     knockback: 2,
+                    direction: 'right',
                 })
             })
         },

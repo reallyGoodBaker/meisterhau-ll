@@ -7,8 +7,8 @@ class DoubleDaggerMoves extends DefaultMoves {
     constructor() {
         super()
 
-        this.animations.parry = 'animation.double_dagger.parry'
-        this.animations.block = 'animation.double_dagger.block'
+        this.animations.parry.left = 'animation.double_dagger.parry'
+        this.animations.block.left = 'animation.double_dagger.block'
         this.setup('resumeHold')
     }
 
@@ -245,6 +245,7 @@ class DoubleDaggerMoves extends DefaultMoves {
                 ctx.attack(pl, e, {
                     damage: 18,
                     knockback: 1.8,
+                    direction: 'middle',
                 })
             })
         },
@@ -418,6 +419,7 @@ class DoubleDaggerMoves extends DefaultMoves {
                 ctx.attack(pl, en, {
                     damage: 22,
                     knockback: 1,
+                    direction: 'middle',
                 })
             })
         },
@@ -468,6 +470,7 @@ class DoubleDaggerMoves extends DefaultMoves {
                     parryable: false,
                     permeable: true,
                     knockback: 2,
+                    direction: 'middle',
                 })
             })
         },

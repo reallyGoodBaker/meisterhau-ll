@@ -562,7 +562,7 @@ function listenAllCustomEvents(mods) {
         shock: false,
         powerful: false,
         direction: 'left',
-        stiffness: 600,
+        stiffness: 500,
         trace: false,
     }
 
@@ -967,6 +967,9 @@ function listenAllMcEvents(collection) {
         if (hasLock(pl)) {
             if (toggleLock(pl.xuid) === null) {
                 em.emitNone('onReleaseLock', pl, pl.getHand().type, null)
+                pl.tell('不要在锁定后跳跃')
+                clearCamera(pl)
+                initCombatComponent(pl, getMod(getHandedItemType(pl)), Status.get(pl.xuid))
             }
         }
     })

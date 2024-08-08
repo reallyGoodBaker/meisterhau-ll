@@ -1,14 +1,14 @@
 /// <reference path="../basic/types.d.ts"/>
 
-const { playAnim, playSoundAll } = require("../../../../../dev/plugins/Components/combat/basic")
-const { DefaultMoves, DefaultTrickModule } = require("../../../../../dev/plugins/Components/combat/basic/default")
+const { playAnim, playSoundAll } = require("../basic")
+const { DefaultMoves, DefaultTrickModule } = require("../basic/default")
 
 class DoubleBladeMoves extends DefaultMoves {
     constructor() {
         super()
 
-        this.animations.parry = 'animation.double_blade.parry.left'
-        this.animations.block = 'animation.double_blade.block.left'
+        this.animations.parry.left = 'animation.double_blade.parry.left'
+        this.animations.block.left = 'animation.double_blade.block.left'
         this.setup('resume')
     }
 
@@ -129,7 +129,7 @@ class DoubleBladeMoves extends DefaultMoves {
     /** @type {Move} */
     startSweap = {
         cast: 8,
-        backswing: 12,
+        backswing: 13,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
@@ -138,6 +138,7 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.adsorbOrSetVelocity(pl, 0.5, 90, 1)
         },
         onLeave(pl, ctx) { 
+            ctx.status.isBlocking = false
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
@@ -147,15 +148,62 @@ class DoubleBladeMoves extends DefaultMoves {
                 rotation: -20
             }).forEach(en => {
                 ctx.attack(pl, en, {
-                    damage: 14,
+                    damage: 17,
                     damageType: 'entityAttack',
                     knockback: 0.8,
+                    direction: 'left'
                 })
             })
         },
         timeline: {
             3: (_, ctx) => ctx.status.isBlocking = false,
             4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90, 1)
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null
+            },
+            hurt: {
+                onHurt: null
+            },
+            parried: {
+                onParried: null
+            },
+            blocked: {
+                onBlocked: null
+            },
+            startMasterHit: {
+                onBlock: null
+            },
+        }
+    }
+
+    /** @type {Move} */
+    startMasterHit = {
+        cast: 6,
+        backswing: 13,
+        onEnter(pl, ctx) {
+            playSoundAll('weapon.sword.hit2', pl.pos, 1)
+            ctx.freeze(pl)
+            ctx.adsorbOrSetVelocity(pl, 1.4, 90, 1)
+        },
+        onAct(pl, ctx) {
+            ctx.selectFromRange(pl, {
+                angle: 40,
+                radius: 2.2,
+                rotation: -20
+            }).forEach(en => {
+                ctx.attack(pl, en, {
+                    damage: 20,
+                    damageType: 'entityAttack',
+                    knockback: 0.8,
+                    permeable: true,
+                    direction: 'left'
+                })
+            })
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl)
         },
         transitions: {
             resume: {
@@ -171,16 +219,8 @@ class DoubleBladeMoves extends DefaultMoves {
                     allowedState: 'backswing'
                 }
             },
-            blocked: {
-                onBlocked: {
-                    allowedState: 'backswing'
-                }
-            }
         }
     }
-
-    /** @type {Move} */
-    
 }
 
 class DoubleBlade extends DefaultTrickModule {

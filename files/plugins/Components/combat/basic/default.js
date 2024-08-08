@@ -5,14 +5,79 @@ const console = require('../../console/main')
 const { isCollide } = require("./generic/kinematic")
 const { Status } = require("./generic/status")
 
+function getAnim(animCategory, direction) {
+    const anim = animCategory[direction]
+
+    if (!anim) {
+        switch (direction) {
+            case 'middle':
+                return animCategory.right ?? animCategory.left
+
+            default:
+                return animCategory.left
+        }
+    }
+
+    return anim
+}
+
 class DefaultMoves {
     animations = {
-        parried: 'animation.general.parried.right',
-        hit: 'animation.general.hit',
-        parry: '',
+        parried: {
+            /**
+             * left and vertical
+             */
+            left: 'animation.general.parried.left',
+            vertical: 'animation.general.parried.left',
+            /**
+             * right and stab
+             */
+            right: 'animation.general.parried.right',
+            middle: 'animation.general.parried.right',
+        },
+        hit: {
+            left: 'animation.general.hit.left',
+            right: 'animation.general.hit.right',
+            vertical: 'animation.general.hit.vertical',
+            middle: 'animation.general.hit.middle',
+        },
+        parry: {
+            /**
+             * left and vertical
+             */
+            left: '',
+            vertical: '',
+            /**
+             * right and stab
+             */
+            right: '',
+            middle: '',
+        },
         knockdown: 'animation.general.fell',
-        blocked: 'animation.general.blocked.right',
-        block: '',
+        blocked: {
+            /**
+             * left and vertical
+             */
+            left: 'animation.general.blocked.left',
+            vertical: 'animation.general.blocked.left',
+            /**
+             * right and stab
+             */
+            right: 'animation.general.blocked.right',
+            middle: 'animation.general.blocked.right',
+        },
+        block: {
+            /**
+             * left and vertical
+             */
+            left: '',
+            vertical: '',
+            /**
+             * right and stab
+             */
+            right: '',
+            middle: '',
+        },
     }
 
     sounds = {
@@ -27,7 +92,9 @@ class DefaultMoves {
     blocked = {
         cast: 9,
         onEnter: (pl, ctx) => {
-            playAnim(pl, this.animations.blocked)
+            const { direction } = ctx.rawArgs[2]
+
+            playAnim(pl, getAnim(this.animations.blocked, direction))
             playSoundAll(this.sounds.blocked, pl.pos, 1)
             ctx.movementInput(pl, false)
             ctx.freeze(pl)
@@ -49,8 +116,10 @@ class DefaultMoves {
     block = {
         cast: 5,
         onEnter: (pl, ctx) => {
+            const { direction } = ctx.rawArgs[2]
+
             ctx.status.isBlocking = true
-            playAnim(pl, this.animations.block)
+            playAnim(pl, playAnim(this.animations.block, direction))
             playSoundAll(this.sounds.block, pl.pos, 1)
             ctx.movementInput(pl, false)
             ctx.freeze(pl)
@@ -78,8 +147,8 @@ class DefaultMoves {
                 'onAttack',
                 'onUseItem',
             ])
-            const [ ,, { stiffness, customHurtAnimation } ] = ctx.rawArgs
-            const hurtAnim = customHurtAnimation ?? this.animations.hit
+            const { stiffness, customHurtAnimation, direction } = ctx.rawArgs[2]
+            const hurtAnim = customHurtAnimation ?? this.animations.hit[direction]
 
             playAnim(pl, hurtAnim)
             ctx.task.queue(() => {
@@ -138,7 +207,8 @@ class DefaultMoves {
                 'onAttack',
                 'onUseItem',
             ])
-            playAnim(pl, this.animations.parried)
+            const { direction } = ctx.rawArgs[2]
+            playAnim(pl, getAnim(this.animations.parried, direction))
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
@@ -161,10 +231,12 @@ class DefaultMoves {
         cast: 10,
         backswing: 11,
         onEnter: (pl, ctx) => {
+            const { direction } = ctx.rawArgs[2]
+
             ctx.movementInput(pl, false)
             playSoundAll(this.sounds.parry, pl.pos, 1)
             ctx.status.isWaitingParry = true
-            playAnim(pl, this.animations.parry)
+            playAnim(pl, getAnim(this.animations.parry, direction))
             ctx.lookAtTarget(pl)
         },
         onLeave(pl, ctx) {

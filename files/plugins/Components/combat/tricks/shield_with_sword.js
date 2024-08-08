@@ -20,7 +20,7 @@ class ShieldSwordMoves extends DefaultMoves {
     constructor() {
         super()
 
-        this.animations.parry = 'animation.weapon.shield_with_sword.parry'
+        this.animations.parry.left = 'animation.weapon.shield_with_sword.parry'
 
         this.setup('idle')
 
@@ -114,7 +114,8 @@ class ShieldSwordMoves extends DefaultMoves {
             }).forEach(en => {
                 ctx.attack(pl, en, {
                     damage: 14,
-                    knockback: 0.5
+                    knockback: 0.5,
+                    direction: 'left'
                 })
             })
         },
@@ -219,6 +220,7 @@ class ShieldSwordMoves extends DefaultMoves {
                     damage: 20,
                     knockback: 1.5,
                     trace: true,
+                    direction: 'vertical'
                 })
             })
         },
@@ -267,6 +269,7 @@ class ShieldSwordMoves extends DefaultMoves {
                     permeable: true,
                     parryable: false,
                     knockback: 0,
+                    direction: 'middle'
                 })
             })
         },
@@ -318,6 +321,7 @@ class ShieldSwordMoves extends DefaultMoves {
                     permeable: true,
                     parryable: false,
                     knockback: 0.05,
+                    direction: 'middle',
                 })
             })
         },
@@ -391,7 +395,8 @@ class ShieldSwordMoves extends DefaultMoves {
             }).forEach(en => {
                 ctx.attack(pl, en, {
                     damage: 14,
-                    knockback: 0.5
+                    knockback: 0.5,
+                    direction: 'vertical'
                 })
             })
         },
@@ -655,6 +660,7 @@ class ShieldSwordMoves extends DefaultMoves {
                         parryable: false,
                         permeable: true,
                         knockback: 0.05,
+                        direction: 'left'
                     })
                 })
             },
@@ -720,6 +726,7 @@ class ShieldSwordMoves extends DefaultMoves {
                     knockback: 1,
                     parryable: false,
                     permeable: true,
+                    direction: 'middle',
                 })
             })
         },
