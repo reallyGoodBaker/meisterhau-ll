@@ -5,7 +5,7 @@ export interface Component {
 }
 
 export interface BasicComponent extends Component {
-    onAttach():  boolean | void | Promise<boolean|void>
+    onAttach(): boolean | void | Promise<boolean|void>
     onDetach(): void | Promise<void>
 }
 
