@@ -1,5 +1,6 @@
 import commonjs from '@rollup/plugin-commonjs'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
+import ts from 'rollup-plugin-typescript2'
 
 export default [
     {
@@ -11,6 +12,7 @@ export default [
         plugins: [
             commonjs(),
             nodeResolve(),
+            ts(),
         ]
     },
     {
@@ -22,6 +24,7 @@ export default [
         plugins: [
             commonjs(),
             nodeResolve(),
+            ts(),
         ]
     },
     {
@@ -33,6 +36,7 @@ export default [
         plugins: [
             commonjs(),
             nodeResolve(),
+            ts(),
         ]
     },
     {
@@ -44,6 +48,7 @@ export default [
         plugins: [
             commonjs(),
             nodeResolve(),
+            ts(),
         ]
     },
 ]

@@ -1,23 +1,27 @@
-/// <reference path="./types.d.ts"/>
+/// <reference path="../types.d.ts"/>
 
-const { EventEmitter } = require('../../events')
-const console = require('../../console/main')
-const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = require('../../scripts-rpc/func/kinematics')
-const { combat: { damage: _damage } } = require('../../scripts-rpc/func')
-const { playAnim } = require('./index')
-const { movement, camera, movementInput } = require('./generic')
-const { cmd } = require('../../command')
-const { selectFromRange } = require('./generic/range')
-const { Status, defaultAcceptableInputs } = require('./generic/status')
-const { Task } = require('./generic/task')
-const { EventInputStream } = require('./generic/event-stream')
+const { EventEmitter } = require('../../../events')
+const console = require('../../../console/main')
+const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = require('../../../scripts-rpc/func/kinematics')
+const { combat: { damage: _damage } } = require('../../../scripts-rpc/func/index')
+const { playAnim } = require('../index')
+const { movement, camera, movementInput } = require('../generic/index')
+const { cmd } = require('../../../command')
+const { selectFromRange } = require('../generic/range')
+const { Status, defaultAcceptableInputs } = require('./status')
+const { Task } = require('../generic/task')
+const { EventInputStream } = require('../generic/event-stream')
 const {
     lookAt, lookAtTarget, distanceToTarget, adsorbToTarget, adsorbTo,
     onTick, toggleLock, hasLock, releaseTarget, adsorbOrSetVelocity
-} = require('./generic/lock')
-const { setVelocity, isCollide } = require('./generic/kinematic')
-const { vec2, vec2ToAngle } = require('./generic/vec')
-const { clearCamera } = require('./generic/camera')
+} = require('../generic/lock')
+const { setVelocity, isCollide } = require('../generic/kinematic')
+const { vec2, vec2ToAngle } = require('../generic/vec')
+const { clearCamera } = require('../generic/camera')
+const { Tick } = require('../components/tick')
+const { Ref } = require('./ref')
+const { CameraFading } = require('../components/camera-fading')
+const { CameraComponent } = require('../components/camera')
 
 const em = new EventEmitter({ enableWatcher: true })
 const es = EventInputStream.get(em)
@@ -180,6 +184,7 @@ const defaultPacker = (pl, bind, status) => {
         hasTarget: hasLock(pl),
         repulsible: status.repulsible,
         isCollide: isCollide(pl),
+        preInput: status.preInput,
     }
 
     return {
@@ -403,7 +408,7 @@ function checkMoveState(mod, _status) {
 }
 
 function clearStatus(pl, s, hand, hasBind) {
-    s.clear()
+    s.reset()
     s.hand = hand
     if (!hasBind) {
         playAnim(pl, 'animation.general.stand')
@@ -501,7 +506,10 @@ function listenAllCustomEvents(mods) {
             }
         }
     })
+
     em.on('onTick', () => {
+        Tick.totalTick++
+
         for (const [xuid, status] of Status.status.entries()) {
             if (typeof xuid !== 'string') {
                 return
@@ -509,9 +517,12 @@ function listenAllCustomEvents(mods) {
             const pl = mc.getPlayer(xuid)
             const bind = getMod(status.hand)
 
-            if (!bind) {
+            if (!pl ||!bind) {
                 return
             }
+
+            Ref.player = pl
+            Ref.status = status
 
             const currentMove = bind.moves[status.status]
             const duration = status.duration++
@@ -521,10 +532,12 @@ function listenAllCustomEvents(mods) {
                 return transition(pl, bind, status, '', Function.prototype, [ pl ])
             }
 
+            const _context = _ctx(pl)
+
             if (currentMove.onTick) {
                 currentMove.onTick(
                     pl,
-                    _ctx(pl),
+                    _context,
                     duration/((currentMove.cast || 0) + (currentMove.backswing || 0))
                 )
             }
@@ -532,24 +545,35 @@ function listenAllCustomEvents(mods) {
             if (currentMove.timeline) {
                 const handler = currentMove.timeline[duration]
                 if (handler?.call) {
-                    handler.call(null, pl, _ctx(pl))
+                    handler.call(null, pl, _context)
+                }
+            }
+
+            for (const component of status.componentManager.getComponents()) {
+                const { onTick } = component
+
+                if (onTick) {
+                    onTick.call(component, pl, status)
                 }
             }
 
             if (duration >= (currentMove.cast || 0) + (currentMove.backswing || 0)) {
                 if (currentMove.onLeave) {
-                    currentMove.onLeave(pl, _ctx(pl))
+                    currentMove.onLeave(pl, _context)
                 }
                 return transition(pl, bind, status, 'onEndOfLife', Function.prototype, [ pl ])
             }
 
             if (duration == currentMove.cast) {
                 if (currentMove.onAct) {
-                    currentMove.onAct(pl, _ctx(pl))
+                    currentMove.onAct(pl, _context)
                 }
                 return
             }
         }
+
+        Ref.status = null
+        Ref.player = null
     })
 
     /**@type {DamageOption}*/
@@ -747,6 +771,39 @@ function listenAllCustomEvents(mods) {
             Function.prototype,
             [abuser, victim, damageOpt]
         )
+
+        const { direction } = damageOpt
+        let to = null
+
+        switch (direction) {
+            case 'left':
+                to = [ 2.2, 0, 1.2 ]
+                break
+
+            case 'right':
+                to = [ 2.2, 0, 0.2 ]
+                break
+            
+            case 'vertical':
+                to = [ 2.2, 0.5, 0.7 ]
+                break
+        
+            default:
+                to = [ 1.5, 0, 0.7 ]
+                break
+        }
+
+        Status.get(abuser.xuid).componentManager.attachComponent(new CameraFading([
+            {
+                from: CameraComponent.defaultOffset,
+                to,
+                duration: 1
+            },
+            {
+                to: CameraComponent.defaultOffset,
+                duration: 2
+            }
+        ], true))
 
         let flag = true,
             prevent = () => flag = false

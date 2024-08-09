@@ -151,7 +151,7 @@ const onTick = em => () => {
 
         if (t.health) {
             battleCamera(_s, t)
-        } else {
+        } else if (_s) {
             em.emitNone('onReleaseLock', _s, _s.getHand().type)
             releaseTarget(s)
         }
@@ -164,8 +164,10 @@ function getClosedEntity(en) {
 
     selectFromRange(en, {
         radius: 10,
+        angle: 46,
+        rotate: -23,
     }).forEach(e => {
-        if (['coptaine:physics', 'minecraft:item'].includes(e.type)) {
+        if (['minecraft:item'].includes(e.type)) {
             return
         }
 

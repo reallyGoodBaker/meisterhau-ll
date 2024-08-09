@@ -1,5 +1,6 @@
 const console = require('../../../console/main')
-const { Status } = require('./status')
+const { CameraComponent } = require('../components/camera')
+const { Status } = require('../core/status')
 const { rotate2, vec2, multiply2 } = require('./vec')
 
 const cameraInput = (pl, enabled=true) => {
@@ -75,7 +76,14 @@ const battleCamera = (pl, en) => {
     const enPos = en.pos
     const initVec = vec2(plPos.x, plPos.z, enPos.x, enPos.z)
     const dist = initVec.m
-    const [ offsetX, offsetY, offsetZ ] = Status.get(pl.xuid).cameraOffsets
+    const manager = Status.get(pl.xuid).componentManager
+    const cameraComponent = manager.getComponent(CameraComponent)
+
+    if (!cameraComponent) {
+        return
+    }
+
+    const [ offsetX, offsetY, offsetZ ] = cameraComponent.offset
     const moduloScale = offsetZ / initVec.m
 
     const cameraVec = multiply2(

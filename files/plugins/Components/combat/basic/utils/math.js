@@ -28,3 +28,24 @@ function randomRange(min=0, max=1, integer=false) {
 }
 
 exports.randomRange = randomRange
+
+/**
+ * @param {number[]} from 
+ * @param {number[]} to 
+ * @param {number} progress 
+ */
+exports.lerpn = (from, to, progress) => {
+    if (from.length !== to.length) {
+        return from
+    }
+
+    const res = []
+    const len = from.length
+    const p = Math.min(Math.max(0, progress), 1)
+
+    for (let i = 0; i < len; i++) {
+        res[i] = from[i] + (to[i] - from[i]) * p
+    }
+
+    return res
+}

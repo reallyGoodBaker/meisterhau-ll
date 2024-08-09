@@ -2,6 +2,31 @@
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
+function getAugmentedNamespace(n) {
+  if (n.__esModule) return n;
+  var f = n.default;
+	if (typeof f == "function") {
+		var a = function a () {
+			if (this instanceof a) {
+        return Reflect.construct(f, arguments, this.constructor);
+			}
+			return f.apply(this, arguments);
+		};
+		a.prototype = f.prototype;
+  } else a = {};
+  Object.defineProperty(a, '__esModule', {value: true});
+	Object.keys(n).forEach(function (k) {
+		var d = Object.getOwnPropertyDescriptor(n, k);
+		Object.defineProperty(a, k, d.get ? d : {
+			enumerable: true,
+			get: function () {
+				return n[k];
+			}
+		});
+	});
+	return a;
+}
+
 var meisterhau = {};
 
 var loadModule = {};
@@ -2138,124 +2163,365 @@ function requireKinematic () {
 	return kinematic;
 }
 
-var status_1;
-var hasRequiredStatus;
+class RefClass {
+    player;
+    status;
+}
+const Ref = new RefClass();
 
-function requireStatus () {
-	if (hasRequiredStatus) return status_1;
-	hasRequiredStatus = 1;
-	/// <reference path="../types.d.ts"/>
-	requireMain();
+var ref = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	Ref: Ref
+});
 
-	const defaultAcceptableInputs = [
-	    'onJump', 'onSneak', 'onAttack', 'onUseItem',
-	    'onChangeSprinting', 'onFeint'
-	];
+class CustomComponent {
+    onTick() { }
+}
+class BaseComponent extends CustomComponent {
+    onAttach() { }
+    onDetach() { }
+    getPlayer() {
+        return Ref.player;
+    }
+    getManager() {
+        return Ref.status?.componentManager;
+    }
+    getStatus() {
+        return Ref.status;
+    }
+}
+class ComponentManager {
+    #components = new Map();
+    getComponent(ctor) {
+        return this.#components.get(ctor);
+    }
+    async #attachComponent(component) {
+        const ctor = Object.getPrototypeOf(component).constructor;
+        if ('onAttach' in component && await component.onAttach()) {
+            return;
+        }
+        this.#components.set(ctor, component);
+    }
+    async attachComponent(...component) {
+        for (const obj of component) {
+            await this.#attachComponent(obj);
+        }
+    }
+    async detachComponent(ctor) {
+        const component = this.#components.get(ctor);
+        if (component && 'onDetach' in component) {
+            await component.onDetach();
+        }
+        this.#components.delete(ctor);
+    }
+    clear() {
+        this.#components.clear();
+    }
+    getComponents() {
+        return this.#components.values();
+    }
+    getComponentNames() {
+        return this.#components.keys();
+    }
+    has(ctor) {
+        return this.#components.has(ctor);
+    }
+}
 
-	/**@type {PlayerStatus}*/
-	class Status {
-	    /**
-	     * @type {Map<string, PlayerStatus>}
-	     */
-	    static status = new Map()
-	    /**
-	     * @param {string} xuid 
-	     * @returns {PlayerStatus}
-	     */
-	    static get(xuid) {
-	        return this.status.get(xuid) ?? new Status(xuid)
+class CameraComponent extends BaseComponent {
+    static defaultOffset = [2.2, 0, 0.7];
+    offset = [...CameraComponent.defaultOffset];
+}
+
+var camera = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	CameraComponent: CameraComponent
+});
+
+class Tick extends CustomComponent {
+    static totalTick = 0;
+    get dt() {
+        return Tick.totalTick;
+    }
+}
+
+var tick = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	Tick: Tick
+});
+
+const defaultAcceptableInputs = [
+    'onJump', 'onSneak', 'onAttack', 'onUseItem',
+    'onChangeSprinting', 'onFeint'
+];
+class Status {
+    static status = new Map();
+    static get(xuid) {
+        return this.status.get(xuid) ?? new Status(xuid);
+    }
+    /**
+     * 手上物品的type
+     */
+    hand = 'minecraft:air';
+    /**
+     * moves中当前move的名称
+     */
+    status = 'unknown';
+    /**
+     * 动作已持续时间
+     */
+    duration = 0;
+    /**
+     * 玩家预输入
+     */
+    preInput = null;
+    /**
+     * 是否可被击退
+     */
+    repulsible = true;
+    /**
+     * 玩家的精力(不是饱和度也不是生命值)
+     */
+    stamina = 0;
+    /**
+     * 玩家的硬直
+     */
+    stiffness = 0;
+    /**
+     * 是否受到冲击
+     * 受到冲击的对象在碰到墙体时会造成短暂眩晕
+     */
+    shocked = false;
+    /**
+     * 是否霸体状态
+     */
+    hegemony = false;
+    #preInputTimer = null;
+    /**
+     * 处于防御状态
+     */
+    isBlocking = false;
+    /**
+     * 处于招架等待状态
+     */
+    isWaitingParry = false;
+    /**
+     * 处于偏斜等待状态
+     */
+    isWaitingDeflection = false;
+    /**
+     * 处于闪避状态
+     */
+    isDodging = false;
+    /**
+     * 玩家接受的事件输入
+     */
+    acceptableInputs = new Set(defaultAcceptableInputs);
+    static defaultCameraOffsets = [2.2, 0, 0.7];
+    cameraOffsets = Status.defaultCameraOffsets;
+    /**
+     * 组件管理器
+     */
+    componentManager = new ComponentManager();
+    constructor(xuid) {
+        Status.status.set(xuid, this);
+        this.reset();
+    }
+    reset() {
+        this.hand = 'minecraft:air';
+        this.status = 'unknown';
+        this.duration = 0;
+        this.repulsible = true;
+        this.isBlocking = false;
+        this.isWaitingParry = false;
+        this.stamina = 0;
+        this.stiffness = 0;
+        this.componentManager.clear();
+        defaultAcceptableInputs.forEach(type => this.acceptableInputs.add(type));
+        this.componentManager.attachComponent(new Tick(), new CameraComponent());
+    }
+    acceptableInput(name, accept) {
+        if (accept !== undefined) {
+            accept
+                ? this.acceptableInputs.add(name)
+                : this.acceptableInputs.delete(name);
+            return;
+        }
+        return this.acceptableInputs.has(name);
+    }
+    /**
+     * @param {AcceptbleInputTypes[]} inputs
+     */
+    enableInputs(inputs) {
+        inputs.forEach(type => this.acceptableInputs.add(type));
+    }
+    /**
+     * @param {AcceptbleInputTypes[]} inputs
+     */
+    disableInputs(inputs) {
+        inputs.forEach(type => this.acceptableInputs.delete(type));
+    }
+    setPreInput(input) {
+        if (this.#preInputTimer) {
+            clearInterval(this.#preInputTimer);
+        }
+        this.preInput = input;
+        this.#preInputTimer = setTimeout(() => {
+            this.#preInputTimer = null;
+            this.preInput = null;
+        }, 500);
+    }
+}
+
+var status = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	Status: Status,
+	defaultAcceptableInputs: defaultAcceptableInputs
+});
+
+var require$$8 = /*@__PURE__*/getAugmentedNamespace(status);
+
+var math = {};
+
+/**
+ * @param {number} start 
+ * @param {number} end 
+ * @param {() => number} calcFn 
+ * @returns 
+ */
+
+var hasRequiredMath;
+
+function requireMath () {
+	if (hasRequiredMath) return math;
+	hasRequiredMath = 1;
+	function constrictCalc(start, end, calcFn) {
+	    let result = 0;
+
+	    try {
+	        result = calcFn.call(null);
+	        if (isNaN(result)) throw ''
+	    } catch {
+	        return start
 	    }
 
-	    hand = 'minecraft:air'
-	    status = 'unknown'
-	    duration = 0
-	    repulsible = true
-	    acceptableInputs = new Set(defaultAcceptableInputs)
-	    stamina = 0
-	    shocked = false
-	    preInput = null
-	    hegemony = false
-	    #preInputTimer = null
-
-	    isBlocking = false
-	    isWaitingParry = false
-	    isWaitingDeflection = false
-	    isDodging = false
-
-	    static defaultCameraOffsets = [ 2.2, 0, 0.7 ]
-	    cameraOffsets = Status.defaultCameraOffsets
-
-	    constructor(xuid) {
-	        Status.status.set(xuid, this);
-	        this.clear();
-	    }
-
-	    clear() {
-	        this.hand = 'minecraft:air';
-	        this.status = 'unknown';
-	        this.duration = 0;
-	        this.repulsible = true;
-	        this.isBlocking = false;
-	        this.isWaitingParry = false;
-	        this.acceptableInputs = new Set(defaultAcceptableInputs);
-	        this.stamina = 0;
-	        this.stiffness = 0;
-	    }
-
-	    edit(obj) {
-	        for (const k in obj) {
-	            if (k in this) {
-	                this[k] = obj[k];
-	            }
-	        }
-	    }
-
-	    acceptableInput(name, accept) {
-	        if (accept !== undefined) {
-	            accept
-	                ? this.acceptableInputs.add(name)
-	                : this.acceptableInputs.delete(name);
-	            return
-	        }
-
-	        return this.acceptableInputs.has(name)
-	    }
-
-	    /**
-	     * @param {AcceptbleInputTypes[]} inputs 
-	     */
-	    enableInputs(inputs) {
-	        inputs.forEach(type => this.acceptableInputs.add(type));
-	    }
-
-	    /**
-	     * @param {AcceptbleInputTypes[]} inputs 
-	     */
-	    disableInputs(inputs) {
-	        inputs.forEach(type => this.acceptableInputs.delete(type));
-	    }
-
-	    /**
-	     * @param {AcceptbleInputTypes} input 
-	     */
-	    setPreInput(input) {
-	        if (this.#preInputTimer) {
-	            clearInterval(this.#preInputTimer);
-	        }
-
-	        this.preInput = input;
-	        this.#preInputTimer = setTimeout(() => {
-	            this.#preInputTimer = null;
-	            this.preInput = null;
-	        }, 500);
-	    }
+	    return result > end ? end
+	            : result < start ? start
+	                : result
 	}
 
-	status_1 = {
-	    Status, defaultAcceptableInputs
+	math.constrictCalc = constrictCalc;
+
+	function randomRange(min=0, max=1, integer=false) {
+	    const num = Math.random() * (max - min) + min;
+
+	    return integer ? Math.round(num) : num
+	}
+
+	math.randomRange = randomRange;
+
+	/**
+	 * @param {number[]} from 
+	 * @param {number[]} to 
+	 * @param {number} progress 
+	 */
+	math.lerpn = (from, to, progress) => {
+	    if (from.length !== to.length) {
+	        return from
+	    }
+
+	    const res = [];
+	    const len = from.length;
+	    const p = Math.min(Math.max(0, progress), 1);
+
+	    for (let i = 0; i < len; i++) {
+	        res[i] = from[i] + (to[i] - from[i]) * p;
+	    }
+
+	    return res
 	};
-	return status_1;
+	return math;
 }
+
+var mathExports = requireMath();
+
+class CameraFading extends BaseComponent {
+    config;
+    exitOnEnd;
+    tick;
+    tickOffset;
+    last;
+    constructor(config = [], exitOnEnd = false) {
+        super();
+        this.config = config;
+        this.exitOnEnd = exitOnEnd;
+        const lastTo = config[config.length - 1].to;
+        this.config = config;
+        this.last = ['linear', lastTo, lastTo, 1];
+    }
+    dt() {
+        return this.tick.dt - this.tickOffset;
+    }
+    onAttach() {
+        if (!(this.tick = this.getManager().getComponent(Tick))) {
+            return true;
+        }
+        this.tickOffset = this.tick.dt;
+    }
+    copyOffset(from, to) {
+        to[0] = from[0];
+        to[1] = from[1];
+        to[2] = from[2];
+    }
+    getTransInfo() {
+        const len = this.config.length;
+        let remain = this.dt();
+        for (let i = 0; i < len; i++) {
+            const { duration, curve, from, to } = this.config[i];
+            if (remain >= duration) {
+                remain -= duration;
+                continue;
+            }
+            if (remain < duration) {
+                return [
+                    curve ?? 'linear',
+                    from ?? this.config[i - 1].to,
+                    to,
+                    remain / duration,
+                ];
+            }
+        }
+        return this.last;
+    }
+    onTick() {
+        const { offset } = this.getManager().getComponent(CameraComponent);
+        const info = this.getTransInfo();
+        const [curve, from, to, progress] = info;
+        switch (curve) {
+            case 'linear':
+                return this.offsetLinear(from, to, progress, offset);
+        }
+        if (this.exitOnEnd && info === this.last) {
+            this.getManager().detachComponent(CameraFading);
+        }
+    }
+    /**
+     * @param {[number, number, number]} origin
+     */
+    offsetLinear(from, to, progress, target) {
+        const offset = mathExports.lerpn(from, to, progress);
+        this.copyOffset(offset, target);
+    }
+}
+
+var cameraFading = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	CameraFading: CameraFading
+});
+
+var require$$17 = /*@__PURE__*/getAugmentedNamespace(cameraFading);
+
+var require$$18 = /*@__PURE__*/getAugmentedNamespace(camera);
 
 var _default;
 var hasRequired_default;
@@ -2268,7 +2534,8 @@ function require_default () {
 	const { playAnim, playSoundAll, playParticle } = requireBasic();
 	requireMain();
 	requireKinematic();
-	const { Status } = requireStatus();
+	const { CameraFading } = require$$17;
+	const { CameraComponent } = require$$18;
 
 	function getAnim(animCategory, direction) {
 	    const anim = animCategory[direction];
@@ -2276,7 +2543,7 @@ function require_default () {
 	    if (!anim) {
 	        switch (direction) {
 	            case 'middle':
-	                return animCategory.right ?? animCategory.left
+	                return animCategory.right || animCategory.left
 
 	            default:
 	                return animCategory.left
@@ -2384,7 +2651,7 @@ function require_default () {
 	            const { direction } = ctx.rawArgs[2];
 
 	            ctx.status.isBlocking = true;
-	            playAnim(pl, playAnim(this.animations.block, direction));
+	            playAnim(pl, getAnim(this.animations.block, direction));
 	            playSoundAll(this.sounds.block, pl.pos, 1);
 	            ctx.movementInput(pl, false);
 	            ctx.freeze(pl);
@@ -2503,25 +2770,25 @@ function require_default () {
 	            ctx.status.isWaitingParry = true;
 	            playAnim(pl, getAnim(this.animations.parry, direction));
 	            ctx.lookAtTarget(pl);
+
+	            ctx.status.componentManager.attachComponent(new CameraFading([
+	                {
+	                    from: CameraComponent.defaultOffset,
+	                    to: [ 0.6, 0, 0.8 ],
+	                    duration: 2
+	                },
+	                {
+	                    to: CameraComponent.defaultOffset,
+	                    duration: 3
+	                }
+	            ]));
 	        },
 	        onLeave(pl, ctx) {
 	            ctx.unfreeze(pl);
 	            ctx.status.isWaitingParry = false;
-	            ctx.status.cameraOffsets = Status.defaultCameraOffsets;
+	            ctx.status.componentManager.detachComponent(CameraFading);
 	        },
 	        timeline: {
-	            5: (pl, ctx) => {
-	                const offsets = ctx.status.cameraOffsets;
-
-	                offsets[0] = 0.6;
-	                offsets[2] = 0.6;
-	            },
-	            8: (pl, ctx) => {
-	                const offsets = ctx.status.cameraOffsets;
-
-	                offsets[0] = 2.2;
-	                offsets[2] = 0.7;
-	            },
 	            13: (pl, ctx) => ctx.trap(pl, { tag: 'parryCounter' })
 	        },
 	        transitions: { }
@@ -2665,7 +2932,7 @@ function require_default () {
 	}
 
 	_default = {
-	    DefaultTrickModule, DefaultMoves
+	    DefaultTrickModule, DefaultMoves,
 	};
 	return _default;
 }
@@ -3401,47 +3668,6 @@ function requireEmptyHand () {
 	 */
 	emptyHand = new EmptyHandTricks();
 	return emptyHand;
-}
-
-var math = {};
-
-/**
- * @param {number} start 
- * @param {number} end 
- * @param {() => number} calcFn 
- * @returns 
- */
-
-var hasRequiredMath;
-
-function requireMath () {
-	if (hasRequiredMath) return math;
-	hasRequiredMath = 1;
-	function constrictCalc(start, end, calcFn) {
-	    let result = 0;
-
-	    try {
-	        result = calcFn.call(null);
-	        if (isNaN(result)) throw ''
-	    } catch {
-	        return start
-	    }
-
-	    return result > end ? end
-	            : result < start ? start
-	                : result
-	}
-
-	math.constrictCalc = constrictCalc;
-
-	function randomRange(min=0, max=1, integer=false) {
-	    const num = Math.random() * (max - min) + min;
-
-	    return integer ? Math.round(num) : num
-	}
-
-	math.randomRange = randomRange;
-	return math;
 }
 
 var hud_1;
@@ -4937,6 +5163,7 @@ function requireOotachi () {
 
 	        this.animations.parry.left = 'animation.weapon.ootachi.parry.left';
 	        this.animations.block.left = 'animation.weapon.ootachi.block.left';
+	        this.animations.block.right = 'animation.weapon.ootachi.block.right';
 	    }
 
 	    idle = {
@@ -4977,6 +5204,7 @@ function requireOotachi () {
 	        }
 	    }
 
+	    /** @type {Move} */
 	    innoKamae = {
 	        cast: Infinity,
 	        onEnter(pl, ctx) {
@@ -5004,7 +5232,10 @@ function requireOotachi () {
 	                onUseItem: { allowedState: 'both' }
 	            },
 	            dodgePrepare: {
-	                onSneak: { allowedState: 'both' }
+	                onSneak: {
+	                    allowedState: 'both',
+	                    isSneaking: true
+	                }
 	            },
 	            hurt: {
 	                onHurt: {
@@ -5300,9 +5531,7 @@ function requireOotachi () {
 	                }
 	            },
 	            blocked: {
-	                onBlocked: {
-	                    allowedState: 'backswing',
-	                }
+	                onBlocked: null
 	            },
 	        }
 	    }
@@ -7201,7 +7430,8 @@ function requireCamera () {
 	if (hasRequiredCamera) return camera_1;
 	hasRequiredCamera = 1;
 	requireMain();
-	const { Status } = requireStatus();
+	const { CameraComponent } = require$$18;
+	const { Status } = require$$8;
 	const { rotate2, vec2, multiply2 } = requireVec();
 
 	const cameraInput = (pl, enabled=true) => {
@@ -7277,7 +7507,14 @@ function requireCamera () {
 	    const enPos = en.pos;
 	    const initVec = vec2(plPos.x, plPos.z, enPos.x, enPos.z);
 	    const dist = initVec.m;
-	    const [ offsetX, offsetY, offsetZ ] = Status.get(pl.xuid).cameraOffsets;
+	    const manager = Status.get(pl.xuid).componentManager;
+	    const cameraComponent = manager.getComponent(CameraComponent);
+
+	    if (!cameraComponent) {
+	        return
+	    }
+
+	    const [ offsetX, offsetY, offsetZ ] = cameraComponent.offset;
 	    const moduloScale = offsetZ / initVec.m;
 
 	    const cameraVec = multiply2(
@@ -7480,7 +7717,7 @@ function requireLock () {
 
 	        if (t.health) {
 	            battleCamera(_s, t);
-	        } else {
+	        } else if (_s) {
 	            em.emitNone('onReleaseLock', _s, _s.getHand().type);
 	            releaseTarget(s);
 	        }
@@ -7493,8 +7730,10 @@ function requireLock () {
 
 	    selectFromRange(en, {
 	        radius: 10,
+	        angle: 46,
+	        rotate: -23,
 	    }).forEach(e => {
-	        if (['coptaine:physics', 'minecraft:item'].includes(e.type)) {
+	        if (['minecraft:item'].includes(e.type)) {
 	            return
 	        }
 
@@ -7713,13 +7952,17 @@ function requireEventStream () {
 	return eventStream;
 }
 
+var require$$15 = /*@__PURE__*/getAugmentedNamespace(tick);
+
+var require$$16 = /*@__PURE__*/getAugmentedNamespace(ref);
+
 var core;
 var hasRequiredCore;
 
 function requireCore () {
 	if (hasRequiredCore) return core;
 	hasRequiredCore = 1;
-	/// <reference path="./types.d.ts"/>
+	/// <reference path="../types.d.ts"/>
 
 	const { EventEmitter } = requireEvents();
 	requireMain();
@@ -7729,7 +7972,7 @@ function requireCore () {
 	const { movement, camera, movementInput } = requireGeneric();
 	requireCommand();
 	const { selectFromRange } = requireRange();
-	const { Status, defaultAcceptableInputs } = requireStatus();
+	const { Status, defaultAcceptableInputs } = require$$8;
 	const { Task } = requireTask();
 	const { EventInputStream } = requireEventStream();
 	const {
@@ -7739,6 +7982,10 @@ function requireCore () {
 	const { setVelocity, isCollide } = requireKinematic();
 	const { vec2, vec2ToAngle } = requireVec();
 	const { clearCamera } = requireCamera();
+	const { Tick } = require$$15;
+	const { Ref } = require$$16;
+	const { CameraFading } = require$$17;
+	const { CameraComponent } = require$$18;
 
 	const em = new EventEmitter({ enableWatcher: true });
 	const es = EventInputStream.get(em);
@@ -7901,6 +8148,7 @@ function requireCore () {
 	        hasTarget: hasLock(pl),
 	        repulsible: status.repulsible,
 	        isCollide: isCollide(pl),
+	        preInput: status.preInput,
 	    };
 
 	    return {
@@ -8124,7 +8372,7 @@ function requireCore () {
 	}
 
 	function clearStatus(pl, s, hand, hasBind) {
-	    s.clear();
+	    s.reset();
 	    s.hand = hand;
 	    if (!hasBind) {
 	        playAnim(pl, 'animation.general.stand');
@@ -8222,7 +8470,10 @@ function requireCore () {
 	            }
 	        }
 	    });
+
 	    em.on('onTick', () => {
+	        Tick.totalTick++;
+
 	        for (const [xuid, status] of Status.status.entries()) {
 	            if (typeof xuid !== 'string') {
 	                return
@@ -8230,9 +8481,12 @@ function requireCore () {
 	            const pl = mc.getPlayer(xuid);
 	            const bind = getMod(status.hand);
 
-	            if (!bind) {
+	            if (!pl ||!bind) {
 	                return
 	            }
+
+	            Ref.player = pl;
+	            Ref.status = status;
 
 	            const currentMove = bind.moves[status.status];
 	            const duration = status.duration++;
@@ -8242,10 +8496,12 @@ function requireCore () {
 	                return transition(pl, bind, status, '', Function.prototype, [ pl ])
 	            }
 
+	            const _context = _ctx(pl);
+
 	            if (currentMove.onTick) {
 	                currentMove.onTick(
 	                    pl,
-	                    _ctx(pl),
+	                    _context,
 	                    duration/((currentMove.cast || 0) + (currentMove.backswing || 0))
 	                );
 	            }
@@ -8253,24 +8509,35 @@ function requireCore () {
 	            if (currentMove.timeline) {
 	                const handler = currentMove.timeline[duration];
 	                if (handler?.call) {
-	                    handler.call(null, pl, _ctx(pl));
+	                    handler.call(null, pl, _context);
+	                }
+	            }
+
+	            for (const component of status.componentManager.getComponents()) {
+	                const { onTick } = component;
+
+	                if (onTick) {
+	                    onTick.call(component, pl, status);
 	                }
 	            }
 
 	            if (duration >= (currentMove.cast || 0) + (currentMove.backswing || 0)) {
 	                if (currentMove.onLeave) {
-	                    currentMove.onLeave(pl, _ctx(pl));
+	                    currentMove.onLeave(pl, _context);
 	                }
 	                return transition(pl, bind, status, 'onEndOfLife', Function.prototype, [ pl ])
 	            }
 
 	            if (duration == currentMove.cast) {
 	                if (currentMove.onAct) {
-	                    currentMove.onAct(pl, _ctx(pl));
+	                    currentMove.onAct(pl, _context);
 	                }
 	                return
 	            }
 	        }
+
+	        Ref.status = null;
+	        Ref.player = null;
 	    });
 
 	    /**@type {DamageOption}*/
@@ -8468,6 +8735,39 @@ function requireCore () {
 	            Function.prototype,
 	            [abuser, victim, damageOpt]
 	        );
+
+	        const { direction } = damageOpt;
+	        let to = null;
+
+	        switch (direction) {
+	            case 'left':
+	                to = [ 2.2, 0, 1.2 ];
+	                break
+
+	            case 'right':
+	                to = [ 2.2, 0, 0.2 ];
+	                break
+	            
+	            case 'vertical':
+	                to = [ 2.2, 0.4, 0.7 ];
+	                break
+	        
+	            default:
+	                to = [ 1.5, 0, 0.7 ];
+	                break
+	        }
+
+	        Status.get(abuser.xuid).componentManager.attachComponent(new CameraFading([
+	            {
+	                from: CameraComponent.defaultOffset,
+	                to,
+	                duration: 1
+	            },
+	            {
+	                to: CameraComponent.defaultOffset,
+	                duration: 2
+	            }
+	        ], true));
 
 	        let flag = true,
 	            prevent = () => flag = false;

@@ -1,3 +1,5 @@
+import { Status } from "./core/status"
+
 type ModuleInitializer = () => TrickModule
 
 interface TrickModule {
@@ -152,6 +154,7 @@ type DefaultTransitionOption = {
     isFlying?: boolean
     isMoving?: boolean
     isSneaking?: boolean
+    preInput?: keyof InputableTransitionMap
 }
 
 interface InputableTransitionMap {
@@ -169,9 +172,7 @@ interface InputableTransitionMap {
 
 interface TransitionTypeOptionMap extends InputableTransitionMap {
     onProjectileHitEntity: unknown
-    onEndOfLife: {
-        preInput: keyof InputableTransitionMap
-    }
+    onEndOfLife: unknown
     onParry: unknown
     onParried: unknown
     onHurt: unknown
@@ -183,9 +184,7 @@ interface TransitionTypeOptionMap extends InputableTransitionMap {
     onReleaseLock: unknown
     onKnockdown: unknown
     onKnockdownOther: unknown
-    onTrap: {
-        preInput: keyof InputableTransitionMap
-    }
+    onTrap: unknown
     onInterrupted: unknown
     onMissAttack: unknown
     onDodge: unknown
@@ -339,7 +338,7 @@ interface MovementContext {
     setVelocity(pl: any, rotation: number, h: number, v: number): void
     yawToVec2(yaw: number): {x: number, y: number}
     applyKnockbackAtVelocityDirection(en: any, h: number, v: number): Promise<void>
-    status: PlayerStatus
+    status: Status
     camera(pl: any, enable?: boolean): void
     movement(pl: any, enable?: boolean): void
     movementInput(pl: any, enable?: boolean): void
@@ -372,74 +371,14 @@ interface Task {
 
 type AcceptbleInputTypes = keyof InputableTransitionMap
 
-interface EditablePlayerStatus {
-    /**
-     * 是否可被击退
-     */
-    repulsible: boolean
-    /**
-     * 处于防御状态
-     */
-    isBlocking: boolean
-    /**
-     * 处于闪避状态
-     */
-    isDodging: boolean
-    /**
-     * 处于偏斜等待状态
-     */
-    isWaitingDeflection: boolean
-    /**
-     * 处于招架等待状态
-     */
-    isWaitingParry: boolean
-    /**
-     * 玩家接受的事件输入
-     */
-    acceptableInputs: Set<AcceptbleInputTypes>
-    /**
-     * 玩家的精力(不是饱和度也不是生命值)
-     */
-    stamina: number
-    /**
-     * 是否受到冲击
-     * 受到冲击的对象在碰到墙体时会造成短暂眩晕
-     */
-    shocked?: boolean
-    /**
-     * 是否霸体状态
-     */
-    hegemony?: boolean
-    /**
-     * 摄像机偏移
-     */
-    cameraOffsets?: [ number, number, number ]
-}
-
-interface PlayerStatus extends EditablePlayerStatus {
-    /**
-     * 手上物品的type
-     */
-    readonly hand: string
-    /**
-     * moves中当前move的名称
-     */
-    readonly status: string
-    /**
-     * 动作已持续时间
-     */
-    readonly duration: number
-    /**
-     * 玩家预输入
-     */
-    readonly preInput: AcceptbleInputTypes
-
+interface Components {
+    getComponent<T extends Component>(name: string): T | undefined
+    addComponent(name: string, component: Component): void
+    removeComponent(name: string): void
     clear(): void
-    edit(obj: EditablePlayerStatus): void
-    acceptableInput(name: AcceptbleInputTypes, accept?: boolean): boolean
-    enableInputs(inputs: AcceptbleInputTypes[]): void
-    disableInputs(inputs: AcceptbleInputTypes[]): void
-    setPreInput(input: AcceptbleInputTypes): void
+    getComponents(): IterableIterator<Component>
+    getComponentNames(): IterableIterator<string>
+    has(name: string): boolean
 }
 
 type EntityDamageCause = 'anvil' | 'blockExplosion' | 'charging' | 'contact' | 'drowning' | 'entityAttack'

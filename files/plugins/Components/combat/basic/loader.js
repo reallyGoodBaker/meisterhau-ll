@@ -5,7 +5,7 @@ const console = require('../../console/main')
 const { checkCompleteness } = require('./completeness')
 const {
     listenAllMcEvents
-} = require('./core')
+} = require('./core/core')
 
 module.exports = function loadAll() {
     const mods = Array.from(collection)

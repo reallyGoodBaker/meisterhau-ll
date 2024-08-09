@@ -136,6 +136,16 @@ function copyFolder(from, to, conf = wrapSyncConfigs()) {
     }
 }
 
+function doTry(func) {
+    return (...args) => {
+        try {
+            func.apply(null, args)
+        } catch (e) {
+            console.error(e)
+        }
+    }
+}
+
 function sync() {
     const conf = wrapSyncConfigs()
     const files = path.resolve(__dirname, '../files')
@@ -144,7 +154,7 @@ function sync() {
     watcher(
         path.resolve(__dirname, '../files'),
         { recursive: true },
-        (type, filename) => {
+        doTry((type, filename) => {
             const { dir, base } = path.parse(filename)
             const targetPath = path.join(dev, path.relative(files, filename))
 
@@ -166,7 +176,7 @@ function sync() {
                 }
             }
 
-        }
+        })
     )
 }
 

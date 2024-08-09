@@ -3,7 +3,9 @@
 const { playAnim, playSoundAll, playParticle } = require("./index")
 const console = require('../../console/main')
 const { isCollide } = require("./generic/kinematic")
-const { Status } = require("./generic/status")
+const { Status } = require("./core/status")
+const { CameraFading } = require("./components/camera-fading")
+const { CameraComponent } = require("./components/camera")
 
 function getAnim(animCategory, direction) {
     const anim = animCategory[direction]
@@ -11,7 +13,7 @@ function getAnim(animCategory, direction) {
     if (!anim) {
         switch (direction) {
             case 'middle':
-                return animCategory.right ?? animCategory.left
+                return animCategory.right || animCategory.left
 
             default:
                 return animCategory.left
@@ -119,7 +121,7 @@ class DefaultMoves {
             const { direction } = ctx.rawArgs[2]
 
             ctx.status.isBlocking = true
-            playAnim(pl, playAnim(this.animations.block, direction))
+            playAnim(pl, getAnim(this.animations.block, direction))
             playSoundAll(this.sounds.block, pl.pos, 1)
             ctx.movementInput(pl, false)
             ctx.freeze(pl)
@@ -238,25 +240,25 @@ class DefaultMoves {
             ctx.status.isWaitingParry = true
             playAnim(pl, getAnim(this.animations.parry, direction))
             ctx.lookAtTarget(pl)
+
+            ctx.status.componentManager.attachComponent(new CameraFading([
+                {
+                    from: CameraComponent.defaultOffset,
+                    to: [ 0.6, 0, 0.8 ],
+                    duration: 2
+                },
+                {
+                    to: CameraComponent.defaultOffset,
+                    duration: 3
+                }
+            ]))
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
             ctx.status.isWaitingParry = false
-            ctx.status.cameraOffsets = Status.defaultCameraOffsets
+            ctx.status.componentManager.detachComponent(CameraFading)
         },
         timeline: {
-            5: (pl, ctx) => {
-                const offsets = ctx.status.cameraOffsets
-
-                offsets[0] = 0.6
-                offsets[2] = 0.6
-            },
-            8: (pl, ctx) => {
-                const offsets = ctx.status.cameraOffsets
-
-                offsets[0] = 2.2
-                offsets[2] = 0.7
-            },
             13: (pl, ctx) => ctx.trap(pl, { tag: 'parryCounter' })
         },
         transitions: { }
@@ -400,5 +402,5 @@ class DefaultTrickModule {
 }
 
 module.exports = {
-    DefaultTrickModule, DefaultMoves
+    DefaultTrickModule, DefaultMoves,
 }

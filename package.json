@@ -22,6 +22,8 @@
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",
-    "@rollup/plugin-node-resolve": "^15.2.3"
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "rollup-plugin-typescript2": "^0.36.0",
+    "tslib": "^2.6.3"
   }
 }

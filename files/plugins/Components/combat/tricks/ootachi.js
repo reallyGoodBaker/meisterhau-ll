@@ -56,6 +56,7 @@ class OotachiMoves extends DefaultMoves {
 
         this.animations.parry.left = 'animation.weapon.ootachi.parry.left'
         this.animations.block.left = 'animation.weapon.ootachi.block.left'
+        this.animations.block.right = 'animation.weapon.ootachi.block.right'
     }
 
     idle = {
@@ -96,6 +97,7 @@ class OotachiMoves extends DefaultMoves {
         }
     }
 
+    /** @type {Move} */
     innoKamae = {
         cast: Infinity,
         onEnter(pl, ctx) {
@@ -123,7 +125,10 @@ class OotachiMoves extends DefaultMoves {
                 onUseItem: { allowedState: 'both' }
             },
             dodgePrepare: {
-                onSneak: { allowedState: 'both' }
+                onSneak: {
+                    allowedState: 'both',
+                    isSneaking: true
+                }
             },
             hurt: {
                 onHurt: {
@@ -419,9 +424,7 @@ class OotachiMoves extends DefaultMoves {
                 }
             },
             blocked: {
-                onBlocked: {
-                    allowedState: 'backswing',
-                }
+                onBlocked: null
             },
         }
     }
