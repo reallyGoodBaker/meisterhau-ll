@@ -244,7 +244,7 @@ class DefaultMoves {
             ctx.status.componentManager.attachComponent(new CameraFading([
                 {
                     from: CameraComponent.defaultOffset,
-                    to: [ 0.6, 0, 0.8 ],
+                    to: [ 0.6, 0, 0.8, 0, 0 ],
                     duration: 2
                 },
                 {

@@ -740,14 +740,12 @@ function requireCommand () {
 	        });
 	    }
 
-	    /**@private*/ createArg(name, type, isOptional) {
-	        const createCmdVariable = enumId => {
-	            let extArgs = enumId ? [enumId, name, 1] : [];
+	    /**@private*/ registeredArgs = new Set()
 
-	            return isOptional
-	                ? this._cmd.optional(name, stringParamTypeMap[type], ...extArgs)
-	                : this._cmd.mandatory(name, stringParamTypeMap[type], ...extArgs)
-	        };
+	    /**@private*/ createArg(name, type, isOptional) {
+	        if (this.registeredArgs.has(name)) {
+	            return
+	        }
 	        
 	        let enumId = null;
 
@@ -756,7 +754,13 @@ function requireCommand () {
 	            this._cmd.setEnum(enumId, [name]);
 	        }
 
-	        return createCmdVariable(enumId)
+	        let extArgs = enumId ? [enumId, name, 1] : [];
+
+	        isOptional
+	            ? this._cmd.optional(name, stringParamTypeMap[type], ...extArgs)
+	            : this._cmd.mandatory(name, stringParamTypeMap[type], ...extArgs);
+
+	        this.registeredArgs.add(name);
 	    }
 	}
 
@@ -2229,8 +2233,20 @@ class ComponentManager {
 }
 
 class CameraComponent extends BaseComponent {
-    static defaultOffset = [2.2, 0, 0.7];
-    offset = [...CameraComponent.defaultOffset];
+    /**
+     * [ x, y, z ]
+     */
+    static defaultOffset = [2.2, 0, 0.8];
+    /**
+     * [ yaw, pitch ]
+     */
+    static defaultRot = [0, 0];
+    /**
+     * [ x, y, z, yaw, pitch ]
+     */
+    static defaultStatus = this.defaultOffset.concat(this.defaultRot);
+    offset = CameraComponent.defaultOffset.slice();
+    rot = [0, 0];
 }
 
 var camera = /*#__PURE__*/Object.freeze({
@@ -2381,6 +2397,89 @@ var status = /*#__PURE__*/Object.freeze({
 
 var require$$8 = /*@__PURE__*/getAugmentedNamespace(status);
 
+/******************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+/* global Reflect, Promise, SuppressedError, Symbol */
+
+
+function __decorate(decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+}
+
+typeof SuppressedError === "function" ? SuppressedError : function (error, suppressed, message) {
+    var e = new Error(message);
+    return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
+};
+
+var DamageModifier_1;
+const commandComponentRegistry = new Map();
+const componentIdMapping = new WeakMap();
+const CommandConstructable = name => target => {
+    if ('create' in target) {
+        commandComponentRegistry.set(name, target);
+        componentIdMapping.set(target, name);
+    }
+};
+const getComponentCtor = (id) => {
+    return commandComponentRegistry.get(id);
+};
+const getComponentId = (t) => {
+    return componentIdMapping.get(t);
+};
+const checkableKeys = new Map();
+const Checkable = keys => target => {
+    //@ts-ignore
+    checkableKeys.set(target, keys);
+};
+function getCheckableEntries(t) {
+    const keys = checkableKeys.get(Object.getPrototypeOf(t).constructor);
+    if (!keys) {
+        return null;
+    }
+    return keys.map(k => [k, t[k]]);
+}
+let DamageModifier = class DamageModifier extends CustomComponent {
+    static { DamageModifier_1 = this; }
+    modifier;
+    static defaultModifier = 0.2;
+    static create({ modifier }) {
+        return new DamageModifier_1(modifier);
+    }
+    constructor(modifier = DamageModifier_1.defaultModifier) {
+        super();
+        this.modifier = modifier;
+    }
+};
+DamageModifier = DamageModifier_1 = __decorate([
+    CommandConstructable('damage-modifier'),
+    Checkable(['modifier'])
+], DamageModifier);
+
+var config = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	Checkable: Checkable,
+	CommandConstructable: CommandConstructable,
+	get DamageModifier () { return DamageModifier; },
+	getCheckableEntries: getCheckableEntries,
+	getComponentCtor: getComponentCtor,
+	getComponentId: getComponentId
+});
+
 var math = {};
 
 /**
@@ -2390,67 +2489,77 @@ var math = {};
  * @returns 
  */
 
-var hasRequiredMath;
+function constrictCalc(start, end, calcFn) {
+    let result = 0;
 
-function requireMath () {
-	if (hasRequiredMath) return math;
-	hasRequiredMath = 1;
-	function constrictCalc(start, end, calcFn) {
-	    let result = 0;
+    try {
+        result = calcFn.call(null);
+        if (isNaN(result)) throw ''
+    } catch {
+        return start
+    }
 
-	    try {
-	        result = calcFn.call(null);
-	        if (isNaN(result)) throw ''
-	    } catch {
-	        return start
-	    }
-
-	    return result > end ? end
-	            : result < start ? start
-	                : result
-	}
-
-	math.constrictCalc = constrictCalc;
-
-	function randomRange(min=0, max=1, integer=false) {
-	    const num = Math.random() * (max - min) + min;
-
-	    return integer ? Math.round(num) : num
-	}
-
-	math.randomRange = randomRange;
-
-	/**
-	 * @param {number[]} from 
-	 * @param {number[]} to 
-	 * @param {number} progress 
-	 */
-	math.lerpn = (from, to, progress) => {
-	    if (from.length !== to.length) {
-	        return from
-	    }
-
-	    const res = [];
-	    const len = from.length;
-	    const p = Math.min(Math.max(0, progress), 1);
-
-	    for (let i = 0; i < len; i++) {
-	        res[i] = from[i] + (to[i] - from[i]) * p;
-	    }
-
-	    return res
-	};
-	return math;
+    return result > end ? end
+            : result < start ? start
+                : result
 }
 
-var mathExports = requireMath();
+math.constrictCalc = constrictCalc;
 
-class CameraFading extends BaseComponent {
+function randomRange(min=0, max=1, integer=false) {
+    const num = Math.random() * (max - min) + min;
+
+    return integer ? Math.round(num) : num
+}
+
+math.randomRange = randomRange;
+
+/**
+ * @param {number[]} from 
+ * @param {number[]} to 
+ * @param {number} progress 
+ */
+var lerpn = math.lerpn = (from, to, progress) => {
+    if (from.length !== to.length) {
+        return from
+    }
+
+    const len = from.length;
+    const res = new Array(len).fill(0);
+    const p = Math.min(Math.max(0, progress), 1);
+
+    for (let i = 0; i < len; i++) {
+        res[i] = from[i] + (to[i] - from[i]) * p;
+    }
+
+    return res
+};
+
+var alerpn = math.alerpn = (from, to, progress) => {
+    if (from.length !== to.length) {
+        return from
+    }
+
+    const len = from.length;
+    const res = new Array(from.length).fill(0);
+    const p = Math.min(Math.max(0, progress), 1);
+
+    for (let i = 0; i < len; i++) {
+        const d = (to[i] - from[i]) % 360;
+        res[i] = from[i] + d * p;
+    }
+
+    return res
+};
+
+var CameraFading_1;
+let CameraFading = CameraFading_1 = class CameraFading extends BaseComponent {
     config;
     exitOnEnd;
     tick;
     tickOffset;
     last;
+    shouldExit = false;
     constructor(config = [], exitOnEnd = false) {
         super();
         this.config = config;
@@ -2458,6 +2567,9 @@ class CameraFading extends BaseComponent {
         const lastTo = config[config.length - 1].to;
         this.config = config;
         this.last = ['linear', lastTo, lastTo, 1];
+    }
+    static create({ config, exitOnEnd = false }) {
+        return new CameraFading_1(config, exitOnEnd);
     }
     dt() {
         return this.tick.dt - this.tickOffset;
@@ -2468,10 +2580,11 @@ class CameraFading extends BaseComponent {
         }
         this.tickOffset = this.tick.dt;
     }
-    copyOffset(from, to) {
-        to[0] = from[0];
-        to[1] = from[1];
-        to[2] = from[2];
+    copy(from, to) {
+        const len = Math.min(from.length, to.length);
+        for (let i = 0; i < len; i++) {
+            to[i] = from[i];
+        }
     }
     getTransInfo() {
         const len = this.config.length;
@@ -2494,29 +2607,65 @@ class CameraFading extends BaseComponent {
         return this.last;
     }
     onTick() {
-        const { offset } = this.getManager().getComponent(CameraComponent);
+        const { offset, rot } = this.getManager().getComponent(CameraComponent);
         const info = this.getTransInfo();
         const [curve, from, to, progress] = info;
         switch (curve) {
             case 'linear':
-                return this.offsetLinear(from, to, progress, offset);
+                return this.offsetLinear(from, to, progress, offset, rot);
+        }
+        if (this.shouldExit) {
+            this.getManager().detachComponent(CameraFading_1);
+            return;
         }
         if (this.exitOnEnd && info === this.last) {
-            this.getManager().detachComponent(CameraFading);
+            this.shouldExit = true;
         }
     }
-    /**
-     * @param {[number, number, number]} origin
-     */
-    offsetLinear(from, to, progress, target) {
-        const offset = mathExports.lerpn(from, to, progress);
-        this.copyOffset(offset, target);
+    offsetLinear(from, to, progress, target, rotation) {
+        const offset = lerpn(from.slice(0, 3), to.slice(0, 3), progress);
+        const rot = alerpn(from.slice(3, 5), to.slice(3, 5), progress);
+        this.copy(offset, target);
+        this.copy(rot, rotation);
     }
-}
+    static fadeFromAttackDirection(abuser, damageOpt) {
+        const { direction } = damageOpt;
+        let to = null;
+        switch (direction) {
+            case 'left':
+                to = [2.2, 0, 0.9, -15, 0];
+                break;
+            case 'right':
+                to = [2.2, 0, 0.5, 15, 0];
+                break;
+            case 'vertical':
+                to = [2.2, 0.4, 0.7, 15, 0];
+                break;
+            default:
+                to = [1.5, 0, 0.7, 0, 0];
+                break;
+        }
+        Status.get(abuser.xuid).componentManager.attachComponent(new CameraFading_1([
+            {
+                from: CameraComponent.defaultStatus,
+                to,
+                duration: 1
+            },
+            {
+                to: CameraComponent.defaultStatus,
+                duration: 2
+            }
+        ], true));
+    }
+};
+CameraFading = CameraFading_1 = __decorate([
+    CommandConstructable('camera-fading'),
+    Checkable(['config'])
+], CameraFading);
 
 var cameraFading = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	CameraFading: CameraFading
+	get CameraFading () { return CameraFading; }
 });
 
 var require$$17 = /*@__PURE__*/getAugmentedNamespace(cameraFading);
@@ -2774,7 +2923,7 @@ function require_default () {
 	            ctx.status.componentManager.attachComponent(new CameraFading([
 	                {
 	                    from: CameraComponent.defaultOffset,
-	                    to: [ 0.6, 0, 0.8 ],
+	                    to: [ 0.6, 0, 0.8, 0, 0 ],
 	                    duration: 2
 	                },
 	                {
@@ -3701,7 +3850,7 @@ function requireLightSaber () {
 	const { playAnim, playSoundAll } = requireBasic();
 	const { DefaultMoves, DefaultTrickModule } = require_default();
 	requireMain();
-	const { constrictCalc, randomRange } = requireMath();
+	const { constrictCalc, randomRange } = math;
 	const { hud } = requireHud();
 
 	class LightSaberMoves extends DefaultMoves {
@@ -4302,7 +4451,6 @@ function requireMoon_glaive () {
 	const { playAnim } = requireBasic();
 	const { DefaultMoves, DefaultTrickModule } = require_default();
 	requireMain();
-	requireMath();
 	requireHud();
 
 	class MoonGlaiveTricks extends DefaultTrickModule {
@@ -5109,7 +5257,7 @@ function requireOotachi () {
 
 	const { playAnim, playSoundAll } = requireBasic();
 	requireMain();
-	const { randomRange } = requireMath();
+	const { randomRange } = math;
 	const { DefaultMoves, DefaultTrickModule } = require_default();
 
 	class OotachiMoves extends DefaultMoves {
@@ -5984,7 +6132,7 @@ function requireShield_with_sword () {
 	const { playAnim, playSoundAll } = requireBasic();
 	const { DefaultMoves, DefaultTrickModule } = require_default();
 	requireMain();
-	const { constrictCalc, randomRange } = requireMath();
+	const { constrictCalc, randomRange } = math;
 	requireHud();
 
 	class ShieldSwordTricks extends DefaultTrickModule {
@@ -7439,7 +7587,11 @@ function requireCamera () {
 	};
 
 	const camera = (pl, easeTime, easeType, pos, lookAt) => {
-	    mc.runcmdEx(`execute as "${pl.name}" run camera @s set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} facing ${lookAt.x} ${lookAt.y} ${lookAt.z}`);
+	    mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} facing ${lookAt.x} ${lookAt.y} ${lookAt.z}`);
+	};
+
+	const cameraRot = (pl, easeTime, easeType, pos, rotX, rotY) => {
+	    mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} rot ${rotX} ${rotY}`); 
 	};
 
 	function clearCamera(pl) {
@@ -7447,6 +7599,7 @@ function requireCamera () {
 	}
 
 	const ROT = Math.PI * 1;
+	const ANGLE = 180 / Math.PI;
 
 	const battleCameraMiddlePoint = (pl, en) => {
 	    const plPos = pl.pos;
@@ -7546,10 +7699,24 @@ function requireCamera () {
 	    const cameraPos = {
 	        x: crossPos.x + cameraPosVec.dx,
 	        z: crossPos.z + cameraPosVec.dy,
-	        y: plPos.y - 0.4,
+	        y: plPos.y - 0.4 + offsetY,
 	    };
 
-	    camera(pl, 0.1, 'linear', cameraPos, { x: enPos.x, z: enPos.z, y: cameraPos.y + offsetY });
+	    // camera(pl, 0.1, 'linear', cameraPos, {
+	    //     x: enPos.x,
+	    //     z: enPos.z,
+	    //     y: cameraPos.y
+	    // })
+	    const cameraEntityVec = {
+	        x: enPos.x - cameraPos.x,
+	        z: enPos.z - cameraPos.z,
+	        y: cameraPos.y
+	    };
+
+	    const yaw = Math.atan2(cameraEntityVec.z, cameraEntityVec.x) * ANGLE - 90;
+	    const pitch = (Math.atan2(Math.sqrt(cameraEntityVec.x * cameraEntityVec.x + cameraEntityVec.z * cameraEntityVec.z), cameraEntityVec.y)) * ANGLE;
+	    const [ dYaw, dPitch ] = cameraComponent.rot;
+	    cameraRot(pl, 0.1, 'linear', cameraPos, pitch + dPitch, yaw + dYaw);
 	};
 
 	camera_1 = {
@@ -7956,6 +8123,108 @@ var require$$15 = /*@__PURE__*/getAugmentedNamespace(tick);
 
 var require$$16 = /*@__PURE__*/getAugmentedNamespace(ref);
 
+var require$$19 = /*@__PURE__*/getAugmentedNamespace(config);
+
+var commandExports = requireCommand();
+
+function registerCommand() {
+    commandExports.cmd('meisterhau', '战斗模组', 1).setup(registry => {
+        registry.register('components add <pl:player> <name:string> [args:json]', (_, __, output, args) => {
+            const targets = args.pl;
+            const componentCtor = getComponentCtor(args.name);
+            if (!componentCtor || !componentCtor.create) {
+                return output.error('无效的组件名');
+            }
+            try {
+                const component = componentCtor.create(args.args);
+                for (const target of targets) {
+                    Status.get(target.xuid).componentManager.attachComponent(component);
+                }
+                output.success(`已为 ${targets.length} 个玩家添加组件 '${args.name}'`);
+            }
+            catch (_) {
+                output.error('无效的组件参数');
+            }
+        })
+            .register('components remove <pl:player> <name:string>', (_, __, output, args) => {
+            const targets = args.pl;
+            const componentCtor = getComponentCtor(args.name);
+            if (!componentCtor || !componentCtor.create) {
+                return output.error('无效的组件名');
+            }
+            for (const terget of targets) {
+                Status.get(terget.xuid).componentManager.detachComponent(componentCtor);
+            }
+            output.success(`已为 ${targets.length} 个玩家移除组件 '${args.name}'`);
+        })
+            .register('components list <pl:player> [detail:bool]', async (_, ori, output, args) => {
+            const pl = args.pl;
+            const useDetail = args.detail ?? false;
+            for (const p of pl) {
+                const status = Status.get(p.xuid);
+                if (!status) {
+                    return;
+                }
+                const componentManager = status.componentManager;
+                const componentNames = Array.from(componentManager.getComponentNames())
+                    .map(ctor => {
+                    const id = getComponentId(ctor);
+                    if (useDetail) {
+                        return id ? `${ctor.name} (${id})` : ctor.name;
+                    }
+                    return id;
+                })
+                    .filter(id => id);
+                if (componentNames.length === 0) {
+                    output.success('玩家没有组件');
+                    return;
+                }
+                output.success(`玩家 ${p.name} 拥有组件:\n${componentNames.join('\n')}`);
+            }
+        })
+            .register('components check <pl:player> <name:string>', (_, __, output, args) => {
+            const componentCtor = getComponentCtor(args.name);
+            if (!componentCtor || !componentCtor.create) {
+                return output.error('无效的组件名');
+            }
+            for (const pl of args.pl) {
+                const status = Status.get(pl.xuid);
+                if (!status) {
+                    continue;
+                }
+                const component = status.componentManager.getComponent(componentCtor);
+                if (!component) {
+                    output.success(`玩家 '${pl.name}' 没有此组件`);
+                    continue;
+                }
+                const checkableEntries = getCheckableEntries(component);
+                if (!checkableEntries) {
+                    output.success('此组件没有检查项');
+                    continue;
+                }
+                const entries = [];
+                for (const [k, v] of checkableEntries) {
+                    entries.push(`  ${k} = ${JSON.stringify(v)}`);
+                }
+                if (entries.length === 0) {
+                    output.success('此组件没有检查项');
+                }
+                else {
+                    output.success(`${pl.name} 的组件 ${args.name}:\n${entries.join('\n')}`);
+                }
+            }
+        })
+            .submit();
+    });
+}
+
+var commands = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	registerCommand: registerCommand
+});
+
+var require$$20 = /*@__PURE__*/getAugmentedNamespace(commands);
+
 var core;
 var hasRequiredCore;
 
@@ -7985,7 +8254,8 @@ function requireCore () {
 	const { Tick } = require$$15;
 	const { Ref } = require$$16;
 	const { CameraFading } = require$$17;
-	const { CameraComponent } = require$$18;
+	const { commandComponentRegistry, DamageModifier, getCheckableEntries } = require$$19;
+	const { registerCommand } = require$$20;
 
 	const em = new EventEmitter({ enableWatcher: true });
 	const es = EventInputStream.get(em);
@@ -8568,13 +8838,10 @@ function requireCore () {
 	            trace,
 	        } = damageOpt;
 
-	        let isPlayer;
+	        const victimIsEntity = !victim.xuid;
 
-	        if (victim.xuid) {
-	            isPlayer = true;
-	        }
-
-	        if (!isPlayer && !victim.isPlayer()) {
+	        if (victimIsEntity) {
+	            CameraFading.fadeFromAttackDirection(abuser, damageOpt);
 	            return _damage(
 	                victim,
 	                damage,
@@ -8584,8 +8851,8 @@ function requireCore () {
 	            )
 	        }
 
-	        const victimizedPlayer = isPlayer ? victim : victim.toPlayer();
-	        const victimStatus = Status.get(victimizedPlayer.xuid);
+	        const victimPlayer = victimIsEntity ? victim.toPlayer() : victim;
+	        const victimStatus = Status.get(victimPlayer.xuid);
 
 	        const _knockback = (h, repulsible) => {
 	            if (powerful || repulsible) {
@@ -8595,15 +8862,22 @@ function requireCore () {
 	                return
 	            }
 
+	            if (victimPlayer.gameMode === 1) {
+	                return
+	            }
+
 	            knockback(victim, 0, 0, 0, -2);
 	        };
 	        const doDamage = () => {
+	            CameraFading.fadeFromAttackDirection(abuser, damageOpt);
 	            _knockback(_k, victimStatus.repulsible);
-
 	            victimStatus.shocked = shock;
-	            em.emitNone('hurt', abuser, victimizedPlayer, {
+
+	            const modifier = victimStatus.componentManager.getComponent(DamageModifier)?.modifier;
+
+	            em.emitNone('hurt', abuser, victimPlayer, {
 	                ...damageOpt,
-	                damage: damage * 0.2, 
+	                damage: damage * (modifier ?? DamageModifier.defaultModifier), 
 	                damageType: 'override',
 	            });
 	        };
@@ -8613,20 +8887,20 @@ function requireCore () {
 	        }
 
 	        if (victimStatus.isWaitingDeflection && !permeable && !powerful) {
-	            return em.emitNone('deflect', abuser, victimizedPlayer, damageOpt)
+	            return em.emitNone('deflect', abuser, victimPlayer, damageOpt)
 	        }
 
 	        if (victimStatus.isDodging && !trace) {
-	            return em.emitNone('dodge', abuser, victimizedPlayer, damageOpt)
+	            return em.emitNone('dodge', abuser, victimPlayer, damageOpt)
 	        }
 
 	        if (victimStatus.isWaitingParry && parryable) {
-	            return em.emitNone('parried', abuser, victimizedPlayer, damageOpt)
+	            return em.emitNone('parried', abuser, victimPlayer, damageOpt)
 	        }
 
 	        if (victimStatus.isBlocking && !permeable) {
 	            _knockback(_k * 0.4, victimStatus.repulsible);
-	            return em.emitNone('block', abuser, victimizedPlayer, damageOpt)
+	            return em.emitNone('block', abuser, victimPlayer, damageOpt)
 	        }
 
 	        doDamage();
@@ -8735,39 +9009,6 @@ function requireCore () {
 	            Function.prototype,
 	            [abuser, victim, damageOpt]
 	        );
-
-	        const { direction } = damageOpt;
-	        let to = null;
-
-	        switch (direction) {
-	            case 'left':
-	                to = [ 2.2, 0, 1.2 ];
-	                break
-
-	            case 'right':
-	                to = [ 2.2, 0, 0.2 ];
-	                break
-	            
-	            case 'vertical':
-	                to = [ 2.2, 0.4, 0.7 ];
-	                break
-	        
-	            default:
-	                to = [ 1.5, 0, 0.7 ];
-	                break
-	        }
-
-	        Status.get(abuser.xuid).componentManager.attachComponent(new CameraFading([
-	            {
-	                from: CameraComponent.defaultOffset,
-	                to,
-	                duration: 1
-	            },
-	            {
-	                to: CameraComponent.defaultOffset,
-	                duration: 2
-	            }
-	        ], true));
 
 	        let flag = true,
 	            prevent = () => flag = false;
@@ -9125,6 +9366,7 @@ function requireCore () {
 	    });
 
 	    listenAllCustomEvents(mods);
+	    registerCommand();
 	}
 
 	function getHandedItemType(pl) {

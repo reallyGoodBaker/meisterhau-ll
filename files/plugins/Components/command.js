@@ -178,13 +178,11 @@ class Registry {
         })
     }
 
-    /**@private*/ createArg(name, type, isOptional) {
-        const createCmdVariable = enumId => {
-            let extArgs = enumId ? [enumId, name, 1] : []
+    /**@private*/ registeredArgs = new Set()
 
-            return isOptional
-                ? this._cmd.optional(name, stringParamTypeMap[type], ...extArgs)
-                : this._cmd.mandatory(name, stringParamTypeMap[type], ...extArgs)
+    /**@private*/ createArg(name, type, isOptional) {
+        if (this.registeredArgs.has(name)) {
+            return
         }
         
         let enumId = null
@@ -194,7 +192,13 @@ class Registry {
             this._cmd.setEnum(enumId, [name])
         }
 
-        return createCmdVariable(enumId)
+        let extArgs = enumId ? [enumId, name, 1] : []
+
+        isOptional
+            ? this._cmd.optional(name, stringParamTypeMap[type], ...extArgs)
+            : this._cmd.mandatory(name, stringParamTypeMap[type], ...extArgs)
+
+        this.registeredArgs.add(name)
     }
 }
 

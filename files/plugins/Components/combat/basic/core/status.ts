@@ -2,7 +2,7 @@
 import console from '../../../console/main'
 import { CameraComponent } from '../components/camera'
 import { Tick } from '../components/tick'
-import type { AcceptbleInputTypes } from '../types'
+import { AcceptbleInputTypes } from '../types'
 import { ComponentManager } from './component'
 
 export const defaultAcceptableInputs = [

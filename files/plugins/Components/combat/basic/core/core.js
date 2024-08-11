@@ -22,6 +22,8 @@ const { Tick } = require('../components/tick')
 const { Ref } = require('./ref')
 const { CameraFading } = require('../components/camera-fading')
 const { CameraComponent } = require('../components/camera')
+const { commandComponentRegistry, DamageModifier, getCheckableEntries } = require('./config')
+const { registerCommand } = require('./commands')
 
 const em = new EventEmitter({ enableWatcher: true })
 const es = EventInputStream.get(em)
@@ -604,13 +606,10 @@ function listenAllCustomEvents(mods) {
             trace,
         } = damageOpt
 
-        let isPlayer
+        const victimIsEntity = !victim.xuid
 
-        if (victim.xuid) {
-            isPlayer = true
-        }
-
-        if (!isPlayer && !victim.isPlayer()) {
+        if (victimIsEntity) {
+            CameraFading.fadeFromAttackDirection(abuser, damageOpt)
             return _damage(
                 victim,
                 damage,
@@ -620,8 +619,8 @@ function listenAllCustomEvents(mods) {
             )
         }
 
-        const victimizedPlayer = isPlayer ? victim : victim.toPlayer()
-        const victimStatus = Status.get(victimizedPlayer.xuid)
+        const victimPlayer = victimIsEntity ? victim.toPlayer() : victim
+        const victimStatus = Status.get(victimPlayer.xuid)
 
         const _knockback = (h, repulsible) => {
             if (powerful || repulsible) {
@@ -631,15 +630,22 @@ function listenAllCustomEvents(mods) {
                 return
             }
 
+            if (victimPlayer.gameMode === 1) {
+                return
+            }
+
             knockback(victim, 0, 0, 0, -2)
         }
         const doDamage = () => {
+            CameraFading.fadeFromAttackDirection(abuser, damageOpt)
             _knockback(_k, victimStatus.repulsible)
-
             victimStatus.shocked = shock
-            em.emitNone('hurt', abuser, victimizedPlayer, {
+
+            const modifier = victimStatus.componentManager.getComponent(DamageModifier)?.modifier
+
+            em.emitNone('hurt', abuser, victimPlayer, {
                 ...damageOpt,
-                damage: damage * 0.2, 
+                damage: damage * (modifier ?? DamageModifier.defaultModifier), 
                 damageType: 'override',
             })
         }
@@ -649,20 +655,20 @@ function listenAllCustomEvents(mods) {
         }
 
         if (victimStatus.isWaitingDeflection && !permeable && !powerful) {
-            return em.emitNone('deflect', abuser, victimizedPlayer, damageOpt)
+            return em.emitNone('deflect', abuser, victimPlayer, damageOpt)
         }
 
         if (victimStatus.isDodging && !trace) {
-            return em.emitNone('dodge', abuser, victimizedPlayer, damageOpt)
+            return em.emitNone('dodge', abuser, victimPlayer, damageOpt)
         }
 
         if (victimStatus.isWaitingParry && parryable) {
-            return em.emitNone('parried', abuser, victimizedPlayer, damageOpt)
+            return em.emitNone('parried', abuser, victimPlayer, damageOpt)
         }
 
         if (victimStatus.isBlocking && !permeable) {
             _knockback(_k * 0.4, victimStatus.repulsible)
-            return em.emitNone('block', abuser, victimizedPlayer, damageOpt)
+            return em.emitNone('block', abuser, victimPlayer, damageOpt)
         }
 
         doDamage()
@@ -771,39 +777,6 @@ function listenAllCustomEvents(mods) {
             Function.prototype,
             [abuser, victim, damageOpt]
         )
-
-        const { direction } = damageOpt
-        let to = null
-
-        switch (direction) {
-            case 'left':
-                to = [ 2.2, 0, 1.2 ]
-                break
-
-            case 'right':
-                to = [ 2.2, 0, 0.2 ]
-                break
-            
-            case 'vertical':
-                to = [ 2.2, 0.5, 0.7 ]
-                break
-        
-            default:
-                to = [ 1.5, 0, 0.7 ]
-                break
-        }
-
-        Status.get(abuser.xuid).componentManager.attachComponent(new CameraFading([
-            {
-                from: CameraComponent.defaultOffset,
-                to,
-                duration: 1
-            },
-            {
-                to: CameraComponent.defaultOffset,
-                duration: 2
-            }
-        ], true))
 
         let flag = true,
             prevent = () => flag = false
@@ -1162,89 +1135,6 @@ function listenAllMcEvents(collection) {
 
     listenAllCustomEvents(mods)
     registerCommand()
-}
-
-function registerCommand() {
-    // cmd('status', '修改状态', 1).setup(registry => {
-    //     registry
-    //     .register('<pl:player> clear', (_, ori, out, res) => {
-    //         const pl = res.pl
-
-    //         if (!pl) {
-    //             return
-    //         }
-
-    //         pl.forEach(pl => {
-    //             _status(pl).clear()
-    //         })
-    //     })
-    //     .register('<pl:player> freeze', (_, ori, out, res) => {
-    //         const pl = res.pl
-
-    //         if (!pl) {
-    //             return
-    //         }
-
-    //         pl.forEach(pl => {
-    //             movement(pl, false)
-    //             camera(pl, false)
-    //         })
-    //     })
-    //     .register('<pl:player> unfreeze', (_, ori, out, res) => {
-    //         const pl = res.pl
-
-    //         if (!pl) {
-    //             return
-    //         }
-
-    //         pl.forEach(pl => {
-    //             movement(pl)
-    //             camera(pl)
-    //         })
-    //     })
-    //     .register('<pl:player> set <input:string> enabled', (_, ori, out, res) => {
-    //         const { pl, input } = res
-
-    //         if (!pl) {
-    //             return
-    //         }
-
-    //         pl.forEach(pl => {
-    //             Status
-    //                 .get(pl.xuid)
-    //                 .acceptableInput(input, true)
-    //         })
-    //     })
-    //     .register('<pl:player> set <input:string> disabled', (_, ori, out, res) => {
-    //         const { pl, input } = res
-
-    //         if (!pl) {
-    //             return
-    //         }
-
-    //         pl.forEach(pl => {
-    //             Status
-    //                 .get(pl.xuid)
-    //                 .acceptableInput(input, false)
-    //         })
-    //     })
-    //     .register('<pl:player> query <input:string>', (_, ori, out, res) => {
-    //         const { pl, input } = res
-
-    //         if (!pl) {
-    //             return
-    //         }
-
-    //         pl.forEach(pl => {
-    //             const enabled = Status
-    //                 .get(pl.xuid)
-    //                 .acceptableInput(input)
-
-    //             pl.tell(`${input}状态: ${enabled ? 'enabled' : 'disabled'}`)
-    //         })
-    //     })
-    //     .submit()
-    // })
 }
 
 function getHandedItemType(pl) {

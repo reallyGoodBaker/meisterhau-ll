@@ -1,5 +1,8 @@
-import { BaseComponent } from '../core/component'
-import { lerpn } from '../utils/math'
+import { BaseComponent, Component } from '../core/component'
+import { Checkable, CommandConstructable, CommandConstructableComponentCtor } from '../core/config'
+import { Status } from '../core/status'
+import { DamageOption } from '../types'
+import { alerpn, lerpn } from '../utils/math'
 import { CameraComponent } from './camera'
 import { Tick } from './tick'
 
@@ -14,10 +17,14 @@ type TransParams = [
     string, number[], number[], number
 ]
 
+@CommandConstructable('camera-fading')
+@Checkable([ 'config' ])
 export class CameraFading extends BaseComponent {
     tick?: Tick
     tickOffset?: number
     readonly last: TransParams
+
+    shouldExit = false
 
     constructor(
         private config: TransInfo[] = [],
@@ -28,6 +35,10 @@ export class CameraFading extends BaseComponent {
 
         this.config = config
         this.last = [ 'linear', lastTo, lastTo, 1 ]
+    }
+
+    static create({ config, exitOnEnd = false }: { config: TransInfo[], exitOnEnd: boolean }): Component {
+        return new CameraFading(config, exitOnEnd)
     }
 
     dt() {
@@ -42,10 +53,12 @@ export class CameraFading extends BaseComponent {
         this.tickOffset = this.tick.dt
     }
 
-    copyOffset(from: number[], to: number[]) {
-        to[0] = from[0]
-        to[1] = from[1]
-        to[2] = from[2]
+    copy(from: number[], to: number[]) {
+        const len = Math.min(from.length, to.length)
+
+        for (let i = 0; i < len; i++) {
+            to[i] = from[i]
+        }
     }
 
     getTransInfo(): TransParams {
@@ -73,26 +86,65 @@ export class CameraFading extends BaseComponent {
     }
 
     onTick() {
-        const { offset } = this.getManager().getComponent(CameraComponent)!
+        const { offset, rot } = this.getManager().getComponent(CameraComponent)!
         const info = this.getTransInfo()
         const [ curve, from, to, progress ] = info
 
         switch (curve) {
             case 'linear':
-                return this.offsetLinear(from, to, progress, offset)
+                return this.offsetLinear(from, to, progress, offset, rot)
+        }
+
+        if (this.shouldExit) {
+            this.getManager().detachComponent(CameraFading)
+            return
         }
 
         if (this.exitOnEnd && info === this.last) {
-            this.getManager().detachComponent(CameraFading)
+            this.shouldExit = true
         }
     }
 
-    /**
-     * @param {[number, number, number]} origin 
-     */
-    offsetLinear(from: number[], to: number[], progress: number, target: number[]) {
-        const offset = lerpn(from, to, progress)
+    offsetLinear(from: number[], to: number[], progress: number, target: number[], rotation: number[]) {
+        const offset = lerpn(from.slice(0, 3), to.slice(0, 3), progress)
+        const rot = alerpn(from.slice(3, 5), to.slice(3, 5), progress)
 
-        this.copyOffset(offset, target)
+        this.copy(offset, target)
+        this.copy(rot, rotation)
+    }
+
+    static fadeFromAttackDirection(abuser: any, damageOpt: DamageOption) {
+        const { direction } = damageOpt
+        let to = null
+
+        switch (direction) {
+            case 'left':
+                to = [ 2.2, 0, 0.9, -15, 0 ]
+                break
+
+            case 'right':
+                to = [ 2.2, 0, 0.5, 15, 0 ]
+                break
+            
+            case 'vertical':
+                to = [ 2.2, 0.4, 0.7, 15, 0 ]
+                break
+        
+            default:
+                to = [ 1.5, 0, 0.7, 0, 0 ]
+                break
+        }
+
+        Status.get(abuser.xuid).componentManager.attachComponent(new CameraFading([
+            {
+                from: CameraComponent.defaultStatus,
+                to,
+                duration: 1
+            },
+            {
+                to: CameraComponent.defaultStatus,
+                duration: 2
+            }
+        ], true))
     }
 }

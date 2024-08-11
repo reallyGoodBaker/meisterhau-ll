@@ -1,7 +1,7 @@
 import { Status } from "./status"
 
 class RefClass {
-    player?: any
+    player: any
     status?: Status
 }
 

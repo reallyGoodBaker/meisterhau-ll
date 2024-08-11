@@ -39,12 +39,29 @@ exports.lerpn = (from, to, progress) => {
         return from
     }
 
-    const res = []
     const len = from.length
+    const res = new Array(len).fill(0)
     const p = Math.min(Math.max(0, progress), 1)
 
     for (let i = 0; i < len; i++) {
         res[i] = from[i] + (to[i] - from[i]) * p
+    }
+
+    return res
+}
+
+exports.alerpn = (from, to, progress) => {
+    if (from.length !== to.length) {
+        return from
+    }
+
+    const len = from.length
+    const res = new Array(from.length).fill(0)
+    const p = Math.min(Math.max(0, progress), 1)
+
+    for (let i = 0; i < len; i++) {
+        const d = (to[i] - from[i]) % 360
+        res[i] = from[i] + d * p
     }
 
     return res

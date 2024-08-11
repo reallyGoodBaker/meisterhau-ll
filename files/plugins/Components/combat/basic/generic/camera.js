@@ -8,7 +8,11 @@ const cameraInput = (pl, enabled=true) => {
 }
 
 const camera = (pl, easeTime, easeType, pos, lookAt) => {
-    mc.runcmdEx(`execute as "${pl.name}" run camera @s set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} facing ${lookAt.x} ${lookAt.y} ${lookAt.z}`)
+    mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} facing ${lookAt.x} ${lookAt.y} ${lookAt.z}`)
+}
+
+const cameraRot = (pl, easeTime, easeType, pos, rotX, rotY) => {
+    mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} rot ${rotX} ${rotY}`) 
 }
 
 function clearCamera(pl) {
@@ -16,6 +20,7 @@ function clearCamera(pl) {
 }
 
 const ROT = Math.PI * 1
+const ANGLE = 180 / Math.PI
 
 const battleCameraMiddlePoint = (pl, en) => {
     const plPos = pl.pos
@@ -115,10 +120,24 @@ const battleCamera = (pl, en) => {
     const cameraPos = {
         x: crossPos.x + cameraPosVec.dx,
         z: crossPos.z + cameraPosVec.dy,
-        y: plPos.y - 0.4,
+        y: plPos.y - 0.4 + offsetY,
     }
 
-    camera(pl, 0.1, 'linear', cameraPos, { x: enPos.x, z: enPos.z, y: cameraPos.y + offsetY })
+    // camera(pl, 0.1, 'linear', cameraPos, {
+    //     x: enPos.x,
+    //     z: enPos.z,
+    //     y: cameraPos.y
+    // })
+    const cameraEntityVec = {
+        x: enPos.x - cameraPos.x,
+        z: enPos.z - cameraPos.z,
+        y: cameraPos.y
+    }
+
+    const yaw = Math.atan2(cameraEntityVec.z, cameraEntityVec.x) * ANGLE - 90
+    const pitch = (Math.atan2(Math.sqrt(cameraEntityVec.x * cameraEntityVec.x + cameraEntityVec.z * cameraEntityVec.z), cameraEntityVec.y)) * ANGLE
+    const [ dYaw, dPitch ] = cameraComponent.rot
+    cameraRot(pl, 0.1, 'linear', cameraPos, pitch + dPitch, yaw + dYaw)
 }
 
 module.exports = {

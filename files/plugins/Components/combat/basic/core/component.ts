@@ -31,8 +31,8 @@ export class BaseComponent extends CustomComponent {
 
 }
 
-interface ComponentCtor<T extends Component | BasicComponent = Component> {
-    new(...args: any): T
+export interface ComponentCtor<T extends Component | BasicComponent = Component> {
+    new(...args: any[]): T
 }
 
 export class ComponentManager {
