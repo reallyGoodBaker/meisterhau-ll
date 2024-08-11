@@ -371,16 +371,6 @@ interface Task {
 
 type AcceptbleInputTypes = keyof InputableTransitionMap
 
-interface Components {
-    getComponent<T extends Component>(name: string): T | undefined
-    addComponent(name: string, component: Component): void
-    removeComponent(name: string): void
-    clear(): void
-    getComponents(): IterableIterator<Component>
-    getComponentNames(): IterableIterator<string>
-    has(name: string): boolean
-}
-
 type EntityDamageCause = 'anvil' | 'blockExplosion' | 'charging' | 'contact' | 'drowning' | 'entityAttack'
     | 'entityExplosion' | 'fall' | 'fallingBlock' | 'fire' | 'fireTick' | 'fireworks' | 'flyIntoWall'
     | 'freezing' | 'lava' | 'lightning' | 'magic' | 'magma' | 'none' | 'override' | 'piston' | 'projectile'

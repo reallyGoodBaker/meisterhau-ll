@@ -1,45 +1,46 @@
 import { Component, ComponentCtor, CustomComponent } from "./component"
 
-export interface CommandConstructableComponentCtor extends ComponentCtor {
-    create(args: any): Component
+type CommandConstructableCtor = ComponentCtor & {
+    create(...args: any[]): Component
 }
 
-const commandComponentRegistry = new Map<string, CommandConstructableComponentCtor>()
+const publicComponentRegistry = new Map<string, CommandConstructableCtor>()
 const componentIdMapping = new WeakMap()
 
-export const CommandConstructable: (name: string) => ClassDecorator = name => target => {
-    if ('create' in target) {
-        commandComponentRegistry.set(name, target as any)
-        componentIdMapping.set(target as any, name as any)
-    }
+export const PublicComponent: (name: string) => ClassDecorator = name => target => {
+    publicComponentRegistry.set(name, target as any)
+    componentIdMapping.set(target as any, name as any)
 }
 
 export const getComponentCtor = (id: string) => {
-    return commandComponentRegistry.get(id)
+    return publicComponentRegistry.get(id)
 }
 
 export const getComponentId: (t: ComponentCtor) => string | undefined = (t: ComponentCtor) => {
     return componentIdMapping.get(t)
 }
 
-const checkableKeys = new Map<ComponentCtor, string[]>()
-export const Checkable: (keys: string[]) => ClassDecorator = keys => target => {
+const fieldKeys = new Map<ComponentCtor, {muts: string[], lets: string[]}>()
+export const Fields: (muts: string[], lets?: string[]) => ClassDecorator = (muts, lets) => target => {
     //@ts-ignore
-    checkableKeys.set(target, keys)
+    fieldKeys.set(target, { muts, lets })
 }
 
-export function getCheckableEntries(t: any): [string, any][] | null {
-    const keys = checkableKeys.get(Object.getPrototypeOf(t).constructor)
+export function getFieldEntries(t: any): {muts: any[], lets: any[]} | null {
+    const keys = fieldKeys.get(Object.getPrototypeOf(t).constructor)
 
     if (!keys) {
         return null
     }
 
-    return keys.map(k => [k, t[k]])
+    return {
+        muts: keys.muts.map(k => [k, t[k]]),
+        lets: keys.lets.map(k => [k, t[k]]),
+    }
 }
 
-@CommandConstructable('damage-modifier')
-@Checkable([ 'modifier' ])
+@PublicComponent('damage-modifier')
+@Fields([ 'modifier' ])
 export class DamageModifier extends CustomComponent {
     static defaultModifier = 0.2
     static create({ modifier }: { modifier: number }) {

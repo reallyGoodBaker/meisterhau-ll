@@ -1,5 +1,5 @@
 import { cmd } from "../../../command"
-import { getComponentId, getComponentCtor, getCheckableEntries } from "./config"
+import { getComponentId, getComponentCtor, getFieldEntries } from "./config"
 import { Status } from "./status"
 
 export function registerCommand() {
@@ -9,7 +9,7 @@ export function registerCommand() {
             const jsonArgs = args.args
             const componentCtor = getComponentCtor(args.name)
 
-            if (!componentCtor || !componentCtor.create) {
+            if (!componentCtor || !('create' in componentCtor)) {
                 return output.error('无效的组件名')
             }
 
@@ -90,15 +90,19 @@ export function registerCommand() {
                     continue
                 }
 
-                const checkableEntries = getCheckableEntries(component)
+                const checkableEntries = getFieldEntries(component)
                 if (!checkableEntries) {
                     output.success('此组件没有检查项')
                     continue
                 }
 
                 const entries = []
-                for (const [ k, v ] of checkableEntries) {
+                for (const [ k, v ] of checkableEntries.muts) {
                     entries.push(`  ${k} = ${JSON.stringify(v)}`)
+                }
+
+                for (const [ k, v ] of checkableEntries.lets) {
+                    entries.push(`  §9${k}§r = ${JSON.stringify(v)}`)
                 }
 
                 if (entries.length === 0) {

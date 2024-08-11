@@ -17,7 +17,7 @@ function lockTarget(src, target) {
     }
 
     if (target) {
-        cameraInput(pl, false)
+        // cameraInput(pl, false)
         locks.set(src, target)
         pl.setMovementSpeed(0.04)
     } else {

@@ -18,12 +18,13 @@
     "@minecraft/server-admin": "^1.0.0-beta.11940b24",
     "@minecraft/server-net": "^1.0.0-beta.11940b24",
     "node-watch": "^0.7.3",
-    "unzipper": "^0.10.11"
+    "unzipper": "^0.12.3"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.6",
+    "levilamina": "^2.14.1",
     "rollup-plugin-typescript2": "^0.36.0",
     "tslib": "^2.6.3"
   }

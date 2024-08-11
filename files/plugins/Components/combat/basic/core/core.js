@@ -1,12 +1,10 @@
 /// <reference path="../types.d.ts"/>
 
 const { EventEmitter } = require('../../../events')
-const console = require('../../../console/main')
 const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = require('../../../scripts-rpc/func/kinematics')
 const { combat: { damage: _damage } } = require('../../../scripts-rpc/func/index')
 const { playAnim } = require('../index')
 const { movement, camera, movementInput } = require('../generic/index')
-const { cmd } = require('../../../command')
 const { selectFromRange } = require('../generic/range')
 const { Status, defaultAcceptableInputs } = require('./status')
 const { Task } = require('../generic/task')
@@ -19,11 +17,11 @@ const { setVelocity, isCollide } = require('../generic/kinematic')
 const { vec2, vec2ToAngle } = require('../generic/vec')
 const { clearCamera } = require('../generic/camera')
 const { Tick } = require('../components/tick')
-const { Ref } = require('./ref')
+const { Optional } = require('./optional')
 const { CameraFading } = require('../components/camera-fading')
-const { CameraComponent } = require('../components/camera')
-const { commandComponentRegistry, DamageModifier, getCheckableEntries } = require('./config')
+const { DamageModifier } = require('./config')
 const { registerCommand } = require('./commands')
+const { antiTreeshaking } = require('../components/anti-treeshaking')
 
 const em = new EventEmitter({ enableWatcher: true })
 const es = EventInputStream.get(em)
@@ -523,9 +521,6 @@ function listenAllCustomEvents(mods) {
                 return
             }
 
-            Ref.player = pl
-            Ref.status = status
-
             const currentMove = bind.moves[status.status]
             const duration = status.duration++
 
@@ -551,13 +546,7 @@ function listenAllCustomEvents(mods) {
                 }
             }
 
-            for (const component of status.componentManager.getComponents()) {
-                const { onTick } = component
-
-                if (onTick) {
-                    onTick.call(component, pl, status)
-                }
-            }
+            status.componentManager.handleTicks(pl, _context)
 
             if (duration >= (currentMove.cast || 0) + (currentMove.backswing || 0)) {
                 if (currentMove.onLeave) {
@@ -573,9 +562,6 @@ function listenAllCustomEvents(mods) {
                 return
             }
         }
-
-        Ref.status = null
-        Ref.player = null
     })
 
     /**@type {DamageOption}*/
@@ -1033,7 +1019,7 @@ function listenAllMcEvents(collection) {
         })
     })
 
-    mc.listen('onOpenContainer', pl => {
+    mc.listen('onOpenContainer', () => {
         // console.log(pl)
     })
 
@@ -1140,6 +1126,8 @@ function listenAllMcEvents(collection) {
 function getHandedItemType(pl) {
     return pl.getHand().type
 }
+
+antiTreeshaking()
 
 module.exports = {
     emitter: em, listenAllMcEvents, 

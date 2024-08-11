@@ -1,40 +1,26 @@
-/**
- * @param {number} start 
- * @param {number} end 
- * @param {() => number} calcFn 
- * @returns 
- */
-function constrictCalc(start, end, calcFn) {
-    let result = 0
-
+export function constrictCalc(start: number, end: number, calcFn: () => number) {
     try {
-        result = calcFn.call(null)
-        if (isNaN(result)) throw ''
+        return minmax(start, end, calcFn.call(null))
     } catch {
         return start
     }
-
-    return result > end ? end
-            : result < start ? start
-                : result
 }
 
-exports.constrictCalc = constrictCalc
+export function minmax(min: number, max: number, val: number) {
+    if (isNaN(val)) {
+        return min
+    }
 
-function randomRange(min=0, max=1, integer=false) {
+    return Math.max(min, Math.min(max, val))
+}
+
+export function randomRange(min=0, max=1, integer=false) {
     const num = Math.random() * (max - min) + min
 
     return integer ? Math.round(num) : num
 }
 
-exports.randomRange = randomRange
-
-/**
- * @param {number[]} from 
- * @param {number[]} to 
- * @param {number} progress 
- */
-exports.lerpn = (from, to, progress) => {
+export const lerpn = (from: number[], to: number[], progress: number) => {
     if (from.length !== to.length) {
         return from
     }
@@ -50,7 +36,7 @@ exports.lerpn = (from, to, progress) => {
     return res
 }
 
-exports.alerpn = (from, to, progress) => {
+export const alerpn = (from: number[], to: number[], progress: number) => {
     if (from.length !== to.length) {
         return from
     }

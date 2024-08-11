@@ -1,10 +1,11 @@
-import { BaseComponent, Component } from '../core/component'
-import { Checkable, CommandConstructable, CommandConstructableComponentCtor } from '../core/config'
+import { BaseComponent, Component, ComponentManager } from '../core/component'
+import { Fields, PublicComponent } from '../core/config'
 import { Status } from '../core/status'
 import { DamageOption } from '../types'
 import { alerpn, lerpn } from '../utils/math'
 import { CameraComponent } from './camera'
 import { Tick } from './tick'
+import { Optional } from '../core/optional';
 
 interface TransInfo {
     curve?: 'linear'
@@ -17,10 +18,10 @@ type TransParams = [
     string, number[], number[], number
 ]
 
-@CommandConstructable('camera-fading')
-@Checkable([ 'config' ])
+@PublicComponent('camera-fading')
+@Fields([ 'config' ])
 export class CameraFading extends BaseComponent {
-    tick?: Tick
+    tick?: Optional<Tick>
     tickOffset?: number
     readonly last: TransParams
 
@@ -42,15 +43,15 @@ export class CameraFading extends BaseComponent {
     }
 
     dt() {
-        return this.tick!.dt - this.tickOffset!
+        return this.tick?.unwrap().dt! - this.tickOffset!
     }
 
-    onAttach() {
-        if (!(this.tick = this.getManager().getComponent(Tick))) {
+    onAttach(manager: ComponentManager): boolean | void | Promise<boolean | void> {
+        if (!(this.tick = manager.getComponent(Tick))) {
             return true
         }
 
-        this.tickOffset = this.tick.dt
+        this.tickOffset = this.tick.unwrap().dt
     }
 
     copy(from: number[], to: number[]) {
@@ -85,8 +86,8 @@ export class CameraFading extends BaseComponent {
         return this.last
     }
 
-    onTick() {
-        const { offset, rot } = this.getManager().getComponent(CameraComponent)!
+    onTick(manager: ComponentManager): void {
+        const { offset, rot } = manager.getComponent(CameraComponent).unwrap()
         const info = this.getTransInfo()
         const [ curve, from, to, progress ] = info
 
@@ -96,7 +97,7 @@ export class CameraFading extends BaseComponent {
         }
 
         if (this.shouldExit) {
-            this.getManager().detachComponent(CameraFading)
+            manager.detachComponent(CameraFading)
             return
         }
 

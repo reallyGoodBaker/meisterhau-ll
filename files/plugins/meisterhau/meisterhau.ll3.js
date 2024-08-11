@@ -2167,32 +2167,12 @@ function requireKinematic () {
 	return kinematic;
 }
 
-class RefClass {
-    player;
-    status;
-}
-const Ref = new RefClass();
-
-var ref = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	Ref: Ref
-});
-
 class CustomComponent {
-    onTick() { }
+    onTick(manager, pl, status) { }
 }
 class BaseComponent extends CustomComponent {
-    onAttach() { }
-    onDetach() { }
-    getPlayer() {
-        return Ref.player;
-    }
-    getManager() {
-        return Ref.status?.componentManager;
-    }
-    getStatus() {
-        return Ref.status;
-    }
+    onAttach(manager) { }
+    onDetach(manager) { }
 }
 class ComponentManager {
     #components = new Map();
@@ -2201,7 +2181,11 @@ class ComponentManager {
     }
     async #attachComponent(component) {
         const ctor = Object.getPrototypeOf(component).constructor;
-        if ('onAttach' in component && await component.onAttach()) {
+        console.log(ctor.name);
+        if (this.#components.get(ctor)) {
+            await this.detachComponent(ctor);
+        }
+        if ('onAttach' in component && await component.onAttach(this)) {
             return;
         }
         this.#components.set(ctor, component);
@@ -2214,7 +2198,7 @@ class ComponentManager {
     async detachComponent(ctor) {
         const component = this.#components.get(ctor);
         if (component && 'onDetach' in component) {
-            await component.onDetach();
+            await component.onDetach(this);
         }
         this.#components.delete(ctor);
     }
@@ -2395,7 +2379,7 @@ var status = /*#__PURE__*/Object.freeze({
 	defaultAcceptableInputs: defaultAcceptableInputs
 });
 
-var require$$8 = /*@__PURE__*/getAugmentedNamespace(status);
+var require$$6 = /*@__PURE__*/getAugmentedNamespace(status);
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -2427,31 +2411,32 @@ typeof SuppressedError === "function" ? SuppressedError : function (error, suppr
 };
 
 var DamageModifier_1;
-const commandComponentRegistry = new Map();
+const publicComponentRegistry = new Map();
 const componentIdMapping = new WeakMap();
-const CommandConstructable = name => target => {
-    if ('create' in target) {
-        commandComponentRegistry.set(name, target);
-        componentIdMapping.set(target, name);
-    }
+const PublicComponent = name => target => {
+    publicComponentRegistry.set(name, target);
+    componentIdMapping.set(target, name);
 };
 const getComponentCtor = (id) => {
-    return commandComponentRegistry.get(id);
+    return publicComponentRegistry.get(id);
 };
 const getComponentId = (t) => {
     return componentIdMapping.get(t);
 };
-const checkableKeys = new Map();
-const Checkable = keys => target => {
+const fieldKeys = new Map();
+const Fields = (muts, lets) => target => {
     //@ts-ignore
-    checkableKeys.set(target, keys);
+    fieldKeys.set(target, { muts, lets });
 };
-function getCheckableEntries(t) {
-    const keys = checkableKeys.get(Object.getPrototypeOf(t).constructor);
+function getFieldEntries(t) {
+    const keys = fieldKeys.get(Object.getPrototypeOf(t).constructor);
     if (!keys) {
         return null;
     }
-    return keys.map(k => [k, t[k]]);
+    return {
+        muts: keys.muts.map(k => [k, t[k]]),
+        lets: keys.lets.map(k => [k, t[k]]),
+    };
 }
 let DamageModifier = class DamageModifier extends CustomComponent {
     static { DamageModifier_1 = this; }
@@ -2466,18 +2451,18 @@ let DamageModifier = class DamageModifier extends CustomComponent {
     }
 };
 DamageModifier = DamageModifier_1 = __decorate([
-    CommandConstructable('damage-modifier'),
-    Checkable(['modifier'])
+    PublicComponent('damage-modifier'),
+    Fields(['modifier'])
 ], DamageModifier);
 
 var config = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	Checkable: Checkable,
-	CommandConstructable: CommandConstructable,
 	get DamageModifier () { return DamageModifier; },
-	getCheckableEntries: getCheckableEntries,
+	Fields: Fields,
+	PublicComponent: PublicComponent,
 	getComponentCtor: getComponentCtor,
-	getComponentId: getComponentId
+	getComponentId: getComponentId,
+	getFieldEntries: getFieldEntries
 });
 
 var math = {};
@@ -2574,8 +2559,8 @@ let CameraFading = CameraFading_1 = class CameraFading extends BaseComponent {
     dt() {
         return this.tick.dt - this.tickOffset;
     }
-    onAttach() {
-        if (!(this.tick = this.getManager().getComponent(Tick))) {
+    onAttach(manager) {
+        if (!(this.tick = manager.getComponent(Tick))) {
             return true;
         }
         this.tickOffset = this.tick.dt;
@@ -2606,8 +2591,8 @@ let CameraFading = CameraFading_1 = class CameraFading extends BaseComponent {
         }
         return this.last;
     }
-    onTick() {
-        const { offset, rot } = this.getManager().getComponent(CameraComponent);
+    onTick(manager) {
+        const { offset, rot } = manager.getComponent(CameraComponent);
         const info = this.getTransInfo();
         const [curve, from, to, progress] = info;
         switch (curve) {
@@ -2615,7 +2600,7 @@ let CameraFading = CameraFading_1 = class CameraFading extends BaseComponent {
                 return this.offsetLinear(from, to, progress, offset, rot);
         }
         if (this.shouldExit) {
-            this.getManager().detachComponent(CameraFading_1);
+            manager.detachComponent(CameraFading_1);
             return;
         }
         if (this.exitOnEnd && info === this.last) {
@@ -2659,8 +2644,8 @@ let CameraFading = CameraFading_1 = class CameraFading extends BaseComponent {
     }
 };
 CameraFading = CameraFading_1 = __decorate([
-    CommandConstructable('camera-fading'),
-    Checkable(['config'])
+    PublicComponent('camera-fading'),
+    Fields(['config'])
 ], CameraFading);
 
 var cameraFading = /*#__PURE__*/Object.freeze({
@@ -2668,9 +2653,9 @@ var cameraFading = /*#__PURE__*/Object.freeze({
 	get CameraFading () { return CameraFading; }
 });
 
-var require$$17 = /*@__PURE__*/getAugmentedNamespace(cameraFading);
+var require$$15 = /*@__PURE__*/getAugmentedNamespace(cameraFading);
 
-var require$$18 = /*@__PURE__*/getAugmentedNamespace(camera);
+var require$$1 = /*@__PURE__*/getAugmentedNamespace(camera);
 
 var _default;
 var hasRequired_default;
@@ -2683,8 +2668,8 @@ function require_default () {
 	const { playAnim, playSoundAll, playParticle } = requireBasic();
 	requireMain();
 	requireKinematic();
-	const { CameraFading } = require$$17;
-	const { CameraComponent } = require$$18;
+	const { CameraFading } = require$$15;
+	const { CameraComponent } = require$$1;
 
 	function getAnim(animCategory, direction) {
 	    const anim = animCategory[direction];
@@ -3207,6 +3192,7 @@ function requireDouble_dagger () {
 	        },
 	        onLeave(pl, ctx) {
 	            ctx.unfreeze(pl);
+	            ctx.status.isBlocking = false;
 	        },
 	        timeline: {
 	            0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 120, 1),
@@ -3344,6 +3330,7 @@ function requireDouble_dagger () {
 	            });
 	        },
 	        onLeave(pl, ctx) {
+	            ctx.status.isWaitingParry = false;
 	            ctx.status.isBlocking = false;
 	            ctx.unfreeze(pl);
 	        },
@@ -3754,11 +3741,10 @@ function requireDouble_dagger () {
 	        super(
 	            'rgb:double_dagger',
 	            'init',
-	            [ 'weapon:double_dagger' ]
+	            [ 'weapon:double_dagger' ],
+	            new DoubleDaggerMoves()
 	        );
 	    }
-
-	    moves = new DoubleDaggerMoves()
 	}
 
 	double_dagger = new DoubleDaggerTricks();
@@ -3805,11 +3791,10 @@ function requireEmptyHand () {
 	        super(
 	            'rgb39.weapon.empty_hand',
 	            'blocking',
-	            [ '*' ]
+	            [ '*' ],
+	            new EmptyHandMoves()
 	        );
 	    }
-
-	    moves = new EmptyHandMoves()
 	}
 
 	/**
@@ -4431,11 +4416,10 @@ function requireLightSaber () {
 	        super(
 	            'rgb39.weapon.light_saber',
 	            'hold',
-	            [ 'weapon:light_saber' ]
+	            [ 'weapon:light_saber' ],
+	            new LightSaberMoves()
 	        );
 	    }
-
-	    moves = new LightSaberMoves()
 	}
 
 	lightSaber = new LightSaberTrick();
@@ -4458,11 +4442,10 @@ function requireMoon_glaive () {
 	        super(
 	            'rgb39.weapon.moon_glaive',
 	            'hold',
-	            [ 'weapon:moon_glaive' ]
+	            [ 'weapon:moon_glaive' ],
+	            new MoonGlaiveMoves()
 	        );
 	    }
-
-	    moves = new MoonGlaiveMoves()
 	}
 
 	class MoonGlaiveMoves extends DefaultMoves {
@@ -6036,11 +6019,10 @@ function requireOotachi () {
 	        super(
 	            'rgb39.weapon.ootachi',
 	            'idle',
-	            [ 'weapon:ootachi', 'weapon:ootachi_akaoni', 'weapon:ootachi_dragon' ]
+	            [ 'weapon:ootachi', 'weapon:ootachi_akaoni', 'weapon:ootachi_dragon' ],
+	            new OotachiMoves()
 	        );
 	    }
-
-	    moves = new OotachiMoves()
 	}
 
 	ootachi = new OotachiTricks();
@@ -6142,11 +6124,10 @@ function requireShield_with_sword () {
 	        super(
 	            'rgb39.weapon.shield_sword',
 	            'idle',
-	            [ 'weapon:shield_with_sword' ]
+	            [ 'weapon:shield_with_sword' ],
+	            new ShieldSwordMoves()
 	        );
 	    }
-
-	    moves = new ShieldSwordMoves()
 	}
 
 	class ShieldSwordMoves extends DefaultMoves {
@@ -7089,11 +7070,10 @@ function requireUchigatana () {
 	        super(
 	            'rgb39.weapon.empty_hand',
 	            'hold',
-	            [ 'weapon:uchigatana' ]
+	            [ 'weapon:uchigatana' ],
+	            new UchigatanaMoves()
 	        );
 	    }
-
-	    moves = new UchigatanaMoves()
 	}
 
 	/**
@@ -7580,8 +7560,8 @@ function requireCamera () {
 	if (hasRequiredCamera) return camera_1;
 	hasRequiredCamera = 1;
 	requireMain();
-	const { CameraComponent } = require$$18;
-	const { Status } = require$$8;
+	const { CameraComponent } = require$$1;
+	const { Status } = require$$6;
 	const { rotate2, vec2, multiply2 } = requireVec();
 
 	const cameraInput = (pl, enabled=true) => {
@@ -8121,11 +8101,56 @@ function requireEventStream () {
 	return eventStream;
 }
 
-var require$$15 = /*@__PURE__*/getAugmentedNamespace(tick);
+var require$$13 = /*@__PURE__*/getAugmentedNamespace(tick);
 
-var require$$16 = /*@__PURE__*/getAugmentedNamespace(ref);
+class Optional {
+    value;
+    static none() {
+        return new Optional(null);
+    }
+    static some(value) {
+        return new Optional(value);
+    }
+    constructor(value) {
+        this.value = value;
+    }
+    unwrap() {
+        if (!this.isEmpty()) {
+            return this.#getAndClear();
+        }
+        throw new Error('Optional is empty');
+    }
+    isEmpty() {
+        return this.value === undefined || this.value === null;
+    }
+    orElse(other) {
+        return this.#getAndClear() || other;
+    }
+    use(fn, self) {
+        if (!this.isEmpty()) {
+            fn.call(self, this.#getAndClear());
+            return true;
+        }
+        return false;
+    }
+    clone() {
+        return new Optional(this.value);
+    }
+    #getAndClear() {
+        const v = this.value;
+        this.value = null;
+        return v;
+    }
+}
 
-var require$$19 = /*@__PURE__*/getAugmentedNamespace(config);
+var optional = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	Optional: Optional
+});
+
+var require$$14 = /*@__PURE__*/getAugmentedNamespace(optional);
+
+var require$$16 = /*@__PURE__*/getAugmentedNamespace(config);
 
 var commandExports = requireCommand();
 
@@ -8135,7 +8160,7 @@ function registerCommand() {
             const targets = args.pl;
             const jsonArgs = args.args;
             const componentCtor = getComponentCtor(args.name);
-            if (!componentCtor || !componentCtor.create) {
+            if (!componentCtor || !('create' in componentCtor)) {
                 return output.error('无效的组件名');
             }
             try {
@@ -8201,14 +8226,17 @@ function registerCommand() {
                     output.success(`玩家 '${pl.name}' 没有此组件`);
                     continue;
                 }
-                const checkableEntries = getCheckableEntries(component);
+                const checkableEntries = getFieldEntries(component);
                 if (!checkableEntries) {
                     output.success('此组件没有检查项');
                     continue;
                 }
                 const entries = [];
-                for (const [k, v] of checkableEntries) {
+                for (const [k, v] of checkableEntries.muts) {
                     entries.push(`  ${k} = ${JSON.stringify(v)}`);
+                }
+                for (const [k, v] of checkableEntries.lets) {
+                    entries.push(`  §9${k}§r = ${JSON.stringify(v)}`);
                 }
                 if (entries.length === 0) {
                     output.success('此组件没有检查项');
@@ -8227,7 +8255,94 @@ var commands = /*#__PURE__*/Object.freeze({
 	registerCommand: registerCommand
 });
 
-var require$$20 = /*@__PURE__*/getAugmentedNamespace(commands);
+var require$$17 = /*@__PURE__*/getAugmentedNamespace(commands);
+
+var BossbarComponent_1;
+let BossbarComponent = class BossbarComponent extends BaseComponent {
+    static { BossbarComponent_1 = this; }
+    title;
+    color;
+    percent;
+    static id = 0;
+    static create({ title, color, percent } = {}) {
+        return new BossbarComponent_1(title, color, percent);
+    }
+    id = BossbarComponent_1.id++;
+    prevPercent = 0;
+    plOpt;
+    constructor(title = 'bossbar', color = 2, percent = 50) {
+        super();
+        this.title = title;
+        this.color = color;
+        this.percent = percent;
+    }
+    onDetach() {
+        this.plOpt?.use(pl => {
+            pl.removeBossBar(this.id);
+        });
+    }
+    onTick(_, pl) {
+        if (this.prevPercent === this.percent) {
+            return;
+        }
+        this.plOpt = pl.clone();
+        this.prevPercent = this.percent;
+        pl.unwrap().setBossBar(this.id, this.title, this.percent, this.color);
+    }
+};
+BossbarComponent = BossbarComponent_1 = __decorate([
+    PublicComponent('bossbar'),
+    Fields(['title', 'color', 'percent'], ['id'])
+], BossbarComponent);
+
+var HealthBar_1;
+let HealthBar = HealthBar_1 = class HealthBar extends BossbarComponent {
+    constructor(title = '', color = 3, percent = 100) {
+        super(title, color, percent);
+    }
+    static create({ title, color, percent } = {}) {
+        return new HealthBar_1(title, color, percent);
+    }
+};
+HealthBar = HealthBar_1 = __decorate([
+    PublicComponent('healthbar'),
+    Fields(['title', 'color', 'percent'], ['id'])
+], HealthBar);
+
+var StaminaBar_1;
+let StaminaBar = StaminaBar_1 = class StaminaBar extends BossbarComponent {
+    title;
+    color;
+    percent;
+    static create({ title, color, percent } = {}) {
+        return new StaminaBar_1(title, color, percent);
+    }
+    constructor(title = '', color = 7, percent = 100) {
+        super();
+        this.title = title;
+        this.color = color;
+        this.percent = percent;
+    }
+};
+StaminaBar = StaminaBar_1 = __decorate([
+    PublicComponent('staminabar'),
+    Fields(['title', 'color', 'percent'], ['id'])
+], StaminaBar);
+
+function antiTreeshaking() {
+    return [
+        BossbarComponent,
+        HealthBar,
+        StaminaBar,
+    ];
+}
+
+var antiTreeshaking$1 = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	antiTreeshaking: antiTreeshaking
+});
+
+var require$$18 = /*@__PURE__*/getAugmentedNamespace(antiTreeshaking$1);
 
 var core;
 var hasRequiredCore;
@@ -8238,14 +8353,12 @@ function requireCore () {
 	/// <reference path="../types.d.ts"/>
 
 	const { EventEmitter } = requireEvents();
-	requireMain();
 	const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = requireKinematics();
 	const { combat: { damage: _damage } } = requireFunc();
 	const { playAnim } = requireBasic();
 	const { movement, camera, movementInput } = requireGeneric();
-	requireCommand();
 	const { selectFromRange } = requireRange();
-	const { Status, defaultAcceptableInputs } = require$$8;
+	const { Status, defaultAcceptableInputs } = require$$6;
 	const { Task } = requireTask();
 	const { EventInputStream } = requireEventStream();
 	const {
@@ -8255,11 +8368,12 @@ function requireCore () {
 	const { setVelocity, isCollide } = requireKinematic();
 	const { vec2, vec2ToAngle } = requireVec();
 	const { clearCamera } = requireCamera();
-	const { Tick } = require$$15;
-	const { Ref } = require$$16;
-	const { CameraFading } = require$$17;
-	const { commandComponentRegistry, DamageModifier, getCheckableEntries } = require$$19;
-	const { registerCommand } = require$$20;
+	const { Tick } = require$$13;
+	const { Optional } = require$$14;
+	const { CameraFading } = require$$15;
+	const { DamageModifier } = require$$16;
+	const { registerCommand } = require$$17;
+	const { antiTreeshaking } = require$$18;
 
 	const em = new EventEmitter({ enableWatcher: true });
 	const es = EventInputStream.get(em);
@@ -8759,9 +8873,6 @@ function requireCore () {
 	                return
 	            }
 
-	            Ref.player = pl;
-	            Ref.status = status;
-
 	            const currentMove = bind.moves[status.status];
 	            const duration = status.duration++;
 
@@ -8787,11 +8898,12 @@ function requireCore () {
 	                }
 	            }
 
-	            for (const component of status.componentManager.getComponents()) {
+	            const manager = status.componentManager;
+	            for (const component of manager.getComponents()) {
 	                const { onTick } = component;
 
 	                if (onTick) {
-	                    onTick.call(component, pl, status);
+	                    onTick.call(component, manager, Optional.some(pl), Optional.some(status));
 	                }
 	            }
 
@@ -8809,9 +8921,6 @@ function requireCore () {
 	                return
 	            }
 	        }
-
-	        Ref.status = null;
-	        Ref.player = null;
 	    });
 
 	    /**@type {DamageOption}*/
@@ -9269,7 +9378,7 @@ function requireCore () {
 	        });
 	    });
 
-	    mc.listen('onOpenContainer', pl => {
+	    mc.listen('onOpenContainer', () => {
 	        // console.log(pl)
 	    });
 
@@ -9376,6 +9485,8 @@ function requireCore () {
 	function getHandedItemType(pl) {
 	    return pl.getHand().type
 	}
+
+	antiTreeshaking();
 
 	core = {
 	    emitter: em, listenAllMcEvents, 
