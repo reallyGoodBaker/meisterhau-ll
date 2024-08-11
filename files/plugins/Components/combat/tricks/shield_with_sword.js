@@ -9,11 +9,10 @@ class ShieldSwordTricks extends DefaultTrickModule {
         super(
             'rgb39.weapon.shield_sword',
             'idle',
-            [ 'weapon:shield_with_sword' ]
+            [ 'weapon:shield_with_sword' ],
+            new ShieldSwordMoves()
         )
     }
-
-    moves = new ShieldSwordMoves()
 }
 
 class ShieldSwordMoves extends DefaultMoves {

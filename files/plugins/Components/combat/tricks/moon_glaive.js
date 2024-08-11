@@ -9,11 +9,10 @@ class MoonGlaiveTricks extends DefaultTrickModule {
         super(
             'rgb39.weapon.moon_glaive',
             'hold',
-            [ 'weapon:moon_glaive' ]
+            [ 'weapon:moon_glaive' ],
+            new MoonGlaiveMoves()
         )
     }
-
-    moves = new MoonGlaiveMoves()
 }
 
 class MoonGlaiveMoves extends DefaultMoves {

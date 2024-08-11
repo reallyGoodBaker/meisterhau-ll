@@ -32,11 +32,10 @@ class EmptyHandTricks extends DefaultTrickModule {
         super(
             'rgb39.weapon.empty_hand',
             'blocking',
-            [ '*' ]
+            [ '*' ],
+            new EmptyHandMoves()
         )
     }
-
-    moves = new EmptyHandMoves()
 }
 
 /**

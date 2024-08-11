@@ -191,11 +191,10 @@ class UchigatanaModule extends DefaultTrickModule {
         super(
             'rgb39.weapon.empty_hand',
             'hold',
-            [ 'weapon:uchigatana' ]
+            [ 'weapon:uchigatana' ],
+            new UchigatanaMoves()
         )
     }
-
-    moves = new UchigatanaMoves()
 }
 
 /**

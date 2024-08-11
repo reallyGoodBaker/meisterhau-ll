@@ -113,6 +113,7 @@ class DoubleDaggerMoves extends DefaultMoves {
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
+            ctx.status.isBlocking = false
         },
         timeline: {
             0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 120, 1),
@@ -250,6 +251,7 @@ class DoubleDaggerMoves extends DefaultMoves {
             })
         },
         onLeave(pl, ctx) {
+            ctx.status.isWaitingParry = false
             ctx.status.isBlocking = false
             ctx.unfreeze(pl)
         },
@@ -660,11 +662,10 @@ class DoubleDaggerTricks extends DefaultTrickModule {
         super(
             'rgb:double_dagger',
             'init',
-            [ 'weapon:double_dagger' ]
+            [ 'weapon:double_dagger' ],
+            new DoubleDaggerMoves()
         )
     }
-
-    moves = new DoubleDaggerMoves()
 }
 
 module.exports = new DoubleDaggerTricks()

@@ -582,11 +582,10 @@ class LightSaberTrick extends DefaultTrickModule {
         super(
             'rgb39.weapon.light_saber',
             'hold',
-            [ 'weapon:light_saber' ]
+            [ 'weapon:light_saber' ],
+            new LightSaberMoves()
         )
     }
-
-    moves = new LightSaberMoves()
 }
 
 module.exports = new LightSaberTrick()

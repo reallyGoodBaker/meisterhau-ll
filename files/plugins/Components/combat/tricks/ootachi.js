@@ -216,6 +216,7 @@ class OotachiMoves extends DefaultMoves {
             })
         },
         onLeave(_, ctx) {
+            ctx.status.isBlocking = false
             ctx.task.cancel()
         },
         transitions: {
@@ -294,6 +295,7 @@ class OotachiMoves extends DefaultMoves {
         },
         onLeave(pl, ctx) {
             ctx.task.cancel()
+            ctx.status.isWaitingParry = false
         },
         timeline: {
             8: (pl, ctx) => {
@@ -779,11 +781,10 @@ class OotachiTricks extends DefaultTrickModule {
         super(
             'rgb39.weapon.ootachi',
             'idle',
-            [ 'weapon:ootachi', 'weapon:ootachi_akaoni', 'weapon:ootachi_dragon' ]
+            [ 'weapon:ootachi', 'weapon:ootachi_akaoni', 'weapon:ootachi_dragon' ],
+            new OotachiMoves()
         )
     }
-
-    moves = new OotachiMoves()
 }
 
 module.exports = new OotachiTricks()

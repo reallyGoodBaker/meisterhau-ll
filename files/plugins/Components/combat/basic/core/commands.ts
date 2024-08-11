@@ -3,9 +3,10 @@ import { getComponentId, getComponentCtor, getCheckableEntries } from "./config"
 import { Status } from "./status"
 
 export function registerCommand() {
-    cmd('meisterhau', '战斗模组', 1).setup(registry => {
-        registry.register('components add <pl:player> <name:string> [args:json]', (_, __, output, args) => {
+    cmd('components', '管理组件', 1).setup(registry => {
+        registry.register('add <pl:player> <name:string> [args:json]', (_, __, output, args) => {
             const targets = args.pl
+            const jsonArgs = args.args
             const componentCtor = getComponentCtor(args.name)
 
             if (!componentCtor || !componentCtor.create) {
@@ -13,7 +14,8 @@ export function registerCommand() {
             }
 
             try {
-                const component = componentCtor.create(args.args)
+                const _args = jsonArgs ? JSON.parse(jsonArgs) : undefined
+                const component = componentCtor.create(_args)
 
                 for (const target of targets) {
                     Status.get(target.xuid).componentManager.attachComponent(component)
@@ -24,7 +26,7 @@ export function registerCommand() {
                 output.error('无效的组件参数')
             }
         })
-        .register('components remove <pl:player> <name:string>', (_, __, output, args) => {
+        .register('remove <pl:player> <name:string>', (_, __, output, args) => {
             const targets = args.pl
             const componentCtor = getComponentCtor(args.name)
 
@@ -38,7 +40,7 @@ export function registerCommand() {
 
             output.success(`已为 ${targets.length} 个玩家移除组件 '${args.name}'`)
         })
-        .register('components list <pl:player> [detail:bool]', async (_, ori, output, args) => {
+        .register('list <pl:player> [detail:bool]', async (_, ori, output, args) => {
             const pl = args.pl
             const useDetail = args.detail ?? false
             
@@ -69,7 +71,7 @@ export function registerCommand() {
                 output.success(`玩家 ${p.name} 拥有组件:\n${componentNames.join('\n')}`)
             }
         })
-        .register('components check <pl:player> <name:string>', (_, __, output, args) => {
+        .register('check <pl:player> <name:string>', (_, __, output, args) => {
             const componentCtor = getComponentCtor(args.name)
 
             if (!componentCtor || !componentCtor.create) {
