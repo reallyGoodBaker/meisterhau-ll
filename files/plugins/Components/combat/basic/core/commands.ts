@@ -1,4 +1,4 @@
-import { cmd } from "../../../command"
+import { cmd } from "@utils/command"
 import { getComponentId, getComponentCtor, getFieldEntries } from "./config"
 import { Status } from "./status"
 

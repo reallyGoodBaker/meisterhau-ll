@@ -148,7 +148,7 @@ class Registry {
 
     /**
      * @param {string | ParamType[]} cmd 
-     * @param {(cmd: any, origin: any, output: any, result: any) => void} handler 
+     * @param {(cmd: Command, origin: CommandOrigin, output: CommandOutput, result: any) => void} handler 
      */
     register(cmd, handler) {
         if (!cmd || !handler) {

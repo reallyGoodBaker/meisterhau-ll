@@ -2,7 +2,7 @@
 
 const { playAnim, playSoundAll } = require('../basic')
 const console = require('../../console/main')
-const { randomRange } = require('../basic/utils/math')
+const { randomRange } = require('../../../utils/math')
 
 /**
  * @type {TrickModule}

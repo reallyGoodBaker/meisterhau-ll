@@ -1,5 +1,5 @@
 import { BaseComponent, ComponentManager } from "../../core/component"
-import { Optional } from "../../core/optional"
+import { Optional } from "@utils/optional"
 import { Status } from "../../core/status"
 import { Stamina } from "../stamina"
 import { TargetLock } from "../target-lock"

@@ -674,7 +674,7 @@ function requireCommand () {
 
 	    /**
 	     * @param {string | ParamType[]} cmd 
-	     * @param {(cmd: any, origin: any, output: any, result: any) => void} handler 
+	     * @param {(cmd: Command, origin: CommandOrigin, output: CommandOutput, result: any) => void} handler 
 	     */
 	    register(cmd, handler) {
 	        if (!cmd || !handler) {
@@ -2167,8 +2167,44 @@ function requireKinematic () {
 	return kinematic;
 }
 
+class Optional {
+    value;
+    static none() {
+        return new Optional(null);
+    }
+    static some(value) {
+        return new Optional(value);
+    }
+    constructor(value) {
+        this.value = value;
+    }
+    unwrap() {
+        if (!this.isEmpty()) {
+            return this.value;
+        }
+        throw new Error('Optional is empty');
+    }
+    isEmpty() {
+        return this.value === undefined || this.value === null;
+    }
+    orElse(other) {
+        return this.value || other;
+    }
+    use(fn, self) {
+        if (!this.isEmpty()) {
+            fn.call(self, this.value);
+            return true;
+        }
+        return false;
+    }
+}
+
 class CustomComponent {
     onTick(manager, pl, status) { }
+    detach(manager) {
+        const ctor = Object.getPrototypeOf(this).constructor;
+        return manager.detachComponent(ctor);
+    }
 }
 class BaseComponent extends CustomComponent {
     onAttach(manager) { }
@@ -2176,24 +2212,34 @@ class BaseComponent extends CustomComponent {
 }
 class ComponentManager {
     #components = new Map();
+    #prependTicks = [];
+    #nextTicks = [];
     getComponent(ctor) {
-        return this.#components.get(ctor);
+        return Optional.some(this.#components.get(ctor));
     }
-    async #attachComponent(component) {
-        const ctor = Object.getPrototypeOf(component).constructor;
-        console.log(ctor.name);
+    async #attachComponent(ctor, component) {
         if (this.#components.get(ctor)) {
             await this.detachComponent(ctor);
         }
-        if ('onAttach' in component && await component.onAttach(this)) {
-            return;
+        if ('onAttach' in component) {
+            await component.onAttach(this);
         }
         this.#components.set(ctor, component);
+        return Optional.some(component);
     }
     async attachComponent(...component) {
+        const components = [];
         for (const obj of component) {
-            await this.#attachComponent(obj);
+            components.push(await this.#attachComponent(Object.getPrototypeOf(obj).constructor, obj));
         }
+        return components;
+    }
+    async getOrCreate(ctor, ...args) {
+        let component = this.#components.get(ctor);
+        if (component) {
+            return Optional.some(component);
+        }
+        return this.#attachComponent(ctor, new ctor(...args));
     }
     async detachComponent(ctor) {
         const component = this.#components.get(ctor);
@@ -2213,6 +2259,26 @@ class ComponentManager {
     }
     has(ctor) {
         return this.#components.has(ctor);
+    }
+    nextTick(fn) {
+        this.#nextTicks.push(fn);
+    }
+    prependNextTick(fn) {
+        this.#prependTicks.unshift(fn);
+    }
+    handleTicks(pl, status) {
+        for (const prependTick of this.#prependTicks) {
+            prependTick.call(null, Optional.some(pl), Optional.some(status));
+        }
+        for (const component of this.#components.values()) {
+            const { onTick } = component;
+            if (onTick) {
+                onTick.call(component, this, Optional.some(pl), Optional.some(status));
+            }
+        }
+        for (const nextTick of this.#nextTicks) {
+            nextTick.call(null, Optional.some(pl), Optional.some(status));
+        }
     }
 }
 
@@ -2465,77 +2531,58 @@ var config = /*#__PURE__*/Object.freeze({
 	getFieldEntries: getFieldEntries
 });
 
-var math = {};
-
-/**
- * @param {number} start 
- * @param {number} end 
- * @param {() => number} calcFn 
- * @returns 
- */
-
 function constrictCalc(start, end, calcFn) {
-    let result = 0;
-
     try {
-        result = calcFn.call(null);
-        if (isNaN(result)) throw ''
-    } catch {
-        return start
+        return minmax(start, end, calcFn.call(null));
     }
-
-    return result > end ? end
-            : result < start ? start
-                : result
+    catch {
+        return start;
+    }
 }
-
-math.constrictCalc = constrictCalc;
-
-function randomRange(min=0, max=1, integer=false) {
+function minmax(min, max, val) {
+    if (isNaN(val)) {
+        return min;
+    }
+    return Math.max(min, Math.min(max, val));
+}
+function randomRange(min = 0, max = 1, integer = false) {
     const num = Math.random() * (max - min) + min;
-
-    return integer ? Math.round(num) : num
+    return integer ? Math.round(num) : num;
 }
-
-math.randomRange = randomRange;
-
-/**
- * @param {number[]} from 
- * @param {number[]} to 
- * @param {number} progress 
- */
-var lerpn = math.lerpn = (from, to, progress) => {
+const lerpn = (from, to, progress) => {
     if (from.length !== to.length) {
-        return from
+        return from;
     }
-
     const len = from.length;
     const res = new Array(len).fill(0);
     const p = Math.min(Math.max(0, progress), 1);
-
     for (let i = 0; i < len; i++) {
         res[i] = from[i] + (to[i] - from[i]) * p;
     }
-
-    return res
+    return res;
 };
-
-var alerpn = math.alerpn = (from, to, progress) => {
+const alerpn = (from, to, progress) => {
     if (from.length !== to.length) {
-        return from
+        return from;
     }
-
     const len = from.length;
     const res = new Array(from.length).fill(0);
     const p = Math.min(Math.max(0, progress), 1);
-
     for (let i = 0; i < len; i++) {
         const d = (to[i] - from[i]) % 360;
         res[i] = from[i] + d * p;
     }
-
-    return res
+    return res;
 };
+
+var math = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	alerpn: alerpn,
+	constrictCalc: constrictCalc,
+	lerpn: lerpn,
+	minmax: minmax,
+	randomRange: randomRange
+});
 
 var CameraFading_1;
 let CameraFading = CameraFading_1 = class CameraFading extends BaseComponent {
@@ -2557,13 +2604,13 @@ let CameraFading = CameraFading_1 = class CameraFading extends BaseComponent {
         return new CameraFading_1(config, exitOnEnd);
     }
     dt() {
-        return this.tick.dt - this.tickOffset;
+        return this.tick?.unwrap().dt - this.tickOffset;
     }
     onAttach(manager) {
         if (!(this.tick = manager.getComponent(Tick))) {
             return true;
         }
-        this.tickOffset = this.tick.dt;
+        this.tickOffset = this.tick.unwrap().dt;
     }
     copy(from, to) {
         const len = Math.min(from.length, to.length);
@@ -2592,7 +2639,7 @@ let CameraFading = CameraFading_1 = class CameraFading extends BaseComponent {
         return this.last;
     }
     onTick(manager) {
-        const { offset, rot } = manager.getComponent(CameraComponent);
+        const { offset, rot } = manager.getComponent(CameraComponent).unwrap();
         const info = this.getTransInfo();
         const [curve, from, to, progress] = info;
         switch (curve) {
@@ -3804,6 +3851,8 @@ function requireEmptyHand () {
 	return emptyHand;
 }
 
+var require$$3 = /*@__PURE__*/getAugmentedNamespace(math);
+
 var hud_1;
 var hasRequiredHud;
 
@@ -3835,7 +3884,7 @@ function requireLightSaber () {
 	const { playAnim, playSoundAll } = requireBasic();
 	const { DefaultMoves, DefaultTrickModule } = require_default();
 	requireMain();
-	const { constrictCalc, randomRange } = math;
+	const { constrictCalc, randomRange } = require$$3;
 	const { hud } = requireHud();
 
 	class LightSaberMoves extends DefaultMoves {
@@ -5240,7 +5289,7 @@ function requireOotachi () {
 
 	const { playAnim, playSoundAll } = requireBasic();
 	requireMain();
-	const { randomRange } = math;
+	const { randomRange } = require$$3;
 	const { DefaultMoves, DefaultTrickModule } = require_default();
 
 	class OotachiMoves extends DefaultMoves {
@@ -6116,7 +6165,7 @@ function requireShield_with_sword () {
 	const { playAnim, playSoundAll } = requireBasic();
 	const { DefaultMoves, DefaultTrickModule } = require_default();
 	requireMain();
-	const { constrictCalc, randomRange } = math;
+	const { constrictCalc, randomRange } = require$$3;
 	requireHud();
 
 	class ShieldSwordTricks extends DefaultTrickModule {
@@ -7732,7 +7781,7 @@ function requireLock () {
 	    }
 
 	    if (target) {
-	        cameraInput(pl, false);
+	        // cameraInput(pl, false)
 	        locks.set(src, target);
 	        pl.setMovementSpeed(0.04);
 	    } else {
@@ -8103,53 +8152,6 @@ function requireEventStream () {
 
 var require$$13 = /*@__PURE__*/getAugmentedNamespace(tick);
 
-class Optional {
-    value;
-    static none() {
-        return new Optional(null);
-    }
-    static some(value) {
-        return new Optional(value);
-    }
-    constructor(value) {
-        this.value = value;
-    }
-    unwrap() {
-        if (!this.isEmpty()) {
-            return this.#getAndClear();
-        }
-        throw new Error('Optional is empty');
-    }
-    isEmpty() {
-        return this.value === undefined || this.value === null;
-    }
-    orElse(other) {
-        return this.#getAndClear() || other;
-    }
-    use(fn, self) {
-        if (!this.isEmpty()) {
-            fn.call(self, this.#getAndClear());
-            return true;
-        }
-        return false;
-    }
-    clone() {
-        return new Optional(this.value);
-    }
-    #getAndClear() {
-        const v = this.value;
-        this.value = null;
-        return v;
-    }
-}
-
-var optional = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	Optional: Optional
-});
-
-var require$$14 = /*@__PURE__*/getAugmentedNamespace(optional);
-
 var require$$16 = /*@__PURE__*/getAugmentedNamespace(config);
 
 var commandExports = requireCommand();
@@ -8263,45 +8265,59 @@ let BossbarComponent = class BossbarComponent extends BaseComponent {
     title;
     color;
     percent;
+    show;
     static id = 0;
-    static create({ title, color, percent } = {}) {
-        return new BossbarComponent_1(title, color, percent);
+    static create({ title, color, percent, show } = {}) {
+        return new BossbarComponent_1(title, color, percent, show);
     }
     id = BossbarComponent_1.id++;
     prevPercent = 0;
     plOpt;
-    constructor(title = 'bossbar', color = 2, percent = 50) {
+    showing = false;
+    constructor(title = 'bossbar', color = 2, percent = 50, show = false) {
         super();
         this.title = title;
         this.color = color;
         this.percent = percent;
+        this.show = show;
     }
     onDetach() {
         this.plOpt?.use(pl => {
             pl.removeBossBar(this.id);
         });
     }
+    setBossbar = (p) => {
+        p.setBossBar(this.id, this.title, this.percent, this.color);
+        this.showing = true;
+    };
     onTick(_, pl) {
         if (this.prevPercent === this.percent) {
             return;
         }
-        this.plOpt = pl.clone();
+        if (!this.show) {
+            if (this.showing) {
+                this.showing = false;
+                pl.use(pl => pl.removeBossBar(this.id));
+            }
+            return;
+        }
+        this.plOpt = pl;
         this.prevPercent = this.percent;
-        pl.unwrap().setBossBar(this.id, this.title, this.percent, this.color);
+        pl.use(this.setBossbar);
     }
 };
 BossbarComponent = BossbarComponent_1 = __decorate([
     PublicComponent('bossbar'),
-    Fields(['title', 'color', 'percent'], ['id'])
+    Fields(['title', 'color', 'percent', 'show'], ['id'])
 ], BossbarComponent);
 
 var HealthBar_1;
 let HealthBar = HealthBar_1 = class HealthBar extends BossbarComponent {
-    constructor(title = '', color = 3, percent = 100) {
-        super(title, color, percent);
+    constructor(title = '', color = 3, percent = 100, show = false) {
+        super(title, color, percent, show);
     }
-    static create({ title, color, percent } = {}) {
-        return new HealthBar_1(title, color, percent);
+    static create({ title, color, percent, show } = {}) {
+        return new HealthBar_1(title, color, percent, show);
     }
 };
 HealthBar = HealthBar_1 = __decorate([
@@ -8311,17 +8327,11 @@ HealthBar = HealthBar_1 = __decorate([
 
 var StaminaBar_1;
 let StaminaBar = StaminaBar_1 = class StaminaBar extends BossbarComponent {
-    title;
-    color;
-    percent;
-    static create({ title, color, percent } = {}) {
-        return new StaminaBar_1(title, color, percent);
+    static create({ title, color, percent, show } = {}) {
+        return new StaminaBar_1(title, color, percent, show);
     }
-    constructor(title = '', color = 7, percent = 100) {
-        super();
-        this.title = title;
-        this.color = color;
-        this.percent = percent;
+    constructor(title = '', color = 7, percent = 100, show = false) {
+        super(title, color, percent, show);
     }
 };
 StaminaBar = StaminaBar_1 = __decorate([
@@ -8369,7 +8379,6 @@ function requireCore () {
 	const { vec2, vec2ToAngle } = requireVec();
 	const { clearCamera } = requireCamera();
 	const { Tick } = require$$13;
-	const { Optional } = require$$14;
 	const { CameraFading } = require$$15;
 	const { DamageModifier } = require$$16;
 	const { registerCommand } = require$$17;
@@ -8898,14 +8907,7 @@ function requireCore () {
 	                }
 	            }
 
-	            const manager = status.componentManager;
-	            for (const component of manager.getComponents()) {
-	                const { onTick } = component;
-
-	                if (onTick) {
-	                    onTick.call(component, manager, Optional.some(pl), Optional.some(status));
-	                }
-	            }
+	            status.componentManager.handleTicks(pl, _context);
 
 	            if (duration >= (currentMove.cast || 0) + (currentMove.backswing || 0)) {
 	                if (currentMove.onLeave) {

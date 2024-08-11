@@ -1,4 +1,4 @@
-const { cmd } = require('./command')
+const { cmd } = require('./utils/command')
 const { alert } = require('./ui')
 
 function distStr(entity, dest, showDiff=true) {

@@ -1,4 +1,4 @@
-const { cmd } = require('./command')
+const { cmd } = require('./utils/command')
 
 function setup() {
     cmd('simplayer', '假人', 1)

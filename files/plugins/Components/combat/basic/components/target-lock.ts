@@ -1,6 +1,6 @@
 import { BaseComponent, ComponentManager } from "../core/component"
-import { Optional } from "../core/optional"
-import { getPlayer } from "../utils/mc"
+import { Optional } from "@utils/optional"
+import { getPlayer } from "@utils/mc"
 
 const locks = new Map()
 const cooldowns = new Set()

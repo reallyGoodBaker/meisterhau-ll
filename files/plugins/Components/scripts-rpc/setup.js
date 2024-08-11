@@ -1,5 +1,5 @@
 const { EventEmitter } = require('../events')
-const { cmd } = require('../command')
+const { cmd } = require('../utils/command')
 const { createServer } = require('./server')
 
 const em = new EventEmitter()

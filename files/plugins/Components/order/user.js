@@ -1,4 +1,4 @@
-const { cmd } = require('../command')
+const { cmd } = require('../utils/command')
 const { action } = require('../ui')
 const { Menu } = require('./customer')
 const Vendor = require('./vendor')

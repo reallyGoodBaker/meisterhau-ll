@@ -1,6 +1,6 @@
 import { BaseComponent, ComponentManager } from "../../core/component"
 import { PublicComponent, Fields } from "../../core/config"
-import { Optional } from "../../core/optional"
+import { Optional } from "@utils/optional"
 
 export interface BossbarComponentParams {
     title?: string

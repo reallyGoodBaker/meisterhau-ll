@@ -1,4 +1,4 @@
-const { cmd } = require('../command')
+const { cmd } = require('../utils/command')
 const { action, widget, Label, Input, Switch, Dropdown, StepSlider } = require('../ui/index')
 const { keys, query, edit, add, remove } = require('./core')
 const { n } = require('./virt.js')

@@ -1,4 +1,4 @@
-const { cmd } = require('./command')
+const { cmd } = require('./utils/command')
 const console = require('./console/main')
 
 const camera = (pl, easeTime, easeType, dPos, rot) => {

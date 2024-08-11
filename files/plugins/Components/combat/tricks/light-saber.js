@@ -1,7 +1,7 @@
 const { playAnim, playSoundAll } = require('../basic')
 const { DefaultMoves, DefaultTrickModule } = require('../basic/default')
 const console = require('../../console/main')
-const { constrictCalc, randomRange } = require('../basic/utils/math')
+const { constrictCalc, randomRange } = require('../../utils/math')
 const { hud } = require('../basic/hud')
 
 class LightSaberMoves extends DefaultMoves {

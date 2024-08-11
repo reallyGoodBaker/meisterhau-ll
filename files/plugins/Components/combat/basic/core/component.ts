@@ -1,4 +1,4 @@
-import { Optional } from './optional'
+import { Optional } from '@utils/optional'
 import { Status } from './status'
 
 export interface Component {

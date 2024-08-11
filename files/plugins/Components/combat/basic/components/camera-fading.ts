@@ -2,10 +2,10 @@ import { BaseComponent, Component, ComponentManager } from '../core/component'
 import { Fields, PublicComponent } from '../core/config'
 import { Status } from '../core/status'
 import { DamageOption } from '../types'
-import { alerpn, lerpn } from '../utils/math'
+import { alerpn, lerpn } from '@utils/math'
 import { CameraComponent } from './camera'
 import { Tick } from './tick'
-import { Optional } from '../core/optional';
+import { Optional } from '@utils/optional'
 
 interface TransInfo {
     curve?: 'linear'

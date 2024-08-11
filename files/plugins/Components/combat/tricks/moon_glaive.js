@@ -1,7 +1,7 @@
 const { playAnim } = require('../basic')
 const { DefaultMoves, DefaultTrickModule } = require('../basic/default')
 const console = require('../../console/main')
-const { constrictCalc } = require('../basic/utils/math')
+const { constrictCalc } = require('../../utils/math')
 const { hud } = require('../basic/hud')
 
 class MoonGlaiveTricks extends DefaultTrickModule {
