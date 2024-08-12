@@ -12,18 +12,18 @@ export class Timer extends BaseComponent {
     }
 
     constructor(
-        public readonly duration: number
+        public readonly duration: number = 0
     ) {
         super()
         this.rest = this.duration
     }
 
-    onTick(): void {
+    onTick() {
         this.rest--
     }
 
-    onAttach(manager: ComponentManager): boolean | void | Promise<boolean | void> {
-        manager.prependNextTick(() => this.rest = this.duration)
+    reset() {
+        this.rest = this.duration
     }
 
 }

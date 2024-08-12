@@ -1,5 +1,5 @@
 import { cmd } from "@utils/command"
-import { getComponentId, getComponentCtor, getFieldEntries } from "./config"
+import { getComponentId, getComponentCtor, getFieldEntries } from './config';
 import { Status } from "./status"
 
 export function registerCommand() {
@@ -48,11 +48,11 @@ export function registerCommand() {
                 const status = Status.get(p.xuid)
 
                 if (!status) {
-                    return
+                    continue
                 }
 
                 const componentManager = status.componentManager
-                const componentNames = Array.from(componentManager.getComponentNames())
+                const componentNames = Array.from(componentManager.getComponentKeys())
                     .map(ctor => {
                         const id = getComponentId(ctor)
                         if (useDetail) {
@@ -65,7 +65,7 @@ export function registerCommand() {
 
                 if (componentNames.length === 0) {
                     output.success('玩家没有组件')
-                    return
+                    continue
                 }
 
                 output.success(`玩家 ${p.name} 拥有组件:\n${componentNames.join('\n')}`)
@@ -74,7 +74,7 @@ export function registerCommand() {
         .register('check <pl:player> <name:string>', (_, __, output, args) => {
             const componentCtor = getComponentCtor(args.name)
 
-            if (!componentCtor || !componentCtor.create) {
+            if (!componentCtor) {
                 return output.error('无效的组件名')
             }
 
@@ -85,12 +85,12 @@ export function registerCommand() {
                 }
 
                 const component = status.componentManager.getComponent(componentCtor)
-                if (!component) {
+                if (component.isEmpty()) {
                     output.success(`玩家 '${pl.name}' 没有此组件`)
                     continue
                 }
 
-                const checkableEntries = getFieldEntries(component)
+                const checkableEntries = getFieldEntries(component.unwrap())
                 if (!checkableEntries) {
                     output.success('此组件没有检查项')
                     continue
@@ -110,6 +110,32 @@ export function registerCommand() {
                 } else {
                     output.success(`${pl.name} 的组件 ${args.name}:\n${entries.join('\n')}`)
                 }
+            }
+        })
+        .register('update <pl:player> <name:string> <args:json>', (_, __, output, args) => {
+            const { pl, args: jsonArgs, name } = args
+            const componentCtor = getComponentCtor(name)
+
+            if (!componentCtor) {
+                return output.error('无效的组件名')
+            }
+
+            for (const target of pl) {
+                const manager = Status.get(target.xuid).componentManager
+
+                manager.update(componentCtor, component => {
+                    const _args = jsonArgs ? JSON.parse(jsonArgs) : undefined
+                    const { muts } = getFieldEntries(component) || {}
+
+                    if (muts) {
+                        muts.forEach(([ k ]) => {
+                            const newVal = _args[k]
+                            if (newVal) {
+                                (component as any)[k] = newVal
+                            }
+                        })
+                    }
+                })
             }
         })
         .submit()

@@ -65,7 +65,7 @@ function handleOnce() {
                 return handleReturn(msg)
             }
         })
-    })
+    }).catch(() => {})
 }
 
 async function handleCall(msg) {

@@ -11,5 +11,6 @@ module.exports = {
         'lib/*',
         'Glacie.dll',
         'plugins/meisterhau/**/*',
+        // 'plugins/yuumo.ll3/**/*',
     ]
 }

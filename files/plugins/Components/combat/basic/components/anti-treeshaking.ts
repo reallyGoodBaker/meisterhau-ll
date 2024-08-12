@@ -1,11 +1,9 @@
-import { BossbarComponent } from "./hud/bossbar"
-import { HealthBar } from "./hud/healthbar"
-import { StaminaBar } from "./hud/staminabar"
+import { HealthModifier } from "./health-modifier"
+import { HudComponent } from "./hud/hud"
 
 export function antiTreeshaking() {
     return [
-        BossbarComponent,
-        HealthBar,
-        StaminaBar,
+        HudComponent,
+        HealthModifier,
     ]
 }

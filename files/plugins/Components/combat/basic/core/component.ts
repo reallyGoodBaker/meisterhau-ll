@@ -30,6 +30,8 @@ export interface ComponentCtor<T extends Component | BasicComponent = Component>
 }
 
 export class ComponentManager {
+    static profilerEnable = false
+
     #components = new Map<ComponentCtor, Component>()
     #prependTicks: Function[] = []
     #nextTicks: Function[] = []
@@ -38,9 +40,20 @@ export class ComponentManager {
         return Optional.some(this.#components.get(ctor)) as Optional<T>
     }
 
+    getComponents(...ctor: ComponentCtor[]): (Component|undefined)[] {
+        return ctor.map(c => this.#components.get(c))
+    }
+
     async #attachComponent<T>(ctor: ComponentCtor, component: Component | BasicComponent): Promise<Optional<T>> {
         if (this.#components.get(ctor)) {
             await this.detachComponent(ctor) 
+        }
+
+        if (REQUIRED_COMPONENTS in component) {
+            //@ts-ignore
+            for (const [ ctor, comp ] of component[REQUIRED_COMPONENTS]) {
+                this.#attachComponent(ctor, comp)
+            }
         }
 
         if ('onAttach' in component) {
@@ -79,18 +92,14 @@ export class ComponentManager {
             await component.onDetach(this)
         }
 
-        this.#components.delete(ctor)
+        return this.#components.delete(ctor)
     }
 
     clear() {
         this.#components.clear()
     }
 
-    getComponents() {
-        return this.#components.values()
-    }
-
-    getComponentNames() {
+    getComponentKeys() {
         return this.#components.keys()
     }
 
@@ -98,29 +107,95 @@ export class ComponentManager {
         return this.#components.has(ctor)
     }
 
-    nextTick(fn: (pl: Optional<Player>, status: Optional<Status>) => void) {
+    afterTick(fn: (pl: Optional<Player>, status: Optional<Status>) => void) {
         this.#nextTicks.push(fn)
     }
 
-    prependNextTick(fn: (pl: Optional<Player>, status: Optional<Status>) => void) {
+    beforeTick(fn: (pl: Optional<Player>, status: Optional<Status>) => void) {
         this.#prependTicks.unshift(fn)
     }
 
     handleTicks(pl: Player, status: Status) {
         for (const prependTick of this.#prependTicks) {
-            prependTick.call(null, Optional.some(pl), Optional.some(status))
+            this.profiler(() => prependTick.call(null, Optional.some(pl), Optional.some(status)))
+            // prependTick.call(null, Optional.some(pl), Optional.some(status))
         }
+        this.#prependTicks.length = 0
 
         for (const component of this.#components.values()) {
             const { onTick } = component
 
             if (onTick) {
-                onTick.call(component, this, Optional.some(pl), Optional.some(status))
+                this.profiler(
+                    () => onTick.call(component, this, Optional.some(pl), Optional.some(status)),
+                    component
+                )
+                // onTick.call(component, this, Optional.some(pl), Optional.some(status))
             }
         }
 
-        for (const nextTick of this.#nextTicks) {
-            nextTick.call(null, Optional.some(pl), Optional.some(status))
+        for (const afterTick of this.#nextTicks) {
+            this.profiler(() => afterTick.call(null, Optional.some(pl), Optional.some(status)))
+            // afterTick.call(null, Optional.some(pl), Optional.some(status))
+        }
+        this.#nextTicks.length = 0
+    }
+
+    update<T extends Component>(ctor: ComponentCtor<T>, fn: (component: T) => void) {
+        const component = this.#components.get(ctor)
+
+        if (component) {
+            fn(component as T)
+            return true
+        }
+
+        return false
+    }
+
+    profiler(fn: Function, component?: Component, name?: string) {
+        if (!ComponentManager.profilerEnable) {
+            return fn()
+        }
+
+        const conponentName = component ? Object.getPrototypeOf(component).constructor.name : ''
+        const profileName = name ? name 
+            : conponentName ? (`${conponentName}.${fn.name}`)
+                : fn.name
+
+        const now = performance.now()
+        const val = fn()
+        console.log(`[Profiler] ${profileName} took ${performance.now() - now}ms`)
+        return val
+    }
+}
+
+type RequireComponentsParam = ComponentCtor | [ComponentCtor, ...any[]]
+const REQUIRED_COMPONENTS = Symbol('REQUIRED_COMPONENTS')
+
+export interface RequiredComponent extends BasicComponent {
+    getComponent<T extends Component>(ctor: ComponentCtor): T
+}
+
+export function RequireComponents(...params: RequireComponentsParam[]) {
+    return class CRequiredComponent extends BaseComponent implements RequiredComponent {
+        [REQUIRED_COMPONENTS] = new Map<ComponentCtor, Component>()
+        
+        constructor() {
+            super()
+            for (const param of params) {
+                if (Array.isArray(param)) {
+                    const [ Ctor, ...args ] = param
+                    this[REQUIRED_COMPONENTS].set(Ctor, Reflect.construct(Ctor, args))
+                    continue
+                }
+
+                this[REQUIRED_COMPONENTS].set(param, Reflect.construct(param, []))
+            }
+        }
+    
+        getComponent<T extends Component>(ctor: ComponentCtor): T {
+            return this[REQUIRED_COMPONENTS].get(ctor) as T
         }
     }
+    
 }

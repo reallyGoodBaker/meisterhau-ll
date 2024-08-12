@@ -1,4 +1,4 @@
-import { Optional } from "../../../optional"
+import { Optional } from "@utils/optional"
 
 export function getPlayer(info: string, init: (pl: Player) => void) {
     const pl = mc.getPlayer(info)

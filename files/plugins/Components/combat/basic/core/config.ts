@@ -21,7 +21,7 @@ export const getComponentId: (t: ComponentCtor) => string | undefined = (t: Comp
 }
 
 const fieldKeys = new Map<ComponentCtor, {muts: string[], lets: string[]}>()
-export const Fields: (muts: string[], lets?: string[]) => ClassDecorator = (muts, lets) => target => {
+export const Fields: (muts: string[], lets?: string[]) => ClassDecorator = (muts, lets=[]) => target => {
     //@ts-ignore
     fieldKeys.set(target, { muts, lets })
 }

@@ -13,6 +13,7 @@ const modules = [
     require('./Components/kinematics/index.js'),
     require('./Components/credit/setup.js'),
     require('./Components/affair/index.js'),
+    require('./Components/testui.js'),
 ]
 
 mc.listen('onServerStarted',() => modules.forEach(m => load(m)))

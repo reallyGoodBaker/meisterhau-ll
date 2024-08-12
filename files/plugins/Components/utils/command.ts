@@ -1,7 +1,3 @@
-/**
- * @typedef {{[p: string]: keyof typeof stringParamTypeMap | `!${keyof typeof stringParamTypeMap}`}} ParamType
- */
-
 const stringParamTypeMap = {
     bool: 0,
     int: 1,
@@ -29,27 +25,25 @@ const matchers = {
     optional: /^\[([\w:]+)\]$/,
 }
 
-/**
- * @param {number} index 
- * @param {keyof typeof stringParamTypeMap} type 
- * @param {string} id 
- * @param {boolean} isOptional 
- */
-function newToken(index, type='enum', id, isOptional=true) {
+interface IToken {
+    index: number
+    type: keyof typeof stringParamTypeMap
+    id: string
+    isOptional: boolean
+}
+
+function newToken(index: number, type='enum', id: string, isOptional=true) {
     return {
         index, type, id, isOptional
     }
 }
 
-/**
- * @param {string} str 
- */
-function parseCmdStr(str) {
+function parseCmdStr(str: string) {
     const frags = str.split(/ +/)
-    const tokens = []
+    const tokens: IToken[] = []
 
     frags.forEach((frag, i) => {
-        let res, isOptional = -1
+        let res: RegExpExecArray | null, isOptional = -1
         if (res = matchers.required.exec(frag)) {
             isOptional = 0
         } else if (res = matchers.optional.exec(frag)) {
@@ -57,27 +51,24 @@ function parseCmdStr(str) {
         }
 
         if (isOptional !== -1) {
-            const data = res[1]
+            const data = res![1]
             const typeDef = data.split(':')
             tokens.push(newToken(
                 i, typeDef[1], typeDef[0], !!isOptional
-            ))
+            ) as IToken)
             return
         }
 
         tokens.push(newToken(
             i, 'enum', frag, false
-        ))
+        ) as IToken)
     })
 
     return tokens
 }
 
-/**
- * @param {ParamType[]} arr 
- */
-function parseCmdArr(arr) {
-    const tokens = []
+function parseCmdArr(arr: ParamType[]) {
+    const tokens: IToken[] = []
 
     arr.forEach((el, i) => {
         const [id, typeDesc] = Object.entries(el)[0]
@@ -91,30 +82,28 @@ function parseCmdArr(arr) {
 
         tokens.push(newToken(
             i, type, id, isOptional
-        ))
+        ) as IToken)
     })
 
     return tokens
 }
 
-class Registry {
-    /**@private*/ _cmd = null
-    /**@private*/ _tokenListCollection = new Set()
-    /**@private*/ _handlerCollection = []
+type Handler = (cmd: Command, origin: CommandOrigin, output: CommandOutput, result: any) => void
 
-    constructor(cmd) {
+export class Registry {
+    /**@private*/ _cmd: Command
+    /**@private*/ _tokenListCollection = new Set<IToken[]>()
+    /**@private*/ _handlerCollection: any[][] = []
+
+    constructor(cmd: Command) {
         this._cmd = cmd
     }
 
-    /**@private*/ getCollection(len) {
+    private getCollection(len: number) {
         return this._handlerCollection[len] ?? (this._handlerCollection[len] = [])
     }
 
-    /**
-     * @param {string | ParamType[]} cmd 
-     * @param {(cmd: Command, origin: CommandOrigin, output: CommandOutput, result: any) => void} handler 
-     */
-    register(cmd, handler) {
+    register(cmd: string | ParamType[], handler: Handler) {
         if (!cmd || !handler) {
             return this
         }
@@ -126,7 +115,7 @@ class Registry {
         this._tokenListCollection.add(tokens)
 
         const len = tokens.length
-        const finalList = tokens.reduce((pre, cur, i) => {
+        const finalList = tokens.reduce<IToken[]>((pre, cur, i) => {
             if (cur.isOptional) {
                 this.getCollection(pre.length)
                     .push([pre.map(t => t.id), handler])
@@ -157,7 +146,7 @@ class Registry {
         this._cmd.setup()
     }
 
-    /**@private*/ sameArr(arr1, arr2) {
+    /**@private*/ sameArr(arr1: any[], arr2: any[]) {
         if (arr1.length !== arr2.length) {
             return false
         }
@@ -180,7 +169,7 @@ class Registry {
 
     /**@private*/ registeredArgs = new Set()
 
-    /**@private*/ createArg(name, type, isOptional) {
+    /**@private*/ createArg(name: string, type: keyof typeof stringParamTypeMap, isOptional: boolean) {
         if (this.registeredArgs.has(name)) {
             return
         }
@@ -195,8 +184,8 @@ class Registry {
         let extArgs = enumId ? [enumId, name, 1] : []
 
         isOptional
-            ? this._cmd.optional(name, stringParamTypeMap[type], ...extArgs)
-            : this._cmd.mandatory(name, stringParamTypeMap[type], ...extArgs)
+            ? this._cmd.optional(name, stringParamTypeMap[type], ...extArgs as any[])
+            : this._cmd.mandatory(name, stringParamTypeMap[type], ...extArgs as any[])
 
         this.registeredArgs.add(name)
     }
@@ -209,22 +198,15 @@ class Registry {
  * @param {number} [flag] 
  * @param {string} [alias] 
  */
-function cmd(head, desc, perm=1) {
+export function cmd(head: string, desc: string, perm=1) {
     const command = mc.newCommand(head, desc, perm)
     const registry = new Registry(command)
 
     return {
-        /**
-         * @param {(registry: Registry) => void | Promise<void>} executor 
-         */
-        setup: executor => {
+        setup: (executor: (registry: Registry) => void | Promise<void>) => {
             executor.call(
                 undefined, registry
             )
         }
     }
-}
-
-module.exports = {
-    cmd, Registry
 }

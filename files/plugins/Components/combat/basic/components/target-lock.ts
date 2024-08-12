@@ -1,24 +1,18 @@
-import { BaseComponent, ComponentManager } from "../core/component"
+import { CustomComponent } from "../core/component"
 import { Optional } from "@utils/optional"
-import { getPlayer } from "@utils/mc"
 
-const locks = new Map()
-const cooldowns = new Set()
-
-export class TargetLock extends BaseComponent {
+export class TargetLock extends CustomComponent {
     public srcPlayer: Optional<Player> = Optional.none()
+    public targetIsPlayer = false
 
     constructor(
-        private source: string,
-        public target: Optional<Entity|Player>,
+        source: string,
+        public target: Optional<Entity|Player> = Optional.none(),
     ) {
         super()
-        
-        locks.set(this.source, this.target)
-        this.srcPlayer = getPlayer(source, pl => pl.setMovementSpeed(0.04))
-    }
-
-    onAttach(manager: ComponentManager): boolean | void | Promise<boolean | void> {
-        
+        this.srcPlayer = Optional.some(mc.getPlayer(source))
+        if (!target.isEmpty() && 'xuid' in target.unwrap()) {
+            this.targetIsPlayer = true
+        }
     }
 }

@@ -1,6 +1,6 @@
 /// <reference path="../types.d.ts"/>
-import console from '../../../console/main'
 import { CameraComponent } from '../components/camera'
+import { Stamina } from '../components/stamina'
 import { Tick } from '../components/tick'
 import { AcceptbleInputTypes } from '../types'
 import { ComponentManager } from './component'
@@ -100,12 +100,13 @@ export class Status {
         this.isWaitingParry = false
         this.stamina = 0
         this.stiffness = 0
-        this.componentManager.clear()
+        // this.componentManager.clear()
         defaultAcceptableInputs.forEach(type => this.acceptableInputs.add(type))
 
         this.componentManager.attachComponent(
             new Tick(),
             new CameraComponent(),
+            new Stamina(0),
         )
     }
 

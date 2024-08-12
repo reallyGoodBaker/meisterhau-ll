@@ -82,7 +82,7 @@ const battleCamera = (pl, en) => {
     const initVec = vec2(plPos.x, plPos.z, enPos.x, enPos.z)
     const dist = initVec.m
     const manager = Status.get(pl.xuid).componentManager
-    const cameraComponent = manager.getComponent(CameraComponent)
+    const cameraComponent = manager.getComponent(CameraComponent).unwrap()
 
     if (!cameraComponent) {
         return

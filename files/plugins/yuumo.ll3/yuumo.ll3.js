@@ -2,6 +2,31 @@
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
+function getAugmentedNamespace(n) {
+  if (n.__esModule) return n;
+  var f = n.default;
+	if (typeof f == "function") {
+		var a = function a () {
+			if (this instanceof a) {
+        return Reflect.construct(f, arguments, this.constructor);
+			}
+			return f.apply(this, arguments);
+		};
+		a.prototype = f.prototype;
+  } else a = {};
+  Object.defineProperty(a, '__esModule', {value: true});
+	Object.keys(n).forEach(function (k) {
+		var d = Object.getOwnPropertyDescriptor(n, k);
+		Object.defineProperty(a, k, d.get ? d : {
+			enumerable: true,
+			get: function () {
+				return n[k];
+			}
+		});
+	});
+	return a;
+}
+
 var yuumo = {};
 
 var loadModule = {};
@@ -34,10 +59,6 @@ loadModule.load = m => {
     }
 };
 
-/**
- * @typedef {{[p: string]: keyof typeof stringParamTypeMap | `!${keyof typeof stringParamTypeMap}`}} ParamType
- */
-
 const stringParamTypeMap = {
     bool: 0,
     int: 1,
@@ -59,211 +80,148 @@ const stringParamTypeMap = {
     entities: 16,
     command: 17
 };
-
 const matchers = {
     required: /^<([\w:]+)>$/,
     optional: /^\[([\w:]+)\]$/,
 };
-
-/**
- * @param {number} index 
- * @param {keyof typeof stringParamTypeMap} type 
- * @param {string} id 
- * @param {boolean} isOptional 
- */
-function newToken(index, type='enum', id, isOptional=true) {
+function newToken(index, type = 'enum', id, isOptional = true) {
     return {
         index, type, id, isOptional
-    }
+    };
 }
-
-/**
- * @param {string} str 
- */
 function parseCmdStr(str) {
     const frags = str.split(/ +/);
     const tokens = [];
-
     frags.forEach((frag, i) => {
         let res, isOptional = -1;
         if (res = matchers.required.exec(frag)) {
             isOptional = 0;
-        } else if (res = matchers.optional.exec(frag)) {
+        }
+        else if (res = matchers.optional.exec(frag)) {
             isOptional = 1;
         }
-
         if (isOptional !== -1) {
             const data = res[1];
             const typeDef = data.split(':');
-            tokens.push(newToken(
-                i, typeDef[1], typeDef[0], !!isOptional
-            ));
-            return
+            tokens.push(newToken(i, typeDef[1], typeDef[0], !!isOptional));
+            return;
         }
-
-        tokens.push(newToken(
-            i, 'enum', frag, false
-        ));
+        tokens.push(newToken(i, 'enum', frag, false));
     });
-
-    return tokens
+    return tokens;
 }
-
-/**
- * @param {ParamType[]} arr 
- */
 function parseCmdArr(arr) {
     const tokens = [];
-
     arr.forEach((el, i) => {
         const [id, typeDesc] = Object.entries(el)[0];
-        let isOptional = true
-            ,type = typeDesc;
-        
+        let isOptional = true, type = typeDesc;
         if (typeDesc.startsWith('!')) {
             isOptional = false;
             type = typeDesc.slice(1);
         }
-
-        tokens.push(newToken(
-            i, type, id, isOptional
-        ));
+        tokens.push(newToken(i, type, id, isOptional));
     });
-
-    return tokens
+    return tokens;
 }
-
 class Registry {
-    /**@private*/ _cmd = null
-    /**@private*/ _tokenListCollection = new Set()
-    /**@private*/ _handlerCollection = []
-
+    /**@private*/ _cmd;
+    /**@private*/ _tokenListCollection = new Set();
+    /**@private*/ _handlerCollection = [];
     constructor(cmd) {
         this._cmd = cmd;
     }
-
-    /**@private*/ getCollection(len) {
-        return this._handlerCollection[len] ?? (this._handlerCollection[len] = [])
+    getCollection(len) {
+        return this._handlerCollection[len] ?? (this._handlerCollection[len] = []);
     }
-
-    /**
-     * @param {string | ParamType[]} cmd 
-     * @param {(cmd: Command, origin: CommandOrigin, output: CommandOutput, result: any) => void} handler 
-     */
     register(cmd, handler) {
         if (!cmd || !handler) {
-            return this
+            return this;
         }
-
-        const tokens = typeof cmd === 'string' 
+        const tokens = typeof cmd === 'string'
             ? parseCmdStr(cmd)
             : parseCmdArr(cmd);
-
         this._tokenListCollection.add(tokens);
-
         const len = tokens.length;
         const finalList = tokens.reduce((pre, cur, i) => {
             if (cur.isOptional) {
                 this.getCollection(pre.length)
                     .push([pre.map(t => t.id), handler]);
             }
-
-            return pre.concat(cur)
+            return pre.concat(cur);
         }, []);
-
         this.getCollection(len)
             .push([finalList.map(l => l.id), handler]);
-
-        return this
+        return this;
     }
-
     submit() {
         this._tokenListCollection.forEach(tokens => {
             let ids = [];
-
-            for (const {id, type, isOptional} of tokens) {
+            for (const { id, type, isOptional } of tokens) {
                 this.createArg(id, type, isOptional);
                 ids.push(id);
             }
-
             this._cmd.overload(ids);
         });
-
         this.setCallback();
         this._cmd.setup();
     }
-
     /**@private*/ sameArr(arr1, arr2) {
         if (arr1.length !== arr2.length) {
-            return false
+            return false;
         }
-
-        return new Set(arr1.concat(arr2)).size === arr1.length 
+        return new Set(arr1.concat(arr2)).size === arr1.length;
     }
-
     /**@private*/ setCallback() {
         this._cmd.setCallback((cmd, origin, out, args) => {
             const argv = Object
                 .keys(args)
                 .filter(v => args[v]);
-
             const pairs = this._handlerCollection[argv.length];
             const [_, handler] = pairs.find(([ids]) => this.sameArr(argv, ids)) || [, Function.prototype];
-            
             handler.call(undefined, cmd, origin, out, args);
         });
     }
-
-    /**@private*/ registeredArgs = new Set()
-
+    /**@private*/ registeredArgs = new Set();
     /**@private*/ createArg(name, type, isOptional) {
         if (this.registeredArgs.has(name)) {
-            return
+            return;
         }
-        
         let enumId = null;
-
         if (type === 'enum') {
             enumId = `enum_${name}`;
             this._cmd.setEnum(enumId, [name]);
         }
-
         let extArgs = enumId ? [enumId, name, 1] : [];
-
         isOptional
             ? this._cmd.optional(name, stringParamTypeMap[type], ...extArgs)
             : this._cmd.mandatory(name, stringParamTypeMap[type], ...extArgs);
-
         this.registeredArgs.add(name);
     }
 }
-
 /**
- * @param {string} head 
- * @param {string} desc 
+ * @param {string} head
+ * @param {string} desc
  * @param {0|1|2} [perm] 0 普通，1 管理员，2 控制台
- * @param {number} [flag] 
- * @param {string} [alias] 
+ * @param {number} [flag]
+ * @param {string} [alias]
  */
-function cmd$7(head, desc, perm=1) {
+function cmd$7(head, desc, perm = 1) {
     const command = mc.newCommand(head, desc, perm);
     const registry = new Registry(command);
-
     return {
-        /**
-         * @param {(registry: Registry) => void | Promise<void>} executor 
-         */
-        setup: executor => {
-            executor.call(
-                undefined, registry
-            );
+        setup: (executor) => {
+            executor.call(undefined, registry);
         }
-    }
+    };
 }
 
-var command = {
-    cmd: cmd$7, Registry
-};
+var command = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	Registry: Registry,
+	cmd: cmd$7
+});
+
+var require$$0 = /*@__PURE__*/getAugmentedNamespace(command);
 
 var main = {exports: {}};
 
@@ -860,7 +818,7 @@ let commandRegistry = {};
  * @param {(em: EventEmitter)=>void} handler 
  * @param {any} [opt]
  */
-function register(command, handler, opt = {}) {
+function register$1(command, handler, opt = {}) {
     let em = new EventEmitter$2({ captureRejections: true });
     commandRegistry[command] = [em, opt];
     handler(em);
@@ -983,7 +941,7 @@ class TConsole {
         this.console = opt.console;
         this.update = opt.update;
         this.unregister = unregister;
-        this.register = register;
+        this.register = register$1;
         this.exec = exec;
         (function () {
             TConsole.tConsole = this;
@@ -1255,7 +1213,7 @@ class ConsoleTerminal {
             _backLogic(this, msgBuilder);
         };
 
-        register('con', em => {
+        register$1('con', em => {
             em.on('-o', openLogic);
             em.on('--open', openLogic);
             em.on('-b', backLogic);
@@ -1847,15 +1805,15 @@ function buildContextOpener(builder, contextSender, onCancelHandlerArgIndex) {
 }
 
 function openAlert(sender) {
-    return buildContextOpener(alert$6, sender, 5)
+    return buildContextOpener(alert$7, sender, 5)
 }
 
 function openAction(sender) {
-    return buildContextOpener(action$6, sender, 3)
+    return buildContextOpener(action$7, sender, 3)
 }
 
 function openWidget(sender) {
-    return buildContextOpener(widget$6, sender, 2)
+    return buildContextOpener(widget$7, sender, 2)
 }
 
 function uiReturnValBuilder(sender) {
@@ -1868,7 +1826,7 @@ function uiReturnValBuilder(sender) {
     }
 }
 
-function alert$6(title, content, button1, buton2, onEnsure = Function.prototype, onReject = Function.prototype, onCancel = Function.prototype) {
+function alert$7(title, content, button1, buton2, onEnsure = Function.prototype, onReject = Function.prototype, onCancel = Function.prototype) {
     let ret = null;
     const sender = pl => {
         let isUserAction = false;
@@ -1897,7 +1855,7 @@ function alert$6(title, content, button1, buton2, onEnsure = Function.prototype,
  * @param {Function} onerror 
  * @returns 
  */
-function action$6(title, content, buttonGroup = [], onerror = Function.prototype) {
+function action$7(title, content, buttonGroup = [], onerror = Function.prototype) {
     const buttons = [],
         images = [],
         handlers = [];
@@ -1935,7 +1893,7 @@ function action$6(title, content, buttonGroup = [], onerror = Function.prototype
     return ret = uiReturnValBuilder(sender)
 }
 
-function widget$6(title, elements = [], onerror = Function.prototype) {
+function widget$7(title, elements = [], onerror = Function.prototype) {
     const fm = mc.newCustomForm();
     const handlers = [];
 
@@ -2006,7 +1964,7 @@ function basicBuilder(type, resolver = (pl, val, args) => [pl, val], useHandler 
 }
 
 var ui = {
-    alert: alert$6, action: action$6, widget: widget$6,
+    alert: alert$7, action: action$7, widget: widget$7,
 
     /**@type {(text: string) => any} */
     Label: basicBuilder('Label', undefined, false),
@@ -2027,8 +1985,8 @@ var ui = {
     StepSlider: basicBuilder('StepSlider'),
 };
 
-const { cmd: cmd$6 } = command;
-const { alert: alert$5 } = ui;
+const { cmd: cmd$6 } = require$$0;
+const { alert: alert$6 } = ui;
 
 function distStr(entity, dest, showDiff=true) {
     const pos = entity.blockPos;
@@ -2072,7 +2030,7 @@ function setup$8() {
                     continue
                 }
 
-                alert$5('', `${source.name} 想要知道你的位置，是否提供？`, '提供', '拒绝', () => {
+                alert$6('', `${source.name} 想要知道你的位置，是否提供？`, '提供', '拒绝', () => {
                     source.tell(distStr(source, dest));
                 }, () => {
                     source.tell(distStr(source, dest, false));
@@ -2188,7 +2146,7 @@ var speed = {
     tick, setVelocity: setVelocity$1
 };
 
-const { cmd: cmd$5 } = command;
+const { cmd: cmd$5 } = require$$0;
 
 function setup$7() {
     cmd$5('simplayer', '假人', 1)
@@ -2204,7 +2162,7 @@ var simulatePlayer = {
     setup: setup$7
 };
 
-const { cmd: cmd$4 } = command;
+const { cmd: cmd$4 } = require$$0;
 
 const camera = (pl, easeTime, easeType, dPos, rot) => {
     mc.runcmdEx(`execute as "${pl.name}" at @s run camera @s set minecraft:free ease ${easeTime} ${easeType} pos ^${dPos.x} ^${dPos.y} ^${dPos.z} rot ${rot.pitch} ${rot.yaw}`);
@@ -2261,7 +2219,7 @@ var overShoulder = {
     camera, clearCamera, setOnShoulderCamera
 };
 
-const {action: action$5, alert: alert$4, widget: widget$5, Switch: Switch$4, StepSlider: StepSlider$1, Input: Input$6, Dropdown: Dropdown$4} = ui;
+const {action: action$6, alert: alert$5, widget: widget$6, Switch: Switch$4, StepSlider: StepSlider$1, Input: Input$6, Dropdown: Dropdown$4} = ui;
 
 function queryPlayer$1(realName) {
     for (const pl of mc.getOnlinePlayers()) {
@@ -2348,14 +2306,14 @@ let Notification$1 = class Notification {
 
         if (this.type === NotificationTypes.MESSAGE) {
             const {btn1, btn2, onEnsure, onReject} = this.content;
-            return alert$4(this.title, this.preview, btn1, btn2, onEnsure, onReject, () => {
+            return alert$5(this.title, this.preview, btn1, btn2, onEnsure, onReject, () => {
                 this.viewed = false;
                 this._notifyNormalMsg(pl);
             }).send(pl)
         }
 
         if (this.type === NotificationTypes.ACTION) {
-            return action$5(this.title, this.preview, this.content, (err, pl) => {
+            return action$6(this.title, this.preview, this.content, (err, pl) => {
                 if (err === -1) {
                     this.viewed = false;
                     return this._notifyNormalMsg(pl)
@@ -2365,7 +2323,7 @@ let Notification$1 = class Notification {
         }
 
         if (this.type === NotificationTypes.MODAL) {
-            return widget$5(this.title, this.content, (err, pl) => {
+            return widget$6(this.title, this.content, (err, pl) => {
                 if (err === -1) {
                     this.viewed = false;
                     return this._notifyNormalMsg(pl)
@@ -2426,7 +2384,7 @@ function regNotifComponent() {
             return pl.tell('没有收到任何信息')
         }
 
-        action$5('收件箱', `${notifs.length} 条消息`, notifs.map(notif => {
+        action$6('收件箱', `${notifs.length} 条消息`, notifs.map(notif => {
             return {
                 text: notif.getListTilePreview(),
                 onClick() {
@@ -2446,7 +2404,7 @@ function regNotifComponent() {
             ,player = '';
 
         
-        widget$5('编辑消息', [
+        widget$6('编辑消息', [
             Dropdown$4('发送给:', players, 0, (_, i) => {
                 player = players[i];
             }),
@@ -2492,7 +2450,7 @@ function regNotifComponent() {
 
                 if (player === '@a') {
                     if (!pl.permLevel) {
-                        alert$4('错误', '权限不足', '是', '取消').send(pl);
+                        alert$5('错误', '权限不足', '是', '取消').send(pl);
                         return
                     }
     
@@ -2547,7 +2505,7 @@ var motd = function() {
     }, 5000);
 };
 
-const { action: action$4, alert: alert$3, widget: widget$4, Dropdown: Dropdown$3, Input: Input$5 } = ui;
+const { action: action$5, alert: alert$4, widget: widget$5, Dropdown: Dropdown$3, Input: Input$5 } = ui;
 const { Notification, NotificationImportances } = notification;
 
 function queryPlayer(realName) {
@@ -2589,14 +2547,14 @@ function recevConfirm(pl2, amount) {
         onEnsure(pl) {
             notif.expire();
             money.trans(pl2.xuid, pl.xuid, amount);
-            const suc = alert$3('结果', '操作成功', '确认', '取消');
+            const suc = alert$4('结果', '操作成功', '确认', '取消');
             suc.send(pl);
             suc.send(pl2);
         },
 
         onReject(pl) {
             notif.expire();
-            const fail = alert$3('结果', '操作失败', '确认', '取消');
+            const fail = alert$4('结果', '操作失败', '确认', '取消');
             fail.send(pl);
             fail.send(pl2);
         }
@@ -2606,10 +2564,10 @@ function recevConfirm(pl2, amount) {
 }
 
 function transferConfirm(name, amount) {
-    return alert$3('转账确认', `向 §b${name}§r 转账 §6${amount}§r, 确认操作？`, '确认', '取消', pl => {
+    return alert$4('转账确认', `向 §b${name}§r 转账 §6${amount}§r, 确认操作？`, '确认', '取消', pl => {
         const pl2 = queryPlayer(name);
         if (!checkIfCreditEnough(pl, amount)) {
-            return alert$3('失败', `余额不足: ${money.get(pl.xuid)}, 需要: ${amount}`, '确认', '取消').send(pl)
+            return alert$4('失败', `余额不足: ${money.get(pl.xuid)}, 需要: ${amount}`, '确认', '取消').send(pl)
         }
         recevConfirm(pl, amount).notify(pl2);
     })
@@ -2652,7 +2610,7 @@ function requestFromUi(pl) {
         amount: 0
     };
 
-    widget$4('收款', [
+    widget$5('收款', [
         Dropdown$3('向他人收款', pls.map(p => p.realName), 0, (_, i) => {
             data.who = pls[i];
         }),
@@ -2677,7 +2635,7 @@ function requestFromUi(pl) {
 }
 
 function creditUi(pl) {
-    const ui = action$4('账户', `我的余额: ${money.get(pl.xuid)}`, [
+    const ui = action$5('账户', `我的余额: ${money.get(pl.xuid)}`, [
         {
             text: '进行转账', onClick() {
                 transferCreditUi(ui).send(pl);
@@ -2700,7 +2658,7 @@ function transferCreditUi(parent) {
     const pls = mc.getOnlinePlayers().map(v => v.realName);
     let name = '';
 
-    return widget$4('向目标转账', [
+    return widget$5('向目标转账', [
         Dropdown$3('选择转账目标', pls, (_, i) => {
             name = pls[i];
         }),
@@ -2773,7 +2731,7 @@ function requestCredit$2(
     failure = defaultRequestCreditFailed,
     cancel = Function.prototype
 ) {
-    alert$3('账户', `为 §b${serviceName}§r 支付 §6${amount}§r ?`, '确认', '取消', async () => {
+    alert$4('账户', `为 §b${serviceName}§r 支付 §6${amount}§r ?`, '确认', '取消', async () => {
         if (checkIfCreditEnough(fromPlayer, amount)) {
             try {
                 await success.call(null, fromPlayer);
@@ -2812,7 +2770,7 @@ var price = {
     }
 };
 
-const {widget: widget$3, action: action$3, Input: Input$4, Switch: Switch$3, alert: alert$2} = ui;
+const {widget: widget$4, action: action$4, Input: Input$4, Switch: Switch$3, alert: alert$3} = ui;
 const {requestCredit: requestCredit$1} = core$1;
 const priceConf = price;
 const {defaultHome} = baseConfig;
@@ -2918,7 +2876,7 @@ function teleportPlayerToCustomPos(pl, name) {
     const targetPos = getPort(name, pl);
 
     if (!targetPos) {
-        return alert$2('错误', `${pl.realName} 没有保存名为 ${name} 的传送点`, '确定', '取消').send(pl)
+        return alert$3('错误', `${pl.realName} 没有保存名为 ${name} 的传送点`, '确定', '取消').send(pl)
     }
 
     let amount = calcAmountByPos(currentPos, targetPos);
@@ -2943,7 +2901,7 @@ function showAddPortUi(pl) {
 
     const cp = pl.blockPos;
 
-    widget$3('添加传送点', [
+    widget$4('添加传送点', [
         Input$4('传送点名称', (_, value) => {
             name = value;
         }),
@@ -2986,7 +2944,7 @@ function showTeleportCustomUi(pl) {
             }
         }
     });
-    action$3('传送到...', '选择你想要传送的地点', teleportBtnList, (err, pl) => {
+    action$4('传送到...', '选择你想要传送的地点', teleportBtnList, (err, pl) => {
         pl.tell(`${err.toString()}\n\n联系管理员获得更多支持`);
     }).send(pl);
 }
@@ -2996,14 +2954,14 @@ function showRemovePosUi(pl) {
         return {
             text: v,
             onClick() {
-                alert$2('确定移除', `移除 "${v}" 传送点，确认？`, '确定', '取消', () => {
+                alert$3('确定移除', `移除 "${v}" 传送点，确认？`, '确定', '取消', () => {
                     removePort(v, pl);
                     pl.tell(`已移除 "${v}" 传送点`);
                 }).send(pl);
             }
         }
     });
-    action$3('移除传送点', '选择你想要移除的传送点', portList, (err, pl) => {
+    action$4('移除传送点', '选择你想要移除的传送点', portList, (err, pl) => {
         pl.tell(`${err.toString()}\n\n联系管理员获得更多支持`);
     }).send(pl);
 }
@@ -3040,13 +2998,13 @@ function calcAmountByPos(currentPos, targetPos) {
 
 function requestTeleportToPlayer(from, to) {
     return new Promise((res, rej) => {
-        alert$2('传送请求', `${from.realName} 想要传送到你的位置，同意？`, '同意', '拒绝',
+        alert$3('传送请求', `${from.realName} 想要传送到你的位置，同意？`, '同意', '拒绝',
             () => {
                 from.teleport(to.pos);
                 res();
             },
             () => {
-                alert$2('拒绝', `${to.realName} 拒绝了你的传送请求`, '确认', '取消').send(from);
+                alert$3('拒绝', `${to.realName} 拒绝了你的传送请求`, '确认', '取消').send(from);
                 rej();
             }
         ).send(to);
@@ -3082,7 +3040,7 @@ const actions = {
 
     c: (pl, act, target) => {
         if (!act) {
-            action$3('', '要做些什么？\n', [
+            action$4('', '要做些什么？\n', [
                 {text: '使用传送点', onClick(err, pl) {
                     if (err) {
                         return
@@ -3148,7 +3106,7 @@ const actions = {
                     });
                 }
             }));
-        action$3('传送到玩家', '选择一名玩家', btnGroups).send(pl);
+        action$4('传送到玩家', '选择一名玩家', btnGroups).send(pl);
     },
 
     w: pl => {
@@ -3163,7 +3121,7 @@ const actions = {
 
 const globalPreserved = {xuid: 'global-preserved'};
 function worldTeleportUiOp(pl) {
-    action$3('', '世界传送', [
+    action$4('', '世界传送', [
         {
             text: '添加传送点',
             onClick(_, pl) {
@@ -3205,11 +3163,11 @@ function worldTeleportUiPlayer(pl) {
     }
 
     if (!current) {
-        alert$2('错误', '不在可用传送区域', '确定', '取消').send(pl);
+        alert$3('错误', '不在可用传送区域', '确定', '取消').send(pl);
         return
     }
 
-    action$3('世界传送', '选择你要传送的地点',
+    action$4('世界传送', '选择你要传送的地点',
         listPorts(globalPreserved)
             .filter(v => v != current)
             .map(name => ({
@@ -3235,7 +3193,7 @@ function worldTeleportAddUi(pl) {
 
     const plPos = pl.blockPos;
 
-    widget$3('添加传送点', [
+    widget$4('添加传送点', [
         Input$4('传送点名称', (_, val) => {
             name = val;
         }),
@@ -3264,12 +3222,12 @@ function worldTeleportAddUi(pl) {
 }
 
 function worldTeleportRmUi(pl) {
-    action$3(
+    action$4(
         '删除传送点', '', listPorts(globalPreserved)
             .map(name => ({
                 text: name,
                 onClick() {
-                    alert$2(
+                    alert$3(
                         '删除传送点', `确定删除传送点 §b${name}§r ?`,
                         '确定', '取消',
                         () => {
@@ -3338,7 +3296,7 @@ var db_lib = path => {
 };
 
 const dbLib = db_lib;
-const { widget: widget$2, Input: Input$3 } = ui;
+const { widget: widget$3, Input: Input$3 } = ui;
 const db$2 = dbLib('./data/trap');
 
 function pos2str(pos) {
@@ -3373,7 +3331,7 @@ function listenItemUse$1() {
         if (item.type === 'ym:trap') {
             /**@type {string}*/
             let strs = [];
-            widget$2('设置陷阱', [
+            widget$3('设置陷阱', [
                 Input$3('添加指令', '', commands[0] || '', (pl, v) => strs[0] = v),
                 Input$3('添加指令', '', commands[1] || '', (pl, v) => strs[1] = v),
                 Input$3('添加指令', '', commands[2] || '', (pl, v) => strs[2] = v),
@@ -3565,7 +3523,7 @@ var core = {
     add: add$5, edit: edit$3, paied, delivered, query: query$3, remove: remove$1, keys: keys$3
 };
 
-const { cmd: cmd$3 } = command;
+const { cmd: cmd$3 } = require$$0;
 const newDB = db_lib;
 const db = newDB('./data/orders/virts');
 
@@ -3658,8 +3616,8 @@ var virt = {
     n: n$3, ref: ref$2
 };
 
-const { cmd: cmd$2 } = command;
-const { action: action$2, widget: widget$1, Label: Label$1, Input: Input$2, Switch: Switch$2, Dropdown: Dropdown$2, StepSlider } = ui;
+const { cmd: cmd$2 } = require$$0;
+const { action: action$3, widget: widget$2, Label: Label$1, Input: Input$2, Switch: Switch$2, Dropdown: Dropdown$2, StepSlider } = ui;
 const { keys: keys$2, query: query$2, edit: edit$2, add: add$4, remove } = core;
 const { n: n$2 } = virt;
 const console$1 = mainExports;
@@ -3714,11 +3672,11 @@ function listOrders(pl) {
         return pl.tell('无订单')
     }
 
-    action$2('列表', '', list.map(k => ({
+    action$3('列表', '', list.map(k => ({
         text: k,
         onClick(_, pl) {
             const order = query$2({ oid: k })[0];
-            action$2(...ManageOrder(order)).send(pl);
+            action$3(...ManageOrder(order)).send(pl);
         }
     }))).send(pl);
 }
@@ -3729,7 +3687,7 @@ function addOrder(pl) {
 
     let cid, vid, amount, paied, delivered;
 
-    widget$1(`修改订单`, [
+    widget$2(`修改订单`, [
         Dropdown$2('顾客', plsStr, 0, (_, i) => cid = pls[i].xuid),
         Dropdown$2('商家', plsStr, 0, (_, i) => vid = pls[i].xuid),
         Input$2('价格', '', '0', (_, v) => amount = parseFloat(v)),
@@ -3748,7 +3706,7 @@ function queryOrder(pl) {
     const plsNames = ['无', ...pls.map(p => p.realName)];
     const checkLabels = ['未知', '是', '否'];
 
-    widget$1('查询订单', [
+    widget$2('查询订单', [
         Input$2('订单id', '', '', (_, v) => {
             if (v) {
                 q.oid = v.trim();
@@ -3796,7 +3754,7 @@ function queryOrder(pl) {
                 return pl.tell('无结果')
             }
 
-            action$2('查询结果', '', result.map(o => {
+            action$3('查询结果', '', result.map(o => {
                 return {
                     text: `${o.oid} ${
                         n$2(o.cid)
@@ -3804,7 +3762,7 @@ function queryOrder(pl) {
                         n$2(o.vid)
                     }`,
                     onClick(_, pl) {
-                        action$2(...ManageOrder(o)).send(pl);
+                        action$3(...ManageOrder(o)).send(pl);
                     }
                 }
             })).send(pl);
@@ -3829,7 +3787,7 @@ function setupOrder() {
 
 var admin = setupOrder;
 
-const { alert: alert$1, Input: Input$1, Switch: Switch$1, Dropdown: Dropdown$1 } = ui;
+const { alert: alert$2, Input: Input$1, Switch: Switch$1, Dropdown: Dropdown$1 } = ui;
 const { keys: keys$1, query: query$1, edit: edit$1, add: add$3 } = core;
 const { requestCredit } = core$1;
 const { n: n$1, ref: ref$1, getVirtEntityLeader: getVirtEntityLeader$1 } = virt;
@@ -3934,7 +3892,7 @@ function Confirm(xuid) {
         return {
             text: `${n$1(o.cid)} -${o.amount}-> ${n$1(o.vid)}`,
             onClick(_, pl) {
-                alert$1('确认', '此订单已交付？', '是', '否', pl => {
+                alert$2('确认', '此订单已交付？', '是', '否', pl => {
                     o.delivered = true;
                     edit$1(o.oid, o);
                     pl.tell('已确认交付');
@@ -3952,7 +3910,7 @@ var customer = {
     Menu: Menu$2
 };
 
-const { alert, Label, Input, Switch, Dropdown, action: action$1, widget } = ui;
+const { alert: alert$1, Label, Input, Switch, Dropdown, action: action$2, widget: widget$1 } = ui;
 const { keys, query, edit, add: add$2 } = core;
 const { n, ref, getControlledEntites, getVirtEntityLeader } = virt;
 // const db = newDB('./data/orders/vendors')
@@ -3963,7 +3921,7 @@ function Menu$1() {
             {
                 text: '交付订单',
                 onClick(_, pl) {
-                    action$1(...DeliveryList(pl.xuid)).send(pl);
+                    action$2(...DeliveryList(pl.xuid)).send(pl);
                 }
             }
         ]
@@ -3976,7 +3934,7 @@ function DeliveryList(xuid) {
     const btnGroup = orders.map(o => ({
         text: `${n(o.cid)} -${o.amount}-> ${n(o.vid)}`,
         onClick(_, pl) {
-            widget(...Delivery(o)).send(pl);
+            widget$1(...Delivery(o)).send(pl);
         }
     }));
 
@@ -4063,18 +4021,18 @@ function Delivery(o) {
 
 var vendor = Menu$1;
 
-const { cmd: cmd$1 } = command;
-const { action } = ui;
+const { cmd: cmd$1 } = require$$0;
+const { action: action$1 } = ui;
 const { Menu } = customer;
 const Vendor = vendor;
 
 var user = () => {
     cmd$1('order', '订单操作', 0).setup(registry => {
         registry.register('customer', (_, o) => {
-            action(...Menu()).send(o.player);
+            action$1(...Menu()).send(o.player);
         })
         .register('vendor', (_, o) => {
-            action(...Vendor()).send(o.player);
+            action$1(...Vendor()).send(o.player);
         })
         .submit();
     });
@@ -4188,7 +4146,7 @@ var mobs_1 = {
     get, getScoreUid: getScoreUid$1, setup: setup$2, add: add$1, rm: rm$1
 };
 
-const { cmd } = command;
+const { cmd } = require$$0;
 const {
     setup: setupMobs, getScoreUid, add, rm
 } = mobs_1;
@@ -4477,6 +4435,55 @@ var affair = {
     init
 };
 
+var testui = {};
+
+const { action, alert, widget } = ui;
+
+function register() {
+    mc.listen('onUseItem', (player, item) => {
+        if (item.type.includes('clock')) {
+            showUi(player);
+        }
+    });
+}
+
+function showUi(player) {
+    action('test', '你好', [
+        {
+            text: '是',
+            onClick() {
+                openUi2(this, player);
+                player.tell('你好');
+            }
+        },
+        {
+            text: '否',
+            onClick() {
+                player.tell('你好2');
+            }
+        }
+    ]).send(player);
+}
+
+function openUi2(ui, player) {
+    ui.openAction('test2', '你不好', [
+        {
+            text: '是',
+            onClick() {
+                player.tell('你不好');
+            }
+        },
+        {
+            text: '否',
+            onClick() {
+                player.tell('你不好2');
+            }
+        }
+    ]).send(player);
+}
+
+register();
+
 const { load } = loadModule;
 
 const modules = [
@@ -4492,6 +4499,7 @@ const modules = [
     kinematics,
     setup_1,
     affair,
+    testui,
 ];
 
 mc.listen('onServerStarted',() => modules.forEach(m => load(m)));

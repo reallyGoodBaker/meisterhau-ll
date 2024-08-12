@@ -22,6 +22,7 @@ const { CameraFading } = require('../components/camera-fading')
 const { DamageModifier } = require('./config')
 const { registerCommand } = require('./commands')
 const { antiTreeshaking } = require('../components/anti-treeshaking')
+const { Stamina } = require('../components/stamina')
 
 const em = new EventEmitter({ enableWatcher: true })
 const es = EventInputStream.get(em)
@@ -172,15 +173,20 @@ const playerAttrPickList = [
     'isOnFire', 'isOnGround', 'isOnHotBlock', 'isGliding', 'isFlying', 'isMoving', 'isSneaking'
 ]
 
+/**
+ * @param {Status} status 
+ * @returns 
+ */
 const defaultPacker = (pl, bind, status) => {
     const allowedState = checkMoveState(bind, status)
     const picked = pick(pl, playerAttrPickList)
+    const stamina = status.componentManager.getComponent(Stamina).unwrap()
 
     // console.log(pl.name, ' packer:', isCollide(pl))
 
     /**@type {TransitionOptMixins}*/
     const mixins = {
-        stamina: status.stamina || 0,
+        stamina: stamina.stamina,
         hasTarget: hasLock(pl),
         repulsible: status.repulsible,
         isCollide: isCollide(pl),
@@ -627,11 +633,16 @@ function listenAllCustomEvents(mods) {
             _knockback(_k, victimStatus.repulsible)
             victimStatus.shocked = shock
 
-            const modifier = victimStatus.componentManager.getComponent(DamageModifier)?.modifier
+            const modifier = victimStatus.componentManager.getComponent(DamageModifier)
+            const actualDamage = damage * (
+                modifier.isEmpty() 
+                    ? DamageModifier.defaultModifier
+                    : modifier.unwrap().modifier
+                )
 
             em.emitNone('hurt', abuser, victimPlayer, {
                 ...damageOpt,
-                damage: damage * (modifier ?? DamageModifier.defaultModifier), 
+                damage: actualDamage, 
                 damageType: 'override',
             })
         }

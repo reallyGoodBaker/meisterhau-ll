@@ -5,6 +5,10 @@ const { battleCamera, cameraInput, clearCamera } = require('./camera')
 const { knockback, faceTo } = require('../../../scripts-rpc/func/kinematics')
 const { setVelocity } = require('./kinematic')
 const { playAnim } = require('../index')
+const { Status } = require('../core/status')
+const { TargetLock } = require('../components/target-lock')
+const { Optional } = require('@utils/optional')
+const { StatusHud } = require('../components/hud/statushud')
 
 const locks = new Map()
 const cooldowns = new Set()
@@ -20,6 +24,10 @@ function lockTarget(src, target) {
         // cameraInput(pl, false)
         locks.set(src, target)
         pl.setMovementSpeed(0.04)
+        Status.get(src).componentManager.attachComponent(
+            new TargetLock(src, Optional.some(target)),
+            new StatusHud(),
+        )
     } else {
         clearCamera(pl)
     }
@@ -27,6 +35,9 @@ function lockTarget(src, target) {
 
 function releaseTarget(src) {
     const pl = mc.getPlayer(src)
+    const manager = Status.get(src).componentManager
+    manager.detachComponent(StatusHud)
+    manager.detachComponent(TargetLock)
     cameraInput(pl)
     clearCamera(pl)
     locks.delete(src)

@@ -1,11 +1,9 @@
 /// <reference path="../basic/types.d.ts"/>
 
-const { playAnim, playSoundAll, playParticle } = require("./index")
-const console = require('../../console/main')
-const { isCollide } = require("./generic/kinematic")
-const { Status } = require("./core/status")
+const { playAnim, playSoundAll } = require("./index")
 const { CameraFading } = require("./components/camera-fading")
 const { CameraComponent } = require("./components/camera")
+const { Stamina } = require("./components/stamina")
 
 function getAnim(animCategory, direction) {
     const anim = animCategory[direction]
@@ -96,6 +94,7 @@ class DefaultMoves {
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2]
 
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 10
             playAnim(pl, getAnim(this.animations.blocked, direction))
             playSoundAll(this.sounds.blocked, pl.pos, 1)
             ctx.movementInput(pl, false)
@@ -120,6 +119,7 @@ class DefaultMoves {
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2]
 
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina += 15
             ctx.status.isBlocking = true
             playAnim(pl, getAnim(this.animations.block, direction))
             playSoundAll(this.sounds.block, pl.pos, 1)
@@ -143,6 +143,8 @@ class DefaultMoves {
     hurt = {
         cast: Infinity,
         onEnter: (pl, ctx) => {
+            const manager = ctx.status.componentManager
+            manager.getComponent(Stamina).unwrap().resetRestore(manager)
             ctx.movementInput(pl, false)
             ctx.freeze(pl)
             ctx.status.disableInputs([
@@ -203,6 +205,7 @@ class DefaultMoves {
     parried = {
         cast: 35,
         onEnter: (pl, ctx) => {
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 20
             ctx.movementInput(pl, false)
             ctx.freeze(pl)
             ctx.status.disableInputs([
@@ -235,6 +238,7 @@ class DefaultMoves {
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2]
 
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina += 10
             ctx.movementInput(pl, false)
             playSoundAll(this.sounds.parry, pl.pos, 1)
             ctx.status.isWaitingParry = true

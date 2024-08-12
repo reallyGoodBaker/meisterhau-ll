@@ -1,11 +1,11 @@
 import { CustomComponent, ComponentManager } from "../core/component"
 import { Fields, PublicComponent } from "../core/config"
-import { Optional } from "../../../utils/optional"
+import { Optional } from "@utils/optional"
 import { constrictCalc, minmax } from "@utils/math"
 import { Timer } from "./timer"
 
 @PublicComponent('stamina')
-@Fields([ 'exhausted', 'stamina', 'maxStamina', 'restorePerTick', 'restoreCooldown' ])
+@Fields([ 'stamina', 'maxStamina', 'restorePerTick', 'restoreCooldown' ])
 export class Stamina extends CustomComponent {
 
     cooldown: Optional<Timer> = Optional.none()
@@ -22,34 +22,32 @@ export class Stamina extends CustomComponent {
     constructor(
         public $stamina = 100,
         public maxStamina = 100,
-        public restorePerTick = 1,
-        public restoreCooldown = 40,
+        public restorePerTick = 1.6,
+        public restoreCooldown = 30,
     ) {
         super()
         this.prevStamina = this.stamina
     }
 
+    async resetRestore(manager: ComponentManager) {
+        this.cooldown = await manager.getOrCreate(Timer, this.restoreCooldown)
+
+        const cooldown = this.cooldown.unwrap()
+        cooldown.rest = this.restoreCooldown
+        this.prevStamina = this.stamina
+    }
+
     onTick(manager: ComponentManager): void {
         if (this.prevStamina > this.stamina) {
-            let cooldown: Timer
-
-            if (this.cooldown.isEmpty()) {
-                cooldown = new Timer(this.restoreCooldown)
-                manager.attachComponent(cooldown)
-                this.cooldown = Optional.some(cooldown)
-                this.prevStamina = this.stamina
-                return
-            }
-
-            cooldown = this.cooldown.unwrap()
-            cooldown.rest = cooldown.duration
-            this.prevStamina = this.stamina
+            this.resetRestore(manager)
             return
         }
 
         if (this.cooldown.isEmpty() || this.cooldown.unwrap().done) {
-            constrictCalc(0, this.maxStamina, () => this.stamina += this.restorePerTick)
+            this.stamina = constrictCalc(0, this.maxStamina, () => this.stamina + this.restorePerTick)
         }
+
+        this.prevStamina = this.stamina
     }
 
 }
