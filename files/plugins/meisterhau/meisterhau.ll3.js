@@ -2066,17 +2066,19 @@ class ComponentManager {
     getComponents(...ctor) {
         return ctor.map(c => this.#components.get(c));
     }
-    async #attachComponent(ctor, component) {
-        if (this.#components.get(ctor)) {
+    async #attachComponent(ctor, component, shouldRebuild = true) {
+        let init = !this.#components.get(ctor);
+        if (!init && shouldRebuild) {
             await this.detachComponent(ctor);
+            init = true;
         }
         if (REQUIRED_COMPONENTS in component) {
             //@ts-ignore
             for (const [ctor, comp] of component[REQUIRED_COMPONENTS]) {
-                this.#attachComponent(ctor, comp);
+                this.#attachComponent(ctor, comp, false);
             }
         }
-        if ('onAttach' in component) {
+        if (init && 'onAttach' in component) {
             await component.onAttach(this);
         }
         this.#components.set(ctor, component);
@@ -2338,7 +2340,7 @@ let Stamina$3 = class Stamina extends CustomComponent {
     set stamina(v) {
         this.$stamina = minmax(0, this.maxStamina, v);
     }
-    constructor($stamina = 100, maxStamina = 100, restorePerTick = 1.6, restoreCooldown = 30) {
+    constructor($stamina = 100, maxStamina = 100, restorePerTick = 1.6, restoreCooldown = 20) {
         super();
         this.$stamina = $stamina;
         this.maxStamina = maxStamina;
@@ -2351,6 +2353,12 @@ let Stamina$3 = class Stamina extends CustomComponent {
         const cooldown = this.cooldown.unwrap();
         cooldown.rest = this.restoreCooldown;
         this.prevStamina = this.stamina;
+    }
+    setCooldown(cooldown) {
+        if (this.cooldown.isEmpty()) {
+            return;
+        }
+        this.cooldown.unwrap().rest = cooldown;
     }
     onTick(manager) {
         if (this.prevStamina > this.stamina) {
@@ -2616,7 +2624,7 @@ let CameraFading$2 = CameraFading_1 = class CameraFading extends BaseComponent {
             },
             {
                 to: CameraComponent$2.defaultStatus,
-                duration: 2
+                duration: 1
             }
         ], true));
     }
@@ -2636,8 +2644,6 @@ var require$$15 = /*@__PURE__*/getAugmentedNamespace(cameraFading);
 var require$$1 = /*@__PURE__*/getAugmentedNamespace(camera$3);
 
 var require$$19 = /*@__PURE__*/getAugmentedNamespace(stamina);
-
-/// <reference path="../basic/types.d.ts"/>
 
 const { playAnim: playAnim$a, playSoundAll: playSoundAll$5 } = basic;
 const { CameraFading: CameraFading$1 } = require$$15;
@@ -2729,7 +2735,7 @@ let DefaultMoves$8 = class DefaultMoves {
      * @type {Move}
      */
     blocked = {
-        cast: 9,
+        cast: 10,
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2];
 
@@ -2757,8 +2763,9 @@ let DefaultMoves$8 = class DefaultMoves {
         cast: 5,
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2];
-
-            ctx.status.componentManager.getComponent(Stamina$2).unwrap().stamina += 15;
+            const stamina = ctx.status.componentManager.getComponent(Stamina$2).unwrap();
+            stamina.setCooldown(5);
+            stamina.stamina += 15;
             ctx.status.isBlocking = true;
             playAnim$a(pl, getAnim(this.animations.block, direction));
             playSoundAll$5(this.sounds.block, pl.pos, 1);
@@ -2783,7 +2790,7 @@ let DefaultMoves$8 = class DefaultMoves {
         cast: Infinity,
         onEnter: (pl, ctx) => {
             const manager = ctx.status.componentManager;
-            manager.getComponent(Stamina$2).unwrap().resetRestore(manager);
+            manager.getComponent(Stamina$2).unwrap().setCooldown(5);
             ctx.movementInput(pl, false);
             ctx.freeze(pl);
             ctx.status.disableInputs([
@@ -2844,7 +2851,7 @@ let DefaultMoves$8 = class DefaultMoves {
     parried = {
         cast: 35,
         onEnter: (pl, ctx) => {
-            ctx.status.componentManager.getComponent(Stamina$2).unwrap().stamina -= 20;
+            ctx.status.componentManager.getComponent(Stamina$2).unwrap().stamina -= 15;
             ctx.movementInput(pl, false);
             ctx.freeze(pl);
             ctx.status.disableInputs([
@@ -4488,7 +4495,7 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
-            ctx.setSpeed(pl, 0.04);
+            ctx.setSpeed(pl, 0.06);
         },
         timeline: {
             4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
@@ -4692,7 +4699,7 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
-            ctx.setSpeed(pl, 0.04);
+            ctx.setSpeed(pl, 0.06);
         },
         timeline: {
             4: (pl, ctx) => ctx.status.isDodging = false,
@@ -5165,8 +5172,6 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
 
 var moon_glaive = new MoonGlaiveTricks();
 
-/// <reference path="../basic/types.d.ts"/>
-
 const { playAnim: playAnim$5, playSoundAll: playSoundAll$2 } = basic;
 const { randomRange: randomRange$1 } = require$$3;
 const { DefaultMoves: DefaultMoves$3, DefaultTrickModule: DefaultTrickModule$3 } = _default;
@@ -5222,6 +5227,7 @@ class OotachiMoves extends DefaultMoves$3 {
         };
 
         this.animations.parry.left = 'animation.weapon.ootachi.parry.left';
+        this.animations.parry.right = 'animation.weapon.ootachi.parry.right';
         this.animations.block.left = 'animation.weapon.ootachi.block.left';
         this.animations.block.right = 'animation.weapon.ootachi.block.right';
     }
@@ -5256,7 +5262,9 @@ class OotachiMoves extends DefaultMoves$3 {
                 }
             },
             combo1Attack: {
-                onAttack: null
+                onAttack: {
+                    stamina: 16,
+                }
             },
             knockdown: {
                 onKnockdown: { allowedState: 'both' }
@@ -5288,20 +5296,17 @@ class OotachiMoves extends DefaultMoves$3 {
             combo1Attack: {
                 onAttack: {
                     allowedState: 'both',
-                    stamina: v => v > 16,
+                    stamina: 16,
                 }
             },
             combo1Chop: {
                 onUseItem: {
                     allowedState: 'both',
-                    stamina: v => v > 22,
+                    stamina: 22,
                 }
             },
             dodgePrepare: {
-                onSneak: {
-                    allowedState: 'both',
-                    isSneaking: true
-                }
+                onSneak: null
             },
             hurt: {
                 onHurt: {
@@ -5317,10 +5322,32 @@ class OotachiMoves extends DefaultMoves$3 {
     resumeKamae = {
         transitions: {
             idle: {
-                onEndOfLife: { hasTarget: false }
+                onEndOfLife: {
+                    hasTarget: false
+                }
+            },
+            dodgePrepare: {
+                onEndOfLife: {
+                    hasTarget: true,
+                    preInput: 'onSneak'
+                }
+            },
+            combo1Attack: {
+                onEndOfLife: {
+                    hasTarget: true,
+                    preInput: 'onAttack'
+                }
+            },
+            combo1Chop: {
+                onEndOfLife: {
+                    hasTarget: true,
+                    preInput: 'onUseItem'
+                }
             },
             innoKamae: {
-                onEndOfLife: { hasTarget: true }
+                onEndOfLife: {
+                    hasTarget: true
+                }
             },
         }
     }
@@ -5416,7 +5443,7 @@ class OotachiMoves extends DefaultMoves$3 {
                     tag: 'combo',
                     hasTarget: true,
                     preInput: 'onAttack',
-                    stamina: v => v > 16,
+                    stamina: 16,
                 }
             },
             combo2Sweap: {
@@ -5424,7 +5451,7 @@ class OotachiMoves extends DefaultMoves$3 {
                     tag: 'combo',
                     hasTarget: true,
                     preInput: 'onUseItem',
-                    stamina: v => v > 28,
+                    stamina: 28,
                 }
             },
             blocked: {
@@ -5515,7 +5542,7 @@ class OotachiMoves extends DefaultMoves$3 {
                     tag: 'combo',
                     hasTarget: true,
                     preInput: 'onAttack',
-                    stamina: v => v > 16,
+                    stamina: 16,
                 }
             },
             combo2Sweap: {
@@ -5523,7 +5550,7 @@ class OotachiMoves extends DefaultMoves$3 {
                     tag: 'combo',
                     hasTarget: true,
                     preInput: 'onUseItem',
-                    stamina: v => v > 28,
+                    stamina: 28,
                 }
             },
             hlitStrike: {
@@ -5596,7 +5623,7 @@ class OotachiMoves extends DefaultMoves$3 {
                     tag: 'combo',
                     preInput: 'onAttack',
                     hasTarget: true,
-                    stamina: v => v > 12,
+                    stamina: 12,
                 }
             },
             combo3Sweap: {
@@ -5604,7 +5631,7 @@ class OotachiMoves extends DefaultMoves$3 {
                     tag: 'combo',
                     preInput: 'onUseItem',
                     hasTarget: true,
-                    stamina: v => v > 38,
+                    stamina: 33,
                 }
             },
             blocked: {
@@ -5682,7 +5709,7 @@ class OotachiMoves extends DefaultMoves$3 {
                     tag: 'combo',
                     preInput: 'onAttack',
                     hasTarget: true,
-                    stamina: v => v > 12,
+                    stamina: 12,
                 }
             },
             combo3Sweap: {
@@ -5690,7 +5717,7 @@ class OotachiMoves extends DefaultMoves$3 {
                     tag: 'combo',
                     preInput: 'onUseItem',
                     hasTarget: true,
-                    stamina: v => v > 38,
+                    stamina: 33,
                 }
             },
         }
@@ -5758,7 +5785,7 @@ class OotachiMoves extends DefaultMoves$3 {
         cast: 16,
         backswing: 19,
         onEnter(pl, ctx) {
-            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 38;
+            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 33;
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
             ctx.adsorbOrSetVelocity(pl, 1, 90);
@@ -5845,9 +5872,7 @@ class OotachiMoves extends DefaultMoves$3 {
                 onEndOfLife: null
             },
             hurt: {
-                onHurt: {
-                    allowedState: 'both'
-                }
+                onHurt: null
             }
         }
     }
@@ -5857,7 +5882,7 @@ class OotachiMoves extends DefaultMoves$3 {
         backswing: 5,
         onEnter(_, ctx) {
             const manager = ctx.status.componentManager;
-            manager.getComponent(Stamina$1).unwrap().resetRestore(manager);
+            manager.getComponent(Stamina$1).unwrap().setCooldown(10);
             ctx.status.isBlocking = true;
         },
         onAct(_, ctx) {
@@ -5902,6 +5927,9 @@ class OotachiMoves extends DefaultMoves$3 {
         transitions: {
             hlitStrike: {
                 onEndOfLife: null
+            },
+            hurt: {
+                onHurt: null
             }
         }
     }
@@ -5928,7 +5956,7 @@ class OotachiMoves extends DefaultMoves$3 {
                     knockback: 3,
                     parryable: false,
                     permeable: true,
-                    stiffness: 800,
+                    stiffness: 900,
                     shock: true,
                     powerful: true,
                     direction: 'middle',
@@ -5954,12 +5982,14 @@ class OotachiMoves extends DefaultMoves$3 {
                 onTrap: {
                     preInput: 'onAttack',
                     hasTarget: true,
+                    stamina: 12,
                 }
             },
             combo3Sweap: {
                 onTrap: {
                     preInput: 'onUseItem',
                     hasTarget: true,
+                    stamina: 33,
                 }
             },
         }
@@ -7743,10 +7773,12 @@ let StatusHud$1 = StatusHud_1 = class StatusHud extends HudComponent {
         const contents = [];
         const shortName = name.length > 14 ? name.substring(0, 14) + '…' : name;
         contents.push(shortName);
-        contents.push(`§${health / maxHealth < 0.3 ? '4' : 'a'}❤ ${String(isPlayer ? health * 5 : health).padStart(3, ' ')}/${isPlayer ? maxHealth * 5 : maxHealth}§r`);
+        contents.push(`§${health / maxHealth < 0.3 ? '4' : 'a'}❤ ${isPlayer
+            ? this.intProgress(health * 5, maxHealth * 5)
+            : this.intProgress(health, maxHealth)}§r`);
         if (!this.targetStamina.isEmpty()) {
             const { stamina, maxStamina } = this.targetStamina.unwrap();
-            contents.push(`§${stamina / maxStamina < 0.3 ? '6' : 'f'}⚡⚡ ${String(stamina).padStart(3, ' ')}/${maxStamina}§r`);
+            contents.push(`§${stamina / maxStamina < 0.3 ? '6' : 'f'}⚡⚡ ${this.intProgress(stamina, maxStamina)}§r`);
         }
         else {
             contents.push('');
@@ -7758,6 +7790,10 @@ let StatusHud$1 = StatusHud_1 = class StatusHud extends HudComponent {
             contents.push(`§${stamina / maxStamina < 0.3 ? '3' : '9'}${progressbar}§r`);
         }
         this.content = contents.join('\n');
+    }
+    intProgress(val, total) {
+        return String(Math.round(val)).padStart(3, ' ') + '/'
+            + String(Math.round(total)).padEnd(3, ' ');
     }
     onTick(_, pl) {
         this.renderStatus();
@@ -7799,7 +7835,7 @@ function lockTarget(src, target) {
     if (target) {
         // cameraInput(pl, false)
         locks.set(src, target);
-        pl.setMovementSpeed(0.04);
+        pl.setMovementSpeed(0.06);
         Status$1.get(src).componentManager.attachComponent(
             new TargetLock(src, Optional.some(target)),
             new StatusHud(),
@@ -7987,7 +8023,7 @@ function movement$1(pl, enabled=true) {
     }
 
     pl.setMovementSpeed(
-        hasLock$1(pl) ? 0.04 : 0.1
+        hasLock$1(pl) ? 0.06 : 0.1
     );
 }
 
@@ -8371,8 +8407,6 @@ var antiTreeshaking$2 = /*#__PURE__*/Object.freeze({
 
 var require$$18 = /*@__PURE__*/getAugmentedNamespace(antiTreeshaking$2);
 
-/// <reference path="../types.d.ts"/>
-
 const { EventEmitter } = requireEvents();
 const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = kinematics$1;
 const { combat: { damage: _damage } } = func;
@@ -8531,7 +8565,7 @@ function _ctx(pl, mixins={}) {
 
 function watchMainhandChange(pl) {
     const status = Status.get(pl.xuid);
-    const hand = pl.getHand()?.type || 'minecraft:air';
+    const hand = pl.getHand()?.type ?? 'minecraft:air';
     
     status.hand = hand;
     return status
@@ -8575,6 +8609,7 @@ const defaultPacker = (pl, bind, status) => {
 
 const dataPackers = {
     onSneak(args) {
+        // console.log(args[1])
         return {
             isSneaking: args[1]
         }
@@ -8617,6 +8652,15 @@ function checkCondition(cond, data) {
 
         if (typeof v === 'function') {
             if (!v(data[k])) {
+                return false
+            }
+
+            continue
+        }
+
+        if (k === 'stamina') {
+            const val = data[k];
+            if (val < v) {
                 return false
             }
 
@@ -8673,7 +8717,6 @@ function transition(pl, bind, status, eventName, prevent, args) {
     }
 
     const currentMove = bind.moves[status.status];
-
     if (!currentMove) {
         return
     }
@@ -8681,10 +8724,8 @@ function transition(pl, bind, status, eventName, prevent, args) {
     const transitions = currentMove.transitions;
 
     let next,
-        /**@type {DefaultTransitionOption}*/cond;
-
-    /**@type {[string, DefaultTransitionOption][]}*/
-    let candidates = [];
+        cond,
+        candidates = [];
 
     for (const [_next, _cond] of Object.entries(transitions)) {
         if (Object.keys(_cond).includes(eventName)) {
@@ -8734,7 +8775,9 @@ function transition(pl, bind, status, eventName, prevent, args) {
             previousMoveState: -1
         }));
         
-        return em.once('onTick', () => transition(pl, bind, status, 'onEndOfLife', prevent, args))
+        // return em.once('onTick', () => transition(pl, bind, status, 'onEndOfLife', prevent, args))
+        transition(pl, bind, status, 'onEndOfLife', prevent, args);
+        return
     }
 
     // const track = timeTracks.get(pl.xuid) ?? []
@@ -9515,8 +9558,6 @@ antiTreeshaking();
 var core = {
     emitter: em, listenAllMcEvents: listenAllMcEvents$1, 
 };
-
-/// <reference path="./types.d.ts"/>
 
 const collection = collection$1;
 const console$1 = mainExports;

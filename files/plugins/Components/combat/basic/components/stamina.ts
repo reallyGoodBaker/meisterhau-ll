@@ -23,7 +23,7 @@ export class Stamina extends CustomComponent {
         public $stamina = 100,
         public maxStamina = 100,
         public restorePerTick = 1.6,
-        public restoreCooldown = 30,
+        public restoreCooldown = 20,
     ) {
         super()
         this.prevStamina = this.stamina
@@ -35,6 +35,14 @@ export class Stamina extends CustomComponent {
         const cooldown = this.cooldown.unwrap()
         cooldown.rest = this.restoreCooldown
         this.prevStamina = this.stamina
+    }
+
+    setCooldown(cooldown: number) {
+        if (this.cooldown.isEmpty()) {
+            return
+        }
+
+        this.cooldown.unwrap().rest = cooldown
     }
 
     onTick(manager: ComponentManager): void {

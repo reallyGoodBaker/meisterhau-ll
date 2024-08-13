@@ -1,5 +1,3 @@
-/// <reference path="../types.d.ts"/>
-
 const { EventEmitter } = require('../../../events')
 const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = require('../../../scripts-rpc/func/kinematics')
 const { combat: { damage: _damage } } = require('../../../scripts-rpc/func/index')
@@ -159,7 +157,7 @@ function _ctx(pl, mixins={}) {
 
 function watchMainhandChange(pl) {
     const status = Status.get(pl.xuid)
-    const hand = pl.getHand()?.type || 'minecraft:air'
+    const hand = pl.getHand()?.type ?? 'minecraft:air'
     
     status.hand = hand
     return status
@@ -203,6 +201,7 @@ const defaultPacker = (pl, bind, status) => {
 
 const dataPackers = {
     onSneak(args) {
+        // console.log(args[1])
         return {
             isSneaking: args[1]
         }
@@ -245,6 +244,15 @@ function checkCondition(cond, data) {
 
         if (typeof v === 'function') {
             if (!v(data[k])) {
+                return false
+            }
+
+            continue
+        }
+
+        if (k === 'stamina') {
+            const val = data[k]
+            if (val < v) {
                 return false
             }
 
@@ -301,7 +309,6 @@ function transition(pl, bind, status, eventName, prevent, args) {
     }
 
     const currentMove = bind.moves[status.status]
-
     if (!currentMove) {
         return
     }
@@ -309,10 +316,8 @@ function transition(pl, bind, status, eventName, prevent, args) {
     const transitions = currentMove.transitions
 
     let next,
-        /**@type {DefaultTransitionOption}*/cond
-
-    /**@type {[string, DefaultTransitionOption][]}*/
-    let candidates = []
+        cond,
+        candidates = []
 
     for (const [_next, _cond] of Object.entries(transitions)) {
         if (Object.keys(_cond).includes(eventName)) {
@@ -362,7 +367,9 @@ function transition(pl, bind, status, eventName, prevent, args) {
             previousMoveState: -1
         }))
         
-        return em.once('onTick', () => transition(pl, bind, status, 'onEndOfLife', prevent, args))
+        // return em.once('onTick', () => transition(pl, bind, status, 'onEndOfLife', prevent, args))
+        transition(pl, bind, status, 'onEndOfLife', prevent, args)
+        return
     }
 
     // const track = timeTracks.get(pl.xuid) ?? []

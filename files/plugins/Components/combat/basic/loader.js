@@ -1,5 +1,3 @@
-/// <reference path="./types.d.ts"/>
-
 const collection = require('../collection')
 const console = require('../../console/main')
 const { checkCompleteness } = require('./completeness')

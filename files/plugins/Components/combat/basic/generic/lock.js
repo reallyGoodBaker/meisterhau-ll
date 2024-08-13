@@ -23,7 +23,7 @@ function lockTarget(src, target) {
     if (target) {
         // cameraInput(pl, false)
         locks.set(src, target)
-        pl.setMovementSpeed(0.04)
+        pl.setMovementSpeed(0.06)
         Status.get(src).componentManager.attachComponent(
             new TargetLock(src, Optional.some(target)),
             new StatusHud(),

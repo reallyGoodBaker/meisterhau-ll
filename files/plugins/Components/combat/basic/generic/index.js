@@ -6,7 +6,7 @@ function movement(pl, enabled=true) {
     }
 
     pl.setMovementSpeed(
-        hasLock(pl) ? 0.04 : 0.1
+        hasLock(pl) ? 0.06 : 0.1
     )
 }
 

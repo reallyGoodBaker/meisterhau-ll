@@ -61,14 +61,14 @@ export class StatusHud extends HudComponent {
 
         contents.push(shortName)
         contents.push(`§${ health / maxHealth < 0.3 ? '4' : 'a' }❤ ${
-            String(isPlayer ? health * 5 : health).padStart(3, ' ')
-        }/${
-            isPlayer ? maxHealth * 5 : maxHealth
+            isPlayer
+                ? this.intProgress(health * 5, maxHealth * 5)
+                : this.intProgress(health, maxHealth)
         }§r`)
 
         if (!this.targetStamina.isEmpty()) {
             const { stamina, maxStamina } = this.targetStamina.unwrap()
-            contents.push(`§${ stamina / maxStamina < 0.3 ? '6' : 'f' }⚡⚡ ${String(stamina).padStart(3, ' ')}/${maxStamina}§r`)
+            contents.push(`§${ stamina / maxStamina < 0.3 ? '6' : 'f' }⚡⚡ ${this.intProgress(stamina, maxStamina)}§r`)
         } else {
             contents.push('')
         }
@@ -81,6 +81,11 @@ export class StatusHud extends HudComponent {
         }
 
         this.content = contents.join('\n')
+    }
+
+    private intProgress(val: number, total: number) {
+        return String(Math.round(val)).padStart(3, ' ') + '/'
+            + String(Math.round(total)).padEnd(3, ' ')
     }
 
     onTick(_: ComponentManager, pl: Optional<Player>): void {

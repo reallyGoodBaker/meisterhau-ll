@@ -44,19 +44,22 @@ export class ComponentManager {
         return ctor.map(c => this.#components.get(c))
     }
 
-    async #attachComponent<T>(ctor: ComponentCtor, component: Component | BasicComponent): Promise<Optional<T>> {
-        if (this.#components.get(ctor)) {
+    async #attachComponent<T>(ctor: ComponentCtor, component: Component | BasicComponent, shouldRebuild=true): Promise<Optional<T>> {
+        let init = !this.#components.get(ctor)
+
+        if (!init && shouldRebuild) {
             await this.detachComponent(ctor) 
+            init = true
         }
 
         if (REQUIRED_COMPONENTS in component) {
             //@ts-ignore
             for (const [ ctor, comp ] of component[REQUIRED_COMPONENTS]) {
-                this.#attachComponent(ctor, comp)
+                this.#attachComponent(ctor, comp, false)
             }
         }
 
-        if ('onAttach' in component) {
+        if (init && 'onAttach' in component) {
             await component.onAttach(this)   
         }
 

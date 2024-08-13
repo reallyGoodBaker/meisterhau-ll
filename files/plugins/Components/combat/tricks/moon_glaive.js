@@ -118,7 +118,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
-            ctx.setSpeed(pl, 0.04)
+            ctx.setSpeed(pl, 0.06)
         },
         timeline: {
             4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
@@ -322,7 +322,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
-            ctx.setSpeed(pl, 0.04)
+            ctx.setSpeed(pl, 0.06)
         },
         timeline: {
             4: (pl, ctx) => ctx.status.isDodging = false,

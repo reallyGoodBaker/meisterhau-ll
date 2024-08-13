@@ -1,5 +1,3 @@
-/// <reference path="../basic/types.d.ts"/>
-
 const { playAnim, playSoundAll } = require('../basic')
 const console = require('../../console/main')
 const { randomRange } = require('../../utils/math')
@@ -56,6 +54,7 @@ class OotachiMoves extends DefaultMoves {
         }
 
         this.animations.parry.left = 'animation.weapon.ootachi.parry.left'
+        this.animations.parry.right = 'animation.weapon.ootachi.parry.right'
         this.animations.block.left = 'animation.weapon.ootachi.block.left'
         this.animations.block.right = 'animation.weapon.ootachi.block.right'
     }
@@ -90,7 +89,9 @@ class OotachiMoves extends DefaultMoves {
                 }
             },
             combo1Attack: {
-                onAttack: null
+                onAttack: {
+                    stamina: 16,
+                }
             },
             knockdown: {
                 onKnockdown: { allowedState: 'both' }
@@ -122,20 +123,17 @@ class OotachiMoves extends DefaultMoves {
             combo1Attack: {
                 onAttack: {
                     allowedState: 'both',
-                    stamina: v => v > 16,
+                    stamina: 16,
                 }
             },
             combo1Chop: {
                 onUseItem: {
                     allowedState: 'both',
-                    stamina: v => v > 22,
+                    stamina: 22,
                 }
             },
             dodgePrepare: {
-                onSneak: {
-                    allowedState: 'both',
-                    isSneaking: true
-                }
+                onSneak: null
             },
             hurt: {
                 onHurt: {
@@ -151,10 +149,32 @@ class OotachiMoves extends DefaultMoves {
     resumeKamae = {
         transitions: {
             idle: {
-                onEndOfLife: { hasTarget: false }
+                onEndOfLife: {
+                    hasTarget: false
+                }
+            },
+            dodgePrepare: {
+                onEndOfLife: {
+                    hasTarget: true,
+                    preInput: 'onSneak'
+                }
+            },
+            combo1Attack: {
+                onEndOfLife: {
+                    hasTarget: true,
+                    preInput: 'onAttack'
+                }
+            },
+            combo1Chop: {
+                onEndOfLife: {
+                    hasTarget: true,
+                    preInput: 'onUseItem'
+                }
             },
             innoKamae: {
-                onEndOfLife: { hasTarget: true }
+                onEndOfLife: {
+                    hasTarget: true
+                }
             },
         }
     }
@@ -250,7 +270,7 @@ class OotachiMoves extends DefaultMoves {
                     tag: 'combo',
                     hasTarget: true,
                     preInput: 'onAttack',
-                    stamina: v => v > 16,
+                    stamina: 16,
                 }
             },
             combo2Sweap: {
@@ -258,7 +278,7 @@ class OotachiMoves extends DefaultMoves {
                     tag: 'combo',
                     hasTarget: true,
                     preInput: 'onUseItem',
-                    stamina: v => v > 28,
+                    stamina: 28,
                 }
             },
             blocked: {
@@ -349,7 +369,7 @@ class OotachiMoves extends DefaultMoves {
                     tag: 'combo',
                     hasTarget: true,
                     preInput: 'onAttack',
-                    stamina: v => v > 16,
+                    stamina: 16,
                 }
             },
             combo2Sweap: {
@@ -357,7 +377,7 @@ class OotachiMoves extends DefaultMoves {
                     tag: 'combo',
                     hasTarget: true,
                     preInput: 'onUseItem',
-                    stamina: v => v > 28,
+                    stamina: 28,
                 }
             },
             hlitStrike: {
@@ -430,7 +450,7 @@ class OotachiMoves extends DefaultMoves {
                     tag: 'combo',
                     preInput: 'onAttack',
                     hasTarget: true,
-                    stamina: v => v > 12,
+                    stamina: 12,
                 }
             },
             combo3Sweap: {
@@ -438,7 +458,7 @@ class OotachiMoves extends DefaultMoves {
                     tag: 'combo',
                     preInput: 'onUseItem',
                     hasTarget: true,
-                    stamina: v => v > 38,
+                    stamina: 33,
                 }
             },
             blocked: {
@@ -516,7 +536,7 @@ class OotachiMoves extends DefaultMoves {
                     tag: 'combo',
                     preInput: 'onAttack',
                     hasTarget: true,
-                    stamina: v => v > 12,
+                    stamina: 12,
                 }
             },
             combo3Sweap: {
@@ -524,7 +544,7 @@ class OotachiMoves extends DefaultMoves {
                     tag: 'combo',
                     preInput: 'onUseItem',
                     hasTarget: true,
-                    stamina: v => v > 38,
+                    stamina: 33,
                 }
             },
         }
@@ -592,7 +612,7 @@ class OotachiMoves extends DefaultMoves {
         cast: 16,
         backswing: 19,
         onEnter(pl, ctx) {
-            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 38
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 33
             ctx.lookAtTarget(pl)
             ctx.freeze(pl)
             ctx.adsorbOrSetVelocity(pl, 1, 90)
@@ -679,9 +699,7 @@ class OotachiMoves extends DefaultMoves {
                 onEndOfLife: null
             },
             hurt: {
-                onHurt: {
-                    allowedState: 'both'
-                }
+                onHurt: null
             }
         }
     }
@@ -691,7 +709,7 @@ class OotachiMoves extends DefaultMoves {
         backswing: 5,
         onEnter(_, ctx) {
             const manager = ctx.status.componentManager
-            manager.getComponent(Stamina).unwrap().resetRestore(manager)
+            manager.getComponent(Stamina).unwrap().setCooldown(10)
             ctx.status.isBlocking = true
         },
         onAct(_, ctx) {
@@ -736,6 +754,9 @@ class OotachiMoves extends DefaultMoves {
         transitions: {
             hlitStrike: {
                 onEndOfLife: null
+            },
+            hurt: {
+                onHurt: null
             }
         }
     }
@@ -762,7 +783,7 @@ class OotachiMoves extends DefaultMoves {
                     knockback: 3,
                     parryable: false,
                     permeable: true,
-                    stiffness: 800,
+                    stiffness: 900,
                     shock: true,
                     powerful: true,
                     direction: 'middle',
@@ -788,12 +809,14 @@ class OotachiMoves extends DefaultMoves {
                 onTrap: {
                     preInput: 'onAttack',
                     hasTarget: true,
+                    stamina: 12,
                 }
             },
             combo3Sweap: {
                 onTrap: {
                     preInput: 'onUseItem',
                     hasTarget: true,
+                    stamina: 33,
                 }
             },
         }

@@ -1,7 +1,6 @@
 import { BaseComponent, Component, ComponentManager } from '../core/component'
 import { Fields, PublicComponent } from '../core/config'
 import { Status } from '../core/status'
-import { DamageOption } from '../types'
 import { alerpn, lerpn } from '@utils/math'
 import { CameraComponent } from './camera'
 import { Tick } from './tick'
@@ -144,7 +143,7 @@ export class CameraFading extends BaseComponent {
             },
             {
                 to: CameraComponent.defaultStatus,
-                duration: 2
+                duration: 1
             }
         ], true))
     }
