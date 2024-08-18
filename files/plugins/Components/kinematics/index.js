@@ -1,5 +1,4 @@
 const { cmd } = require('../utils/command')
-const console = require('../console/main')
 const {
     setup: setupMobs, getScoreUid, add, rm
 } = require('./mobs')

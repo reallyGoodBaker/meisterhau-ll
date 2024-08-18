@@ -24,6 +24,7 @@
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-typescript": "^11.1.6",
+    "@types/node": "^22.4.0",
     "levilamina": "^2.14.1",
     "rollup-plugin-typescript-paths": "^1.5.0",
     "rollup-plugin-typescript2": "^0.36.0",

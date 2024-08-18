@@ -1,5 +1,4 @@
 const { knockback } = require('../../../scripts-rpc/func/kinematics')
-const console = require('../../../console/main')
 
 
 const setVelocity = (pl, rotation, h, v) => {

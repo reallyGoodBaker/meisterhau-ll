@@ -1,5 +1,3 @@
-const console = require('../console/main')
-
 function buildContextOpener(builder, contextSender, onCancelHandlerArgIndex) {
     return (...args) => {
         const onCancelHandler = args[onCancelHandlerArgIndex] || (() => { })

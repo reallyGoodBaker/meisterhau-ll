@@ -1,11 +1,9 @@
-/// <reference path="../basic/types.d.ts"/>
-
-const { playAnim } = require('../basic')
+const { playAnim, playSoundAll } = require("../basic/index")
 
 /**
  * @type {TrickModule}
  */
-module.exports = {
+exports.tricks = {
     sid: 'rgb39.weapon.katana',
     bind: 'weapon:katana',
     entry: 'default',

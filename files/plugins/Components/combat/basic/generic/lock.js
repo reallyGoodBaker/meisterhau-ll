@@ -1,5 +1,4 @@
 const { remote } = require('../../../scripts-rpc/setup')
-const console = require('../../../console/main')
 const { selectFromRange } = require('./range')
 const { battleCamera, cameraInput, clearCamera } = require('./camera')
 const { knockback, faceTo } = require('../../../scripts-rpc/func/kinematics')

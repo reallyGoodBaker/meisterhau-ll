@@ -1,7 +1,5 @@
 'use strict';
 
-var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
 function getAugmentedNamespace(n) {
   if (n.__esModule) return n;
   var f = n.default;
@@ -29,8 +27,6 @@ function getAugmentedNamespace(n) {
 
 var yuumo = {};
 
-var loadModule = {};
-
 var loaderConfig = {
     ignore: [
         '.ignore',
@@ -47,7 +43,7 @@ var loaderConfig = {
 
 const { loadEntries } = loaderConfig;
 
-loadModule.load = m => {
+function load$1(m) {
     if (typeof m === 'function') {
         return m()
     }
@@ -57,6 +53,10 @@ loadModule.load = m => {
             return m[k]()
         }
     }
+}
+
+var loadModule = {
+    load: load$1
 };
 
 const stringParamTypeMap = {
@@ -223,7 +223,259 @@ var command = /*#__PURE__*/Object.freeze({
 
 var require$$0 = /*@__PURE__*/getAugmentedNamespace(command);
 
-var main = {exports: {}};
+function buildContextOpener(builder, contextSender, onCancelHandlerArgIndex) {
+    return (...args) => {
+        const onCancelHandler = args[onCancelHandlerArgIndex] || (() => { });
+        args[onCancelHandlerArgIndex] = (...args) => {
+            const val = onCancelHandler.apply(null, args);
+            contextSender(args[0]);
+            return val
+        };
+
+        return builder.apply(null, args)
+    }
+}
+
+function openAlert(sender) {
+    return buildContextOpener(alert$6, sender, 5)
+}
+
+function openAction(sender) {
+    return buildContextOpener(action$6, sender, 3)
+}
+
+function openWidget(sender) {
+    return buildContextOpener(widget$6, sender, 2)
+}
+
+function uiReturnValBuilder(sender) {
+    return {
+        send: sender,
+        open: buildContextOpener,
+        openAlert: openAlert(sender),
+        openAction: openAction(sender),
+        openWidget: openWidget(sender),
+    }
+}
+
+function alert$6(title, content, button1, buton2, onEnsure = Function.prototype, onReject = Function.prototype, onCancel = Function.prototype) {
+    let ret = null;
+    const sender = pl => {
+        let isUserAction = false;
+        setTimeout(() => {
+            isUserAction = true;
+        }, 300);
+        pl.sendModalForm(title, content, button1, buton2, (_, confirmed) => {
+            if (!isUserAction) {
+                return onCancel.call(ret, pl)
+            }
+            
+            if (confirmed) {
+                return onEnsure.call(ret, pl), undefined
+            }
+    
+            return onReject.call(ret, pl), undefined
+        });
+    };
+    return ret = uiReturnValBuilder(sender)
+}
+
+/**
+ * @param {string} title 
+ * @param {string} content 
+ * @param {Array<{text: string; icon: string; onClick: (err: any, pl: any)=>void}>} buttonGroup 
+ * @param {Function} onerror 
+ * @returns 
+ */
+function action$6(title, content, buttonGroup = [], onerror = Function.prototype) {
+    const buttons = [],
+        images = [],
+        handlers = [];
+
+    buttonGroup.forEach(conf => {
+        const { text, icon, onClick } = conf;
+        buttons.push(text);
+        images.push(icon || '');
+        handlers.push(onClick);
+    });
+
+    let ret = null;
+    const sender = pl => {
+        pl.sendSimpleForm(
+            title, content,
+            buttons, images,
+            (pl, i) => {
+                if (i === null) {
+                    return onerror.call(ret, -1, pl)
+                }
+
+                try {
+                    handlers[i].call(ret, 0, pl);
+                } catch (err) {
+                    try {
+                        onerror.call(ret, err, pl);
+                    } catch (er) {
+                        throw er
+                    }
+                }
+            }
+        );
+    };
+
+    return ret = uiReturnValBuilder(sender)
+}
+
+function widget$6(title, elements = [], onerror = Function.prototype) {
+    const fm = mc.newCustomForm();
+    const handlers = [];
+
+    elements.forEach(el => {
+        const { type, args, handler } = el;
+
+        handlers.push(handler);
+        fm[`add${type}`](...args);
+    });
+
+    fm.setTitle(title);
+
+    let ret = null;
+    const sender = pl => {
+        pl.sendForm(fm, (_, data) => {
+            if (data === null) {
+                return onerror.call(ret, pl, -1)
+            }
+
+            if (!data) {
+                try {
+                    return onerror.call(ret, pl)
+                } catch (err) {
+                    throw err
+                }
+            }
+    
+            data.forEach((val, i) => {
+                try {
+                    handlers[i].call(ret, pl, val);
+                } catch (err) {
+                    try {
+                        onerror.call(ret, pl, err);
+                    } catch (err) {
+                        throw err
+                    }
+                }
+            });
+        });
+    };
+
+    return ret = uiReturnValBuilder(sender)
+}
+
+/**
+ * @param {string} type 
+ * @param {Function} [handler] 
+ * @returns 
+ */
+function basicBuilder(type, resolver = (pl, val, args) => [pl, val], useHandler = true) {
+    return (...args) => {
+        let handler = useHandler
+            ? null
+            : Function.prototype;
+
+        if (typeof args[args.length-1] === 'function') {
+            const _handler = args.pop();
+            handler = (pl, val) => {
+                const _args = resolver.call(null, pl, val, args);
+                _handler.apply(null, _args);
+            };
+        }
+
+        return {
+            type, args, handler
+        }
+    }
+}
+
+var ui = {
+    alert: alert$6, action: action$6, widget: widget$6,
+
+    /**@type {(text: string) => any} */
+    Label: basicBuilder('Label', undefined, false),
+
+    /**@type {(title: string, placeholder?: string, defaultVal?: string, handler?: (pl: any, value: string) => void) => any} */
+    Input: basicBuilder('Input'),
+
+    /**@type {(title: string, defaultVal?: boolean, handler?: (pl: any, value: boolean) => void) => any} */
+    Switch: basicBuilder('Switch'),
+
+    /**@type {(title: string, items: string[], defaultVal?: number, handler?: (pl: any, value: number) => void) => any} */
+    Dropdown: basicBuilder('Dropdown'),
+
+    /**@type {(title: string, min: number, max: number, step?: number, defaultVal?: number, handler?: (pl: any, value: number) => void) => any} */
+    Slider: basicBuilder('Slider'),
+
+    /**@type {(title: string, items: string[], defaultVal?: number, handler?: (pl: any, value: string) => void) => any} */
+    StepSlider: basicBuilder('StepSlider'),
+};
+
+const { cmd: cmd$6 } = require$$0;
+const { alert: alert$5 } = ui;
+
+function distStr(entity, dest, showDiff=true) {
+    const pos = entity.blockPos;
+    const distance = ~~entity.distanceTo(dest);
+
+    const diff = `    |${dest.x - pos.x}, ${dest.y - pos.y}, ${dest.z - pos.z}|`;
+
+    return distance + (showDiff ? diff : '')
+}
+
+function setup$8() {
+    cmd$6('whoami', '我是谁？', 0)
+    .setup(registry => {
+        registry
+        .register('name', (cmd, ori, out) => {
+            out.success(ori.entity.name);
+        })
+        .register('type', (_, ori, out) => {
+            out.success(ori.entity.type);
+        })
+        .register('id <mob:entity>', (_, ori, out, args) => {
+            const source = ori.player ?? ori.entity;
+            const targets = args.mob;
+
+            targets.forEach(t => {
+                source.tell(t.uniqueId);
+            });
+        })
+        .register('dist <position:pos>', (_, ori, out, args) => {
+            const dest = args.position;
+            out.success(distStr(ori.entity, dest));
+        })
+        .register('dist <mob:entity>', (_, ori, out, args) => {
+            const source = ori.player ?? ori.entity;
+            const targets = args.mob;
+            
+            for (const target of targets) {
+                const dest = target.blockPos;
+                if (!target.isPlayer()) {
+                    out.success(distStr(source, dest));
+                    continue
+                }
+
+                alert$5('', `${source.name} 想要知道你的位置，是否提供？`, '提供', '拒绝', () => {
+                    source.tell(distStr(source, dest));
+                }, () => {
+                    source.tell(distStr(source, dest, false));
+                }).send(target.toPlayer());
+            }
+        })
+        .submit();
+    });
+}
+
+var whoami = {
+    setup: setup$8
+};
 
 var events = {};
 
@@ -433,7 +685,7 @@ class IndexedLinked {
         };
     };
 }
-let EventEmitter$3 = class EventEmitter {
+let EventEmitter$2 = class EventEmitter {
     /**@private*/ maxListeners = -1;
     /**@private*/ _events = {};
     /**@private*/ captureRejections = false;
@@ -633,7 +885,7 @@ let EventEmitter$3 = class EventEmitter {
         }
     }
 };
-events.EventEmitter = EventEmitter$3;
+events.EventEmitter = EventEmitter$2;
 class AbstractHook {
     /**@protected*/
     list = new IndexedLinked(() => this);
@@ -713,1341 +965,7 @@ class AsyncShortCircuitHook extends AbstractHook {
 }
 events.AsyncShortCircuitHook = AsyncShortCircuitHook;
 
-let formatting = 'minecraft';
-
-/**
- * @param {'minecraft'|'ansiEscapeSeq'} type 
- */
-function setFormatting(type) {
-    formatting = type;
-}
-
-const Formatting = {
-    black: "§0",
-    dark_blue: "§1",
-    dark_green: "§2",
-    dark_aqua: "§3",
-    dark_red: "§4",
-    dark_purple: "§5",
-    gold: "§6",
-    gray: "§7",
-    dark_gray: "§8",
-    blue: "§9",
-    green: "§a",
-    aqua: "§b",
-    red: "§c",
-    light_purple: "§d",
-    yellow: "§e",
-    white: "§f",
-    minecoin_gold: "§g",
-    obfuscated: "§k",
-    bold: "§l",
-    italic: "§o",
-    reset: "§r",
-    normal: ''
-};
-
-const FormattingANSLEscapeSequences = {
-    black: "\x1b[30m",
-    dark_blue: "\x1b[34m",
-    dark_green: "\x1b[32m",
-    dark_aqua: "\x1b[36m",
-    dark_red: "\x1b[31m",
-    dark_purple: "\x1b[35m",
-    dark_gray: "\x1b[90m",
-    gold: "\x1b[93m",
-    gray: "\x1b[37m",
-    blue: "\x1b[94m",
-    green: "\x1b[92m",
-    aqua: "\x1b[96m",
-    red: "\x1b[91m",
-    light_purple: "\x1b[95m",
-    yellow: "\x1b[33m",
-    white: "\x1b[97m",
-    minecoin_gold: "\x1b[93m",
-    obfuscated: "\x1b[7m",
-    bold: "\x1b[1m",
-    italic: "\x1b[3m",
-    reset: "\x1b[0m",
-    normal: ''
-};
-
-function style(key) {
-    if (formatting === 'minecraft') {
-        console.trace();
-    }
-    return formatting === 'minecraft'? Formatting[key]
-        : FormattingANSLEscapeSequences[key]
-}
-
-function proxify(obj) {
-    return new Proxy(obj, {
-        get(t, p) {
-            return style(t[p])
-        },
-        set() {
-            return false
-        }
-    })
-}
-
-const basic = proxify({
-    undefined: 'dark_blue',
-    boolean: 'dark_blue',
-    function: 'yellow',
-    number: 'aqua',
-    string: 'light_purple',
-    symbol: 'minecoin_gold'
-});
-
-const objectProp = proxify({
-    setterGetter: 'dark_green',
-    innenumerable: 'green',
-    preview: 'gray',
-    normal: 'blue',
-    prototype: 'dark_gray',
-    symbol: 'minecoin_gold'
-});
-
-const {EventEmitter: EventEmitter$2} = events;
-
-let commandRegistry = {};
-
-/**
- * @param {string} command 
- * @param {(em: EventEmitter)=>void} handler 
- * @param {any} [opt]
- */
-function register$1(command, handler, opt = {}) {
-    let em = new EventEmitter$2({ captureRejections: true });
-    commandRegistry[command] = [em, opt];
-    handler(em);
-}
-
-function unregister(command) {
-    commandRegistry[command][0].emit('unregister');
-    delete commandRegistry[command];
-}
-
-function exec(commandStr, onerror = () => null) {
-    return new Promise(resolve => {
-        let [commandResolver, ...args] = splitRegular(commandStr);
-        const [em, opt] = commandRegistry[commandResolver];
-        let shouldStopFlowing = false;
-
-        em.on('error', onerror);
-        em.once('error', () => {
-            shouldStopFlowing = true;
-            resolve(false);
-        });
-
-        em.emit('exec', ...args);
-        if (shouldStopFlowing) return;
-
-        let argCur;
-        let unspecializedArgs = [];
-
-        for (let i = 0; i < args.length;) {
-            argCur = args[i];
-            if (argCur.startsWith('-')) {
-                let resCount = opt[argCur];
-                if (resCount) {
-                    let _args = args.slice(i + 1, i += resCount + 1);
-                    em.emit(argCur, ..._args);
-                } else {
-                    em.emit(argCur);
-                    i++;
-                }
-                if (shouldStopFlowing) return;
-                continue;
-            }
-
-            i++;
-            unspecializedArgs.push(argCur);
-        }
-        em.emit('default', ...unspecializedArgs);
-        if (shouldStopFlowing) return;
-
-        resolve(true);
-        em.off('error', onerror);
-    })
-}
-
-const states = {
-    blank: 0,
-    string: 1
-};
-
-/**
- * @param {string} str 
- */
-function splitRegular(str) {
-    str = str.trim();
-    const len = str.length;
-    let data = '';
-    let res = [];
-    let state = states.blank;
-
-    for (let i = 0; i < len; i++) {
-        const char = str[i];
-
-        if (state === states.string && char === '"') {
-            data += char;
-            res.push(data);
-            data = '';
-            state = states.blank;
-            continue;
-        }
-
-        if (state !== states.string && char === '"') {
-            if (data) {
-                res.push(data);
-                data = '';
-            }
-            state = states.string;
-            data += char;
-            continue;
-        }
-
-        if (state === states.blank && char === ' ') {
-            if (data) {
-                res.push(data);
-                data = '';
-            }
-        } else {
-            if (char !== '"') {
-                data += char;
-            }
-        }
-
-        if (i === len - 1) {
-            res.push(data);
-            data = '';
-        }
-    }
-
-    return res;
-}
-
-class TConsole {
-    static tConsole = null;
-    static __emitter__ = new EventEmitter$2();
-    static console = null;
-
-    static showDetail = true;
-    static tabSize = 2;
-
-    constructor(opt) {
-        this.console = opt.console;
-        this.update = opt.update;
-        this.unregister = unregister;
-        this.register = register$1;
-        this.exec = exec;
-        (function () {
-            TConsole.tConsole = this;
-        })();
-    }
-
-    getConsole() {
-        return this.console;
-    }
-
-    injectConsole() {
-        let Global = typeof window !== 'undefined' ? window :
-            typeof commonjsGlobal !== 'undefined' ? commonjsGlobal :
-                typeof globalThis !== 'undefined' ? globalThis :
-                    typeof self !== 'undefined' ? self : {};
-
-        Global.console = this.console;
-    }
-
-    showDetail(bool = true) {
-        TConsole.showDetail = bool;
-    }
-
-    tabSize(count = 2) {
-        TConsole.tabSize = count;
-    }
-
-    /**
-     * @param {'minecraft'|'ansiEscapeSeq'} type 
-     */
-    setFormatting(type) {
-        setFormatting(type);
-    }
-
-    update() { }
-
-    on(type, handler) {
-        TConsole.__emitter__.on(type, handler);
-        return this;
-    }
-
-    off(type, handler) {
-        TConsole.__emitter__.on(type, handler);
-    }
-
-
-}
-
-const tab = () => new Array(TConsole.tabSize).fill(' ').join('');
-const getTab = (count = 1) => new Array(count).fill(tab()).join('');
-
-class MsgBlock extends Array {
-    static get defaultColor() {
-        return style('white')
-    }
-    static get defaultStyle() {
-        return style('normal')
-    }
-
-    toTellrawString(tabCount = 0) {
-        let [_style, color, ...msgs] = this;
-
-        _style = _style || MsgBlock.defaultStyle;
-        color = color || MsgBlock.defaultColor;
-
-        let msg = msgs.reduce((pre, cur) => {
-            if (typeof cur === 'string') {
-                return pre + cur;
-            }
-
-            if (typeof cur === 'object' && cur instanceof MsgBlock) {
-                return pre + cur.toTellrawString();
-            }
-        }, '');
-
-        let returnVal = getTab(tabCount) + (color + _style + msg + style('reset')).trim();
-
-        return returnVal
-    }
-
-    toString(tabCount = 0) {
-        return this.toTellrawString(tabCount);
-    }
-
-}
-
-function mbf(...iterable) {
-    return MsgBlock.from(iterable);
-}
-
-function safeString(string) {
-    return string.replace(/"/g, '\\"');
-}
-
-function basicTypeMsg(data) {
-    const basicType = typeof data;
-    if (basicType in basic) return basicTypeParser(data, basicType);
-}
-
-function functionMsg(data, color) {
-    let str = safeString(data.toString());
-    let firstBlank = str.indexOf(' ');
-    if (str === '(') return str;
-    return mbf(style('italic'), color, str.slice(0, firstBlank), mbf('', style('normal'), str.slice(firstBlank)));
-}
-
-function getFunctionSignature(func, color) {
-    let str = safeString(func.toString());
-    let signEnd = /\)[\s]*\{/.exec(func).index + 1;
-    let firstBlank = str.indexOf(' ');
-
-    if (str[0] === '(') return `<Anonymous>${str.slice(0, signEnd)}`;
-    return mbf(style('italic'), color, str.slice(0, firstBlank), mbf('', style('normal'), str.slice(firstBlank, signEnd)));
-}
-
-function basicTypeParser(data, type) {
-    let color = basic[type];
-    if (type === 'function') {
-        return functionMsg(data, color);
-    }
-
-    if (type === 'undefined') {
-        return mbf('', color, 'undefined');
-    }
-
-    if (type === 'string') {
-        return mbf('', color, safeString(`'${data.toString()}'`));
-    }
-
-    return mbf('', color, data.toString());
-}
-
-function fakeNativeToString(name, ...args) {
-    function toString() { return `function ${name}(${args.join(', ')}) { [native code] }` }
-    return toString;
-}
-
-class RawTeller {
-    static sender = null;
-    /**
-     * @type {[string, string][]}
-     */
-    msgQueue = [];
-    pending = false;
-
-    static header = '';
-    /**
-     * @type {RawTeller}
-     */
-    static rawTeller;
-
-    constructor(header) {
-        this.header = header || RawTeller.header;
-        RawTeller.rawTeller = this;
-    }
-
-    send(msg) {
-        this.msgQueue.push(msg);
-    }
-
-    pend() {
-        this.pending = true;
-    }
-
-    active() {
-        if (this.pending) return;
-
-        this.msgQueue.forEach(msg => {
-            RawTeller.sender(`${this.header}${msg}`);
-        });
-
-        this.msgQueue = [];
-    }
-
-    setSender(func) {
-        RawTeller.sender = func;
-    }
-
-}
-
-/**
- * @param {any} commander 
- * @returns {Function}
- */
-function getRawTeller(commander) {
-
-    let sender = new RawTeller();
-    sender.setSender(commander);
-
-    function send(msg) {
-        sender.send(msg);
-    }
-
-    send.toString = fakeNativeToString('send', 'msg');
-
-    send.update = () => {
-        sender.active();
-    };
-
-    let senderProxy = new Proxy(send, {
-        get(t, p) {
-            return t[p];
-        },
-
-        set() { return false }
-    });
-
-    return senderProxy;
-}
-
-const UNTRUSTED_HEADER = 'Untrusted >';
-const UNTRUSTED_HEADER_PREFIX = () => mbf(style('italic'), style('red'), UNTRUSTED_HEADER);
-
-function sendUntrusted(msg) {
-    RawTeller.rawTeller.send(UNTRUSTED_HEADER_PREFIX() + getTab() + msg);
-}
-
-function send(msg) {
-    RawTeller.rawTeller.send(msg);
-}
-
-const ConsoleSpecified = {
-    '-o': 1,
-    '-b': 0,
-    '--open': 1,
-    '--back': 0,
-    '-p': 1
-};
-
-async function _openLogic(terminal, index, msgBuilder) {
-    let data = terminal.get(index);
-    let msg = await msgBuilder('normal', data);
-    terminal.pushContext();
-
-    send(msg);
-}
-
-async function _backLogic(terminal, msgBuilder) {
-    if (!terminal.index) return;
-
-    let data = terminal.clearContext();
-    let msg = await msgBuilder('normal', data);
-
-    send(msg);
-}
-
-class Context {
-    data = null;
-    previews = [];
-    constructor(data, previews) {
-        this.data = data;
-        this.previews = previews;
-    }
-}
-
-class ConsoleTerminal {
-    static contexts = [];
-    static counter = -1;
-    context = null;
-    index = 0;
-
-    constructor(msgBuilder) {
-
-        const openLogic = index => {
-            _openLogic(this, index, msgBuilder);
-        };
-
-        const backLogic = () => {
-            _backLogic(this, msgBuilder);
-        };
-
-        register$1('con', em => {
-            em.on('-o', openLogic);
-            em.on('--open', openLogic);
-            em.on('-b', backLogic);
-            em.on('--back', backLogic);
-            em.on('-p', async data => sendUntrusted(await msgBuilder('normal', data)));
-
-            em.on('unregister', () => {
-                em.removeAllListeners('-o');
-                em.removeAllListeners('--open');
-                em.removeAllListeners('-b');
-                em.removeAllListeners('--back');
-                em.removeAllListeners('-p');
-            });
-        }, ConsoleSpecified);
-
-        let arr = [];
-        TConsole.__emitter__.on('--object', data => {
-            ConsoleTerminal.counter = -1;
-            this.context = new Context(data, [...arr]);
-            if (!ConsoleTerminal.contexts.length) this.pushContext();
-        });
-
-        TConsole.__emitter__.on('--preview', data => {
-            ConsoleTerminal.counter++;
-            arr.push(data);
-        });
-
-    }
-
-    clearContext() {
-        ConsoleTerminal.contexts.length = this.index;
-        this.index--;
-        this.updateContext();
-        return this.context.data;
-    }
-
-    pushContext() {
-        this.index = ConsoleTerminal.contexts.length;
-        ConsoleTerminal.contexts.push(this.context);
-        this.updateContext();
-    }
-
-    updateContext() {
-        this.context = ConsoleTerminal.contexts[this.index];
-    }
-
-    get(index = 0) {
-        return this.context.previews[index];
-    }
-
-}
-
-async function toString(obj, showDetails = false) {
-    let returnVal;
-    if (!showDetails) {
-        returnVal = await getPreviewMsg(obj);
-    }
-    returnVal = await getDetailsMsg(obj);
-
-    TConsole.__emitter__.emit('--object', obj);
-
-    return returnVal;
-}
-
-function getProto(obj) {
-    return Object.getPrototypeOf(obj);
-}
-
-function getClassPrefix(obj) {
-    let __proto__ = getProto(obj);
-    let constructor;
-
-    if (!__proto__) return '';
-
-    constructor = __proto__.constructor;
-    return constructor.name;
-}
-
-function getObjPropNames(obj) {
-    let arr = [];
-    for (const k in obj) {
-        arr.push(k);
-    }
-    return arr;
-}
-
-function getObjSymbols(obj) {
-    return Object.getOwnPropertySymbols(obj);
-}
-
-function getObjDescriptors(obj) {
-    return Object.getOwnPropertyDescriptors(obj);
-}
-
-async function keyValTile(obj, k, propColor) {
-    let ks;
-    let vs;
-
-    if (k === '[[Prototype]]') {
-        let prefix = getClassPrefix(obj);
-        if (!prefix) return '';
-        return mbf('', objectProp.prototype, k, ':  ', prefix);
-    }
-
-    ks = typeof k === 'symbol' ?
-        mbf(style('italic'), objectProp.symbol, safeString(k.toString())) :
-        mbf(style('italic'), propColor, safeString(k));
-
-    vs = typeof obj[k] === 'object' ?
-        (await parseObjValue(obj[k])) : basicTypeMsg(obj[k]);
-
-    if (typeof obj[k] === 'object' && obj[k]) {
-        TConsole.__emitter__.emit('--preview', obj[k]);
-        vs.push(getTab() + `$${ConsoleTerminal.counter}`);
-    }
-
-    return mbf('', style('normal'), ks, ':  ', vs);
-
-}
-
-async function parseExtend(obj, showInnenumerable = true) {
-    const objDesc = getObjDescriptors(obj);
-    let res = mbf();
-
-    for (const k in objDesc) {
-        const desc = objDesc[k];
-        const { set, get, enumerable } = desc;
-        const propName = safeString(typeof k === 'symbol' ? k.toString() : k);
-        let msg = mbf();
-
-        if (typeof get === 'function') {
-            msg.push('\n');
-            msg.push('', objectProp.setterGetter, `get ${propName}: `, await parseValPreview(get));
-        }
-
-        if (typeof set === 'function') {
-            msg.push('\n');
-            msg.push('', objectProp.setterGetter, `set ${propName}: `, await parseValPreview(set));
-        }
-
-        if (!enumerable && showInnenumerable) {
-            msg.push('\n');
-            msg.push('', objectProp.innenumerable, k, ': ', await parseValPreview(obj[k]));
-        }
-
-        if (msg.length) res.push(...msg);
-    }
-
-    if (res.length) return res;
-    return '';
-}
-
-async function paresePrototype(obj) {
-
-    let res = mbf();
-    let __proto__ = obj;
-
-    while ((__proto__ = getProto(__proto__)) !== Object.prototype && __proto__) {
-        res.push(await parseExtend(__proto__, false));
-    }
-
-    return res;
-}
-
-async function getDetailsMsg(obj) {
-    let propColor = objectProp.normal;
-    let classPrefix = getClassPrefix(obj);
-    let props = [];
-
-    let msg = mbf('\n', style('normal'), `${await parseValPreview(obj, classPrefix)}:`);
-    props = props.concat(getObjPropNames(obj)).concat(getObjSymbols(obj));
-
-    for (const cur of props) {
-        msg.push('\n', await keyValTile(obj, cur, propColor));
-    }
-
-    let extend = await parseExtend(obj);
-    if (extend.length > 2) {
-        msg.push(extend);
-    }
-
-    msg.push(await paresePrototype(obj));
-
-    const prototypeClassPrefix = await keyValTile(obj, '[[Prototype]]', propColor);
-    if (prototypeClassPrefix) msg.push('\n', prototypeClassPrefix);
-
-    return msg;
-}
-
-async function getPreviewMsg(obj) {
-    let propColor = objectProp.preview;
-    let classPrefix = getClassPrefix(obj);
-
-    let msg = mbf(style('italic'), style('normal'), `${classPrefix} {`);
-    let props = getObjPropNames(obj);
-    for (const cur of props) {
-        msg.push('\n', await keyValTile(obj, cur, propColor));
-    }
-    msg.push('}');
-
-    return msg;
-}
-
-async function parseObjValue(obj) {
-    let classPrefix = getClassPrefix(obj);
-    if (obj === null) {
-        return mbf('', basic.undefined, 'null');
-    }
-
-    if (obj instanceof Array) {
-        return await parseArray(obj, classPrefix);
-    }
-
-    return await parseValPreview(obj, classPrefix);
-}
-
-async function parseArray(obj, classPrefix) {
-    if (classPrefix === 'Array') classPrefix = '';
-    let res = mbf(style('italic'), '', `${classPrefix}(${obj.length}) [`);
-    let i = 0;
-    for (const cur of obj) {
-        if (typeof cur === 'object') {
-            if (cur === null) res.push(mbf('', basic.undefined, 'null'));
-            else res.push(await parseValPreview(cur, classPrefix));
-        } else {
-            res.push(basicTypeMsg(cur));
-        }
-        if (i < obj.length - 1) {
-            res.push(', ');
-        }
-        i++;
-    }
-    res.push(']');
-    return res;
-}
-
-async function parseValPreview(obj, classPrefix) {
-
-    const keys = specClassParsers.keys();
-    for (const k of keys) {
-        if (obj instanceof k) {
-            return await getSpecParser(k).call(undefined, obj, classPrefix);
-        }
-    }
-
-    if (typeof obj !== 'object') {
-        return basicTypeMsg(obj);
-    }
-
-    classPrefix = classPrefix ? classPrefix + ' ' : '';
-    return mbf('', objectProp.preview, `${classPrefix}{ ... }`,);
-}
-
-/**
- * @type {Map<Function, Function>}
- */
-let specClassParsers = new Map();
-
-function getSpecParser(instanceClass) {
-    if (specClassParsers.has(instanceClass)) {
-        return specClassParsers.get(instanceClass);
-    }
-
-    return null;
-}
-
-function registerSpecParser(instanceClass, handler) {
-    specClassParsers.set(instanceClass, handler);
-}
-
-const getPromiseState = (() => {
-    let obj = {};
-    let promiseState = Symbol('promiseState');
-    let promiseValue = Symbol('promiseValue');
-
-    return p => {
-        let _p = Promise.race([p, obj]);
-        _p[promiseState] = 'pending';
-
-        _p.then(v => {
-            if (v === obj) _p[promiseState] = 'pending';
-            else _p[promiseState] = 'fulfilled', _p[promiseValue] = v;
-        }, reason => (_p[promiseState] = 'rejected', _p[promiseValue] = reason));
-
-        return { promiseState, promiseValue, p: _p };
-    };
-
-})();
-
-function doRegisterSpecParsers() {
-    registerSpecParser(Array, (obj, classPrefix) => {
-        return mbf(style('italic'), objectProp.preview, `${classPrefix}`, '(', basicTypeMsg(obj.length), style('italic'), objectProp.preview, ')');
-    });
-
-    registerSpecParser(Promise, async (obj, classPrefix) => {
-        let { promiseState, promiseValue, p } = getPromiseState(obj);
-        let state = p[promiseState];
-        let value = p[promiseValue];
-        let message;
-
-        let msg = async () => {
-            state = p[promiseState];
-            value = p[promiseValue];
-            return mbf(style('italic'), objectProp.preview, `${classPrefix}`, ` { <${state}>${state === 'pending' ? '' : ': ' + (typeof value === 'object' ? await parseValPreview(value, classPrefix) : basicTypeMsg(value))} }`);
-        };
-
-        try {
-            await p;
-        } catch (error) { }
-
-        message = await msg();
-
-        return message;
-    });
-
-
-    registerSpecParser(Error, obj => {
-        return mbf('', style('normal'), obj.stack);
-    });
-
-    registerSpecParser(Function, obj => {
-        const msg = getFunctionSignature(obj, basic.function);
-        return mbf('', basic.function, msg);
-    });
-
-
-}
-
-class Format {
-    /**
-     * @type {Format[]}
-     */
-    static formats = [];
-
-    constructor(opt) {
-        this.checker = opt.checker;
-        this.parse = opt.parse;
-
-        Format.formats.push(this);
-    }
-
-}
-
-function check(str) {
-    let i = 0;
-    for (const format of Format.formats) {
-        if (format.checker.test(str)) {
-            return i;
-        }
-        i++;
-    }
-    return false;
-}
-
-/**
- * @param {{checker: RegExp, parse: (value: any) => any}} opt 
- */
-function addFormat(opt) {
-    return new Format(opt);
-}
-
-async function parseFormat(str, value, format) {
-    const res = format.checker.exec(str);
-    const args = [...res];
-    const returnVal = await format.parse(value, ...args);
-
-    return str.replace(format.checker, returnVal);
-}
-
-async function getfstr(formatStr, ...args) {
-    let _args = [...args];
-    let index;
-    let returnVal;
-
-    while (typeof (index = check(await returnVal || formatStr)) === 'number') {
-        let value = _args.shift();
-        let format = Format.formats[index];
-
-        returnVal = await parseFormat(returnVal || formatStr, value, format);
-    }
-
-    return returnVal;
-}
-
-function initfstring() {
-
-    addFormat({
-        checker: /%d/,
-        parse(value) {
-            return mbf('', basic.number, new Number(value).toFixed(0));
-        }
-    });
-
-    addFormat({
-        checker: /%[o|O]/,
-        async parse(v) {
-            return mbf(style('italic'), style('normal'), await toString(v, TConsole.showDetail));
-        }
-    });
-
-    addFormat({
-        checker: /%(.*?)f/,
-        parse(v, $, $1) {
-            if ($1.startsWith('.')) {
-                $1 = $1.slice(1);
-                return mbf('', basic.number, new Number(v).toFixed(+$1));
-            }
-            return mbf('', basic.number, new Number(v));
-        }
-    });
-
-}
-
-/**
- * @param {(msg: string) => void} receiver 
- * @returns {TConsole}
- */
-function initConsole(receiver) {
-
-    doRegisterSpecParsers();
-    initfstring();
-
-
-    const rawSend = getRawTeller(receiver);
-    const send = async msg => rawSend(await msg);
-
-    async function buildMsg(s = 'white', ...args) {
-        let res = mbf('', style(s));
-        let i = -1;
-
-        if (typeof args[0] === 'string') {
-            let fstr = await getfstr(...args);
-            if (fstr) return fstr;
-        }
-
-        for (const cur of args) {
-            i++;
-            let msg = typeof cur === 'object' ? await toString(cur, TConsole.showDetail) :
-                typeof cur === 'string' ? mbf('', style(s), safeString(cur)) : basicTypeMsg(cur);
-
-            if (i) res.push(getTab());
-            res.push(msg);
-        }
-
-        return res;
-    }
-
-    new ConsoleTerminal(buildMsg);
-
-    function log(...args) {
-        let res;
-        try {
-            res = buildMsg('white', ...args);
-        } catch (e) {
-            error(e);
-        }
-
-        send(res);
-    }
-
-    function error(...args) {
-        let err;
-        try {
-            err = buildMsg('red', ...args);
-        } catch (e) {
-            send(mbf('', style('red'), 'Fatal Error: You should have crashed your game!'));
-        }
-
-        send(err);
-    }
-
-    function warn(...args) {
-        let res;
-        try {
-            res = buildMsg('yellow', ...args);
-        } catch (e) {
-            error(e);
-        }
-
-        send(res);
-    }
-
-    function getTraceStack(sliceStart = 0) {
-        return Error('').stack.split('\n').slice(sliceStart + 2).join('\n');
-    }
-
-    function trace() {
-        let stack = getTraceStack(1);
-        stack = 'trace():\n' + stack;
-
-        send(buildMsg('white', stack));
-    }
-
-    function assert(condition, ...data) {
-        if (!condition) {
-            error('Assertion failed: ', ...data, getTraceStack(1));
-        }
-    }
-
-    let _counts = {};
-    function count(label = 'default') {
-        _counts[label] ? _counts[label]++ : _counts[label] = 1;
-        log(`${label}: ${_counts[label]}`);
-    }
-
-    function countReset(label = 'default') {
-        if (_counts[label]) {
-            delete _counts[label];
-        }
-    }
-
-
-    let _tickNow = 1;
-    let _timers = {};
-    function updateTimer() {
-        _tickNow++;
-    }
-
-    function time(label = 'default') {
-        _timers[label] = _tickNow;
-    }
-
-    function timeLog(label = 'default') {
-        let tkNow = _tickNow;
-        let tkBefore = _timers[label];
-
-        if (!tkBefore) {
-            warn(`Timer '${label}' does not exist`, getTraceStack(1));
-            return;
-        }
-
-        let res = tkNow - tkBefore;
-        log(`${label}: ${res} ticks (${res * 50} ms)`);
-    }
-
-    function timeEnd(label = 'default') {
-        timeLog(label);
-        if (_timers[label]) {
-            delete _timers[label];
-        }
-    }
-
-
-    function updateRawTeller() {
-        rawSend.update();
-    }
-
-    function update() {
-        updateTimer();
-        updateRawTeller();
-    }
-
-    const _console = {
-        log, error, warn, trace, assert, count, countReset,
-        time, timeLog, timeEnd
-    };
-
-    return new TConsole({ update, console: _console });
-
-}
-
-var console_1 = { initConsole };
-
-(function (module, exports) {
-	const {initConsole} = console_1;
-
-	const tConsole = initConsole(msg => log(`${msg}`));
-	tConsole.setFormatting('ansiEscapeSeq');
-
-	setInterval(() => tConsole.update(), 20);
-
-	module.exports = tConsole.getConsole();
-	exports.tConsole = tConsole; 
-} (main, main.exports));
-
-var mainExports = main.exports;
-
-function buildContextOpener(builder, contextSender, onCancelHandlerArgIndex) {
-    return (...args) => {
-        const onCancelHandler = args[onCancelHandlerArgIndex] || (() => { });
-        args[onCancelHandlerArgIndex] = (...args) => {
-            const val = onCancelHandler.apply(null, args);
-            contextSender(args[0]);
-            return val
-        };
-
-        return builder.apply(null, args)
-    }
-}
-
-function openAlert(sender) {
-    return buildContextOpener(alert$7, sender, 5)
-}
-
-function openAction(sender) {
-    return buildContextOpener(action$7, sender, 3)
-}
-
-function openWidget(sender) {
-    return buildContextOpener(widget$7, sender, 2)
-}
-
-function uiReturnValBuilder(sender) {
-    return {
-        send: sender,
-        open: buildContextOpener,
-        openAlert: openAlert(sender),
-        openAction: openAction(sender),
-        openWidget: openWidget(sender),
-    }
-}
-
-function alert$7(title, content, button1, buton2, onEnsure = Function.prototype, onReject = Function.prototype, onCancel = Function.prototype) {
-    let ret = null;
-    const sender = pl => {
-        let isUserAction = false;
-        setTimeout(() => {
-            isUserAction = true;
-        }, 300);
-        pl.sendModalForm(title, content, button1, buton2, (_, confirmed) => {
-            if (!isUserAction) {
-                return onCancel.call(ret, pl)
-            }
-            
-            if (confirmed) {
-                return onEnsure.call(ret, pl), undefined
-            }
-    
-            return onReject.call(ret, pl), undefined
-        });
-    };
-    return ret = uiReturnValBuilder(sender)
-}
-
-/**
- * @param {string} title 
- * @param {string} content 
- * @param {Array<{text: string; icon: string; onClick: (err: any, pl: any)=>void}>} buttonGroup 
- * @param {Function} onerror 
- * @returns 
- */
-function action$7(title, content, buttonGroup = [], onerror = Function.prototype) {
-    const buttons = [],
-        images = [],
-        handlers = [];
-
-    buttonGroup.forEach(conf => {
-        const { text, icon, onClick } = conf;
-        buttons.push(text);
-        images.push(icon || '');
-        handlers.push(onClick);
-    });
-
-    let ret = null;
-    const sender = pl => {
-        pl.sendSimpleForm(
-            title, content,
-            buttons, images,
-            (pl, i) => {
-                if (i === null) {
-                    return onerror.call(ret, -1, pl)
-                }
-
-                try {
-                    handlers[i].call(ret, 0, pl);
-                } catch (err) {
-                    try {
-                        onerror.call(ret, err, pl);
-                    } catch (er) {
-                        throw er
-                    }
-                }
-            }
-        );
-    };
-
-    return ret = uiReturnValBuilder(sender)
-}
-
-function widget$7(title, elements = [], onerror = Function.prototype) {
-    const fm = mc.newCustomForm();
-    const handlers = [];
-
-    elements.forEach(el => {
-        const { type, args, handler } = el;
-
-        handlers.push(handler);
-        fm[`add${type}`](...args);
-    });
-
-    fm.setTitle(title);
-
-    let ret = null;
-    const sender = pl => {
-        pl.sendForm(fm, (_, data) => {
-            if (data === null) {
-                return onerror.call(ret, pl, -1)
-            }
-
-            if (!data) {
-                try {
-                    return onerror.call(ret, pl)
-                } catch (err) {
-                    throw err
-                }
-            }
-    
-            data.forEach((val, i) => {
-                try {
-                    handlers[i].call(ret, pl, val);
-                } catch (err) {
-                    try {
-                        onerror.call(ret, pl, err);
-                    } catch (err) {
-                        throw err
-                    }
-                }
-            });
-        });
-    };
-
-    return ret = uiReturnValBuilder(sender)
-}
-
-/**
- * @param {string} type 
- * @param {Function} [handler] 
- * @returns 
- */
-function basicBuilder(type, resolver = (pl, val, args) => [pl, val], useHandler = true) {
-    return (...args) => {
-        let handler = useHandler
-            ? null
-            : Function.prototype;
-
-        if (typeof args[args.length-1] === 'function') {
-            const _handler = args.pop();
-            handler = (pl, val) => {
-                const _args = resolver.call(null, pl, val, args);
-                _handler.apply(null, _args);
-            };
-        }
-
-        return {
-            type, args, handler
-        }
-    }
-}
-
-var ui = {
-    alert: alert$7, action: action$7, widget: widget$7,
-
-    /**@type {(text: string) => any} */
-    Label: basicBuilder('Label', undefined, false),
-
-    /**@type {(title: string, placeholder?: string, defaultVal?: string, handler?: (pl: any, value: string) => void) => any} */
-    Input: basicBuilder('Input'),
-
-    /**@type {(title: string, defaultVal?: boolean, handler?: (pl: any, value: boolean) => void) => any} */
-    Switch: basicBuilder('Switch'),
-
-    /**@type {(title: string, items: string[], defaultVal?: number, handler?: (pl: any, value: number) => void) => any} */
-    Dropdown: basicBuilder('Dropdown'),
-
-    /**@type {(title: string, min: number, max: number, step?: number, defaultVal?: number, handler?: (pl: any, value: number) => void) => any} */
-    Slider: basicBuilder('Slider'),
-
-    /**@type {(title: string, items: string[], defaultVal?: number, handler?: (pl: any, value: string) => void) => any} */
-    StepSlider: basicBuilder('StepSlider'),
-};
-
-const { cmd: cmd$6 } = require$$0;
-const { alert: alert$6 } = ui;
-
-function distStr(entity, dest, showDiff=true) {
-    const pos = entity.blockPos;
-    const distance = ~~entity.distanceTo(dest);
-
-    const diff = `    |${dest.x - pos.x}, ${dest.y - pos.y}, ${dest.z - pos.z}|`;
-
-    return distance + (showDiff ? diff : '')
-}
-
-function setup$8() {
-    cmd$6('whoami', '我是谁？', 0)
-    .setup(registry => {
-        registry
-        .register('name', (cmd, ori, out) => {
-            out.success(ori.entity.name);
-        })
-        .register('type', (_, ori, out) => {
-            out.success(ori.entity.type);
-        })
-        .register('id <mob:entity>', (_, ori, out, args) => {
-            const source = ori.player ?? ori.entity;
-            const targets = args.mob;
-
-            targets.forEach(t => {
-                source.tell(t.uniqueId);
-            });
-        })
-        .register('dist <position:pos>', (_, ori, out, args) => {
-            const dest = args.position;
-            out.success(distStr(ori.entity, dest));
-        })
-        .register('dist <mob:entity>', (_, ori, out, args) => {
-            const source = ori.player ?? ori.entity;
-            const targets = args.mob;
-            
-            for (const target of targets) {
-                const dest = target.blockPos;
-                if (!target.isPlayer()) {
-                    out.success(distStr(source, dest));
-                    continue
-                }
-
-                alert$6('', `${source.name} 想要知道你的位置，是否提供？`, '提供', '拒绝', () => {
-                    source.tell(distStr(source, dest));
-                }, () => {
-                    source.tell(distStr(source, dest, false));
-                }).send(target.toPlayer());
-            }
-        })
-        .submit();
-    });
-}
-
-var whoami = {
-    setup: setup$8
-};
-
 const {EventEmitter: EventEmitter$1} = events;
-const console$2 = mainExports;
-
 const eachTick = new EventEmitter$1();
 
 mc.listen('onTick', () => {
@@ -2125,14 +1043,14 @@ function setVelocity$1(mob, vec3, collideBox=playerCollideBox, resistance=0.05) 
             return
         }
 
-        console$2.log(1, mob.pos);
+        console.log(1, mob.pos);
         mob.teleport(
             pos.x,
             pos.y - 1.6,
             pos.z,
             pos.dimid
         );
-        console$2.log(2, mob.pos);
+        console.log(2, mob.pos);
 
         vec3 = {
             dx: vec3.dx > resistance ? vec3.dx - resistance: 0,
@@ -2219,7 +1137,7 @@ var overShoulder = {
     camera, clearCamera, setOnShoulderCamera
 };
 
-const {action: action$6, alert: alert$5, widget: widget$6, Switch: Switch$4, StepSlider: StepSlider$1, Input: Input$6, Dropdown: Dropdown$4} = ui;
+const {action: action$5, alert: alert$4, widget: widget$5, Switch: Switch$4, StepSlider: StepSlider$1, Input: Input$6, Dropdown: Dropdown$4} = ui;
 
 function queryPlayer$1(realName) {
     for (const pl of mc.getOnlinePlayers()) {
@@ -2306,14 +1224,14 @@ let Notification$1 = class Notification {
 
         if (this.type === NotificationTypes.MESSAGE) {
             const {btn1, btn2, onEnsure, onReject} = this.content;
-            return alert$5(this.title, this.preview, btn1, btn2, onEnsure, onReject, () => {
+            return alert$4(this.title, this.preview, btn1, btn2, onEnsure, onReject, () => {
                 this.viewed = false;
                 this._notifyNormalMsg(pl);
             }).send(pl)
         }
 
         if (this.type === NotificationTypes.ACTION) {
-            return action$6(this.title, this.preview, this.content, (err, pl) => {
+            return action$5(this.title, this.preview, this.content, (err, pl) => {
                 if (err === -1) {
                     this.viewed = false;
                     return this._notifyNormalMsg(pl)
@@ -2323,7 +1241,7 @@ let Notification$1 = class Notification {
         }
 
         if (this.type === NotificationTypes.MODAL) {
-            return widget$6(this.title, this.content, (err, pl) => {
+            return widget$5(this.title, this.content, (err, pl) => {
                 if (err === -1) {
                     this.viewed = false;
                     return this._notifyNormalMsg(pl)
@@ -2384,7 +1302,7 @@ function regNotifComponent() {
             return pl.tell('没有收到任何信息')
         }
 
-        action$6('收件箱', `${notifs.length} 条消息`, notifs.map(notif => {
+        action$5('收件箱', `${notifs.length} 条消息`, notifs.map(notif => {
             return {
                 text: notif.getListTilePreview(),
                 onClick() {
@@ -2404,7 +1322,7 @@ function regNotifComponent() {
             ,player = '';
 
         
-        widget$6('编辑消息', [
+        widget$5('编辑消息', [
             Dropdown$4('发送给:', players, 0, (_, i) => {
                 player = players[i];
             }),
@@ -2450,7 +1368,7 @@ function regNotifComponent() {
 
                 if (player === '@a') {
                     if (!pl.permLevel) {
-                        alert$5('错误', '权限不足', '是', '取消').send(pl);
+                        alert$4('错误', '权限不足', '是', '取消').send(pl);
                         return
                     }
     
@@ -2505,7 +1423,7 @@ var motd = function() {
     }, 5000);
 };
 
-const { action: action$5, alert: alert$4, widget: widget$5, Dropdown: Dropdown$3, Input: Input$5 } = ui;
+const { action: action$4, alert: alert$3, widget: widget$4, Dropdown: Dropdown$3, Input: Input$5 } = ui;
 const { Notification, NotificationImportances } = notification;
 
 function queryPlayer(realName) {
@@ -2547,14 +1465,14 @@ function recevConfirm(pl2, amount) {
         onEnsure(pl) {
             notif.expire();
             money.trans(pl2.xuid, pl.xuid, amount);
-            const suc = alert$4('结果', '操作成功', '确认', '取消');
+            const suc = alert$3('结果', '操作成功', '确认', '取消');
             suc.send(pl);
             suc.send(pl2);
         },
 
         onReject(pl) {
             notif.expire();
-            const fail = alert$4('结果', '操作失败', '确认', '取消');
+            const fail = alert$3('结果', '操作失败', '确认', '取消');
             fail.send(pl);
             fail.send(pl2);
         }
@@ -2564,10 +1482,10 @@ function recevConfirm(pl2, amount) {
 }
 
 function transferConfirm(name, amount) {
-    return alert$4('转账确认', `向 §b${name}§r 转账 §6${amount}§r, 确认操作？`, '确认', '取消', pl => {
+    return alert$3('转账确认', `向 §b${name}§r 转账 §6${amount}§r, 确认操作？`, '确认', '取消', pl => {
         const pl2 = queryPlayer(name);
         if (!checkIfCreditEnough(pl, amount)) {
-            return alert$4('失败', `余额不足: ${money.get(pl.xuid)}, 需要: ${amount}`, '确认', '取消').send(pl)
+            return alert$3('失败', `余额不足: ${money.get(pl.xuid)}, 需要: ${amount}`, '确认', '取消').send(pl)
         }
         recevConfirm(pl, amount).notify(pl2);
     })
@@ -2610,7 +1528,7 @@ function requestFromUi(pl) {
         amount: 0
     };
 
-    widget$5('收款', [
+    widget$4('收款', [
         Dropdown$3('向他人收款', pls.map(p => p.realName), 0, (_, i) => {
             data.who = pls[i];
         }),
@@ -2635,7 +1553,7 @@ function requestFromUi(pl) {
 }
 
 function creditUi(pl) {
-    const ui = action$5('账户', `我的余额: ${money.get(pl.xuid)}`, [
+    const ui = action$4('账户', `我的余额: ${money.get(pl.xuid)}`, [
         {
             text: '进行转账', onClick() {
                 transferCreditUi(ui).send(pl);
@@ -2658,7 +1576,7 @@ function transferCreditUi(parent) {
     const pls = mc.getOnlinePlayers().map(v => v.realName);
     let name = '';
 
-    return widget$5('向目标转账', [
+    return widget$4('向目标转账', [
         Dropdown$3('选择转账目标', pls, (_, i) => {
             name = pls[i];
         }),
@@ -2731,7 +1649,7 @@ function requestCredit$2(
     failure = defaultRequestCreditFailed,
     cancel = Function.prototype
 ) {
-    alert$4('账户', `为 §b${serviceName}§r 支付 §6${amount}§r ?`, '确认', '取消', async () => {
+    alert$3('账户', `为 §b${serviceName}§r 支付 §6${amount}§r ?`, '确认', '取消', async () => {
         if (checkIfCreditEnough(fromPlayer, amount)) {
             try {
                 await success.call(null, fromPlayer);
@@ -2770,7 +1688,7 @@ var price = {
     }
 };
 
-const {widget: widget$4, action: action$4, Input: Input$4, Switch: Switch$3, alert: alert$3} = ui;
+const {widget: widget$3, action: action$3, Input: Input$4, Switch: Switch$3, alert: alert$2} = ui;
 const {requestCredit: requestCredit$1} = core$1;
 const priceConf = price;
 const {defaultHome} = baseConfig;
@@ -2876,7 +1794,7 @@ function teleportPlayerToCustomPos(pl, name) {
     const targetPos = getPort(name, pl);
 
     if (!targetPos) {
-        return alert$3('错误', `${pl.realName} 没有保存名为 ${name} 的传送点`, '确定', '取消').send(pl)
+        return alert$2('错误', `${pl.realName} 没有保存名为 ${name} 的传送点`, '确定', '取消').send(pl)
     }
 
     let amount = calcAmountByPos(currentPos, targetPos);
@@ -2901,7 +1819,7 @@ function showAddPortUi(pl) {
 
     const cp = pl.blockPos;
 
-    widget$4('添加传送点', [
+    widget$3('添加传送点', [
         Input$4('传送点名称', (_, value) => {
             name = value;
         }),
@@ -2944,7 +1862,7 @@ function showTeleportCustomUi(pl) {
             }
         }
     });
-    action$4('传送到...', '选择你想要传送的地点', teleportBtnList, (err, pl) => {
+    action$3('传送到...', '选择你想要传送的地点', teleportBtnList, (err, pl) => {
         pl.tell(`${err.toString()}\n\n联系管理员获得更多支持`);
     }).send(pl);
 }
@@ -2954,14 +1872,14 @@ function showRemovePosUi(pl) {
         return {
             text: v,
             onClick() {
-                alert$3('确定移除', `移除 "${v}" 传送点，确认？`, '确定', '取消', () => {
+                alert$2('确定移除', `移除 "${v}" 传送点，确认？`, '确定', '取消', () => {
                     removePort(v, pl);
                     pl.tell(`已移除 "${v}" 传送点`);
                 }).send(pl);
             }
         }
     });
-    action$4('移除传送点', '选择你想要移除的传送点', portList, (err, pl) => {
+    action$3('移除传送点', '选择你想要移除的传送点', portList, (err, pl) => {
         pl.tell(`${err.toString()}\n\n联系管理员获得更多支持`);
     }).send(pl);
 }
@@ -2998,13 +1916,13 @@ function calcAmountByPos(currentPos, targetPos) {
 
 function requestTeleportToPlayer(from, to) {
     return new Promise((res, rej) => {
-        alert$3('传送请求', `${from.realName} 想要传送到你的位置，同意？`, '同意', '拒绝',
+        alert$2('传送请求', `${from.realName} 想要传送到你的位置，同意？`, '同意', '拒绝',
             () => {
                 from.teleport(to.pos);
                 res();
             },
             () => {
-                alert$3('拒绝', `${to.realName} 拒绝了你的传送请求`, '确认', '取消').send(from);
+                alert$2('拒绝', `${to.realName} 拒绝了你的传送请求`, '确认', '取消').send(from);
                 rej();
             }
         ).send(to);
@@ -3040,7 +1958,7 @@ const actions = {
 
     c: (pl, act, target) => {
         if (!act) {
-            action$4('', '要做些什么？\n', [
+            action$3('', '要做些什么？\n', [
                 {text: '使用传送点', onClick(err, pl) {
                     if (err) {
                         return
@@ -3106,7 +2024,7 @@ const actions = {
                     });
                 }
             }));
-        action$4('传送到玩家', '选择一名玩家', btnGroups).send(pl);
+        action$3('传送到玩家', '选择一名玩家', btnGroups).send(pl);
     },
 
     w: pl => {
@@ -3121,7 +2039,7 @@ const actions = {
 
 const globalPreserved = {xuid: 'global-preserved'};
 function worldTeleportUiOp(pl) {
-    action$4('', '世界传送', [
+    action$3('', '世界传送', [
         {
             text: '添加传送点',
             onClick(_, pl) {
@@ -3163,11 +2081,11 @@ function worldTeleportUiPlayer(pl) {
     }
 
     if (!current) {
-        alert$3('错误', '不在可用传送区域', '确定', '取消').send(pl);
+        alert$2('错误', '不在可用传送区域', '确定', '取消').send(pl);
         return
     }
 
-    action$4('世界传送', '选择你要传送的地点',
+    action$3('世界传送', '选择你要传送的地点',
         listPorts(globalPreserved)
             .filter(v => v != current)
             .map(name => ({
@@ -3193,7 +2111,7 @@ function worldTeleportAddUi(pl) {
 
     const plPos = pl.blockPos;
 
-    widget$4('添加传送点', [
+    widget$3('添加传送点', [
         Input$4('传送点名称', (_, val) => {
             name = val;
         }),
@@ -3222,12 +2140,12 @@ function worldTeleportAddUi(pl) {
 }
 
 function worldTeleportRmUi(pl) {
-    action$4(
+    action$3(
         '删除传送点', '', listPorts(globalPreserved)
             .map(name => ({
                 text: name,
                 onClick() {
-                    alert$3(
+                    alert$2(
                         '删除传送点', `确定删除传送点 §b${name}§r ?`,
                         '确定', '取消',
                         () => {
@@ -3296,7 +2214,7 @@ var db_lib = path => {
 };
 
 const dbLib = db_lib;
-const { widget: widget$3, Input: Input$3 } = ui;
+const { widget: widget$2, Input: Input$3 } = ui;
 const db$2 = dbLib('./data/trap');
 
 function pos2str(pos) {
@@ -3331,7 +2249,7 @@ function listenItemUse$1() {
         if (item.type === 'ym:trap') {
             /**@type {string}*/
             let strs = [];
-            widget$3('设置陷阱', [
+            widget$2('设置陷阱', [
                 Input$3('添加指令', '', commands[0] || '', (pl, v) => strs[0] = v),
                 Input$3('添加指令', '', commands[1] || '', (pl, v) => strs[1] = v),
                 Input$3('添加指令', '', commands[2] || '', (pl, v) => strs[2] = v),
@@ -3617,10 +2535,9 @@ var virt = {
 };
 
 const { cmd: cmd$2 } = require$$0;
-const { action: action$3, widget: widget$2, Label: Label$1, Input: Input$2, Switch: Switch$2, Dropdown: Dropdown$2, StepSlider } = ui;
+const { action: action$2, widget: widget$1, Label: Label$1, Input: Input$2, Switch: Switch$2, Dropdown: Dropdown$2, StepSlider } = ui;
 const { keys: keys$2, query: query$2, edit: edit$2, add: add$4, remove } = core;
 const { n: n$2 } = virt;
-const console$1 = mainExports;
 
 const EditOrder = order => [
     `修改订单`, [
@@ -3672,11 +2589,11 @@ function listOrders(pl) {
         return pl.tell('无订单')
     }
 
-    action$3('列表', '', list.map(k => ({
+    action$2('列表', '', list.map(k => ({
         text: k,
         onClick(_, pl) {
             const order = query$2({ oid: k })[0];
-            action$3(...ManageOrder(order)).send(pl);
+            action$2(...ManageOrder(order)).send(pl);
         }
     }))).send(pl);
 }
@@ -3687,7 +2604,7 @@ function addOrder(pl) {
 
     let cid, vid, amount, paied, delivered;
 
-    widget$2(`修改订单`, [
+    widget$1(`修改订单`, [
         Dropdown$2('顾客', plsStr, 0, (_, i) => cid = pls[i].xuid),
         Dropdown$2('商家', plsStr, 0, (_, i) => vid = pls[i].xuid),
         Input$2('价格', '', '0', (_, v) => amount = parseFloat(v)),
@@ -3706,7 +2623,7 @@ function queryOrder(pl) {
     const plsNames = ['无', ...pls.map(p => p.realName)];
     const checkLabels = ['未知', '是', '否'];
 
-    widget$2('查询订单', [
+    widget$1('查询订单', [
         Input$2('订单id', '', '', (_, v) => {
             if (v) {
                 q.oid = v.trim();
@@ -3754,7 +2671,7 @@ function queryOrder(pl) {
                 return pl.tell('无结果')
             }
 
-            action$3('查询结果', '', result.map(o => {
+            action$2('查询结果', '', result.map(o => {
                 return {
                     text: `${o.oid} ${
                         n$2(o.cid)
@@ -3762,12 +2679,12 @@ function queryOrder(pl) {
                         n$2(o.vid)
                     }`,
                     onClick(_, pl) {
-                        action$3(...ManageOrder(o)).send(pl);
+                        action$2(...ManageOrder(o)).send(pl);
                     }
                 }
             })).send(pl);
         }),
-    ], (_, e) => console$1.log(e)).send(pl);
+    ], (_, e) => console.log(e)).send(pl);
 }
 
 function setupOrder() {
@@ -3787,7 +2704,7 @@ function setupOrder() {
 
 var admin = setupOrder;
 
-const { alert: alert$2, Input: Input$1, Switch: Switch$1, Dropdown: Dropdown$1 } = ui;
+const { alert: alert$1, Input: Input$1, Switch: Switch$1, Dropdown: Dropdown$1 } = ui;
 const { keys: keys$1, query: query$1, edit: edit$1, add: add$3 } = core;
 const { requestCredit } = core$1;
 const { n: n$1, ref: ref$1, getVirtEntityLeader: getVirtEntityLeader$1 } = virt;
@@ -3892,7 +2809,7 @@ function Confirm(xuid) {
         return {
             text: `${n$1(o.cid)} -${o.amount}-> ${n$1(o.vid)}`,
             onClick(_, pl) {
-                alert$2('确认', '此订单已交付？', '是', '否', pl => {
+                alert$1('确认', '此订单已交付？', '是', '否', pl => {
                     o.delivered = true;
                     edit$1(o.oid, o);
                     pl.tell('已确认交付');
@@ -3910,7 +2827,7 @@ var customer = {
     Menu: Menu$2
 };
 
-const { alert: alert$1, Label, Input, Switch, Dropdown, action: action$2, widget: widget$1 } = ui;
+const { alert, Label, Input, Switch, Dropdown, action: action$1, widget } = ui;
 const { keys, query, edit, add: add$2 } = core;
 const { n, ref, getControlledEntites, getVirtEntityLeader } = virt;
 // const db = newDB('./data/orders/vendors')
@@ -3921,7 +2838,7 @@ function Menu$1() {
             {
                 text: '交付订单',
                 onClick(_, pl) {
-                    action$2(...DeliveryList(pl.xuid)).send(pl);
+                    action$1(...DeliveryList(pl.xuid)).send(pl);
                 }
             }
         ]
@@ -3934,7 +2851,7 @@ function DeliveryList(xuid) {
     const btnGroup = orders.map(o => ({
         text: `${n(o.cid)} -${o.amount}-> ${n(o.vid)}`,
         onClick(_, pl) {
-            widget$1(...Delivery(o)).send(pl);
+            widget(...Delivery(o)).send(pl);
         }
     }));
 
@@ -4022,17 +2939,17 @@ function Delivery(o) {
 var vendor = Menu$1;
 
 const { cmd: cmd$1 } = require$$0;
-const { action: action$1 } = ui;
+const { action } = ui;
 const { Menu } = customer;
 const Vendor = vendor;
 
 var user = () => {
     cmd$1('order', '订单操作', 0).setup(registry => {
         registry.register('customer', (_, o) => {
-            action$1(...Menu()).send(o.player);
+            action(...Menu()).send(o.player);
         })
         .register('vendor', (_, o) => {
-            action$1(...Vendor()).send(o.player);
+            action(...Vendor()).send(o.player);
         })
         .submit();
     });
@@ -4435,54 +3352,158 @@ var affair = {
     init
 };
 
-var testui = {};
+/******************************************************************************
+Copyright (c) Microsoft Corporation.
 
-const { action, alert, widget } = ui;
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
 
-function register() {
-    mc.listen('onUseItem', (player, item) => {
-        if (item.type.includes('clock')) {
-            showUi(player);
-        }
-    });
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+/* global Reflect, Promise, SuppressedError, Symbol */
+
+
+function __decorate(decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
 }
 
-function showUi(player) {
-    action('test', '你好', [
-        {
-            text: '是',
-            onClick() {
-                openUi2(this, player);
-                player.tell('你好');
-            }
-        },
-        {
-            text: '否',
-            onClick() {
-                player.tell('你好2');
-            }
-        }
-    ]).send(player);
+typeof SuppressedError === "function" ? SuppressedError : function (error, suppressed, message) {
+    var e = new Error(message);
+    return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
+};
+
+const formStackMapping = new Map();
+function getMapping(xuid) {
+    let formStack = formStackMapping.get(xuid);
+    if (!formStack) {
+        formStack = [];
+        formStackMapping.set(xuid, formStack);
+    }
+    return formStack;
 }
 
-function openUi2(ui, player) {
-    ui.openAction('test2', '你不好', [
-        {
-            text: '是',
-            onClick() {
-                player.tell('你不好');
+var Alert;
+(function (Alert) {
+    function ApplyButton(text, onClick) {
+        return context => {
+            context.apply = {
+                text,
+                onClick
+            };
+        };
+    }
+    Alert.ApplyButton = ApplyButton;
+    function CancelButton(text, onClick) {
+        return context => {
+            context.cancel = {
+                text,
+                onClick
+            };
+        };
+    }
+    Alert.CancelButton = CancelButton;
+    function View(title, content) {
+        return context => {
+            context.title = title;
+            context.content = content;
+        };
+    }
+    Alert.View = View;
+    function sendAlert({ title, content, apply, cancel }, pl) {
+        pl.sendModalForm(title, content, apply?.text, cancel?.text, (pl, confirmed) => {
+            if (confirmed) {
+                return apply?.onClick(pl);
             }
-        },
-        {
-            text: '否',
-            onClick() {
-                player.tell('你不好2');
-            }
+            return cancel?.onClick(pl);
+        });
+    }
+    function createContext(widget) {
+        const ctx = {};
+        for (const view of widget.render()) {
+            view.call(null, ctx);
         }
-    ]).send(player);
+        if (!ctx.title || !ctx.content) {
+            throw new Error('Title and content are required');
+        }
+        return ctx;
+    }
+    Alert.start = (ctor, pl) => {
+        const widget = Reflect.construct(ctor, []);
+        const ctx = createContext(widget);
+        const stack = getMapping(pl.xuid);
+        stack.push(['alert', widget]);
+        sendAlert(ctx, pl);
+    };
+    function back(widget, pl) {
+        sendAlert(createContext(widget), pl);
+    }
+    Alert.back = back;
+})(Alert || (Alert = {}));
+
+const exports$1 = new Map();
+function Export(id) {
+    return (target) => {
+        exports$1.set(id, target);
+    };
 }
 
-register();
+class Widget {
+    back(pl) {
+        back(this, pl);
+    }
+}
+function back(widget, pl) {
+    const formStack = getMapping(pl.xuid);
+    if (!formStack.length) {
+        return;
+    }
+    let [type, currentWidget] = formStack.pop();
+    if (currentWidget === widget) {
+        [type, currentWidget] = formStack.pop();
+    }
+    switch (type) {
+        case 'alert':
+            return Alert.back(widget, pl);
+    }
+}
+
+var MyWidget_1;
+let MyWidget = MyWidget_1 = class MyWidget extends Widget {
+    render() {
+        return [
+            Alert.View('test', 'content'),
+            Alert.ApplyButton('是', pl => {
+                pl.tell('yes');
+                Alert.start(MyWidget_1, pl);
+            }),
+            Alert.CancelButton('否', pl => {
+                pl.tell('no');
+                this.back(pl);
+            }),
+        ];
+    }
+};
+MyWidget = MyWidget_1 = __decorate([
+    Export('main')
+], MyWidget);
+mc.listen('onJump', pl => {
+    Alert.start(MyWidget, pl);
+});
+
+var testui = /*#__PURE__*/Object.freeze({
+	__proto__: null
+});
+
+var require$$13 = /*@__PURE__*/getAugmentedNamespace(testui);
 
 const { load } = loadModule;
 
@@ -4499,7 +3520,7 @@ const modules = [
     kinematics,
     setup_1,
     affair,
-    testui,
+    require$$13,
 ];
 
 mc.listen('onServerStarted',() => modules.forEach(m => load(m)));

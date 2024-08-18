@@ -1,6 +1,5 @@
-const { playAnim, playSoundAll } = require('../basic')
+const { playAnim, playSoundAll } = require("../basic/index")
 const { DefaultMoves, DefaultTrickModule } = require('../basic/default')
-const console = require('../../console/main')
 const { constrictCalc, randomRange } = require('../../utils/math')
 const { hud } = require('../basic/hud')
 
@@ -588,4 +587,4 @@ class LightSaberTrick extends DefaultTrickModule {
     }
 }
 
-module.exports = new LightSaberTrick()
+exports.tricks = new LightSaberTrick()

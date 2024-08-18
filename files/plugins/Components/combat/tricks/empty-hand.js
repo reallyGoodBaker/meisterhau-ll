@@ -1,8 +1,5 @@
-/// <reference path="../basic/types.d.ts"/>
-
-const { playAnim } = require('../basic')
+const { playAnim, playSoundAll } = require("../basic/index")
 const { DefaultMoves, DefaultTrickModule } = require('../basic/default')
-const console = require('../../console/main')
 
 class EmptyHandMoves extends DefaultMoves {
     /**
@@ -38,7 +35,4 @@ class EmptyHandTricks extends DefaultTrickModule {
     }
 }
 
-/**
- * @type {TrickModule}
- */
-module.exports = new EmptyHandTricks()
+exports.tricks = new EmptyHandTricks()

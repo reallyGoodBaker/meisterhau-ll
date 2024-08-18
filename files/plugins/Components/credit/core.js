@@ -1,6 +1,5 @@
 const { action, alert, widget, Dropdown, Input } = require('../ui')
 const { Notification, NotificationImportances } = require('../notification')
-const console = require('../console/main')
 
 function queryPlayer(realName) {
     for (const pl of mc.getOnlinePlayers()) {

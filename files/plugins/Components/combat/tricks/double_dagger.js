@@ -1,6 +1,4 @@
-/// <reference path="../basic/types.d.ts"/>
-
-const { playAnim, playSoundAll } = require("../basic")
+const { playAnim, playSoundAll } = require("../basic/index")
 const { DefaultMoves, DefaultTrickModule } = require("../basic/default")
 
 class DoubleDaggerMoves extends DefaultMoves {
@@ -668,4 +666,4 @@ class DoubleDaggerTricks extends DefaultTrickModule {
     }
 }
 
-module.exports = new DoubleDaggerTricks()
+exports.tricks = new DoubleDaggerTricks()

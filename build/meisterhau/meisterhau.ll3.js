@@ -1,7 +1,5 @@
 'use strict';
 
-var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
 function getDefaultExportFromCjs (x) {
 	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
 }
@@ -33,8 +31,6 @@ function getAugmentedNamespace(n) {
 
 var meisterhau = {};
 
-var loadModule$1 = {};
-
 var loaderConfig = {
     ignore: [
         '.ignore',
@@ -51,7 +47,7 @@ var loaderConfig = {
 
 const { loadEntries } = loaderConfig;
 
-loadModule$1.load = m => {
+function load$1(m) {
     if (typeof m === 'function') {
         return m()
     }
@@ -61,6 +57,10 @@ loadModule$1.load = m => {
             return m[k]()
         }
     }
+}
+
+var loadModule$1 = {
+    load: load$1
 };
 
 var events = {};
@@ -722,1093 +722,12 @@ var command = /*#__PURE__*/Object.freeze({
 
 var require$$1$1 = /*@__PURE__*/getAugmentedNamespace(command);
 
-var main = {exports: {}};
-
-let formatting = 'minecraft';
-
-/**
- * @param {'minecraft'|'ansiEscapeSeq'} type 
- */
-function setFormatting(type) {
-    formatting = type;
-}
-
-const Formatting = {
-    black: "§0",
-    dark_blue: "§1",
-    dark_green: "§2",
-    dark_aqua: "§3",
-    dark_red: "§4",
-    dark_purple: "§5",
-    gold: "§6",
-    gray: "§7",
-    dark_gray: "§8",
-    blue: "§9",
-    green: "§a",
-    aqua: "§b",
-    red: "§c",
-    light_purple: "§d",
-    yellow: "§e",
-    white: "§f",
-    minecoin_gold: "§g",
-    obfuscated: "§k",
-    bold: "§l",
-    italic: "§o",
-    reset: "§r",
-    normal: ''
-};
-
-const FormattingANSLEscapeSequences = {
-    black: "\x1b[30m",
-    dark_blue: "\x1b[34m",
-    dark_green: "\x1b[32m",
-    dark_aqua: "\x1b[36m",
-    dark_red: "\x1b[31m",
-    dark_purple: "\x1b[35m",
-    dark_gray: "\x1b[90m",
-    gold: "\x1b[93m",
-    gray: "\x1b[37m",
-    blue: "\x1b[94m",
-    green: "\x1b[92m",
-    aqua: "\x1b[96m",
-    red: "\x1b[91m",
-    light_purple: "\x1b[95m",
-    yellow: "\x1b[33m",
-    white: "\x1b[97m",
-    minecoin_gold: "\x1b[93m",
-    obfuscated: "\x1b[7m",
-    bold: "\x1b[1m",
-    italic: "\x1b[3m",
-    reset: "\x1b[0m",
-    normal: ''
-};
-
-function style(key) {
-    if (formatting === 'minecraft') {
-        console.trace();
-    }
-    return formatting === 'minecraft'? Formatting[key]
-        : FormattingANSLEscapeSequences[key]
-}
-
-function proxify(obj) {
-    return new Proxy(obj, {
-        get(t, p) {
-            return style(t[p])
-        },
-        set() {
-            return false
-        }
-    })
-}
-
-const basic$1 = proxify({
-    undefined: 'dark_blue',
-    boolean: 'dark_blue',
-    function: 'yellow',
-    number: 'aqua',
-    string: 'light_purple',
-    symbol: 'minecoin_gold'
-});
-
-const objectProp = proxify({
-    setterGetter: 'dark_green',
-    innenumerable: 'green',
-    preview: 'gray',
-    normal: 'blue',
-    prototype: 'dark_gray',
-    symbol: 'minecoin_gold'
-});
-
-const {EventEmitter: EventEmitter$1} = requireEvents();
-
-let commandRegistry = {};
-
-/**
- * @param {string} command 
- * @param {(em: EventEmitter)=>void} handler 
- * @param {any} [opt]
- */
-function register(command, handler, opt = {}) {
-    let em = new EventEmitter$1({ captureRejections: true });
-    commandRegistry[command] = [em, opt];
-    handler(em);
-}
-
-function unregister(command) {
-    commandRegistry[command][0].emit('unregister');
-    delete commandRegistry[command];
-}
-
-function exec(commandStr, onerror = () => null) {
-    return new Promise(resolve => {
-        let [commandResolver, ...args] = splitRegular(commandStr);
-        const [em, opt] = commandRegistry[commandResolver];
-        let shouldStopFlowing = false;
-
-        em.on('error', onerror);
-        em.once('error', () => {
-            shouldStopFlowing = true;
-            resolve(false);
-        });
-
-        em.emit('exec', ...args);
-        if (shouldStopFlowing) return;
-
-        let argCur;
-        let unspecializedArgs = [];
-
-        for (let i = 0; i < args.length;) {
-            argCur = args[i];
-            if (argCur.startsWith('-')) {
-                let resCount = opt[argCur];
-                if (resCount) {
-                    let _args = args.slice(i + 1, i += resCount + 1);
-                    em.emit(argCur, ..._args);
-                } else {
-                    em.emit(argCur);
-                    i++;
-                }
-                if (shouldStopFlowing) return;
-                continue;
-            }
-
-            i++;
-            unspecializedArgs.push(argCur);
-        }
-        em.emit('default', ...unspecializedArgs);
-        if (shouldStopFlowing) return;
-
-        resolve(true);
-        em.off('error', onerror);
-    })
-}
-
-const states = {
-    blank: 0,
-    string: 1
-};
-
-/**
- * @param {string} str 
- */
-function splitRegular(str) {
-    str = str.trim();
-    const len = str.length;
-    let data = '';
-    let res = [];
-    let state = states.blank;
-
-    for (let i = 0; i < len; i++) {
-        const char = str[i];
-
-        if (state === states.string && char === '"') {
-            data += char;
-            res.push(data);
-            data = '';
-            state = states.blank;
-            continue;
-        }
-
-        if (state !== states.string && char === '"') {
-            if (data) {
-                res.push(data);
-                data = '';
-            }
-            state = states.string;
-            data += char;
-            continue;
-        }
-
-        if (state === states.blank && char === ' ') {
-            if (data) {
-                res.push(data);
-                data = '';
-            }
-        } else {
-            if (char !== '"') {
-                data += char;
-            }
-        }
-
-        if (i === len - 1) {
-            res.push(data);
-            data = '';
-        }
-    }
-
-    return res;
-}
-
-class TConsole {
-    static tConsole = null;
-    static __emitter__ = new EventEmitter$1();
-    static console = null;
-
-    static showDetail = true;
-    static tabSize = 2;
-
-    constructor(opt) {
-        this.console = opt.console;
-        this.update = opt.update;
-        this.unregister = unregister;
-        this.register = register;
-        this.exec = exec;
-        (function () {
-            TConsole.tConsole = this;
-        })();
-    }
-
-    getConsole() {
-        return this.console;
-    }
-
-    injectConsole() {
-        let Global = typeof window !== 'undefined' ? window :
-            typeof commonjsGlobal !== 'undefined' ? commonjsGlobal :
-                typeof globalThis !== 'undefined' ? globalThis :
-                    typeof self !== 'undefined' ? self : {};
-
-        Global.console = this.console;
-    }
-
-    showDetail(bool = true) {
-        TConsole.showDetail = bool;
-    }
-
-    tabSize(count = 2) {
-        TConsole.tabSize = count;
-    }
-
-    /**
-     * @param {'minecraft'|'ansiEscapeSeq'} type 
-     */
-    setFormatting(type) {
-        setFormatting(type);
-    }
-
-    update() { }
-
-    on(type, handler) {
-        TConsole.__emitter__.on(type, handler);
-        return this;
-    }
-
-    off(type, handler) {
-        TConsole.__emitter__.on(type, handler);
-    }
-
-
-}
-
-const tab = () => new Array(TConsole.tabSize).fill(' ').join('');
-const getTab = (count = 1) => new Array(count).fill(tab()).join('');
-
-class MsgBlock extends Array {
-    static get defaultColor() {
-        return style('white')
-    }
-    static get defaultStyle() {
-        return style('normal')
-    }
-
-    toTellrawString(tabCount = 0) {
-        let [_style, color, ...msgs] = this;
-
-        _style = _style || MsgBlock.defaultStyle;
-        color = color || MsgBlock.defaultColor;
-
-        let msg = msgs.reduce((pre, cur) => {
-            if (typeof cur === 'string') {
-                return pre + cur;
-            }
-
-            if (typeof cur === 'object' && cur instanceof MsgBlock) {
-                return pre + cur.toTellrawString();
-            }
-        }, '');
-
-        let returnVal = getTab(tabCount) + (color + _style + msg + style('reset')).trim();
-
-        return returnVal
-    }
-
-    toString(tabCount = 0) {
-        return this.toTellrawString(tabCount);
-    }
-
-}
-
-function mbf(...iterable) {
-    return MsgBlock.from(iterable);
-}
-
-function safeString(string) {
-    return string.replace(/"/g, '\\"');
-}
-
-function basicTypeMsg(data) {
-    const basicType = typeof data;
-    if (basicType in basic$1) return basicTypeParser(data, basicType);
-}
-
-function functionMsg(data, color) {
-    let str = safeString(data.toString());
-    let firstBlank = str.indexOf(' ');
-    if (str === '(') return str;
-    return mbf(style('italic'), color, str.slice(0, firstBlank), mbf('', style('normal'), str.slice(firstBlank)));
-}
-
-function getFunctionSignature(func, color) {
-    let str = safeString(func.toString());
-    let signEnd = /\)[\s]*\{/.exec(func).index + 1;
-    let firstBlank = str.indexOf(' ');
-
-    if (str[0] === '(') return `<Anonymous>${str.slice(0, signEnd)}`;
-    return mbf(style('italic'), color, str.slice(0, firstBlank), mbf('', style('normal'), str.slice(firstBlank, signEnd)));
-}
-
-function basicTypeParser(data, type) {
-    let color = basic$1[type];
-    if (type === 'function') {
-        return functionMsg(data, color);
-    }
-
-    if (type === 'undefined') {
-        return mbf('', color, 'undefined');
-    }
-
-    if (type === 'string') {
-        return mbf('', color, safeString(`'${data.toString()}'`));
-    }
-
-    return mbf('', color, data.toString());
-}
-
-function fakeNativeToString(name, ...args) {
-    function toString() { return `function ${name}(${args.join(', ')}) { [native code] }` }
-    return toString;
-}
-
-class RawTeller {
-    static sender = null;
-    /**
-     * @type {[string, string][]}
-     */
-    msgQueue = [];
-    pending = false;
-
-    static header = '';
-    /**
-     * @type {RawTeller}
-     */
-    static rawTeller;
-
-    constructor(header) {
-        this.header = header || RawTeller.header;
-        RawTeller.rawTeller = this;
-    }
-
-    send(msg) {
-        this.msgQueue.push(msg);
-    }
-
-    pend() {
-        this.pending = true;
-    }
-
-    active() {
-        if (this.pending) return;
-
-        this.msgQueue.forEach(msg => {
-            RawTeller.sender(`${this.header}${msg}`);
-        });
-
-        this.msgQueue = [];
-    }
-
-    setSender(func) {
-        RawTeller.sender = func;
-    }
-
-}
-
-/**
- * @param {any} commander 
- * @returns {Function}
- */
-function getRawTeller(commander) {
-
-    let sender = new RawTeller();
-    sender.setSender(commander);
-
-    function send(msg) {
-        sender.send(msg);
-    }
-
-    send.toString = fakeNativeToString('send', 'msg');
-
-    send.update = () => {
-        sender.active();
-    };
-
-    let senderProxy = new Proxy(send, {
-        get(t, p) {
-            return t[p];
-        },
-
-        set() { return false }
-    });
-
-    return senderProxy;
-}
-
-const UNTRUSTED_HEADER = 'Untrusted >';
-const UNTRUSTED_HEADER_PREFIX = () => mbf(style('italic'), style('red'), UNTRUSTED_HEADER);
-
-function sendUntrusted(msg) {
-    RawTeller.rawTeller.send(UNTRUSTED_HEADER_PREFIX() + getTab() + msg);
-}
-
-function send(msg) {
-    RawTeller.rawTeller.send(msg);
-}
-
-const ConsoleSpecified = {
-    '-o': 1,
-    '-b': 0,
-    '--open': 1,
-    '--back': 0,
-    '-p': 1
-};
-
-async function _openLogic(terminal, index, msgBuilder) {
-    let data = terminal.get(index);
-    let msg = await msgBuilder('normal', data);
-    terminal.pushContext();
-
-    send(msg);
-}
-
-async function _backLogic(terminal, msgBuilder) {
-    if (!terminal.index) return;
-
-    let data = terminal.clearContext();
-    let msg = await msgBuilder('normal', data);
-
-    send(msg);
-}
-
-class Context {
-    data = null;
-    previews = [];
-    constructor(data, previews) {
-        this.data = data;
-        this.previews = previews;
-    }
-}
-
-class ConsoleTerminal {
-    static contexts = [];
-    static counter = -1;
-    context = null;
-    index = 0;
-
-    constructor(msgBuilder) {
-
-        const openLogic = index => {
-            _openLogic(this, index, msgBuilder);
-        };
-
-        const backLogic = () => {
-            _backLogic(this, msgBuilder);
-        };
-
-        register('con', em => {
-            em.on('-o', openLogic);
-            em.on('--open', openLogic);
-            em.on('-b', backLogic);
-            em.on('--back', backLogic);
-            em.on('-p', async data => sendUntrusted(await msgBuilder('normal', data)));
-
-            em.on('unregister', () => {
-                em.removeAllListeners('-o');
-                em.removeAllListeners('--open');
-                em.removeAllListeners('-b');
-                em.removeAllListeners('--back');
-                em.removeAllListeners('-p');
-            });
-        }, ConsoleSpecified);
-
-        let arr = [];
-        TConsole.__emitter__.on('--object', data => {
-            ConsoleTerminal.counter = -1;
-            this.context = new Context(data, [...arr]);
-            if (!ConsoleTerminal.contexts.length) this.pushContext();
-        });
-
-        TConsole.__emitter__.on('--preview', data => {
-            ConsoleTerminal.counter++;
-            arr.push(data);
-        });
-
-    }
-
-    clearContext() {
-        ConsoleTerminal.contexts.length = this.index;
-        this.index--;
-        this.updateContext();
-        return this.context.data;
-    }
-
-    pushContext() {
-        this.index = ConsoleTerminal.contexts.length;
-        ConsoleTerminal.contexts.push(this.context);
-        this.updateContext();
-    }
-
-    updateContext() {
-        this.context = ConsoleTerminal.contexts[this.index];
-    }
-
-    get(index = 0) {
-        return this.context.previews[index];
-    }
-
-}
-
-async function toString(obj, showDetails = false) {
-    let returnVal;
-    if (!showDetails) {
-        returnVal = await getPreviewMsg(obj);
-    }
-    returnVal = await getDetailsMsg(obj);
-
-    TConsole.__emitter__.emit('--object', obj);
-
-    return returnVal;
-}
-
-function getProto(obj) {
-    return Object.getPrototypeOf(obj);
-}
-
-function getClassPrefix(obj) {
-    let __proto__ = getProto(obj);
-    let constructor;
-
-    if (!__proto__) return '';
-
-    constructor = __proto__.constructor;
-    return constructor.name;
-}
-
-function getObjPropNames(obj) {
-    let arr = [];
-    for (const k in obj) {
-        arr.push(k);
-    }
-    return arr;
-}
-
-function getObjSymbols(obj) {
-    return Object.getOwnPropertySymbols(obj);
-}
-
-function getObjDescriptors(obj) {
-    return Object.getOwnPropertyDescriptors(obj);
-}
-
-async function keyValTile(obj, k, propColor) {
-    let ks;
-    let vs;
-
-    if (k === '[[Prototype]]') {
-        let prefix = getClassPrefix(obj);
-        if (!prefix) return '';
-        return mbf('', objectProp.prototype, k, ':  ', prefix);
-    }
-
-    ks = typeof k === 'symbol' ?
-        mbf(style('italic'), objectProp.symbol, safeString(k.toString())) :
-        mbf(style('italic'), propColor, safeString(k));
-
-    vs = typeof obj[k] === 'object' ?
-        (await parseObjValue(obj[k])) : basicTypeMsg(obj[k]);
-
-    if (typeof obj[k] === 'object' && obj[k]) {
-        TConsole.__emitter__.emit('--preview', obj[k]);
-        vs.push(getTab() + `$${ConsoleTerminal.counter}`);
-    }
-
-    return mbf('', style('normal'), ks, ':  ', vs);
-
-}
-
-async function parseExtend(obj, showInnenumerable = true) {
-    const objDesc = getObjDescriptors(obj);
-    let res = mbf();
-
-    for (const k in objDesc) {
-        const desc = objDesc[k];
-        const { set, get, enumerable } = desc;
-        const propName = safeString(typeof k === 'symbol' ? k.toString() : k);
-        let msg = mbf();
-
-        if (typeof get === 'function') {
-            msg.push('\n');
-            msg.push('', objectProp.setterGetter, `get ${propName}: `, await parseValPreview(get));
-        }
-
-        if (typeof set === 'function') {
-            msg.push('\n');
-            msg.push('', objectProp.setterGetter, `set ${propName}: `, await parseValPreview(set));
-        }
-
-        if (!enumerable && showInnenumerable) {
-            msg.push('\n');
-            msg.push('', objectProp.innenumerable, k, ': ', await parseValPreview(obj[k]));
-        }
-
-        if (msg.length) res.push(...msg);
-    }
-
-    if (res.length) return res;
-    return '';
-}
-
-async function paresePrototype(obj) {
-
-    let res = mbf();
-    let __proto__ = obj;
-
-    while ((__proto__ = getProto(__proto__)) !== Object.prototype && __proto__) {
-        res.push(await parseExtend(__proto__, false));
-    }
-
-    return res;
-}
-
-async function getDetailsMsg(obj) {
-    let propColor = objectProp.normal;
-    let classPrefix = getClassPrefix(obj);
-    let props = [];
-
-    let msg = mbf('\n', style('normal'), `${await parseValPreview(obj, classPrefix)}:`);
-    props = props.concat(getObjPropNames(obj)).concat(getObjSymbols(obj));
-
-    for (const cur of props) {
-        msg.push('\n', await keyValTile(obj, cur, propColor));
-    }
-
-    let extend = await parseExtend(obj);
-    if (extend.length > 2) {
-        msg.push(extend);
-    }
-
-    msg.push(await paresePrototype(obj));
-
-    const prototypeClassPrefix = await keyValTile(obj, '[[Prototype]]', propColor);
-    if (prototypeClassPrefix) msg.push('\n', prototypeClassPrefix);
-
-    return msg;
-}
-
-async function getPreviewMsg(obj) {
-    let propColor = objectProp.preview;
-    let classPrefix = getClassPrefix(obj);
-
-    let msg = mbf(style('italic'), style('normal'), `${classPrefix} {`);
-    let props = getObjPropNames(obj);
-    for (const cur of props) {
-        msg.push('\n', await keyValTile(obj, cur, propColor));
-    }
-    msg.push('}');
-
-    return msg;
-}
-
-async function parseObjValue(obj) {
-    let classPrefix = getClassPrefix(obj);
-    if (obj === null) {
-        return mbf('', basic$1.undefined, 'null');
-    }
-
-    if (obj instanceof Array) {
-        return await parseArray(obj, classPrefix);
-    }
-
-    return await parseValPreview(obj, classPrefix);
-}
-
-async function parseArray(obj, classPrefix) {
-    if (classPrefix === 'Array') classPrefix = '';
-    let res = mbf(style('italic'), '', `${classPrefix}(${obj.length}) [`);
-    let i = 0;
-    for (const cur of obj) {
-        if (typeof cur === 'object') {
-            if (cur === null) res.push(mbf('', basic$1.undefined, 'null'));
-            else res.push(await parseValPreview(cur, classPrefix));
-        } else {
-            res.push(basicTypeMsg(cur));
-        }
-        if (i < obj.length - 1) {
-            res.push(', ');
-        }
-        i++;
-    }
-    res.push(']');
-    return res;
-}
-
-async function parseValPreview(obj, classPrefix) {
-
-    const keys = specClassParsers.keys();
-    for (const k of keys) {
-        if (obj instanceof k) {
-            return await getSpecParser(k).call(undefined, obj, classPrefix);
-        }
-    }
-
-    if (typeof obj !== 'object') {
-        return basicTypeMsg(obj);
-    }
-
-    classPrefix = classPrefix ? classPrefix + ' ' : '';
-    return mbf('', objectProp.preview, `${classPrefix}{ ... }`,);
-}
-
-/**
- * @type {Map<Function, Function>}
- */
-let specClassParsers = new Map();
-
-function getSpecParser(instanceClass) {
-    if (specClassParsers.has(instanceClass)) {
-        return specClassParsers.get(instanceClass);
-    }
-
-    return null;
-}
-
-function registerSpecParser(instanceClass, handler) {
-    specClassParsers.set(instanceClass, handler);
-}
-
-const getPromiseState = (() => {
-    let obj = {};
-    let promiseState = Symbol('promiseState');
-    let promiseValue = Symbol('promiseValue');
-
-    return p => {
-        let _p = Promise.race([p, obj]);
-        _p[promiseState] = 'pending';
-
-        _p.then(v => {
-            if (v === obj) _p[promiseState] = 'pending';
-            else _p[promiseState] = 'fulfilled', _p[promiseValue] = v;
-        }, reason => (_p[promiseState] = 'rejected', _p[promiseValue] = reason));
-
-        return { promiseState, promiseValue, p: _p };
-    };
-
-})();
-
-function doRegisterSpecParsers() {
-    registerSpecParser(Array, (obj, classPrefix) => {
-        return mbf(style('italic'), objectProp.preview, `${classPrefix}`, '(', basicTypeMsg(obj.length), style('italic'), objectProp.preview, ')');
-    });
-
-    registerSpecParser(Promise, async (obj, classPrefix) => {
-        let { promiseState, promiseValue, p } = getPromiseState(obj);
-        let state = p[promiseState];
-        let value = p[promiseValue];
-        let message;
-
-        let msg = async () => {
-            state = p[promiseState];
-            value = p[promiseValue];
-            return mbf(style('italic'), objectProp.preview, `${classPrefix}`, ` { <${state}>${state === 'pending' ? '' : ': ' + (typeof value === 'object' ? await parseValPreview(value, classPrefix) : basicTypeMsg(value))} }`);
-        };
-
-        try {
-            await p;
-        } catch (error) { }
-
-        message = await msg();
-
-        return message;
-    });
-
-
-    registerSpecParser(Error, obj => {
-        return mbf('', style('normal'), obj.stack);
-    });
-
-    registerSpecParser(Function, obj => {
-        const msg = getFunctionSignature(obj, basic$1.function);
-        return mbf('', basic$1.function, msg);
-    });
-
-
-}
-
-class Format {
-    /**
-     * @type {Format[]}
-     */
-    static formats = [];
-
-    constructor(opt) {
-        this.checker = opt.checker;
-        this.parse = opt.parse;
-
-        Format.formats.push(this);
-    }
-
-}
-
-function check(str) {
-    let i = 0;
-    for (const format of Format.formats) {
-        if (format.checker.test(str)) {
-            return i;
-        }
-        i++;
-    }
-    return false;
-}
-
-/**
- * @param {{checker: RegExp, parse: (value: any) => any}} opt 
- */
-function addFormat(opt) {
-    return new Format(opt);
-}
-
-async function parseFormat(str, value, format) {
-    const res = format.checker.exec(str);
-    const args = [...res];
-    const returnVal = await format.parse(value, ...args);
-
-    return str.replace(format.checker, returnVal);
-}
-
-async function getfstr(formatStr, ...args) {
-    let _args = [...args];
-    let index;
-    let returnVal;
-
-    while (typeof (index = check(await returnVal || formatStr)) === 'number') {
-        let value = _args.shift();
-        let format = Format.formats[index];
-
-        returnVal = await parseFormat(returnVal || formatStr, value, format);
-    }
-
-    return returnVal;
-}
-
-function initfstring() {
-
-    addFormat({
-        checker: /%d/,
-        parse(value) {
-            return mbf('', basic$1.number, new Number(value).toFixed(0));
-        }
-    });
-
-    addFormat({
-        checker: /%[o|O]/,
-        async parse(v) {
-            return mbf(style('italic'), style('normal'), await toString(v, TConsole.showDetail));
-        }
-    });
-
-    addFormat({
-        checker: /%(.*?)f/,
-        parse(v, $, $1) {
-            if ($1.startsWith('.')) {
-                $1 = $1.slice(1);
-                return mbf('', basic$1.number, new Number(v).toFixed(+$1));
-            }
-            return mbf('', basic$1.number, new Number(v));
-        }
-    });
-
-}
-
-/**
- * @param {(msg: string) => void} receiver 
- * @returns {TConsole}
- */
-function initConsole(receiver) {
-
-    doRegisterSpecParsers();
-    initfstring();
-
-
-    const rawSend = getRawTeller(receiver);
-    const send = async msg => rawSend(await msg);
-
-    async function buildMsg(s = 'white', ...args) {
-        let res = mbf('', style(s));
-        let i = -1;
-
-        if (typeof args[0] === 'string') {
-            let fstr = await getfstr(...args);
-            if (fstr) return fstr;
-        }
-
-        for (const cur of args) {
-            i++;
-            let msg = typeof cur === 'object' ? await toString(cur, TConsole.showDetail) :
-                typeof cur === 'string' ? mbf('', style(s), safeString(cur)) : basicTypeMsg(cur);
-
-            if (i) res.push(getTab());
-            res.push(msg);
-        }
-
-        return res;
-    }
-
-    new ConsoleTerminal(buildMsg);
-
-    function log(...args) {
-        let res;
-        try {
-            res = buildMsg('white', ...args);
-        } catch (e) {
-            error(e);
-        }
-
-        send(res);
-    }
-
-    function error(...args) {
-        let err;
-        try {
-            err = buildMsg('red', ...args);
-        } catch (e) {
-            send(mbf('', style('red'), 'Fatal Error: You should have crashed your game!'));
-        }
-
-        send(err);
-    }
-
-    function warn(...args) {
-        let res;
-        try {
-            res = buildMsg('yellow', ...args);
-        } catch (e) {
-            error(e);
-        }
-
-        send(res);
-    }
-
-    function getTraceStack(sliceStart = 0) {
-        return Error('').stack.split('\n').slice(sliceStart + 2).join('\n');
-    }
-
-    function trace() {
-        let stack = getTraceStack(1);
-        stack = 'trace():\n' + stack;
-
-        send(buildMsg('white', stack));
-    }
-
-    function assert(condition, ...data) {
-        if (!condition) {
-            error('Assertion failed: ', ...data, getTraceStack(1));
-        }
-    }
-
-    let _counts = {};
-    function count(label = 'default') {
-        _counts[label] ? _counts[label]++ : _counts[label] = 1;
-        log(`${label}: ${_counts[label]}`);
-    }
-
-    function countReset(label = 'default') {
-        if (_counts[label]) {
-            delete _counts[label];
-        }
-    }
-
-
-    let _tickNow = 1;
-    let _timers = {};
-    function updateTimer() {
-        _tickNow++;
-    }
-
-    function time(label = 'default') {
-        _timers[label] = _tickNow;
-    }
-
-    function timeLog(label = 'default') {
-        let tkNow = _tickNow;
-        let tkBefore = _timers[label];
-
-        if (!tkBefore) {
-            warn(`Timer '${label}' does not exist`, getTraceStack(1));
-            return;
-        }
-
-        let res = tkNow - tkBefore;
-        log(`${label}: ${res} ticks (${res * 50} ms)`);
-    }
-
-    function timeEnd(label = 'default') {
-        timeLog(label);
-        if (_timers[label]) {
-            delete _timers[label];
-        }
-    }
-
-
-    function updateRawTeller() {
-        rawSend.update();
-    }
-
-    function update() {
-        updateTimer();
-        updateRawTeller();
-    }
-
-    const _console = {
-        log, error, warn, trace, assert, count, countReset,
-        time, timeLog, timeEnd
-    };
-
-    return new TConsole({ update, console: _console });
-
-}
-
-var console_1 = { initConsole };
-
-(function (module, exports) {
-	const {initConsole} = console_1;
-
-	const tConsole = initConsole(msg => log(`${msg}`));
-	tConsole.setFormatting('ansiEscapeSeq');
-
-	setInterval(() => tConsole.update(), 20);
-
-	module.exports = tConsole.getConsole();
-	exports.tConsole = tConsole; 
-} (main, main.exports));
-
-var mainExports = main.exports;
-
 var server;
 var hasRequiredServer;
 
 function requireServer () {
 	if (hasRequiredServer) return server;
 	hasRequiredServer = 1;
-
 	function handleCall(msg, em) {
 	    const { id, name, args } = msg;
 	    em.emitNone('call', id, name, args);
@@ -1952,31 +871,37 @@ function requireSetup () {
 	return setup_1;
 }
 
-function playAnim$b(pl, anim, nextAnim, time, stopExp, controller) {
+function playAnim$9(pl, anim, nextAnim, time, stopExp, controller) {
     mc.runcmdEx(`/playanimation "${pl.name}" ` + [anim, nextAnim, time, stopExp, controller].filter(x => x).join(' '));
 }
-
 function playSound(pl, sound, pos, volume, pitch, minVolume) {
     mc.runcmdEx(`/playsound ${sound} ${pl.name} ` + [
         pos.x, pos.y, pos.z, volume, pitch, minVolume
     ].join(' '));
 }
-
-function playSoundAll$6(sound, pos, volume, pitch, minVolume) {
+function playSoundAll$8(sound, pos, volume, pitch, minVolume) {
     mc.runcmdEx(`/playsound ${sound} @a ` + [
         pos.x, pos.y, pos.z, volume, pitch, minVolume
     ].join(' '));
 }
-
 function playParticle(particle, pos) {
     mc.runcmdEx(`/particle ${particle} ` + [
         pos.x, pos.y, pos.z
     ].join(' '));
 }
+function movable() {
+}
 
-var basic = {
-    playAnim: playAnim$b, playSound, playSoundAll: playSoundAll$6, playParticle,
-};
+var basic = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	movable: movable,
+	playAnim: playAnim$9,
+	playParticle: playParticle,
+	playSound: playSound,
+	playSoundAll: playSoundAll$8
+});
+
+var require$$3$1 = /*@__PURE__*/getAugmentedNamespace(basic);
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -2177,15 +1102,15 @@ function RequireComponents(...params) {
 var DamageModifier_1;
 const publicComponentRegistry = new Map();
 const componentIdMapping = new WeakMap();
-const PublicComponent = name => target => {
-    publicComponentRegistry.set(name, target);
-    componentIdMapping.set(target, name);
-};
 const getComponentCtor = (id) => {
     return publicComponentRegistry.get(id);
 };
 const getComponentId = (t) => {
     return componentIdMapping.get(t);
+};
+const PublicComponent = name => target => {
+    publicComponentRegistry.set(name, target);
+    componentIdMapping.set(target, name);
 };
 const fieldKeys = new Map();
 const Fields = (muts, lets = []) => target => {
@@ -2229,7 +1154,7 @@ var config = /*#__PURE__*/Object.freeze({
 	getFieldEntries: getFieldEntries
 });
 
-let CameraComponent$2 = class CameraComponent extends BaseComponent {
+let CameraComponent$1 = class CameraComponent extends BaseComponent {
     /**
      * [ x, y, z ]
      */
@@ -2248,7 +1173,7 @@ let CameraComponent$2 = class CameraComponent extends BaseComponent {
 
 var camera$3 = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	CameraComponent: CameraComponent$2
+	CameraComponent: CameraComponent$1
 });
 
 function constrictCalc$2(start, end, calcFn) {
@@ -2265,7 +1190,7 @@ function minmax(min, max, val) {
     }
     return Math.max(min, Math.min(max, val));
 }
-function randomRange$3(min = 0, max = 1, integer = false) {
+function randomRange$2(min = 0, max = 1, integer = false) {
     const num = Math.random() * (max - min) + min;
     return integer ? Math.round(num) : num;
 }
@@ -2301,7 +1226,7 @@ var math = /*#__PURE__*/Object.freeze({
 	constrictCalc: constrictCalc$2,
 	lerpn: lerpn,
 	minmax: minmax,
-	randomRange: randomRange$3
+	randomRange: randomRange$2
 });
 
 let Timer = class Timer extends BaseComponent {
@@ -2327,7 +1252,7 @@ Timer = __decorate([
     Fields(['rest'], ['duration', 'done'])
 ], Timer);
 
-let Stamina$3 = class Stamina extends CustomComponent {
+let Stamina$1 = class Stamina extends CustomComponent {
     $stamina;
     maxStamina;
     restorePerTick;
@@ -2371,14 +1296,14 @@ let Stamina$3 = class Stamina extends CustomComponent {
         this.prevStamina = this.stamina;
     }
 };
-Stamina$3 = __decorate([
+Stamina$1 = __decorate([
     PublicComponent('stamina'),
     Fields(['stamina', 'maxStamina', 'restorePerTick', 'restoreCooldown'])
-], Stamina$3);
+], Stamina$1);
 
 var stamina = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	get Stamina () { return Stamina$3; }
+	get Stamina () { return Stamina$1; }
 });
 
 let Tick$1 = class Tick extends CustomComponent {
@@ -2393,7 +1318,6 @@ var tick = /*#__PURE__*/Object.freeze({
 	Tick: Tick$1
 });
 
-/// <reference path="../types.d.ts"/>
 const defaultAcceptableInputs$1 = [
     'onJump', 'onSneak', 'onAttack', 'onUseItem',
     'onChangeSprinting', 'onFeint'
@@ -2401,7 +1325,7 @@ const defaultAcceptableInputs$1 = [
 let Status$3 = class Status {
     static status = new Map();
     static get(xuid) {
-        return this.status.get(xuid) ?? new Status(xuid);
+        return this.status.get(xuid) || new Status(xuid);
     }
     /**
      * 手上物品的type
@@ -2482,7 +1406,7 @@ let Status$3 = class Status {
         this.stiffness = 0;
         // this.componentManager.clear()
         defaultAcceptableInputs$1.forEach(type => this.acceptableInputs.add(type));
-        this.componentManager.attachComponent(new Tick$1(), new CameraComponent$2(), new Stamina$3(0));
+        this.componentManager.attachComponent(new Tick$1(), new CameraComponent$1(), new Stamina$1(0));
     }
     acceptableInput(name, accept) {
         if (accept !== undefined) {
@@ -2524,7 +1448,7 @@ var status = /*#__PURE__*/Object.freeze({
 });
 
 var CameraFading_1;
-let CameraFading$2 = CameraFading_1 = class CameraFading extends BaseComponent {
+let CameraFading$1 = CameraFading_1 = class CameraFading extends BaseComponent {
     config;
     exitOnEnd;
     tick;
@@ -2578,7 +1502,7 @@ let CameraFading$2 = CameraFading_1 = class CameraFading extends BaseComponent {
         return this.last;
     }
     onTick(manager) {
-        const { offset, rot } = manager.getComponent(CameraComponent$2).unwrap();
+        const { offset, rot } = manager.getComponent(CameraComponent$1).unwrap();
         const info = this.getTransInfo();
         const [curve, from, to, progress] = info;
         switch (curve) {
@@ -2618,55 +1542,40 @@ let CameraFading$2 = CameraFading_1 = class CameraFading extends BaseComponent {
         }
         Status$3.get(abuser.xuid).componentManager.attachComponent(new CameraFading_1([
             {
-                from: CameraComponent$2.defaultStatus,
+                from: CameraComponent$1.defaultStatus,
                 to,
                 duration: 1
             },
             {
-                to: CameraComponent$2.defaultStatus,
+                to: CameraComponent$1.defaultStatus,
                 duration: 1
             }
         ], true));
     }
 };
-CameraFading$2 = CameraFading_1 = __decorate([
+CameraFading$1 = CameraFading_1 = __decorate([
     PublicComponent('camera-fading'),
     Fields(['config'])
-], CameraFading$2);
+], CameraFading$1);
 
 var cameraFading = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	get CameraFading () { return CameraFading$2; }
+	get CameraFading () { return CameraFading$1; }
 });
-
-var require$$15 = /*@__PURE__*/getAugmentedNamespace(cameraFading);
-
-var require$$1 = /*@__PURE__*/getAugmentedNamespace(camera$3);
-
-var require$$19 = /*@__PURE__*/getAugmentedNamespace(stamina);
-
-const { playAnim: playAnim$a, playSoundAll: playSoundAll$5 } = basic;
-const { CameraFading: CameraFading$1 } = require$$15;
-const { CameraComponent: CameraComponent$1 } = require$$1;
-const { Stamina: Stamina$2 } = require$$19;
 
 function getAnim(animCategory, direction) {
     const anim = animCategory[direction];
-
     if (!anim) {
         switch (direction) {
             case 'middle':
-                return animCategory.right || animCategory.left
-
+                return animCategory.right || animCategory.left;
             default:
-                return animCategory.left
+                return animCategory.left;
         }
     }
-
-    return anim
+    return anim;
 }
-
-let DefaultMoves$8 = class DefaultMoves {
+let DefaultMoves$7 = class DefaultMoves {
     animations = {
         parried: {
             /**
@@ -2723,25 +1632,19 @@ let DefaultMoves$8 = class DefaultMoves {
             right: '',
             middle: '',
         },
-    }
-
+    };
     sounds = {
         parry: 'weapon.parry',
         blocked: 'weapon.sword.hit3',
         block: 'weapon.sword.hit2',
-    }
-
-    /**
-     * @type {Move}
-     */
+    };
     blocked = {
         cast: 10,
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2];
-
-            ctx.status.componentManager.getComponent(Stamina$2).unwrap().stamina -= 10;
-            playAnim$a(pl, getAnim(this.animations.blocked, direction));
-            playSoundAll$5(this.sounds.blocked, pl.pos, 1);
+            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 10;
+            playAnim$9(pl, getAnim(this.animations.blocked, direction));
+            playSoundAll$8(this.sounds.blocked, pl.pos, 1);
             ctx.movementInput(pl, false);
             ctx.freeze(pl);
             ctx.setVelocity(pl, -100, 0.8, -2);
@@ -2754,21 +1657,17 @@ let DefaultMoves$8 = class DefaultMoves {
             8: (pl, ctx) => ctx.trap(pl, { tag: 'blockedCounter' })
         },
         transitions: {}
-    }
-
-    /**
-     * @type {Move}
-     */
+    };
     block = {
         cast: 5,
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2];
-            const stamina = ctx.status.componentManager.getComponent(Stamina$2).unwrap();
+            const stamina = ctx.status.componentManager.getComponent(Stamina$1).unwrap();
             stamina.setCooldown(5);
             stamina.stamina += 15;
             ctx.status.isBlocking = true;
-            playAnim$a(pl, getAnim(this.animations.block, direction));
-            playSoundAll$5(this.sounds.block, pl.pos, 1);
+            playAnim$9(pl, getAnim(this.animations.block, direction));
+            playSoundAll$8(this.sounds.block, pl.pos, 1);
             ctx.movementInput(pl, false);
             ctx.freeze(pl);
         },
@@ -2781,16 +1680,12 @@ let DefaultMoves$8 = class DefaultMoves {
             4: (pl, ctx) => ctx.trap(pl, { tag: 'blockCounter' })
         },
         transitions: {}
-    }
-
-    /**
-     * @type {Move}
-     */
+    };
     hurt = {
         cast: Infinity,
         onEnter: (pl, ctx) => {
             const manager = ctx.status.componentManager;
-            manager.getComponent(Stamina$2).unwrap().setCooldown(5);
+            manager.getComponent(Stamina$1).unwrap().setCooldown(5);
             ctx.movementInput(pl, false);
             ctx.freeze(pl);
             ctx.status.disableInputs([
@@ -2798,9 +1693,8 @@ let DefaultMoves$8 = class DefaultMoves {
                 'onUseItem',
             ]);
             const { stiffness, customHurtAnimation, direction } = ctx.rawArgs[2];
-            const hurtAnim = customHurtAnimation ?? this.animations.hit[direction];
-
-            playAnim$a(pl, hurtAnim);
+            const hurtAnim = customHurtAnimation ?? this.animations.hit[direction || 'left'];
+            playAnim$9(pl, hurtAnim);
             ctx.task.queue(() => {
                 ctx.trap(pl, { tag: 'recover' });
             }, stiffness).run();
@@ -2818,12 +1712,8 @@ let DefaultMoves$8 = class DefaultMoves {
                 ctx.trap(pl, { tag: 'hitWall' });
             }
         },
-        transitions: { }
-    }
-
-    /**
-     * @type {Move}
-     */
+        transitions: {}
+    };
     hitWall = {
         cast: 25,
         onEnter: (pl, ctx) => {
@@ -2833,7 +1723,7 @@ let DefaultMoves$8 = class DefaultMoves {
                 'onAttack',
                 'onUseItem',
             ]);
-            playAnim$a(pl, 'animation.general.hit_wall');
+            playAnim$9(pl, 'animation.general.hit_wall');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -2842,16 +1732,12 @@ let DefaultMoves$8 = class DefaultMoves {
                 'onUseItem',
             ]);
         },
-        transitions: { }
-    }
-
-    /**
-     * @type {Move}
-     */
+        transitions: {}
+    };
     parried = {
         cast: 35,
         onEnter: (pl, ctx) => {
-            ctx.status.componentManager.getComponent(Stamina$2).unwrap().stamina -= 15;
+            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 15;
             ctx.movementInput(pl, false);
             ctx.freeze(pl);
             ctx.status.disableInputs([
@@ -2859,7 +1745,7 @@ let DefaultMoves$8 = class DefaultMoves {
                 'onUseItem',
             ]);
             const { direction } = ctx.rawArgs[2];
-            playAnim$a(pl, getAnim(this.animations.parried, direction));
+            playAnim$9(pl, getAnim(this.animations.parried, direction));
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -2872,29 +1758,23 @@ let DefaultMoves$8 = class DefaultMoves {
             4: (pl, ctx) => ctx.setVelocity(pl, -140, 1.5, -2),
             12: (pl, ctx) => ctx.lookAtTarget(pl),
         },
-        transitions: { }
-    }
-
-    /**
-     * @type {Move}
-     */
+        transitions: {}
+    };
     parry = {
         cast: 10,
         backswing: 11,
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2];
-
-            ctx.status.componentManager.getComponent(Stamina$2).unwrap().stamina += 10;
+            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina += 10;
             ctx.movementInput(pl, false);
-            playSoundAll$5(this.sounds.parry, pl.pos, 1);
+            playSoundAll$8(this.sounds.parry, pl.pos, 1);
             ctx.status.isWaitingParry = true;
-            playAnim$a(pl, getAnim(this.animations.parry, direction));
+            playAnim$9(pl, getAnim(this.animations.parry, direction));
             ctx.lookAtTarget(pl);
-
             ctx.status.componentManager.attachComponent(new CameraFading$1([
                 {
                     from: CameraComponent$1.defaultOffset,
-                    to: [ 0.6, 0, 0.8, 0, 0 ],
+                    to: [0.6, 0, 0.8, 0, 0],
                     duration: 2
                 },
                 {
@@ -2911,12 +1791,8 @@ let DefaultMoves$8 = class DefaultMoves {
         timeline: {
             13: (pl, ctx) => ctx.trap(pl, { tag: 'parryCounter' })
         },
-        transitions: { }
-    }
-
-    /**
-     * @type {Move}
-     */
+        transitions: {}
+    };
     knockdown = {
         cast: 30,
         onEnter: (pl, ctx) => {
@@ -2925,19 +1801,18 @@ let DefaultMoves$8 = class DefaultMoves {
                 'onAttack',
                 'onUseItem'
             ]);
-            playAnim$a(pl, this.animations.knockdown);
+            playAnim$9(pl, this.animations.knockdown);
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
-            playAnim$a(pl, 'animation.general.stand');
+            playAnim$9(pl, 'animation.general.stand');
             ctx.status.enableInputs([
                 'onAttack',
                 'onUseItem'
             ]);
         },
-        transitions: { }
-    }
-
+        transitions: {}
+    };
     setup(init) {
         this.hitWall.transitions = {
             hurt: {
@@ -2947,7 +1822,6 @@ let DefaultMoves$8 = class DefaultMoves {
                 onEndOfLife: null
             },
         };
-
         this.parry.transitions = {
             parry: {
                 onParry: null
@@ -2959,7 +1833,6 @@ let DefaultMoves$8 = class DefaultMoves {
                 onHurt: null
             },
         };
-
         this.parried.transitions = {
             [init]: {
                 onEndOfLife: null
@@ -2968,7 +1841,6 @@ let DefaultMoves$8 = class DefaultMoves {
                 onHurt: { allowedState: 'both' }
             },
         };
-
         this.hurt.transitions = {
             [init]: {
                 onTrap: {
@@ -2986,7 +1858,6 @@ let DefaultMoves$8 = class DefaultMoves {
                 }
             },
         };
-
         this.blocked.transitions = {
             [init]: {
                 onEndOfLife: null
@@ -2995,7 +1866,6 @@ let DefaultMoves$8 = class DefaultMoves {
                 onHurt: { allowedState: 'both' }
             },
         };
-
         this.block.transitions = {
             [init]: {
                 onEndOfLife: null
@@ -3008,59 +1878,47 @@ let DefaultMoves$8 = class DefaultMoves {
             }
         };
     }
-
-    /**
-     * @param {keyof this} state 
-     * @param {Move} obj 
-     */
     mixin(state, obj) {
+        //@ts-ignore
         this[state] = Object.assign(this[state], obj);
     }
-
-    /**
-     * @param {keyof this} state 
-     * @param {string} state 
-     * @param {TransitionTypeOption} obj 
-     */
-    setTransition(state, transitionName, obj) {
+    setTransition(state, transitionName, transition) {
+        //@ts-ignore
         const _state = this[state];
         if (!_state) {
-            return
+            return;
         }
-
-        _state.transitions[transitionName] = obj;
+        _state.transitions[transitionName] = transition;
     }
 };
-
 /**
  * @implements {TrickModule}
  */
-let DefaultTrickModule$8 = class DefaultTrickModule {
-    /**
-     * @param {string} sid 
-     * @param {string} entry 
-     * @param {string|string[]} bind 
-     * @param {Moves} moves
-     */
+let DefaultTrickModule$7 = class DefaultTrickModule {
+    sid;
+    entry;
+    bind;
+    moves;
     constructor(sid, entry, bind, moves) {
         this.sid = sid;
         this.entry = entry;
         this.bind = bind;
         this.moves = moves;
     }
-
 };
 
-var _default = {
-    DefaultTrickModule: DefaultTrickModule$8, DefaultMoves: DefaultMoves$8,
-};
+var _default = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	DefaultMoves: DefaultMoves$7,
+	DefaultTrickModule: DefaultTrickModule$7
+});
 
-/// <reference path="../basic/types.d.ts"/>
+var require$$1 = /*@__PURE__*/getAugmentedNamespace(_default);
 
-const { playAnim: playAnim$9, playSoundAll: playSoundAll$4 } = basic;
-const { DefaultMoves: DefaultMoves$7, DefaultTrickModule: DefaultTrickModule$7 } = _default;
+const { playAnim: playAnim$8, playSoundAll: playSoundAll$7 } = require$$3$1;
+const { DefaultMoves: DefaultMoves$6, DefaultTrickModule: DefaultTrickModule$6 } = require$$1;
 
-class DoubleDaggerMoves extends DefaultMoves$7 {
+class DoubleDaggerMoves extends DefaultMoves$6 {
     constructor() {
         super();
 
@@ -3102,7 +1960,7 @@ class DoubleDaggerMoves extends DefaultMoves$7 {
     init = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$9(pl, 'animation.posture.clear');
+            playAnim$8(pl, 'animation.posture.clear');
         },
         transitions: {
             hold: {
@@ -3120,7 +1978,7 @@ class DoubleDaggerMoves extends DefaultMoves$7 {
     hold = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim$9(pl, 'animation.double_dagger.hold', 'animation.double_dagger.hold');
+            playAnim$8(pl, 'animation.double_dagger.hold', 'animation.double_dagger.hold');
         },
         transitions: {
             init: {
@@ -3152,11 +2010,11 @@ class DoubleDaggerMoves extends DefaultMoves$7 {
         onEnter(pl, ctx) {
             ctx.status.isBlocking = true;
             ctx.freeze(pl);
-            playAnim$9(pl, 'animation.double_dagger.horizontal_swing');
+            playAnim$8(pl, 'animation.double_dagger.horizontal_swing');
             ctx.lookAtTarget(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll$4('weapon.woosh.1', pl.pos, 1);
+            playSoundAll$7('weapon.woosh.1', pl.pos, 1);
             ctx.selectFromRange(pl, {
                 angle: 90,
                 radius: 2,
@@ -3229,7 +2087,7 @@ class DoubleDaggerMoves extends DefaultMoves$7 {
         backswing: 11,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$9(pl, 'animation.double_dagger.horizontal_swing.to.vertical_chop');
+            playAnim$8(pl, 'animation.double_dagger.horizontal_swing.to.vertical_chop');
             ctx.lookAtTarget(pl);
         },
         onAct(pl, ctx) {
@@ -3251,7 +2109,7 @@ class DoubleDaggerMoves extends DefaultMoves$7 {
         timeline: {
             0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
             4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8),
-            9: pl => playSoundAll$4('weapon.woosh.3', pl.pos, 1),
+            9: pl => playSoundAll$7('weapon.woosh.3', pl.pos, 1),
             10: (pl, ctx) => ctx.trap(pl)
         },
         transitions: {
@@ -3292,7 +2150,7 @@ class DoubleDaggerMoves extends DefaultMoves$7 {
             ctx.status.isWaitingParry = true;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$9(pl, 'animation.double_dagger.stab');
+            playAnim$8(pl, 'animation.double_dagger.stab');
         },
         onAct(pl, ctx) {
             ctx.selectFromRange(pl, {
@@ -3316,7 +2174,7 @@ class DoubleDaggerMoves extends DefaultMoves$7 {
             3: (_, ctx) => ctx.status.isWaitingParry = false,
             6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8),
             8: (_, ctx) => ctx.status.isBlocking = true,
-            9: pl => playSoundAll$4('weapon.woosh.2', pl.pos, 1),
+            9: pl => playSoundAll$7('weapon.woosh.2', pl.pos, 1),
             12: (_, ctx) => ctx.status.isBlocking = false,
             14: (pl, ctx) => ctx.trap(pl)
         },
@@ -3360,7 +2218,7 @@ class DoubleDaggerMoves extends DefaultMoves$7 {
         onEnter(pl, ctx) {
             ctx.status.isWaitingDeflection = true;
             ctx.freeze(pl);
-            playAnim$9(pl, 'animation.double_dagger.dodge.front');
+            playAnim$8(pl, 'animation.double_dagger.dodge.front');
             ctx.lookAtTarget(pl);
         },
         onAct(_, ctx) {
@@ -3409,8 +2267,8 @@ class DoubleDaggerMoves extends DefaultMoves$7 {
             ctx.status.isDodging = true;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playSoundAll$4('weapon.deflection', pl.pos, 1);
-            playAnim$9(pl, 'animation.double_dagger.deflection');
+            playSoundAll$7('weapon.deflection', pl.pos, 1);
+            playAnim$8(pl, 'animation.double_dagger.deflection');
         },
         onAct(_, ctx) {
             ctx.status.isDodging = false;
@@ -3466,7 +2324,7 @@ class DoubleDaggerMoves extends DefaultMoves$7 {
         backswing: 9,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$9(pl, 'animation.double_dagger.deflection.stab');
+            playAnim$8(pl, 'animation.double_dagger.deflection.stab');
         },
         onAct(pl, ctx) {
             ctx.lookAtTarget(pl);
@@ -3487,7 +2345,7 @@ class DoubleDaggerMoves extends DefaultMoves$7 {
         },
         timeline: {
             5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 60, 0),
-            6: pl => playSoundAll$4('weapon.woosh.2', pl.pos, 1)
+            6: pl => playSoundAll$7('weapon.woosh.2', pl.pos, 1)
         },
         transitions: {
             hurt: {
@@ -3515,7 +2373,7 @@ class DoubleDaggerMoves extends DefaultMoves$7 {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.adsorbOrSetVelocity(pl, 1.5, 90, 0.8);
-            playAnim$9(pl, 'animation.double_dagger.deflection.punch');
+            playAnim$8(pl, 'animation.double_dagger.deflection.punch');
         },
         onAct(pl, ctx) {
             ctx.lookAtTarget(pl);
@@ -3556,7 +2414,7 @@ class DoubleDaggerMoves extends DefaultMoves$7 {
         backswing: 15,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$9(pl, 'animation.double_dagger.dodge.catch');
+            playAnim$8(pl, 'animation.double_dagger.dodge.catch');
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.8);
         },
         onAct(pl, ctx) {
@@ -3642,7 +2500,7 @@ class DoubleDaggerMoves extends DefaultMoves$7 {
         backswing: 12,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$9(pl, 'animation.double_dagger.catch.stab');
+            playAnim$8(pl, 'animation.double_dagger.catch.stab');
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.8);
         },
         onAct(pl, ctx) {
@@ -3683,7 +2541,7 @@ class DoubleDaggerMoves extends DefaultMoves$7 {
         backswing: 11,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$9(pl, 'animation.double_dagger.catch.kick');
+            playAnim$8(pl, 'animation.double_dagger.catch.kick');
             ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8);
         },
         onAct(pl, ctx) {
@@ -3714,7 +2572,7 @@ class DoubleDaggerMoves extends DefaultMoves$7 {
     }
 }
 
-class DoubleDaggerTricks extends DefaultTrickModule$7 {
+class DoubleDaggerTricks extends DefaultTrickModule$6 {
     constructor() {
         super(
             'rgb:double_dagger',
@@ -3725,21 +2583,23 @@ class DoubleDaggerTricks extends DefaultTrickModule$7 {
     }
 }
 
-var double_dagger = new DoubleDaggerTricks();
+const tricks$5 = new DoubleDaggerTricks();
 
-/// <reference path="../basic/types.d.ts"/>
+var double_dagger = {
+    tricks: tricks$5
+};
 
-const { playAnim: playAnim$8 } = basic;
-const { DefaultMoves: DefaultMoves$6, DefaultTrickModule: DefaultTrickModule$6 } = _default;
+const { playAnim: playAnim$7, playSoundAll: playSoundAll$6 } = require$$3$1;
+const { DefaultMoves: DefaultMoves$5, DefaultTrickModule: DefaultTrickModule$5 } = require$$1;
 
-class EmptyHandMoves extends DefaultMoves$6 {
+class EmptyHandMoves extends DefaultMoves$5 {
     /**
      * @type {Move}
      */
     blocking = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$8(pl, 'animation.general.empty_hand');
+            playAnim$7(pl, 'animation.general.empty_hand');
         },
         transitions: {
             cast: {
@@ -3755,7 +2615,7 @@ class EmptyHandMoves extends DefaultMoves$6 {
     }
 }
 
-class EmptyHandTricks extends DefaultTrickModule$6 {
+class EmptyHandTricks extends DefaultTrickModule$5 {
     constructor() {
         super(
             'rgb39.weapon.empty_hand',
@@ -3766,40 +2626,42 @@ class EmptyHandTricks extends DefaultTrickModule$6 {
     }
 }
 
-/**
- * @type {TrickModule}
- */
-var emptyHand = new EmptyHandTricks();
+const tricks$4 = new EmptyHandTricks();
 
-var require$$3 = /*@__PURE__*/getAugmentedNamespace(math);
-
-function hud$1(progress, size, style=['', '§6▮', '§4▯', '']) {
-    const duration = Math.ceil(size * progress);
-    const [ left, bar, empty, right ] = style;
-
-    return left +
-        bar.repeat(duration) +
-        empty.repeat(size - duration) + right
-}
-
-
-var hud_1 = {
-    hud: hud$1
+var emptyHand = {
+    tricks: tricks$4
 };
 
-const { playAnim: playAnim$7, playSoundAll: playSoundAll$3 } = basic;
-const { DefaultMoves: DefaultMoves$5, DefaultTrickModule: DefaultTrickModule$5 } = _default;
-const { constrictCalc: constrictCalc$1, randomRange: randomRange$2 } = require$$3;
-const { hud } = hud_1;
+var require$$2$1 = /*@__PURE__*/getAugmentedNamespace(math);
 
-class LightSaberMoves extends DefaultMoves$5 {
+function hud$1(progress, size, style = ['', '§6▮', '§4▯', '']) {
+    const duration = Math.ceil(size * progress);
+    const [left, bar, empty, right] = style;
+    return left +
+        bar.repeat(duration) +
+        empty.repeat(size - duration) + right;
+}
+
+var hud$2 = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	hud: hud$1
+});
+
+var require$$3 = /*@__PURE__*/getAugmentedNamespace(hud$2);
+
+const { playAnim: playAnim$6, playSoundAll: playSoundAll$5 } = require$$3$1;
+const { DefaultMoves: DefaultMoves$4, DefaultTrickModule: DefaultTrickModule$4 } = require$$1;
+const { constrictCalc: constrictCalc$1, randomRange: randomRange$1 } = require$$2$1;
+const { hud } = require$$3;
+
+class LightSaberMoves extends DefaultMoves$4 {
     /**
      * @type {Move}
      */
     hold = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim$7(pl, 'animation.weapon.light_saber.hold', 'animation.weapon.light_saber.hold');
+            playAnim$6(pl, 'animation.weapon.light_saber.hold', 'animation.weapon.light_saber.hold');
         },
         onTick(pl, ctx) {
             const { status } = ctx;
@@ -3847,7 +2709,7 @@ class LightSaberMoves extends DefaultMoves$5 {
     dodge = {
         cast: 15,
         onEnter(pl, ctx) {
-            playAnim$7(pl, 'animation.weapon.light_saber.dodge');
+            playAnim$6(pl, 'animation.weapon.light_saber.dodge');
             ctx.movement(pl, false);
             ctx.setVelocity(pl, -90, 2, 0);
             ctx.status.stamina = constrictCalc$1(0, 100, () => ctx.status.stamina - 10);
@@ -3902,7 +2764,7 @@ class LightSaberMoves extends DefaultMoves$5 {
         backswing: 10,
         onEnter(pl, ctx) {
             pl.setSprinting(false);
-            playAnim$7(pl, 'animation.weapon.light_saber.jump_attack');
+            playAnim$6(pl, 'animation.weapon.light_saber.jump_attack');
             ctx.status.stamina = constrictCalc$1(0, 100, () => ctx.status.stamina - 15);
             ctx.freeze(pl);
         },
@@ -3956,7 +2818,7 @@ class LightSaberMoves extends DefaultMoves$5 {
     beforeBlocking = {
         cast: 4,
         onEnter(pl, ctx) {
-            playAnim$7(pl, 'animation.weapon.light_saber.blocking', 'animation.weapon.light_saber.blocking');
+            playAnim$6(pl, 'animation.weapon.light_saber.blocking', 'animation.weapon.light_saber.blocking');
             ctx.status.isWaitingParry = true;
         },
         onLeave(pl, ctx) {
@@ -4038,7 +2900,7 @@ class LightSaberMoves extends DefaultMoves$5 {
             const damageOpt = ctx.rawArgs[2];
             const result = ctx.status.stamina - (damageOpt.damage || 0);
             ctx.status.stamina = result < 0 ? 0 : result;
-            playSoundAll$3(`weapon.sword.hit${randomRange$2(1, 4, true)}`, pl.pos, 1);
+            playSoundAll$5(`weapon.sword.hit${randomRange$1(1, 4, true)}`, pl.pos, 1);
         },
         transitions: {
             blocking: {
@@ -4063,7 +2925,7 @@ class LightSaberMoves extends DefaultMoves$5 {
     running = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$7(pl, 'animation.weapon.light_saber.run', 'animation.weapon.light_saber.run');
+            playAnim$6(pl, 'animation.weapon.light_saber.run', 'animation.weapon.light_saber.run');
         },
         onTick(pl, ctx) {
             pl.tell(hud(ctx.status.stamina/100, 20), 5);
@@ -4111,7 +2973,7 @@ class LightSaberMoves extends DefaultMoves$5 {
             ctx.movement(pl, false);
             ctx.setVelocity(pl, 90, 3, 0);
             pl.setSprinting(false);
-            playAnim$7(pl, 'animation.weapon.light_saber.dash');
+            playAnim$6(pl, 'animation.weapon.light_saber.dash');
         },
         onTick(pl, ctx) {
             pl.tell(hud(ctx.status.stamina/100, 20), 5);
@@ -4187,7 +3049,7 @@ class LightSaberMoves extends DefaultMoves$5 {
         cast: 10,
         backswing: 10,
         onEnter(pl, ctx) {
-            playAnim$7(pl, 'animation.weapon.light_saber.strike');
+            playAnim$6(pl, 'animation.weapon.light_saber.strike');
             ctx.status.stamina = constrictCalc$1(0, 100, () => ctx.status.stamina - 20);
             ctx.freeze(pl);
             ctx.adsorbOrSetVelocity(pl, 1, 90);
@@ -4240,7 +3102,7 @@ class LightSaberMoves extends DefaultMoves$5 {
         backswing: 11,
         onEnter(pl, ctx) {
             ctx.movement(pl, false);
-            playAnim$7(pl, 'animation.weapon.light_saber.attack1');
+            playAnim$6(pl, 'animation.weapon.light_saber.attack1');
             ctx.status.stamina = constrictCalc$1(0, 100, () => ctx.status.stamina - 10);
         },
         onTick(pl, ctx) {
@@ -4302,7 +3164,7 @@ class LightSaberMoves extends DefaultMoves$5 {
         backswing: 12,
         onEnter(pl, ctx) {
             ctx.movement(pl, false);
-            playAnim$7(pl, 'animation.weapon.light_saber.attack2');
+            playAnim$6(pl, 'animation.weapon.light_saber.attack2');
             ctx.status.stamina = constrictCalc$1(0, 100, () => ctx.status.stamina - 12);
         },
         onAct(pl, ctx) {
@@ -4365,7 +3227,7 @@ class LightSaberMoves extends DefaultMoves$5 {
     }
 }
 
-class LightSaberTrick extends DefaultTrickModule$5 {
+class LightSaberTrick extends DefaultTrickModule$4 {
     constructor() {
         super(
             'rgb39.weapon.light_saber',
@@ -4376,12 +3238,16 @@ class LightSaberTrick extends DefaultTrickModule$5 {
     }
 }
 
-var lightSaber = new LightSaberTrick();
+const tricks$3 = new LightSaberTrick();
 
-const { playAnim: playAnim$6 } = basic;
-const { DefaultMoves: DefaultMoves$4, DefaultTrickModule: DefaultTrickModule$4 } = _default;
+var lightSaber = {
+    tricks: tricks$3
+};
 
-class MoonGlaiveTricks extends DefaultTrickModule$4 {
+const { playAnim: playAnim$5, playSoundAll: playSoundAll$4 } = require$$3$1;
+const { DefaultMoves: DefaultMoves$3, DefaultTrickModule: DefaultTrickModule$3 } = require$$1;
+
+class MoonGlaiveTricks extends DefaultTrickModule$3 {
     constructor() {
         super(
             'rgb39.weapon.moon_glaive',
@@ -4392,7 +3258,7 @@ class MoonGlaiveTricks extends DefaultTrickModule$4 {
     }
 }
 
-class MoonGlaiveMoves extends DefaultMoves$4 {
+class MoonGlaiveMoves extends DefaultMoves$3 {
 
     constructor() {
         super();
@@ -4424,7 +3290,7 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.releaseTarget(pl.xuid);
-            playAnim$6(pl, 'animation.weapon.moon_glaive.hold', 'animation.weapon.moon_glaive.hold');
+            playAnim$5(pl, 'animation.weapon.moon_glaive.hold', 'animation.weapon.moon_glaive.hold');
         },
         transitions: {
             hurt: {
@@ -4450,7 +3316,7 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.releaseTarget(pl.xuid);
-            playAnim$6(pl, 'animation.weapon.moon_glaive.running', 'animation.weapon.moon_glaive.running');
+            playAnim$5(pl, 'animation.weapon.moon_glaive.running', 'animation.weapon.moon_glaive.running');
         },
         transitions: {
             hurt: {
@@ -4478,7 +3344,7 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.setSpeed(pl, 0);
             ctx.camera(pl, false);
-            playAnim$6(pl, 'animation.weapon.moon_glaive.retention.negative_spinning');
+            playAnim$5(pl, 'animation.weapon.moon_glaive.retention.negative_spinning');
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1);
         },
         onAct(pl, ctx) {
@@ -4534,7 +3400,7 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$6(pl, 'animation.weapon.moon_glaive.retention', 'animation.weapon.moon_glaive.retention');
+            playAnim$5(pl, 'animation.weapon.moon_glaive.retention', 'animation.weapon.moon_glaive.retention');
         },
         onTick(pl, ctx) {
             ctx.lookAtTarget(pl);
@@ -4572,7 +3438,7 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
         cast: 5,
         onEnter(pl, ctx) {
             ctx.camera(pl, false);
-            playAnim$6(pl, 'animation.weapon.moon_glaive.to_retention');
+            playAnim$5(pl, 'animation.weapon.moon_glaive.to_retention');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -4609,7 +3475,7 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
         cast: 5,
         onEnter(pl, ctx) {
             ctx.camera(pl, false);
-            playAnim$6(pl, 'animation.weapon.moon_glaive.from_retention');
+            playAnim$5(pl, 'animation.weapon.moon_glaive.from_retention');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -4631,7 +3497,7 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
         cast: Infinity,
         onEnter(pl, ctx) {
             pl.setSprinting(false);
-            playAnim$6(pl, 'animation.weapon.moon_glaive.hold_locked', 'animation.weapon.moon_glaive.hold_locked');
+            playAnim$5(pl, 'animation.weapon.moon_glaive.hold_locked', 'animation.weapon.moon_glaive.hold_locked');
             ctx.trap(pl);
         },
         transitions: {
@@ -4694,7 +3560,7 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
             ctx.status.isDodging = true;
             ctx.setSpeed(pl, 0);
             ctx.camera(pl);
-            playAnim$6(pl, 'animation.weapon.moon_glaive.dodge');
+            playAnim$5(pl, 'animation.weapon.moon_glaive.dodge');
             ctx.setVelocity(pl, -90, 2.5, 0);
         },
         onLeave(pl, ctx) {
@@ -4738,7 +3604,7 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$6(pl, 'animation.weapon.moon_glaive.push');
+            playAnim$5(pl, 'animation.weapon.moon_glaive.push');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -4804,7 +3670,7 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$6(pl, 'animation.weapon.moon_glaive.chop');
+            playAnim$5(pl, 'animation.weapon.moon_glaive.chop');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -4852,7 +3718,7 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
             ctx.status.repulsible = false;
-            playAnim$6(pl, 'animation.weapon.moon_glaive.vertical_chop');
+            playAnim$5(pl, 'animation.weapon.moon_glaive.vertical_chop');
         },
         onLeave(pl, ctx) {
             ctx.status.hegemony = true;
@@ -4909,7 +3775,7 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$6(pl, 'animation.weapon.moon_glaive.heavy_sweap');
+            playAnim$5(pl, 'animation.weapon.moon_glaive.heavy_sweap');
             ctx.status.isWaitingParry = true;
         },
         onLeave(pl, ctx) {
@@ -4990,7 +3856,7 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$6(pl, 'animation.weapon.moon_glaive.chop.combo');
+            playAnim$5(pl, 'animation.weapon.moon_glaive.chop.combo');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -5037,7 +3903,7 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
             ctx.status.hegemony = true;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$6(pl, 'animation.weapon.moon_glaive.positive_spinning');
+            playAnim$5(pl, 'animation.weapon.moon_glaive.positive_spinning');
         },
         onLeave(pl, ctx) {
             ctx.status.hegemony = false;
@@ -5091,7 +3957,7 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$6(pl, 'animation.weapon.moon_glaive.parry.knock');
+            playAnim$5(pl, 'animation.weapon.moon_glaive.parry.knock');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -5132,7 +3998,7 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
             ctx.status.repulsible = false;
-            playAnim$6(pl, 'animation.weapon.moon_glaive.parry.chop');
+            playAnim$5(pl, 'animation.weapon.moon_glaive.parry.chop');
         },
         onLeave(pl, ctx) {
             ctx.status.repulsible = true;
@@ -5170,19 +4036,16 @@ class MoonGlaiveMoves extends DefaultMoves$4 {
     }
 }
 
-var moon_glaive = new MoonGlaiveTricks();
+const tricks$2 = new MoonGlaiveTricks();
 
-const { playAnim: playAnim$5, playSoundAll: playSoundAll$2 } = basic;
-const { randomRange: randomRange$1 } = require$$3;
-const { DefaultMoves: DefaultMoves$3, DefaultTrickModule: DefaultTrickModule$3 } = _default;
-const { Stamina: Stamina$1 } = require$$19;
+var moon_glaive = {
+    tricks: tricks$2
+};
 
-class OotachiMoves extends DefaultMoves$3 {
+class OotachiMoves extends DefaultMoves$7 {
     constructor() {
         super();
-
         this.setup('resumeKamae');
-
         this.parry.timeline = {
             14: (pl, ctx) => ctx.trap(pl)
         };
@@ -5211,7 +4074,6 @@ class OotachiMoves extends DefaultMoves$3 {
                 onKnockdown: { allowedState: 'both' }
             },
         };
-
         this.parried.transitions = {
             resumeKamae: {
                 onEndOfLife: null
@@ -5225,13 +4087,11 @@ class OotachiMoves extends DefaultMoves$3 {
                 onKnockdown: { allowedState: 'both' }
             },
         };
-
         this.animations.parry.left = 'animation.weapon.ootachi.parry.left';
         this.animations.parry.right = 'animation.weapon.ootachi.parry.right';
         this.animations.block.left = 'animation.weapon.ootachi.block.left';
         this.animations.block.right = 'animation.weapon.ootachi.block.right';
     }
-
     idle = {
         cast: Infinity,
         onEnter(pl, ctx) {
@@ -5239,10 +4099,12 @@ class OotachiMoves extends DefaultMoves$3 {
             ctx.releaseTarget(pl.xuid);
             if (ctx.previousStatus === 'running') {
                 ctx.task
-                    .queue(() => playAnim$5(pl, 'animation.weapon.ootachi.trans.running.idle'), 0)
-                    .queue(() => playAnim$5(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle'), 210)
+                    .queue(() => playAnim$9(pl, 'animation.weapon.ootachi.trans.running.idle'), 0)
+                    .queue(() => playAnim$9(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle'), 210)
                     .run();
-            } else playAnim$5(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle');
+            }
+            else
+                playAnim$9(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle');
         },
         onLeave(_, ctx) {
             ctx.task.cancel();
@@ -5270,14 +4132,12 @@ class OotachiMoves extends DefaultMoves$3 {
                 onKnockdown: { allowedState: 'both' }
             },
         }
-    }
-
-    /** @type {Move} */
+    };
     innoKamae = {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$5(pl, 'animation.weapon.ootachi.kamae.inno', 'animation.weapon.ootachi.kamae.inno');
+            playAnim$9(pl, 'animation.weapon.ootachi.kamae.inno', 'animation.weapon.ootachi.kamae.inno');
         },
         onTick(pl, ctx) {
             ctx.lookAtTarget(pl);
@@ -5317,8 +4177,7 @@ class OotachiMoves extends DefaultMoves$3 {
                 onKnockdown: { allowedState: 'both' }
             },
         }
-    }
-
+    };
     resumeKamae = {
         transitions: {
             idle: {
@@ -5350,17 +4209,15 @@ class OotachiMoves extends DefaultMoves$3 {
                 }
             },
         }
-    }
-
+    };
     running = {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.releaseTarget(pl.xuid);
             ctx.task
-                .queue(() => playAnim$5(pl, 'animation.weapon.ootachi.trans.idle.running'), 0)
-                .queue(() => playAnim$5(pl, 'animation.weapon.ootachi.running', 'animation.weapon.ootachi.running'), 210)
+                .queue(() => playAnim$9(pl, 'animation.weapon.ootachi.trans.idle.running'), 0)
+                .queue(() => playAnim$9(pl, 'animation.weapon.ootachi.running', 'animation.weapon.ootachi.running'), 210)
                 .run();
-            
         },
         onLeave(_, ctx) {
             ctx.task.cancel();
@@ -5378,17 +4235,13 @@ class OotachiMoves extends DefaultMoves$3 {
                 onKnockdown: { allowedState: 'both' }
             },
         }
-    }
-
-    /**
-     * @type {Move}
-     */
+    };
     combo1Attack = {
         cast: 7,
         backswing: 13,
         timeline: {
             5: (_, ctx) => ctx.status.isBlocking = false,
-            7: pl => playSoundAll$2(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1),
+            7: pl => playSoundAll$8(`weapon.woosh.${randomRange$2(2, 4, true)}`, pl.pos, 1),
             14: (pl, ctx) => ctx.trap(pl, { tag: 'combo' })
         },
         onEnter(pl, ctx) {
@@ -5400,7 +4253,7 @@ class OotachiMoves extends DefaultMoves$3 {
                 { handler: () => ctx.adsorbOrSetVelocity(pl, 1, 90), timeout: 100 },
                 { handler: () => ctx.adsorbOrSetVelocity(pl, 0.8, 90), timeout: 300 },
             ]).run();
-            playAnim$5(pl, 'animation.weapon.ootachi.combo1.attack');
+            playAnim$9(pl, 'animation.weapon.ootachi.combo1.attack');
             ctx.lookAtTarget(pl);
         },
         onAct(pl, ctx) {
@@ -5463,8 +4316,7 @@ class OotachiMoves extends DefaultMoves$3 {
                 onBlock: null
             }
         }
-    }
-
+    };
     combo1Chop = {
         cast: 11,
         backswing: 13,
@@ -5476,15 +4328,15 @@ class OotachiMoves extends DefaultMoves$3 {
                 { handler: () => ctx.adsorbOrSetVelocity(pl, 1, 90), timeout: 0 },
                 { handler: () => ctx.status.isWaitingParry = false, timeout: 150 },
                 { handler: () => {
-                    ctx.adsorbOrSetVelocity(pl, 1.2, 90);
-                }, timeout: 50 },
+                        ctx.adsorbOrSetVelocity(pl, 1.2, 90);
+                    }, timeout: 50 },
                 { handler: () => ctx.adsorbOrSetVelocity(pl, 0.5, 90), timeout: 400 },
             ]).run();
-            playAnim$5(pl, 'animation.weapon.ootachi.combo1.chop');
+            playAnim$9(pl, 'animation.weapon.ootachi.combo1.chop');
             ctx.lookAtTarget(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll$2(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$8(`weapon.woosh.${randomRange$2(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromRange(pl, {
                 radius: 3,
                 angle: 120,
@@ -5561,11 +4413,7 @@ class OotachiMoves extends DefaultMoves$3 {
                 }
             }
         }
-    }
-
-    /**
-     * @type {Move}
-     */
+    };
     combo2Cut = {
         cast: 9,
         backswing: 17,
@@ -5573,13 +4421,11 @@ class OotachiMoves extends DefaultMoves$3 {
             ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 18;
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
-            playAnim$5(pl, `animation.weapon.ootachi.combo2.cut.${
-                ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'
-            }`);
+            playAnim$9(pl, `animation.weapon.ootachi.combo2.cut.${ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'}`);
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1.5);
         },
         onAct(pl, ctx) {
-            playSoundAll$2(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$8(`weapon.woosh.${randomRange$2(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromRange(pl, {
                 radius: 3.5,
                 angle: 50,
@@ -5638,11 +4484,7 @@ class OotachiMoves extends DefaultMoves$3 {
                 onBlocked: null
             },
         }
-    }
-
-    /**
-     * @type {Move}
-     */
+    };
     combo2Sweap = {
         cast: 12,
         backswing: 14,
@@ -5652,16 +4494,14 @@ class OotachiMoves extends DefaultMoves$3 {
             ctx.freeze(pl);
             ctx.status.hegemony = true;
             ctx.status.repulsible = false;
-            playAnim$5(pl, `animation.weapon.ootachi.combo2.sweap.${
-                ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'
-            }`);
+            playAnim$9(pl, `animation.weapon.ootachi.combo2.sweap.${ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'}`);
             ctx.adsorbOrSetVelocity(pl, 0.2, 90);
             ctx.task
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 1.2, 90), 200)
                 .run();
         },
         onAct(pl, ctx) {
-            playSoundAll$2(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$8(`weapon.woosh.${randomRange$2(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromRange(pl, {
                 radius: 3,
                 angle: 80,
@@ -5721,17 +4561,14 @@ class OotachiMoves extends DefaultMoves$3 {
                 }
             },
         }
-    }
-
+    };
     combo3Stab = {
         cast: 8,
         backswing: 17,
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 17;
             ctx.freeze(pl);
-            playAnim$5(pl, `animation.weapon.ootachi.combo3.stab.${
-                ctx.previousStatus === 'combo2Cut' ? 'l' : 'r'
-            }`);
+            playAnim$9(pl, `animation.weapon.ootachi.combo3.stab.${ctx.previousStatus === 'combo2Cut' ? 'l' : 'r'}`);
             ctx.task
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 0.5, 90), 0)
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 200)
@@ -5739,7 +4576,7 @@ class OotachiMoves extends DefaultMoves$3 {
         },
         onAct(pl, ctx) {
             ctx.lookAtTarget(pl);
-            playSoundAll$2(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$8(`weapon.woosh.${randomRange$2(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromRange(pl, {
                 radius: 3.5,
                 angle: 30,
@@ -5779,8 +4616,7 @@ class OotachiMoves extends DefaultMoves$3 {
                 }
             },
         }
-    }
-
+    };
     combo3Sweap = {
         cast: 16,
         backswing: 19,
@@ -5789,16 +4625,14 @@ class OotachiMoves extends DefaultMoves$3 {
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
             ctx.adsorbOrSetVelocity(pl, 1, 90);
-            playAnim$5(pl, `animation.weapon.ootachi.combo3.sweap.${
-                ctx.previousStatus === 'combo2Cut' ? 'l' : 'r'
-            }`);
+            playAnim$9(pl, `animation.weapon.ootachi.combo3.sweap.${ctx.previousStatus === 'combo2Cut' ? 'l' : 'r'}`);
             ctx.task
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 200)
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 280)
                 .run();
         },
         onAct(pl, ctx) {
-            playSoundAll$2(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$8(`weapon.woosh.${randomRange$2(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromRange(pl, {
                 radius: 3.5,
                 angle: 90,
@@ -5841,8 +4675,7 @@ class OotachiMoves extends DefaultMoves$3 {
                 onKnockdown: { allowedState: 'both' }
             },
         }
-    }
-
+    };
     dodgePrepare = {
         cast: 0,
         backswing: 1,
@@ -5852,15 +4685,16 @@ class OotachiMoves extends DefaultMoves$3 {
                 direct = direct || 1;
                 if (direct !== 1) {
                     ctx.setVelocity(pl, direct * 90, 2);
-                } else {
+                }
+                else {
                     ctx.adsorbToTarget(pl, 2);
                 }
                 direct !== 3 && ctx.adsorbToTarget(pl, 0.3);
-
                 if (direct !== 3) {
-                    playAnim$5(pl, 'animation.weapon.ootachi.dodge.front');
-                } else {
-                    playAnim$5(pl, 'animation.weapon.ootachi.dodge.back');
+                    playAnim$9(pl, 'animation.weapon.ootachi.dodge.front');
+                }
+                else {
+                    playAnim$9(pl, 'animation.weapon.ootachi.dodge.back');
                 }
             });
         },
@@ -5875,8 +4709,7 @@ class OotachiMoves extends DefaultMoves$3 {
                 onHurt: null
             }
         }
-    }
-
+    };
     dodge = {
         cast: 3,
         backswing: 5,
@@ -5914,15 +4747,14 @@ class OotachiMoves extends DefaultMoves$3 {
                 onHurt: { allowedState: 'both' }
             }
         }
-    }
-
+    };
     dodgeBlocking = {
         cast: 0,
         onEnter(pl, ctx) {
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^^1^0.5`);
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^-0.1^1^0.5`);
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^0.1^1^0.5`);
-            playSoundAll$2('weapon.heavy', pl.pos, 1);
+            playSoundAll$8('weapon.heavy', pl.pos, 1);
         },
         transitions: {
             hlitStrike: {
@@ -5932,8 +4764,7 @@ class OotachiMoves extends DefaultMoves$3 {
                 onHurt: null
             }
         }
-    }
-
+    };
     /**
      * @type {Move}
      */
@@ -5942,7 +4773,7 @@ class OotachiMoves extends DefaultMoves$3 {
         backswing: 4,
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 12;
-            playAnim$5(pl, 'animation.weapon.ootachi.hlit');
+            playAnim$9(pl, 'animation.weapon.ootachi.hlit');
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.5);
         },
         onAct(pl, ctx) {
@@ -5993,30 +4824,30 @@ class OotachiMoves extends DefaultMoves$3 {
                 }
             },
         }
-    }
+    };
 }
-
-class OotachiTricks extends DefaultTrickModule$3 {
+class OotachiTricks extends DefaultTrickModule$7 {
     constructor() {
-        super(
-            'rgb39.weapon.ootachi',
-            'idle',
-            [ 'weapon:ootachi', 'weapon:ootachi_akaoni', 'weapon:ootachi_dragon' ],
-            new OotachiMoves()
-        );
+        super('rgb39.weapon.ootachi', 'idle', ['weapon:ootachi', 'weapon:ootachi_akaoni', 'weapon:ootachi_dragon'], new OotachiMoves());
     }
 }
+const tricks$1 = new OotachiTricks();
 
-var ootachi = new OotachiTricks();
+var ootachi = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	tricks: tricks$1
+});
 
-/// <reference path="../basic/types.d.ts"/>
+var require$$4 = /*@__PURE__*/getAugmentedNamespace(ootachi);
 
-const { playAnim: playAnim$4 } = basic;
+var sheathed_katana = {};
+
+const { playAnim: playAnim$4, playSoundAll: playSoundAll$3 } = require$$3$1;
 
 /**
  * @type {TrickModule}
  */
-var sheathed_katana = {
+sheathed_katana.tricks = {
     sid: 'rgb39.weapon.katana',
     bind: 'weapon:katana',
     entry: 'default',
@@ -6079,9 +4910,11 @@ var sheathed_katana = {
     }
 };
 
-const { playAnim: playAnim$3, playSoundAll: playSoundAll$1 } = basic;
-const { DefaultMoves: DefaultMoves$2, DefaultTrickModule: DefaultTrickModule$2 } = _default;
-const { constrictCalc, randomRange } = require$$3;
+var shield_with_sword = {};
+
+const { playAnim: playAnim$3, playSoundAll: playSoundAll$2 } = require$$3$1;
+const { DefaultMoves: DefaultMoves$2, DefaultTrickModule: DefaultTrickModule$2 } = require$$1;
+const { constrictCalc, randomRange } = require$$2$1;
 
 class ShieldSwordTricks extends DefaultTrickModule$2 {
     constructor() {
@@ -6121,7 +4954,7 @@ class ShieldSwordMoves extends DefaultMoves$2 {
         this.block =  {
             cast: 7,
             onEnter(pl, ctx) {
-                playSoundAll$1(`weapon.sheild.hit${randomRange(1, 3, true)}`, pl.pos, 1);
+                playSoundAll$2(`weapon.sheild.hit${randomRange(1, 3, true)}`, pl.pos, 1);
                 ctx.status.isBlocking = true;
                 ctx.freeze(pl);
                 ctx.lookAtTarget(pl);
@@ -6184,7 +5017,7 @@ class ShieldSwordMoves extends DefaultMoves$2 {
             ctx.task.cancel();
         },
         onAct(pl, ctx) {
-            playSoundAll$1(`weapon.woosh.${randomRange(1, 3, true)}`, pl.pos, 1);
+            playSoundAll$2(`weapon.woosh.${randomRange(1, 3, true)}`, pl.pos, 1);
             ctx.selectFromRange(pl, {
                 radius: 2.8,
                 angle: 60,
@@ -6288,7 +5121,7 @@ class ShieldSwordMoves extends DefaultMoves$2 {
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll$1(`weapon.woosh.${randomRange(3, 5, true)}`, pl.pos, 1);
+            playSoundAll$2(`weapon.woosh.${randomRange(3, 5, true)}`, pl.pos, 1);
             ctx.selectFromRange(pl, {
                 angle: 40,
                 rotation: -20,
@@ -6432,7 +5265,7 @@ class ShieldSwordMoves extends DefaultMoves$2 {
     punchSomeone = {
         cast: 15,
         onEnter(pl, ctx) {
-            playSoundAll$1(`weapon.sheild.hit${randomRange(1, 3, true)}`, pl.pos, 0.5);
+            playSoundAll$2(`weapon.sheild.hit${randomRange(1, 3, true)}`, pl.pos, 0.5);
             ctx.trap(pl);
         },
         transitions: {
@@ -6465,7 +5298,7 @@ class ShieldSwordMoves extends DefaultMoves$2 {
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll$1(`weapon.woosh.${randomRange(1, 2, true)}`, pl.pos, 1);
+            playSoundAll$2(`weapon.woosh.${randomRange(1, 2, true)}`, pl.pos, 1);
             ctx.selectFromRange(pl, {
                 radius: 3,
                 angle: 46,
@@ -6793,7 +5626,7 @@ class ShieldSwordMoves extends DefaultMoves$2 {
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll$1(`weapon.woosh.${randomRange(1,3, true)}`, pl.pos, 1);
+            playSoundAll$2(`weapon.woosh.${randomRange(1,3, true)}`, pl.pos, 1);
             ctx.selectFromRange(pl, {
                 angle: 30,
                 rotation: -15,
@@ -6831,12 +5664,12 @@ class ShieldSwordMoves extends DefaultMoves$2 {
     }
 }
 
-var shield_with_sword = new ShieldSwordTricks();
+shield_with_sword.tricks = new ShieldSwordTricks();
 
-/// <reference path="../basic/types.d.ts"/>
+var uchigatana = {};
 
-const { playAnim: playAnim$2 } = basic;
-const { DefaultMoves: DefaultMoves$1, DefaultTrickModule: DefaultTrickModule$1 } = _default;
+const { playAnim: playAnim$2, playSoundAll: playSoundAll$1 } = require$$3$1;
+const { DefaultMoves: DefaultMoves$1, DefaultTrickModule: DefaultTrickModule$1 } = require$$1;
 
 class UchigatanaMoves extends DefaultMoves$1 {
     /**
@@ -7034,12 +5867,10 @@ class UchigatanaModule extends DefaultTrickModule$1 {
 /**
  * @type {TrickModule}
  */
-var uchigatana = new UchigatanaModule();
+uchigatana.tricks = new UchigatanaModule();
 
-/// <reference path="../basic/types.d.ts"/>
-
-const { playAnim: playAnim$1, playSoundAll } = basic;
-const { DefaultMoves, DefaultTrickModule } = _default;
+const { playAnim: playAnim$1, playSoundAll } = require$$3$1;
+const { DefaultMoves, DefaultTrickModule } = require$$1;
 
 class DoubleBladeMoves extends DefaultMoves {
     constructor() {
@@ -7274,42 +6105,35 @@ class DoubleBlade extends DefaultTrickModule {
     }
 }
 
-var double_blade = new DoubleBlade();
+const tricks = new DoubleBlade();
 
-const mods = [
+var double_blade = {
+    tricks
+};
+
+var collection = [
     double_dagger,
     emptyHand,
     lightSaber,
     moon_glaive,
-    ootachi,
+    require$$4,
     sheathed_katana,
     shield_with_sword,
     uchigatana,
     double_blade
 ];
 
-var collection$1 = mods;
+var collection$1 = /*@__PURE__*/getDefaultExportFromCjs(collection);
 
-/// <reference path="./types.d.ts"/>
-
-/**
- * @param {TrickModule} mod 
- */
-function checkCompleteness$1(mod) {
+function checkCompleteness(mod) {
     if (!mod.sid || !mod.bind || !mod.entry || !mod.moves) {
-        return '缺少必要的属性: sid | bind | entry | moves'
+        return '缺少必要的属性: sid | bind | entry | moves';
     }
-
     if (!Object.keys(mod.moves).includes(mod.entry)) {
-        return `无效的 entry: '${mod.entry}'`
+        return `无效的 entry: '${mod.entry}'`;
     }
-
-    return false
+    return false;
 }
-
-var completeness = {
-    checkCompleteness: checkCompleteness$1
-};
 
 const { remote: remote$1 } = requireSetup();
 
@@ -7479,9 +6303,11 @@ var range = {
     selectFromRange: selectFromRange$2, defaultRange,
 };
 
+var require$$0 = /*@__PURE__*/getAugmentedNamespace(camera$3);
+
 var require$$6 = /*@__PURE__*/getAugmentedNamespace(status);
 
-const { CameraComponent } = require$$1;
+const { CameraComponent } = require$$0;
 const { Status: Status$2 } = require$$6;
 const { rotate2, vec2: vec2$1, multiply2 } = vec;
 
@@ -7692,7 +6518,7 @@ var targetLock = /*#__PURE__*/Object.freeze({
 	TargetLock: TargetLock$1
 });
 
-var require$$8 = /*@__PURE__*/getAugmentedNamespace(targetLock);
+var require$$7 = /*@__PURE__*/getAugmentedNamespace(targetLock);
 
 var require$$14 = /*@__PURE__*/getAugmentedNamespace(optional);
 
@@ -7728,6 +6554,7 @@ let HudComponent = class HudComponent extends BaseComponent {
     renderHud(pl) {
         pl.unwrap()
             .setTitle(this.content, this.type, this.fadeIn, this.fadeOut, this.stay);
+        // .tell(this.content, 5)
     }
 };
 HudComponent = HudComponent_1 = __decorate([
@@ -7750,7 +6577,7 @@ let StatusHud$1 = StatusHud_1 = class StatusHud extends HudComponent {
         if ((this.targetLock = manager.getComponent(TargetLock$1)).isEmpty()) {
             return true;
         }
-        if ((this.stamina = manager.getComponent(Stamina$3)).isEmpty()) {
+        if ((this.stamina = manager.getComponent(Stamina$1)).isEmpty()) {
             return true;
         }
         manager.beforeTick(() => {
@@ -7759,7 +6586,7 @@ let StatusHud$1 = StatusHud_1 = class StatusHud extends HudComponent {
                 return;
             }
             const target = lock.target.unwrap();
-            this.targetStamina = Status$3.get(target.xuid).componentManager.getComponent(Stamina$3);
+            this.targetStamina = Status$3.get(target.xuid).componentManager.getComponent(Stamina$1);
         });
     }
     renderStatus() {
@@ -7810,7 +6637,7 @@ var statushud = /*#__PURE__*/Object.freeze({
 	get StatusHud () { return StatusHud$1; }
 });
 
-var require$$10 = /*@__PURE__*/getAugmentedNamespace(statushud);
+var require$$9 = /*@__PURE__*/getAugmentedNamespace(statushud);
 
 requireSetup();
 const { selectFromRange: selectFromRange$1 } = range;
@@ -7818,9 +6645,9 @@ const { battleCamera, cameraInput, clearCamera: clearCamera$1 } = camera_1;
 const { knockback: knockback$1, faceTo } = kinematics$1;
 const { setVelocity: setVelocity$1 } = kinematic;
 const { Status: Status$1 } = require$$6;
-const { TargetLock } = require$$8;
+const { TargetLock } = require$$7;
 const { Optional } = require$$14;
-const { StatusHud } = require$$10;
+const { StatusHud } = require$$9;
 
 const locks = new Map();
 const cooldowns = new Set();
@@ -8185,6 +7012,8 @@ var eventStream = {
 
 var require$$13 = /*@__PURE__*/getAugmentedNamespace(tick);
 
+var require$$15 = /*@__PURE__*/getAugmentedNamespace(cameraFading);
+
 var require$$16 = /*@__PURE__*/getAugmentedNamespace(config);
 
 function registerCommand$1() {
@@ -8407,10 +7236,12 @@ var antiTreeshaking$2 = /*#__PURE__*/Object.freeze({
 
 var require$$18 = /*@__PURE__*/getAugmentedNamespace(antiTreeshaking$2);
 
+var require$$19 = /*@__PURE__*/getAugmentedNamespace(stamina);
+
 const { EventEmitter } = requireEvents();
 const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = kinematics$1;
 const { combat: { damage: _damage } } = func;
-const { playAnim } = basic;
+const { playAnim } = require$$3$1;
 const { movement, camera, movementInput } = generic;
 const { selectFromRange } = range;
 const { Status, defaultAcceptableInputs } = require$$6;
@@ -8484,9 +7315,9 @@ const mobEvents = [
 //     'onParry', 'onParried', 'onEndOfLife', 'onHurt', 'onBlocked', 'onBlock', 'onHit'
 // ]
 
-/**@type {Map<string, PlayerStatus>}*/
+/**@type {Map<string, Status>}*/
 
-/**@type {(pl: any) => PlayerStatus}*/
+/**@type {(pl: any) => Status}*/
 const _status = pl => Status.get(pl.xuid);
 
 function freeze(pl) {
@@ -8696,12 +7527,10 @@ function initCombatComponent(pl, bind, status) {
     }
 }
 
-// const timeTracks = new Map()
-
 /**
  * @param {any} pl 
  * @param {TrickModule} bind 
- * @param {PlayerStatus} status 
+ * @param {Status} status 
  * @param {string} eventName 
  * @param {() => void} prevent 
  * @param {any[]} args 
@@ -8813,7 +7642,7 @@ function transition(pl, bind, status, eventName, prevent, args) {
 
 /**
  * @param {TrickModule} mod 
- * @param {PlayerStatus} _status 
+ * @param {Status} _status 
  * @returns {'none'|'cast'|'backswing'|'finish'}
  */
 function checkMoveState(mod, _status) {
@@ -8867,6 +7696,10 @@ function listenPlayerItemChange(mods) {
         const status = Status.get(pl.xuid);
         const oldBind = getMod(old);
 
+        if (!status) {
+            return
+        }
+
         releaseTarget(pl.xuid);
 
         if (oldBind) {
@@ -8897,6 +7730,7 @@ function listenAllCustomEvents(mods) {
             if (typeof xuid !== 'string') {
                 return
             }
+
             const pl = mc.getPlayer(xuid);
             const bind = getMod(status.hand);
 
@@ -9263,8 +8097,6 @@ function listenAllCustomEvents(mods) {
             return
         }
 
-        pl.quickEvalMolangScript('v.posture = 0;');
-
         transition(pl, bind, status, 'onReleaseLock', Function.prototype, [ pl ]);
     });
 
@@ -9275,8 +8107,6 @@ function listenAllCustomEvents(mods) {
         if (!bind || !status) {
             return
         }
-
-        pl.quickEvalMolangScript('v.posture = 1;');
 
         transition(pl, bind, status, 'onLock', Function.prototype, [ pl, target ]);
     });
@@ -9304,7 +8134,7 @@ function listenAllCustomEvents(mods) {
     });
 }
 
-function listenAllMcEvents$1(collection) {
+function listenAllMcEvents(collection) {
     const mods = new Map();
 
     function getMod(hand) {
@@ -9556,42 +8386,30 @@ function getHandedItemType(pl) {
 antiTreeshaking();
 
 var core = {
-    emitter: em, listenAllMcEvents: listenAllMcEvents$1, 
+    emitter: em, listenAllMcEvents, 
 };
 
-const collection = collection$1;
-const console$1 = mainExports;
-const { checkCompleteness } = completeness;
-const {
-    listenAllMcEvents
-} = core;
-
-var loader = function loadAll() {
-    const mods = Array.from(collection);
-
-    listenAllMcEvents(collection);
-    mods.forEach(mod => loadModule(mod));
-};
-
-/**
- * @param {TrickModule} mod 
- */
-function loadModule(mod) {
+async function loadAll() {
+    //@ts-ignore
+    const mods = Array.from(collection$1).map(({ tricks }) => tricks);
+    const result = [0, 0];
+    core.listenAllMcEvents(mods);
+    mods.forEach(mod => loadModule(mod, result));
+    console.log(`加载了 ${mods.length} 个模块，成功 ${result[1]} 个，失败 ${result[0]}`);
+}
+function loadModule(mod, flags) {
     let errMessage;
     if (errMessage = checkCompleteness(mod)) {
-        console$1.error(`${("'" + mod.sid + "'") || '一个'} 模块加载失败${errMessage ? ': ' + errMessage : ''}`);
-        return false
+        console.error(`${("'" + mod.sid + "'") || '一个'} 模块加载失败${errMessage ? ': ' + errMessage : ''}`);
+        flags[0]++;
+        return false;
     }
-
-    
-
+    flags[1]++;
 }
-
-var loader$1 = /*@__PURE__*/getDefaultExportFromCjs(loader);
 
 function setup() {
     try {
-        loader$1();
+        loadAll();
     }
     catch (error) {
         log(error + '');

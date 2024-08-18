@@ -1,5 +1,4 @@
 const { cmd } = require('./utils/command')
-const console = require('./console/main')
 
 const camera = (pl, easeTime, easeType, dPos, rot) => {
     mc.runcmdEx(`execute as "${pl.name}" at @s run camera @s set minecraft:free ease ${easeTime} ${easeType} pos ^${dPos.x} ^${dPos.y} ^${dPos.z} rot ${rot.pitch} ${rot.yaw}`)

@@ -1,4 +1,4 @@
-const mods = [
+module.exports = [
     require('./tricks/double_dagger'),
     require('./tricks/empty-hand'),
     require('./tricks/light-saber'),
@@ -9,5 +9,3 @@ const mods = [
     require('./tricks/uchigatana'),
     require('./tricks/double_blade')
 ]
-
-module.exports = mods

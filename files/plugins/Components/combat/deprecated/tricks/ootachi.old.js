@@ -1,7 +1,4 @@
-/// <reference path="../basic/types.d.ts"/>
-
 const { playAnim, playSoundAll } = require('../basic')
-const console = require('../../console/main')
 const { randomRange } = require('../../../utils/math')
 
 /**

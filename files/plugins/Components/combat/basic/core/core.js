@@ -76,9 +76,9 @@ const mobEvents = [
 //     'onParry', 'onParried', 'onEndOfLife', 'onHurt', 'onBlocked', 'onBlock', 'onHit'
 // ]
 
-/**@type {Map<string, PlayerStatus>}*/
+/**@type {Map<string, Status>}*/
 
-/**@type {(pl: any) => PlayerStatus}*/
+/**@type {(pl: any) => Status}*/
 const _status = pl => Status.get(pl.xuid)
 
 function freeze(pl) {
@@ -288,12 +288,10 @@ function initCombatComponent(pl, bind, status) {
     }
 }
 
-// const timeTracks = new Map()
-
 /**
  * @param {any} pl 
  * @param {TrickModule} bind 
- * @param {PlayerStatus} status 
+ * @param {Status} status 
  * @param {string} eventName 
  * @param {() => void} prevent 
  * @param {any[]} args 
@@ -405,7 +403,7 @@ function transition(pl, bind, status, eventName, prevent, args) {
 
 /**
  * @param {TrickModule} mod 
- * @param {PlayerStatus} _status 
+ * @param {Status} _status 
  * @returns {'none'|'cast'|'backswing'|'finish'}
  */
 function checkMoveState(mod, _status) {
@@ -459,6 +457,10 @@ function listenPlayerItemChange(mods) {
         const status = Status.get(pl.xuid)
         const oldBind = getMod(old)
 
+        if (!status) {
+            return
+        }
+
         releaseTarget(pl.xuid)
 
         if (oldBind) {
@@ -489,6 +491,7 @@ function listenAllCustomEvents(mods) {
             if (typeof xuid !== 'string') {
                 return
             }
+
             const pl = mc.getPlayer(xuid)
             const bind = getMod(status.hand)
 
@@ -855,8 +858,6 @@ function listenAllCustomEvents(mods) {
             return
         }
 
-        pl.quickEvalMolangScript('v.posture = 0;')
-
         transition(pl, bind, status, 'onReleaseLock', Function.prototype, [ pl ])
     })
 
@@ -867,8 +868,6 @@ function listenAllCustomEvents(mods) {
         if (!bind || !status) {
             return
         }
-
-        pl.quickEvalMolangScript('v.posture = 1;')
 
         transition(pl, bind, status, 'onLock', Function.prototype, [ pl, target ])
     })

@@ -1,6 +1,4 @@
 const {EventEmitter} = require('./events')
-const console = require('./console/main')
-
 const eachTick = new EventEmitter()
 
 mc.listen('onTick', () => {

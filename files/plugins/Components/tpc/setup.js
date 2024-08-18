@@ -3,8 +3,6 @@ const {requestCredit} = require('../credit/core')
 const priceConf = require('../../ServerConfig/price')
 const {defaultHome} = require('../../ServerConfig/baseConfig')
 
-const console = require('../console/main')
-
 const RECORDS_PATH = './plugins/Components/tpc/ports.data'
 const portRecords = File.readFrom(RECORDS_PATH)
     ? JSON.parse(File.readFrom(RECORDS_PATH))

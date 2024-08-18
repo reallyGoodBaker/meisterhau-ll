@@ -2,7 +2,6 @@ const { alert, Input, Switch, Dropdown } = require('../ui/index')
 const { keys, query, edit, add } = require('./core')
 const { requestCredit } = require('../credit/core')
 const { n, ref, getVirtEntityLeader } = require('./virt')
-const console = require('../console/main')
 
 function Menu() {
     return ['客户', '', [

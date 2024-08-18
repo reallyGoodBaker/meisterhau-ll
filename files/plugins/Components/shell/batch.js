@@ -1,5 +1,3 @@
-const console = require("../console/main")
-
 function parseBatchCommands() {
     
 }

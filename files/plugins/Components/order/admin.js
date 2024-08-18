@@ -2,7 +2,6 @@ const { cmd } = require('../utils/command')
 const { action, widget, Label, Input, Switch, Dropdown, StepSlider } = require('../ui/index')
 const { keys, query, edit, add, remove } = require('./core')
 const { n } = require('./virt.js')
-const console = require('../console/main')
 
 const EditOrder = order => [
     `修改订单`, [

@@ -1,5 +1,4 @@
 const { cmd } = require('../utils/command')
-const console = require('../console/main')
 const newDB = require('../db.lib')
 const db = newDB('./data/orders/virts')
 

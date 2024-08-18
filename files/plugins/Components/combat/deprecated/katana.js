@@ -1,6 +1,3 @@
-/// <reference path="../../basic/types.d.ts"/>
-
-// const console = require('../console/main')
 const { hud } = require('../basic/hud')
 // const ps = mc.newParticleSpawner()
 const { playAnim } = require('../basic')

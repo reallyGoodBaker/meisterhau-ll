@@ -20,7 +20,7 @@ export class StatusHud extends HudComponent {
     }
 
     static create({ content, type, fadeIn, fadeOut, stay }: HudComponentParams = {}): StatusHud {
-        return new StatusHud(content, type, fadeIn, fadeOut, stay)
+        return new StatusHud(content, type as any, fadeIn, fadeOut, stay)
     }
 
     private targetLock: Optional<TargetLock> = Optional.none()

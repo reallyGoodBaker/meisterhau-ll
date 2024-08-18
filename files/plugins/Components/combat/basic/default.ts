@@ -1,9 +1,9 @@
-const { playAnim, playSoundAll } = require("./index")
-const { CameraFading } = require("./components/camera-fading")
-const { CameraComponent } = require("./components/camera")
-const { Stamina } = require("./components/stamina")
+import { playAnim, playSoundAll } from "./index"
+import { CameraFading } from "./components/camera-fading"
+import { CameraComponent } from "./components/camera"
+import { Stamina } from "./components/stamina"
 
-function getAnim(animCategory, direction) {
+function getAnim(animCategory: any, direction: string) {
     const anim = animCategory[direction]
 
     if (!anim) {
@@ -19,7 +19,9 @@ function getAnim(animCategory, direction) {
     return anim
 }
 
-class DefaultMoves {
+type StateKey<T> = ObjKeyType<T, Move>
+
+export class DefaultMoves {
     animations = {
         parried: {
             /**
@@ -84,10 +86,7 @@ class DefaultMoves {
         block: 'weapon.sword.hit2',
     }
 
-    /**
-     * @type {Move}
-     */
-    blocked = {
+    blocked: Move = {
         cast: 10,
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2]
@@ -109,10 +108,7 @@ class DefaultMoves {
         transitions: {}
     }
 
-    /**
-     * @type {Move}
-     */
-    block = {
+    block: Move = {
         cast: 5,
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2]
@@ -136,10 +132,7 @@ class DefaultMoves {
         transitions: {}
     }
 
-    /**
-     * @type {Move}
-     */
-    hurt = {
+    hurt: Move = {
         cast: Infinity,
         onEnter: (pl, ctx) => {
             const manager = ctx.status.componentManager
@@ -150,8 +143,8 @@ class DefaultMoves {
                 'onAttack',
                 'onUseItem',
             ])
-            const { stiffness, customHurtAnimation, direction } = ctx.rawArgs[2]
-            const hurtAnim = customHurtAnimation ?? this.animations.hit[direction]
+            const { stiffness, customHurtAnimation, direction } = ctx.rawArgs[2] as DamageOption
+            const hurtAnim = customHurtAnimation ?? this.animations.hit[direction || 'left']
 
             playAnim(pl, hurtAnim)
             ctx.task.queue(() => {
@@ -174,10 +167,7 @@ class DefaultMoves {
         transitions: { }
     }
 
-    /**
-     * @type {Move}
-     */
-    hitWall = {
+    hitWall: Move = {
         cast: 25,
         onEnter: (pl, ctx) => {
             ctx.movementInput(pl, false)
@@ -198,10 +188,7 @@ class DefaultMoves {
         transitions: { }
     }
 
-    /**
-     * @type {Move}
-     */
-    parried = {
+    parried: Move = {
         cast: 35,
         onEnter: (pl, ctx) => {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 15
@@ -228,10 +215,7 @@ class DefaultMoves {
         transitions: { }
     }
 
-    /**
-     * @type {Move}
-     */
-    parry = {
+    parry: Move = {
         cast: 10,
         backswing: 11,
         onEnter: (pl, ctx) => {
@@ -267,10 +251,7 @@ class DefaultMoves {
         transitions: { }
     }
 
-    /**
-     * @type {Move}
-     */
-    knockdown = {
+    knockdown: Move = {
         cast: 30,
         onEnter: (pl, ctx) => {
             ctx.freeze(pl)
@@ -291,7 +272,7 @@ class DefaultMoves {
         transitions: { }
     }
 
-    setup(init) {
+    setup<T extends DefaultMoves>(init: StateKey<T>) {
         this.hitWall.transitions = {
             hurt: {
                 onHurt: null
@@ -362,48 +343,30 @@ class DefaultMoves {
         }
     }
 
-    /**
-     * @param {keyof this} state 
-     * @param {Move} obj 
-     */
-    mixin(state, obj) {
+    mixin<T extends DefaultMoves>(state: StateKey<T>, obj: any): void {
+        //@ts-ignore
         this[state] = Object.assign(this[state], obj)
     }
 
-    /**
-     * @param {keyof this} state 
-     * @param {string} state 
-     * @param {TransitionTypeOption} obj 
-     */
-    setTransition(state, transitionName, obj) {
+    setTransition<T extends DefaultMoves>(state: StateKey<T>, transitionName: StateKey<T>, transition: MoveTransition<StateKey<T>>) {
+        //@ts-ignore
         const _state = this[state]
         if (!_state) {
             return
         }
 
-        _state.transitions[transitionName] = obj
+        _state.transitions[transitionName] = transition
     }
 }
 
 /**
  * @implements {TrickModule}
  */
-class DefaultTrickModule {
-    /**
-     * @param {string} sid 
-     * @param {string} entry 
-     * @param {string|string[]} bind 
-     * @param {Moves} moves
-     */
-    constructor(sid, entry, bind, moves) {
-        this.sid = sid
-        this.entry = entry
-        this.bind = bind
-        this.moves = moves
-    }
-
-}
-
-module.exports = {
-    DefaultTrickModule, DefaultMoves,
+export class DefaultTrickModule {
+    constructor(
+        public sid: string,
+        public entry: string,
+        public bind: string|string[],
+        public moves: DefaultMoves
+    ) {}
 }

@@ -1,5 +1,4 @@
 const loaderConfig = require('./ServerConfig/loaderConfig')
-const console = require('./Components/console/main')
 const { cmd } = require('./Components/command')
 const { EventEmitter } = require('./Components/events')
 

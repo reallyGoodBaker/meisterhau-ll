@@ -10,7 +10,9 @@ module.exports = {
         'config/**/*',
         'lib/*',
         'Glacie.dll',
-        'plugins/meisterhau/**/*',
-        // 'plugins/yuumo.ll3/**/*',
+    ],
+    builds: [
+        'meisterhau',
+        '-yuumo.ll3',
     ]
 }

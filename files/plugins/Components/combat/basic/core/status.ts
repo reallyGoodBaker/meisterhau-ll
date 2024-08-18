@@ -1,8 +1,6 @@
-/// <reference path="../types.d.ts"/>
 import { CameraComponent } from '../components/camera'
 import { Stamina } from '../components/stamina'
 import { Tick } from '../components/tick'
-import { AcceptbleInputTypes } from '../types'
 import { ComponentManager } from './component'
 
 export const defaultAcceptableInputs = [
@@ -13,7 +11,7 @@ export const defaultAcceptableInputs = [
 export class Status {
     static status = new Map<string, Status>()
     static get(xuid: string) {
-        return this.status.get(xuid) ?? new Status(xuid)
+        return this.status.get(xuid) || new Status(xuid)
     }
 
     /**
@@ -55,7 +53,7 @@ export class Status {
      * 是否霸体状态
      */
     hegemony = false
-    #preInputTimer: number | null = null
+    #preInputTimer: NodeJS.Timeout | null = null
     /**
      * 处于防御状态
      */

@@ -2,7 +2,6 @@ const { alert, Label, Input, Switch, Dropdown, action, widget } = require('../ui
 const { keys, query, edit, add } = require('./core')
 const { requestCredit } = require('../credit/core')
 const { n, ref, getControlledEntites, getVirtEntityLeader } = require('./virt')
-const console = require('../console/main')
 const newDB = require('../db.lib')
 // const db = newDB('./data/orders/vendors')
 

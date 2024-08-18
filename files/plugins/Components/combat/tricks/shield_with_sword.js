@@ -1,6 +1,5 @@
-const { playAnim, playSoundAll } = require('../basic')
+const { playAnim, playSoundAll } = require("../basic/index")
 const { DefaultMoves, DefaultTrickModule } = require('../basic/default')
-const console = require('../../console/main')
 const { constrictCalc, randomRange } = require('../../utils/math')
 const { hud } = require('../basic/hud')
 
@@ -752,4 +751,4 @@ class ShieldSwordMoves extends DefaultMoves {
     }
 }
 
-module.exports = new ShieldSwordTricks()
+exports.tricks = new ShieldSwordTricks()

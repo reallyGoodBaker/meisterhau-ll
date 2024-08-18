@@ -1,4 +1,4 @@
-const { load } = require('./loadModule')
+const { load } = require('./loadModule.js')
 
 const modules = [
     require('./Components/whoami.js'),

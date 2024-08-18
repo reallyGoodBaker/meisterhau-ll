@@ -1,4 +1,5 @@
 const syncConfig = require('./config').sync || []
+const buildsConfig = require('./config').builds || []
 const fs = require('fs')
 const path = require('path')
 const watcher = require('node-watch')
@@ -146,11 +147,54 @@ function doTry(func) {
     }
 }
 
+function overrideDir(from, to, onlyRemove = false) {
+    if (!fs.existsSync(from)) {
+        return
+    }
+
+    if (fs.existsSync(to)) {
+        fs.rmSync(to, { recursive: true, force: true })
+    }
+
+    if (onlyRemove) {
+        return
+    }
+
+    fs.cpSync(
+        from,
+        to,
+        {
+            recursive: true,
+            force: true,
+            errorOnExist: true,
+        }
+    )
+}
+
+const build = path.resolve(__dirname, '../build')
+const plugins = path.resolve(__dirname, '../dev/plugins')
+
+function overrideBuild(name) {
+    const onlyRemove = name.startsWith('-')
+    const folderName = onlyRemove ? name.slice(1) : name
+
+    overrideDir(
+        path.join(build, folderName),
+        path.join(plugins, folderName),
+        onlyRemove
+    )
+}
+
+function overrideBuilds() {
+    buildsConfig.forEach(overrideBuild)
+}
+
 function sync() {
     const conf = wrapSyncConfigs()
     const files = path.resolve(__dirname, '../files')
     const dev = path.resolve(__dirname, '../dev')
 
+    overrideBuilds()
     watcher(
         path.resolve(__dirname, '../files'),
         { recursive: true },

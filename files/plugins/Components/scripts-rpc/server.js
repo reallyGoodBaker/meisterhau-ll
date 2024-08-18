@@ -1,5 +1,3 @@
-const console = require('../console/main')
-
 function handleCall(msg, em) {
     const { id, name, args } = msg
     em.emitNone('call', id, name, args)

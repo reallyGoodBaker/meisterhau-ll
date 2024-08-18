@@ -1,4 +1,3 @@
-const console = require("../console/main")
 const dbLib = require("../db.lib")
 const { widget, Input } = require("../ui")
 const db = dbLib('./data/trap')

@@ -1,6 +1,6 @@
 const { load } = require('./loadModule')
 
 mc.listen('onServerStarted',() => [
-    require('./Components/scripts-rpc/setup.js'),
-    require('./Components/combat/init.js'),
+    require('./Components/scripts-rpc/setup'),
+    require('./Components/combat/init'),
 ].forEach(m => load(m)))

@@ -1,9 +1,4 @@
-/// <reference path="./types.d.ts"/>
-
-/**
- * @param {TrickModule} mod 
- */
-function checkCompleteness(mod) {
+export function checkCompleteness(mod: TrickModule) {
     if (!mod.sid || !mod.bind || !mod.entry || !mod.moves) {
         return '缺少必要的属性: sid | bind | entry | moves'
     }
@@ -13,8 +8,4 @@ function checkCompleteness(mod) {
     }
 
     return false
-}
-
-module.exports = {
-    checkCompleteness
 }

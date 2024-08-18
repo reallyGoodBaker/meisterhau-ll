@@ -7,17 +7,17 @@ type CommandConstructableCtor = ComponentCtor & {
 const publicComponentRegistry = new Map<string, CommandConstructableCtor>()
 const componentIdMapping = new WeakMap()
 
-export const PublicComponent: (name: string) => ClassDecorator = name => target => {
-    publicComponentRegistry.set(name, target as any)
-    componentIdMapping.set(target as any, name as any)
-}
-
 export const getComponentCtor = (id: string) => {
     return publicComponentRegistry.get(id)
 }
 
 export const getComponentId: (t: ComponentCtor) => string | undefined = (t: ComponentCtor) => {
     return componentIdMapping.get(t)
+}
+
+export const PublicComponent: (name: string) => ClassDecorator = name => target => {
+    publicComponentRegistry.set(name, target as any)
+    componentIdMapping.set(target as any, name as any)
 }
 
 const fieldKeys = new Map<ComponentCtor, {muts: string[], lets: string[]}>()

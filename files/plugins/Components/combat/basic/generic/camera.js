@@ -1,4 +1,3 @@
-const console = require('../../../console/main')
 const { CameraComponent } = require('../components/camera')
 const { Status } = require('../core/status')
 const { rotate2, vec2, multiply2 } = require('./vec')

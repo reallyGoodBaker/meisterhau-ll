@@ -1,8 +1,5 @@
-/// <reference path="../basic/types.d.ts"/>
-
-const { playAnim } = require('../basic')
+const { playAnim, playSoundAll } = require("../basic/index")
 const { DefaultMoves, DefaultTrickModule } = require('../basic/default')
-const console = require('../../console/main')
 
 class UchigatanaMoves extends DefaultMoves {
     /**
@@ -200,4 +197,4 @@ class UchigatanaModule extends DefaultTrickModule {
 /**
  * @type {TrickModule}
  */
-module.exports = new UchigatanaModule()
+exports.tricks = new UchigatanaModule()

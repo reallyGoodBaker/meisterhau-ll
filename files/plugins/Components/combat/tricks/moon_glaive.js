@@ -1,6 +1,5 @@
-const { playAnim } = require('../basic')
+const { playAnim, playSoundAll } = require("../basic/index")
 const { DefaultMoves, DefaultTrickModule } = require('../basic/default')
-const console = require('../../console/main')
 const { constrictCalc } = require('../../utils/math')
 const { hud } = require('../basic/hud')
 
@@ -793,4 +792,4 @@ class MoonGlaiveMoves extends DefaultMoves {
     }
 }
 
-module.exports = new MoonGlaiveTricks()
+exports.tricks = new MoonGlaiveTricks()

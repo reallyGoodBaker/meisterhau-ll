@@ -1,6 +1,6 @@
 /// <reference types="levilamina" />
 
-import { Status } from './combat/basic/core/status'
+import { Status } from './Components/combat/basic/core/status'
 
 declare global {
 
@@ -76,7 +76,7 @@ interface Move {
      * }
      * ```
      */
-    onAct: MovementCallback
+    onAct?: MovementCallback
 
     /**
      * 进入此状态后，每tick执行的回调,
@@ -123,20 +123,20 @@ interface Move {
     /**
      * 以刻为键的时间轴
      */
-    timeline: { [P: number]: MovementCallback }
+    timeline?: { [P: number]: MovementCallback }
 
     /**
      * 时间轴，以毫秒为键
      */
-    timeTrack: { [K: number]: MovementCallback }
+    timeTrack?: { [K: number]: MovementCallback }
 }
 
-interface MoveTransition {
+interface MoveTransition<T=string> {
     /**
      * 下一个动作在`moves`中对应的键名
      */
 
-    [P: string]: TransitionTypeOption
+    [P: T]: TransitionTypeOption
 }
 
 type DefaultTransitionOption = {
@@ -164,11 +164,11 @@ type DefaultTransitionOption = {
 interface InputableTransitionMap {
     onJump: unknown
     onSneak: {
-        isSneaking: boolean
+        isSneaking?: boolean
     }
     onUseItem: unknown
     onChangeSprinting: {
-        sprinting: boolean
+        sprinting?: boolean
     }
     onAttack: unknown
     onFeint: unknown
@@ -195,10 +195,10 @@ interface TransitionTypeOptionMap extends InputableTransitionMap {
     onDeflection: unknown
 }
 type TransitionTypeOption = {
-    [p in keyof TransitionTypeOptionMap]?: TransitionTypeOptionMap[p] & DefaultTransitionOption & TransitionOptMixins
+    [p in keyof TransitionTypeOptionMap]?: null | (TransitionTypeOptionMap[p] & DefaultTransitionOption & TransitionOptMixins)
 }
 
-type MovementCallback = (source: any, context: Readonly<MovementContext>) => void | Promise<void>
+type MovementCallback = (source: any, context: Readonly<MovementContext>) => any | Promise<any>
 
 interface AttackRange {
     /**
@@ -333,13 +333,13 @@ interface MovementContext {
      * @param damage 
      * @param damageType 
      */
-    attack(abuser: any, victim: any, damageOpt?: DamageOption): void
+    attack(abuser: Player, victim: Player|Entity, damageOpt?: DamageOption): void
     freeze(player: any): void
     unfreeze(player: any): void
     knockback(en: any, x: number, z: number, horizontal: number, vertical: number): Promise<void>
     clearVelocity(en: any): Promise<void>
     impulse(en: any, x: number, y: number, z: number): Promise<void>
-    setVelocity(pl: any, rotation: number, h: number, v: number): void
+    setVelocity(pl: any, rotation: number, h: number, v?: number): void
     yawToVec2(yaw: number): {x: number, y: number}
     applyKnockbackAtVelocityDirection(en: any, h: number, v: number): Promise<void>
     status: Status
@@ -383,7 +383,7 @@ type EntityDamageCause = 'anvil' | 'blockExplosion' | 'charging' | 'contact' | '
 
 interface DamageOption {
     damage: number
-    damageType: EntityDamageCause
+    damageType?: EntityDamageCause
     damagingProjectile?: any
     /**
      * 可穿透格挡
@@ -431,23 +431,30 @@ interface TransitionOptMixins {
     /**
      * 玩家的精力(不是饱和度也不是生命值)
      */
-    stamina: number
+    stamina?: number
     /**
      * 玩家是否锁定某个实体
      */
-    hasTarget: boolean
+    hasTarget?: boolean
     /**
      * 是否可被击退
      */
-    repulsible: boolean
+    repulsible?: boolean
     /**
      * 是否受到冲击
      * 受到冲击的对象在碰到墙体时会造成短暂眩晕
      */
-    shocked: boolean
+    shocked?: boolean
     /**
      * 是否碰撞
      */
-    isCollide: boolean
+    isCollide?: boolean
 }
+
+type ObjKeyType<Obj, Val> = { [K in keyof Obj]: Val extends Obj[K] ? K : never }[keyof Obj]
+
+type ConstructorOf<Ret, Param=any[]> = new (...args: Param) => Ret
+
+
+
 }

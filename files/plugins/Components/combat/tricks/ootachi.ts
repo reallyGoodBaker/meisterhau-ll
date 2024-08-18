@@ -1,15 +1,13 @@
-const { playAnim, playSoundAll } = require('../basic')
-const console = require('../../console/main')
-const { randomRange } = require('../../utils/math')
-const { DefaultMoves, DefaultTrickModule } = require('../basic/default')
-const { Stamina } = require('combat/basic/components/stamina')
+import { playAnim, playSoundAll } from "../basic/index"
+import { randomRange } from '../../utils/math'
+import { DefaultMoves, DefaultTrickModule } from '../basic/default'
+import { Stamina } from 'combat/basic/components/stamina'
 
 class OotachiMoves extends DefaultMoves {
     constructor() {
         super()
 
-        this.setup('resumeKamae')
-
+        this.setup<OotachiMoves>('resumeKamae')
         this.parry.timeline = {
             14: (pl, ctx) => ctx.trap(pl)
         }
@@ -59,7 +57,7 @@ class OotachiMoves extends DefaultMoves {
         this.animations.block.right = 'animation.weapon.ootachi.block.right'
     }
 
-    idle = {
+    idle: Move = {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.unfreeze(pl)
@@ -99,8 +97,7 @@ class OotachiMoves extends DefaultMoves {
         }
     }
 
-    /** @type {Move} */
-    innoKamae = {
+    innoKamae: Move = {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
@@ -146,7 +143,7 @@ class OotachiMoves extends DefaultMoves {
         }
     }
 
-    resumeKamae = {
+    resumeKamae: Move = {
         transitions: {
             idle: {
                 onEndOfLife: {
@@ -179,7 +176,7 @@ class OotachiMoves extends DefaultMoves {
         }
     }
 
-    running = {
+    running: Move = {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.releaseTarget(pl.xuid)
@@ -207,10 +204,7 @@ class OotachiMoves extends DefaultMoves {
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    combo1Attack = {
+    combo1Attack: Move = {
         cast: 7,
         backswing: 13,
         timeline: {
@@ -292,7 +286,7 @@ class OotachiMoves extends DefaultMoves {
         }
     }
 
-    combo1Chop = {
+    combo1Chop: Move = {
         cast: 11,
         backswing: 13,
         onEnter(pl, ctx) {
@@ -390,10 +384,7 @@ class OotachiMoves extends DefaultMoves {
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    combo2Cut = {
+    combo2Cut: Move = {
         cast: 9,
         backswing: 17,
         onEnter(pl, ctx) {
@@ -467,10 +458,8 @@ class OotachiMoves extends DefaultMoves {
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    combo2Sweap = {
+
+    combo2Sweap: Move = {
         cast: 12,
         backswing: 14,
         onEnter(pl, ctx) {
@@ -550,7 +539,7 @@ class OotachiMoves extends DefaultMoves {
         }
     }
 
-    combo3Stab = {
+    combo3Stab: Move = {
         cast: 8,
         backswing: 17,
         onEnter(pl, ctx) {
@@ -608,7 +597,7 @@ class OotachiMoves extends DefaultMoves {
         }
     }
 
-    combo3Sweap = {
+    combo3Sweap: Move = {
         cast: 16,
         backswing: 19,
         onEnter(pl, ctx) {
@@ -670,7 +659,7 @@ class OotachiMoves extends DefaultMoves {
         }
     }
 
-    dodgePrepare = {
+    dodgePrepare: Move = {
         cast: 0,
         backswing: 1,
         onEnter(pl, ctx) {
@@ -704,7 +693,7 @@ class OotachiMoves extends DefaultMoves {
         }
     }
 
-    dodge = {
+    dodge: Move = {
         cast: 3,
         backswing: 5,
         onEnter(_, ctx) {
@@ -743,7 +732,7 @@ class OotachiMoves extends DefaultMoves {
         }
     }
 
-    dodgeBlocking = {
+    dodgeBlocking: Move = {
         cast: 0,
         onEnter(pl, ctx) {
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^^1^0.5`)
@@ -764,7 +753,7 @@ class OotachiMoves extends DefaultMoves {
     /**
      * @type {Move}
      */
-    hlitStrike = {
+    hlitStrike: Move = {
         cast: 6,
         backswing: 4,
         onEnter(pl, ctx) {
@@ -834,4 +823,4 @@ class OotachiTricks extends DefaultTrickModule {
     }
 }
 
-module.exports = new OotachiTricks()
+export const tricks = new OotachiTricks()
