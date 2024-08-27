@@ -33,7 +33,7 @@ function startDevServer() {
 
     child.stdout.pipe(process.stdout)
     child.stderr.pipe(process.stderr)
-    process.stdin.on('data', buf => child.stdin.write(buf))
+    process.stdin.pipe(child.stdin)
 }
 
 async function start() {

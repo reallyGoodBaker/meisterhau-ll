@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "pnpm run build && node ./scripts/start-dev-server",
-    "build": "rollup -c --bundleConfigAsCjs"
+    "build": "rollup -c --bundleConfigAsCjs && node ./scripts/js-define"
   },
   "repository": {
     "type": "git",

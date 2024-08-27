@@ -1,4 +1,4 @@
-const { playAnim, playSoundAll } = require("../basic/index")
+const { playAnim, playSoundAll, DEFAULT_POSTURE_SPEED } = require("../basic/index")
 const { DefaultMoves, DefaultTrickModule } = require('../basic/default')
 const { constrictCalc } = require('../../utils/math')
 const { hud } = require('../basic/hud')
@@ -117,7 +117,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
-            ctx.setSpeed(pl, 0.06)
+            ctx.setSpeed(pl, DEFAULT_POSTURE_SPEED)
         },
         timeline: {
             4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
@@ -321,7 +321,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
-            ctx.setSpeed(pl, 0.06)
+            ctx.setSpeed(pl, DEFAULT_POSTURE_SPEED)
         },
         timeline: {
             4: (pl, ctx) => ctx.status.isDodging = false,

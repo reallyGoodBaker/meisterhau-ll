@@ -26,8 +26,7 @@
                     "variable.item_status": "public",
                     "variable.posture": "public",
                     "variable.speed": "public",
-                    "variable.body_rot": "public",
-                    "variable.body_rot_lastframe": "public",
+                    "variable.restrict_rot": "public",
                     "variable.item_scale": "public",
                     "variable.waist_item_scale": "public"
                 },
@@ -144,6 +143,8 @@
 
                 "pr.stand": "animation.posture.right.stand",
                 "pr.walk_front": "animation.posture.right.walk_front",
+                "pl.stand": "animation.posture.left.stand",
+                "pl.walk_front": "animation.posture.left.walk_front",
                 "waist_weapon": "animation.hold.waist_weapon"
             },
             "particle_effects": {

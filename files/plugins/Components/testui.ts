@@ -19,6 +19,6 @@ class MyWidget extends Widget<Alert.State> {
     }
 }
 
-mc.listen('onJump', pl => {
-    Alert.start(MyWidget, pl)
-})
+// mc.listen('onJump', pl => {
+//     Alert.start(MyWidget, pl)
+// })

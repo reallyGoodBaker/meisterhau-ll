@@ -4,7 +4,6 @@ import { Tick } from "./tick"
 
 export class Scheduler extends BaseComponent {
 
-    private tick: Optional<Tick> = Optional.none()
     private offset: number = 0
     public update = false
 
@@ -14,15 +13,11 @@ export class Scheduler extends BaseComponent {
         super()
     }
 
-    onAttach(manager: ComponentManager): boolean | void | Promise<boolean | void> {
-        if (!(this.tick = manager.getComponent(Tick))) {
-            return true
-        }
-
-        this.offset = this.tick.unwrap().dt
+    onAttach(): boolean | void | Promise<boolean | void> {
+        this.offset = Tick.tick
     }
 
     onTick() {
-        this.update = (this.tick.unwrap().dt - this.offset) % this.period === 0
+        this.update = (Tick.tick - this.offset) % this.period === 0
     }
 }

@@ -87,7 +87,7 @@ function _handleGobletInteract(ev, type) {
         return false
     }
 
-    if (!gobletEntities.includes(closedEntity.entity.typeId)) {
+    if (!gobletEntities.includes(closedEntity.entity?.typeId)) {
         return false
     }
 

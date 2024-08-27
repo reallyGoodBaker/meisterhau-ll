@@ -27,7 +27,7 @@ interface TrickModule {
 
 type Moves = {[p: string]: Move}
 
-interface Move {
+interface Move<Ctx=any> {
     /**
      * 前摇时间，默认`0`tick
      * @example
@@ -118,7 +118,12 @@ interface Move {
     /**
      * 离开此状态的条件及下一个状态
      */
-    transitions: MoveTransition
+    transitions: {
+        /**
+         * 下一个动作在`moves`中对应的键名
+         */
+        [P: string]: TransitionTypeOption
+    }
 
     /**
      * 以刻为键的时间轴
@@ -195,10 +200,19 @@ interface TransitionTypeOptionMap extends InputableTransitionMap {
     onDeflection: unknown
 }
 type TransitionTypeOption = {
-    [p in keyof TransitionTypeOptionMap]?: null | (TransitionTypeOptionMap[p] & DefaultTransitionOption & TransitionOptMixins)
+    [p in keyof TransitionTypeOptionMap]?: null | (TransitionTypeOptionMap[p] & DefaultTransitionOption & TransitionOptMixins & { tag?: string })
 }
 
-type MovementCallback = (source: any, context: Readonly<MovementContext>) => any | Promise<any>
+type MovementCallback = (source: Player, context: MovementContext) => any | Promise<any>
+
+interface DefaultRawArgs extends Array<any> {
+    0: Player
+}
+
+interface AttackRawArgs extends DefaultRawArgs {
+    1: Player | Entity
+    2: Readonly<DamageOption>
+}
 
 interface AttackRange {
     /**
@@ -304,16 +318,16 @@ interface ParticleEmitter {
     curve: ParticleCurve
 }
 
-interface MovementContext {
+interface MovementContext<RawArgs = Array> {
     /**
      * 从范围中选择目标
      */
-    selectFromRange(pl: any, range: AttackRange): any[]
+    selectFromRange(pl: any, range: AttackRange): Entity[]
     /**
      * 回调函数接受的参数
      * 详情参照liteloader文档
      */
-    readonly rawArgs: any[]
+    readonly rawArgs: RawArgs
     /**
      * 阻止事件发生
      */
@@ -342,11 +356,11 @@ interface MovementContext {
     setVelocity(pl: any, rotation: number, h: number, v?: number): void
     yawToVec2(yaw: number): {x: number, y: number}
     applyKnockbackAtVelocityDirection(en: any, h: number, v: number): Promise<void>
-    status: Status
+    readonly status: Status
     camera(pl: any, enable?: boolean): void
     movement(pl: any, enable?: boolean): void
     movementInput(pl: any, enable?: boolean): void
-    task: Task
+    readonly task: Task
     lookAt(pl: any, en: any): void
     lookAtTarget(pl: any): void
     distanceToTarget(pl: any): void

@@ -3,7 +3,7 @@ const { selectFromRange } = require('./range')
 const { battleCamera, cameraInput, clearCamera } = require('./camera')
 const { knockback, faceTo } = require('../../../scripts-rpc/func/kinematics')
 const { setVelocity } = require('./kinematic')
-const { playAnim } = require('../index')
+const { playAnim, DEFAULT_POSTURE_SPEED, DEFAULT_SPEED } = require('../index')
 const { Status } = require('../core/status')
 const { TargetLock } = require('../components/target-lock')
 const { Optional } = require('@utils/optional')
@@ -22,7 +22,7 @@ function lockTarget(src, target) {
     if (target) {
         // cameraInput(pl, false)
         locks.set(src, target)
-        pl.setMovementSpeed(0.06)
+        pl.setMovementSpeed(DEFAULT_POSTURE_SPEED)
         Status.get(src).componentManager.attachComponent(
             new TargetLock(src, Optional.some(target)),
             new StatusHud(),
@@ -40,7 +40,7 @@ function releaseTarget(src) {
     cameraInput(pl)
     clearCamera(pl)
     locks.delete(src)
-    pl.setMovementSpeed(0.1)
+    pl.setMovementSpeed(DEFAULT_SPEED)
     cooldowns.add(pl.xuid)
     setTimeout(() => cooldowns.delete(pl.xuid), 500)
 }

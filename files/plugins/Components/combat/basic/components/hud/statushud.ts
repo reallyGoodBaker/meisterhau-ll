@@ -57,7 +57,7 @@ export class StatusHud extends HudComponent {
         const isPlayer = lock.targetIsPlayer
         const { health, maxHealth, name} = target
         const contents = []
-        const shortName = name.length > 14 ? name.substring(0, 14) + '…' : name
+        const shortName = name.length > 13 ? name.substring(0, 13) + '…' : name
 
         contents.push(shortName)
         contents.push(`§${ health / maxHealth < 0.3 ? '4' : 'a' }❤ ${

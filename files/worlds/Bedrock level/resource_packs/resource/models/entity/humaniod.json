@@ -1,5 +1,5 @@
 {
-	"format_version": "1.12.0",
+	"format_version": "1.16.0",
 	"minecraft:geometry": [
 		{
 			"description": {
@@ -339,6 +339,12 @@
 					"rotation": [-90, 0, 0]
 				},
 				{
+					"name": "leftHand",
+					"parent": "leftForearm",
+					"pivot": [5.5, 12.5, 0.75],
+					"binding": "'leftitem'"
+				},
+				{
 					"name": "leftUpperSleeve",
 					"parent": "leftArm",
 					"pivot": [5, 21.5, 0],
@@ -447,6 +453,18 @@
 							}
 						}
 					]
+				},
+				{
+					"name": "rightHand",
+					"parent": "rightForearm",
+					"pivot": [-5, 12.5, 0],
+					"binding": "'rightitem'"
+				},
+				{
+					"name": "mainHand",
+					"parent": "rightForearm",
+					"pivot": [-5, 12.5, 0],
+					"binding": "q.item_slot_to_bone_name(c.item_slot)"
 				},
 				{
 					"name": "rightUpperSleeve",

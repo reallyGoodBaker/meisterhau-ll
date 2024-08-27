@@ -4,7 +4,7 @@ import { Status } from '../core/status'
 import { alerpn, lerpn } from '@utils/math'
 import { CameraComponent } from './camera'
 import { Tick } from './tick'
-import { Optional } from '@utils/optional'
+import { interruptExcept, interruptIf } from '@utils/defined'
 
 interface TransInfo {
     curve?: 'linear'
@@ -20,15 +20,13 @@ type TransParams = [
 @PublicComponent('camera-fading')
 @Fields([ 'config' ])
 export class CameraFading extends BaseComponent {
-    tick?: Optional<Tick>
-    tickOffset?: number
-    readonly last: TransParams
 
-    shouldExit = false
+    private tickOffset = 0
+    private finished = false
+    readonly last: TransParams
 
     constructor(
         private config: TransInfo[] = [],
-        private exitOnEnd = false
     ) {
         super()
         const lastTo = config[config.length - 1].to
@@ -37,20 +35,16 @@ export class CameraFading extends BaseComponent {
         this.last = [ 'linear', lastTo, lastTo, 1 ]
     }
 
-    static create({ config, exitOnEnd = false }: { config: TransInfo[], exitOnEnd: boolean }): Component {
-        return new CameraFading(config, exitOnEnd)
+    static create({ config }: { config: TransInfo[] }): Component {
+        return new CameraFading(config)
     }
 
     dt() {
-        return this.tick?.unwrap().dt! - this.tickOffset!
+        return Tick.tick - this.tickOffset!
     }
 
-    onAttach(manager: ComponentManager): boolean | void | Promise<boolean | void> {
-        if (!(this.tick = manager.getComponent(Tick))) {
-            return true
-        }
-
-        this.tickOffset = this.tick.unwrap().dt
+    onAttach(): boolean | void | Promise<boolean | void> {
+        this.tickOffset = Tick.tick
     }
 
     copy(from: number[], to: number[]) {
@@ -90,18 +84,14 @@ export class CameraFading extends BaseComponent {
         const info = this.getTransInfo()
         const [ curve, from, to, progress ] = info
 
+        interruptIf(this.finished)
         switch (curve) {
             case 'linear':
-                return this.offsetLinear(from, to, progress, offset, rot)
+                this.offsetLinear(from, to, progress, offset, rot)
         }
 
-        if (this.shouldExit) {
-            manager.detachComponent(CameraFading)
-            return
-        }
-
-        if (this.exitOnEnd && info === this.last) {
-            this.shouldExit = true
+        if (this.last === info) {
+            this.finished = true
         }
     }
 
@@ -113,7 +103,9 @@ export class CameraFading extends BaseComponent {
         this.copy(rot, rotation)
     }
 
-    static fadeFromAttackDirection(abuser: any, damageOpt: DamageOption) {
+    static fadeFromAttackDirection(abuser: Player | Entity, damageOpt: DamageOption) {
+        interruptExcept('xuid' in abuser)
+
         const { direction } = damageOpt
         let to = null
 
@@ -135,16 +127,19 @@ export class CameraFading extends BaseComponent {
                 break
         }
 
-        Status.get(abuser.xuid).componentManager.attachComponent(new CameraFading([
-            {
-                from: CameraComponent.defaultStatus,
-                to,
-                duration: 1
-            },
-            {
-                to: CameraComponent.defaultStatus,
-                duration: 1
-            }
-        ], true))
+        const manager = Status.get((abuser as Player).xuid).componentManager
+        manager.beforeTick(() => {
+            manager.attachComponent(new CameraFading([
+                {
+                    from: CameraComponent.defaultStatus,
+                    to,
+                    duration: 1
+                },
+                {
+                    to: CameraComponent.defaultStatus,
+                    duration: 1
+                }
+            ]))
+        })
     }
 }

@@ -1,5 +1,5 @@
 {
-	"format_version": "1.12.0",
+	"format_version": "1.16.0",
 	"minecraft:geometry": [
 		{
 			"description": {
@@ -61,10 +61,10 @@
 				{
 					"name": "head",
 					"parent": "body",
-					"pivot": [0, 24, 0],
+					"pivot": [0, 24.93185, -0.51764],
 					"cubes": [
 						{
-							"origin": [-4, 24, -4],
+							"origin": [-4, 24.03407, -4.2941],
 							"size": [8, 8, 8],
 							"uv": {
 								"north": {"uv": [8, 8], "uv_size": [8, 8]},
@@ -208,18 +208,19 @@
 				{
 					"name": "rightItem",
 					"parent": "rightForearm",
-					"pivot": [-5.5, 12.5, 0],
+					"pivot": [-5.48104, 12.46229, -0.4299],
+					"rotation": [-175, 0, 0],
 					"cubes": [
 						{
-							"origin": [-5.75, 12.5, -13.7],
-							"size": [0.5, 1, 19],
+							"origin": [-5.98104, 12.46229, -13.9299],
+							"size": [1, 1, 36],
 							"uv": {
-								"north": {"uv": [0, 0], "uv_size": [0.5, 2]},
-								"east": {"uv": [0, 0], "uv_size": [25, 2]},
-								"south": {"uv": [0, 0], "uv_size": [0.5, 2]},
-								"west": {"uv": [0, 0], "uv_size": [25, 2]},
-								"up": {"uv": [0.5, 25], "uv_size": [-0.5, -25]},
-								"down": {"uv": [0.5, 25], "uv_size": [-0.5, -25]}
+								"north": {"uv": [0, 0], "uv_size": [1, 1]},
+								"east": {"uv": [0, 0], "uv_size": [36, 1]},
+								"south": {"uv": [0, 0], "uv_size": [1, 1]},
+								"west": {"uv": [0, 0], "uv_size": [36, 1]},
+								"up": {"uv": [1, 36], "uv_size": [-1, -36]},
+								"down": {"uv": [1, 36], "uv_size": [-1, -36]}
 							}
 						}
 					]
@@ -227,9 +228,9 @@
 				{
 					"name": "right_emitter",
 					"parent": "rightItem",
-					"pivot": [-5.5, 12.5, 0],
+					"pivot": [-5.48104, 12.46229, -1.9299],
 					"locators": {
-						"right_emitter": [-6, 13, 0]
+						"right_emitter": [-5.98104, 12.96229, -1.9299]
 					}
 				},
 				{

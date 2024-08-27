@@ -15,7 +15,6 @@ const { setVelocity, isCollide } = require('../generic/kinematic')
 const { vec2, vec2ToAngle } = require('../generic/vec')
 const { clearCamera } = require('../generic/camera')
 const { Tick } = require('../components/tick')
-const { Optional } = require('../../../utils/optional')
 const { CameraFading } = require('../components/camera-fading')
 const { DamageModifier } = require('./config')
 const { registerCommand } = require('./commands')
@@ -31,6 +30,11 @@ const yawToVec2 = yaw => {
         x: Math.cos(rad),
         y: Math.sin(rad)
     }
+}
+
+function damageWithCameraFading(victim, damage, cause, abuser, projectile, damageOpt) {
+    CameraFading.fadeFromAttackDirection(abuser, damageOpt)
+    _damage(victim, damage, cause, abuser, projectile)
 }
 
 function knockdown(abuser, victim, knockback=2) {
@@ -100,7 +104,7 @@ function getMoveDir(pl) {
     const xuid = pl.xuid
 
     return new Promise(res => {
-        em.once('onTick', () => {
+        setTimeout(() => {
             const currentPos = mc.getPlayer(xuid).feetPos
             const movVec = vec2(currentPos.x, currentPos.z, previusPos.x, previusPos.z)
             let rot = vec2ToAngle(movVec) * 180 / Math.PI - pl.direction.yaw
@@ -115,7 +119,7 @@ function getMoveDir(pl) {
                             : rot < 135 ? 2 : 3
             
             res(direct)
-        })
+        }, 50);
     })
 }
 
@@ -524,7 +528,7 @@ function listenAllCustomEvents(mods) {
     })
 
     em.on('onTick', () => {
-        Tick.totalTick++
+        Tick.tick++
 
         for (const [xuid, status] of Status.status.entries()) {
             if (typeof xuid !== 'string') {
@@ -611,13 +615,13 @@ function listenAllCustomEvents(mods) {
         const victimIsEntity = !victim.xuid
 
         if (victimIsEntity) {
-            CameraFading.fadeFromAttackDirection(abuser, damageOpt)
-            return _damage(
+            return damageWithCameraFading(
                 victim,
                 damage,
                 damageType,
                 abuser,
-                damagingProjectile
+                damagingProjectile,
+                damageOpt,
             )
         }
 
@@ -639,7 +643,6 @@ function listenAllCustomEvents(mods) {
             knockback(victim, 0, 0, 0, -2)
         }
         const doDamage = () => {
-            CameraFading.fadeFromAttackDirection(abuser, damageOpt)
             _knockback(_k, victimStatus.repulsible)
             victimStatus.shocked = shock
 
@@ -811,7 +814,7 @@ function listenAllCustomEvents(mods) {
         }
 
         if (flag) {
-            _damage(victim, damage, damageType, abuser, damagingProjectile)
+            damageWithCameraFading(victim, damage, damageType, abuser, damagingProjectile, damageOpt)
         }
     })
 

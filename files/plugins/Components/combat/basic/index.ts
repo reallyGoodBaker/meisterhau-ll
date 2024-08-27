@@ -23,3 +23,6 @@ export function playParticle(particle: string, pos: Pos3) {
 export function movable() {
     
 }
+
+export const DEFAULT_SPEED = 0.1
+export const DEFAULT_POSTURE_SPEED = 0.04

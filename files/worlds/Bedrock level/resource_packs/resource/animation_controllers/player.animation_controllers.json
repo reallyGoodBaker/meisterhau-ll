@@ -110,7 +110,7 @@
 				"third_person": {
 					"animations": [
 						"humanoid_base_pose",
-                        "body_fix",
+						"body_fix",
 						{"look_at_target": "!query.is_sleeping && !query.is_emoting"},
 						"cape",
 						"controller.move",
@@ -150,7 +150,8 @@
 				"idle": {
 					"animations": [
 						{"pr.stand": "v.posture == 1"},
-						{"custom.stand": "v.posture == 0"}
+						{"custom.stand": "v.posture == 0"},
+						{"pl.stand": "v.posture == 2"}
 					],
 					"transitions": [
 						{"walking": "q.ground_speed >= 0.5"}
@@ -160,7 +161,8 @@
 				"walking": {
 					"animations": [
 						{"custom.walk": "q.is_on_ground && v.posture == 0"},
-						{"pr.walk_front": "v.posture == 1 && q.is_on_ground"}
+						{"pr.walk_front": "v.posture == 1 && q.is_on_ground"},
+						{"pl.walk_front": "v.posture == 2 && q.is_on_ground"}
 					],
 					"transitions": [
 						{"idle": "q.ground_speed < 0.5"},

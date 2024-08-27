@@ -1,3 +1,4 @@
+const { DEFAULT_POSTURE_SPEED, DEFAULT_SPEED } = require("../index")
 const { hasLock } = require("./lock")
 
 function movement(pl, enabled=true) {
@@ -6,7 +7,7 @@ function movement(pl, enabled=true) {
     }
 
     pl.setMovementSpeed(
-        hasLock(pl) ? 0.06 : 0.1
+        hasLock(pl) ? DEFAULT_POSTURE_SPEED : DEFAULT_SPEED
     )
 }
 

@@ -12,6 +12,10 @@ async function damage(victim, damage, cause, abuser, projectile) {
     // _damageLL(victim, damage)
 }
 
+/**
+ * 
+ * @param {Entity} victim
+ */
 function _damageLL(victim, damage, cause, abuser, projectile) {
     victim.hurt(damage, ActorDamageCause.EntityAttack)
 }

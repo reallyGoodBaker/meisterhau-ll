@@ -102,7 +102,6 @@ export class Status {
         defaultAcceptableInputs.forEach(type => this.acceptableInputs.add(type))
 
         this.componentManager.attachComponent(
-            new Tick(),
             new CameraComponent(),
             new Stamina(0),
         )

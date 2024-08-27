@@ -3,7 +3,7 @@ import { Scheduler } from "./scheduler"
 import { RequireComponents } from '../core/component'
 import { Timer } from "./timer"
 import { Fields, PublicComponent } from "../core/config"
-import { Optional } from '../../../utils/optional';
+import { Optional } from '@utils/optional'
 
 @PublicComponent('health-modifier')
 @Fields([ 'remain' ], [ 'delta', 'duration' ])

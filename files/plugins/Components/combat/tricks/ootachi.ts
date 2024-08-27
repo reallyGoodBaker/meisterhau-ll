@@ -247,9 +247,7 @@ class OotachiMoves extends DefaultMoves {
                 onBlock: null,
             },
             hurt: {
-                onHurt: {
-                    allowedState: 'both'
-                }
+                onHurt: null
             },
             parried: {
                 onParried: {
