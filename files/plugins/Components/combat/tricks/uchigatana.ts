@@ -1,27 +1,35 @@
-const { playAnim, playSoundAll } = require("../basic/index")
-const { DefaultMoves, DefaultTrickModule } = require('../basic/default')
+import { playAnim, playSoundAll } from "../basic/index"
+import { DefaultMoves, DefaultTrickModule } from '../basic/default'
+import { randomRange } from "@utils/math"
 
 class UchigatanaMoves extends DefaultMoves {
-    /**
-     * @type {Move}
-     */
-    hold = {
+    constructor() {
+        super()
+
+        this.setup<UchigatanaMoves>('resume')
+    }
+
+    hold: Move = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            ctx.releaseTarget(pl.xuid)
             playAnim(pl, 'animation.weapon.uchigatana.hold', 'animation.weapon.uchigatana.hold')
         },
         transitions: {
             kamae: {
                 onLock: null,
             },
+            hurt: {
+                onHurt: null
+            },
+            running: {
+                onChangeSprinting: {
+                    sprinting: true
+                }
+            },
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    kamae = {
+    kamae: Move = {
         cast: Infinity,
         onEnter(pl) {
             playAnim(pl, 'animation.weapon.uchigatana.kamae', 'animation.weapon.uchigatana.kamae')
@@ -45,10 +53,44 @@ class UchigatanaMoves extends DefaultMoves {
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    resume = {
+    jodanKamae: Move = {
+        cast: 10,
+        backswing: 10,
+        onEnter(pl, ctx) {
+            ctx.freeze(pl)
+            playAnim(pl, 'animation.weapon.uchigatana.kamae.jodan')
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl)
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null,
+            },
+            hurt: {
+                onHurt: null
+            }
+        }
+    }
+
+    running: Move = {
+        cast: Infinity,
+        onEnter(pl) {
+            playAnim(pl, 'animation.weapon.uchigatana.running', 'animation.weapon.uchigatana.running')
+        },
+        transitions: {
+            resume: {
+                onChangeSprinting: {
+                    sprinting: false
+                }
+            },
+            hurt: {
+                onHurt: null
+            },
+        }
+    }
+
+    resume: Move = {
         transitions: {
             hold: {
                 onEndOfLife: {
@@ -68,12 +110,9 @@ class UchigatanaMoves extends DefaultMoves {
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    attack1 = {
-        cast: 8,
-        backswing: 13,
+    attack1: Move = {
+        cast: 9,
+        backswing: 12,
         onEnter(pl, ctx) {
             ctx.status.isBlocking = true
             ctx.freeze(pl)
@@ -84,6 +123,7 @@ class UchigatanaMoves extends DefaultMoves {
             ctx.selectFromRange(pl).forEach(en => {
                 ctx.attack(pl, en, {
                     damage: 12,
+                    direction: 'right',
                 })
             })
         },
@@ -95,13 +135,14 @@ class UchigatanaMoves extends DefaultMoves {
             0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.5, 90),
             4: (_, ctx) => ctx.status.isBlocking = false,
             5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
+            7: pl => playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1),
             12: (pl, ctx) => ctx.trap(pl)
         },
         transitions: {
             block: {
                 onBlock: null
             },
-            resume: {
+            jodanKamae: {
                 onEndOfLife: null
             },
             hurt: {
@@ -127,10 +168,7 @@ class UchigatanaMoves extends DefaultMoves {
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    attack2 = {
+    attack2: Move = {
         cast: 12,
         backswing: 14,
         onEnter(pl, ctx) {
@@ -175,12 +213,6 @@ class UchigatanaMoves extends DefaultMoves {
             },
         }
     }
-
-    constructor() {
-        super()
-
-        this.setup('resume')
-    }
 }
 
 class UchigatanaModule extends DefaultTrickModule {
@@ -188,13 +220,10 @@ class UchigatanaModule extends DefaultTrickModule {
         super(
             'rgb39.weapon.empty_hand',
             'hold',
-            [ 'weapon:uchigatana' ],
+            [ 'weapon:uchigatana', 'weapon:morphidae' ],
             new UchigatanaMoves()
         )
     }
 }
 
-/**
- * @type {TrickModule}
- */
-exports.tricks = new UchigatanaModule()
+export const tricks = new UchigatanaModule()

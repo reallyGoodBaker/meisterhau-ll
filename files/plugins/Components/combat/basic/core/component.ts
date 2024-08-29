@@ -1,9 +1,10 @@
 import { Optional } from '@utils/optional'
-import { Status } from './status'
 
 export interface Component {
-    onTick(manager: ComponentManager, pl: Optional<Player>, status: Optional<Status>): void
+    onTick(manager: ComponentManager, en: Optional<Player|Entity>): void
     detach(manager: ComponentManager): void
+    getManager(): ComponentManager
+    getEntity(): Optional<Player|Entity>
 }
 
 export interface BasicComponent extends Component {
@@ -11,12 +12,26 @@ export interface BasicComponent extends Component {
     onDetach(manager: ComponentManager): void | Promise<void>
 }
 
+const REFLECT_MANAGER = Symbol('reflect-manager')
+const REFLECT_ENTITY = Symbol('reflect-entity')
+
 export class CustomComponent implements Component {
-    onTick(manager: ComponentManager, pl: Optional<Player>, status: Optional<Status>): void {}
+    [REFLECT_MANAGER]?: ComponentManager
+    [REFLECT_ENTITY]: Optional<Player|Entity> = Optional.none()
+
+    onTick(manager: ComponentManager, en: Optional<Player|Entity>): void {}
 
     detach(manager: ComponentManager) {
         const ctor = Object.getPrototypeOf(this).constructor
         return manager.detachComponent(ctor)
+    }
+
+    getManager(): ComponentManager {
+        return this[REFLECT_MANAGER] as ComponentManager
+    }
+
+    getEntity(): Optional<Player|Entity> {
+        return this[REFLECT_ENTITY]
     }
 }
 
@@ -110,36 +125,45 @@ export class ComponentManager {
         return this.#components.has(ctor)
     }
 
-    afterTick(fn: (pl: Optional<Player>, status: Optional<Status>) => void) {
+    afterTick(fn: (en: Optional<Player|Entity>) => void) {
         this.#nextTicks.push(fn)
     }
 
-    beforeTick(fn: (pl: Optional<Player>, status: Optional<Status>) => void) {
+    beforeTick(fn: (en: Optional<Player|Entity>) => void) {
         this.#prependTicks.unshift(fn)
     }
 
-    handleTicks(pl: Player, status: Status) {
+    handleTicks(en: Player|Entity) {
         for (const prependTick of this.#prependTicks) {
-            this.profiler(() => prependTick.call(null, Optional.some(pl), Optional.some(status)))
-            // prependTick.call(null, Optional.some(pl), Optional.some(status))
+            this.profiler(() => prependTick.call(null, Optional.some(en)))
+            // prependTick.call(null, Optional.some(en))
         }
         this.#prependTicks.length = 0
 
         for (const component of this.#components.values()) {
+
+            if (REFLECT_ENTITY in component) {
+                component[REFLECT_ENTITY] = Optional.some(en)
+            }
+
+            if (REFLECT_MANAGER in component) {
+                component[REFLECT_MANAGER] = this
+            }
+
             const { onTick } = component
 
             if (onTick) {
                 this.profiler(
-                    () => onTick.call(component, this, Optional.some(pl), Optional.some(status)),
+                    () => onTick.call(component, this, Optional.some(en)),
                     component
                 )
-                // onTick.call(component, this, Optional.some(pl), Optional.some(status))
+                // onTick.call(component, this, Optional.some(en))
             }
         }
 
         for (const afterTick of this.#nextTicks) {
-            this.profiler(() => afterTick.call(null, Optional.some(pl), Optional.some(status)))
-            // afterTick.call(null, Optional.some(pl), Optional.some(status))
+            this.profiler(() => afterTick.call(null, Optional.some(en)))
+            // afterTick.call(null, Optional.some(en))
         }
         this.#nextTicks.length = 0
     }

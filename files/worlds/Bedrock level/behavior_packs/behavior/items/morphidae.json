@@ -2,7 +2,7 @@
     "format_version": "1.20.40",
     "minecraft:item": {
         "description": {
-            "identifier": "weapon:double_dagger",
+            "identifier": "weapon:morphidae",
             "menu_category": {
                 "category": "equipment",
                 "group": "itemGroup.name.sword"
@@ -10,15 +10,15 @@
         },
         "components": {
             "minecraft:hand_equipped": true,
-            "minecraft:damage": {
-                "value": 10
-            },
             "minecraft:max_stack_size": {
                 "value": 1
             },
-            "minecraft:icon": "double_dagger",
+            "minecraft:icon": "morphidae",
             "minecraft:display_name": {
-				"value": "双持匕首"
+				"value": "闪蝶"
+			},
+            "minecraft:durability": {
+				"max_durability": 600
 			},
             "minecraft:can_destroy_in_creative": {
                 "value": false

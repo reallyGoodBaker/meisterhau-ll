@@ -1,5 +1,5 @@
-const { playAnim, playSoundAll } = require("../basic/index")
-const { DefaultMoves, DefaultTrickModule } = require("../basic/default")
+import { playAnim, playSoundAll } from "../basic/index"
+import { DefaultMoves, DefaultTrickModule } from "../basic/default"
 
 class DoubleBladeMoves extends DefaultMoves {
     constructor() {
@@ -7,13 +7,10 @@ class DoubleBladeMoves extends DefaultMoves {
 
         this.animations.parry.left = 'animation.double_blade.parry.left'
         this.animations.block.left = 'animation.double_blade.block.left'
-        this.setup('resume')
+        this.setup<DoubleBladeMoves>('resume')
     }
 
-    /**
-     * @type {Move}
-     */
-    idle = {
+    idle: Move = {
         cast: Infinity,
         onEnter(pl) {
             playAnim(pl, 'animation.double_blade.idle', 'animation.double_blade.idle')
@@ -33,10 +30,7 @@ class DoubleBladeMoves extends DefaultMoves {
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    running = {
+    running: Move = {
         cast: Infinity,
         onEnter(pl) {
             playAnim(pl, 'animation.double_blade.running', 'animation.double_blade.running')
@@ -53,8 +47,7 @@ class DoubleBladeMoves extends DefaultMoves {
         }
     }
 
-    /** @type {Move} */
-    i2r = {
+    i2r: Move = {
         cast: 5,
         onEnter(pl) {
             playAnim(pl, 'animation.double_blade.i2r')
@@ -71,8 +64,7 @@ class DoubleBladeMoves extends DefaultMoves {
         }
     }
 
-    /** @type {Move} */
-    r2i = {
+    r2i: Move = {
         cast: 5,
         onEnter(pl) {
             playAnim(pl, 'animation.double_blade.r2i')
@@ -89,8 +81,7 @@ class DoubleBladeMoves extends DefaultMoves {
         }
     }
 
-    /** @type {Move} */
-    hold = {
+    hold: Move = {
         cast: Infinity,
         onEnter(pl) {
             playAnim(pl, 'animation.double_blade.hold', 'animation.double_blade.hold')
@@ -108,8 +99,7 @@ class DoubleBladeMoves extends DefaultMoves {
         }
     }
 
-    /** @type {Move} */
-    resume = {
+    resume: Move = {
         transitions: {
             hold: {
                 onEndOfLife: {
@@ -124,8 +114,7 @@ class DoubleBladeMoves extends DefaultMoves {
         }
     }
 
-    /** @type {Move} */
-    startSweap = {
+    startSweap: Move = {
         cast: 8,
         backswing: 13,
         onEnter(pl, ctx) {
@@ -176,8 +165,7 @@ class DoubleBladeMoves extends DefaultMoves {
         }
     }
 
-    /** @type {Move} */
-    startMasterHit = {
+    startMasterHit: Move = {
         cast: 6,
         backswing: 13,
         onEnter(pl, ctx) {
@@ -228,10 +216,11 @@ class DoubleBlade extends DefaultTrickModule {
             'idle',
             [
                 'weapon:double_blade',
+                'weapon:db_morphidae',
             ],
             new DoubleBladeMoves()
         )
     }
 }
 
-exports.tricks = new DoubleBlade()
+export const tricks = new DoubleBlade()

@@ -104,30 +104,28 @@ export class CameraFading extends BaseComponent {
     }
 
     static fadeFromAttackDirection(abuser: Player | Entity, damageOpt: DamageOption) {
-        interruptExcept('xuid' in abuser)
-
         const { direction } = damageOpt
         let to = null
 
         switch (direction) {
-            case 'left':
-                to = [ 2.2, 0, 0.9, -15, 0 ]
+            case 'right':
+                to = [ 2.5, 0, 0.6, -15, 0 ]
                 break
 
-            case 'right':
-                to = [ 2.2, 0, 0.5, 15, 0 ]
+            case 'left':
+                to = [ 2.5, 0, 1, 15, 0 ]
                 break
             
             case 'vertical':
-                to = [ 2.2, 0.4, 0.7, 15, 0 ]
+                to = [ 2.5, 0.3, 0.8, 0, -15 ]
                 break
         
             default:
-                to = [ 1.5, 0, 0.7, 0, 0 ]
+                to = [ 1.5, 0, 0.5, 0, 0 ]
                 break
         }
 
-        const manager = Status.get((abuser as Player).xuid).componentManager
+        const manager = Status.get((abuser as Player).uniqueId).componentManager
         manager.beforeTick(() => {
             manager.attachComponent(new CameraFading([
                 {

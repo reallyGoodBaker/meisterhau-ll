@@ -45,7 +45,7 @@ class MoonGlaiveMoves extends DefaultMoves {
     hold = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            ctx.releaseTarget(pl.xuid)
+            ctx.releaseTarget(pl.uniqueId)
             playAnim(pl, 'animation.weapon.moon_glaive.hold', 'animation.weapon.moon_glaive.hold')
         },
         transitions: {
@@ -71,7 +71,7 @@ class MoonGlaiveMoves extends DefaultMoves {
     running = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            ctx.releaseTarget(pl.xuid)
+            ctx.releaseTarget(pl.uniqueId)
             playAnim(pl, 'animation.weapon.moon_glaive.running', 'animation.weapon.moon_glaive.running')
         },
         transitions: {

@@ -1,5 +1,4 @@
-import { Optional } from "@utils/optional"
-import { BaseComponent, ComponentManager } from "../core/component"
+import { BaseComponent } from "../core/component"
 import { Tick } from "./tick"
 
 export class Scheduler extends BaseComponent {

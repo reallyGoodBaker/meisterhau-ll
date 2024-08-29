@@ -1,3 +1,4 @@
+const { rotateTo } = require('../../../scripts-rpc/func/combat')
 const { CameraComponent } = require('../components/camera')
 const { Status } = require('../core/status')
 const { rotate2, vec2, multiply2 } = require('./vec')
@@ -80,13 +81,13 @@ const battleCamera = (pl, en) => {
     const enPos = en.pos
     const initVec = vec2(plPos.x, plPos.z, enPos.x, enPos.z)
     const dist = initVec.m
-    const manager = Status.get(pl.xuid).componentManager
-    const cameraComponent = manager.getComponent(CameraComponent).unwrap()
-
-    if (!cameraComponent) {
+    const manager = Status.get(pl.uniqueId).componentManager
+    const cameraComponentOpt = manager.getComponent(CameraComponent)
+    if (cameraComponentOpt.isEmpty()) {
         return
     }
 
+    const cameraComponent = cameraComponentOpt.unwrap()
     const [ offsetX, offsetY, offsetZ ] = cameraComponent.offset
     const moduloScale = offsetZ / initVec.m
 
@@ -119,7 +120,7 @@ const battleCamera = (pl, en) => {
     const cameraPos = {
         x: crossPos.x + cameraPosVec.dx,
         z: crossPos.z + cameraPosVec.dy,
-        y: plPos.y - 0.4 + offsetY,
+        y: plPos.y - .3 + offsetY,
     }
 
     // camera(pl, 0.1, 'linear', cameraPos, {

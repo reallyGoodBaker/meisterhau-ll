@@ -19,7 +19,7 @@ const { CameraFading } = require('../components/camera-fading')
 const { DamageModifier } = require('./config')
 const { registerCommand } = require('./commands')
 const { antiTreeshaking } = require('../components/anti-treeshaking')
-const { Stamina } = require('../components/stamina')
+const { Stamina } = require('../components/core/stamina')
 
 const em = new EventEmitter({ enableWatcher: true })
 const es = EventInputStream.get(em)
@@ -83,7 +83,7 @@ const mobEvents = [
 /**@type {Map<string, Status>}*/
 
 /**@type {(pl: any) => Status}*/
-const _status = pl => Status.get(pl.xuid)
+const _status = pl => Status.get(pl.uniqueId)
 
 function freeze(pl) {
     movement(pl, false)
@@ -101,11 +101,11 @@ function getMoveDir(pl) {
         x: pl.feetPos.x,
         z: pl.feetPos.z
     }
-    const xuid = pl.xuid
+    const uniqueId = pl.uniqueId
 
     return new Promise(res => {
         setTimeout(() => {
-            const currentPos = mc.getPlayer(xuid).feetPos
+            const currentPos = mc.getPlayer(uniqueId).feetPos
             const movVec = vec2(currentPos.x, currentPos.z, previusPos.x, previusPos.z)
             let rot = vec2ToAngle(movVec) * 180 / Math.PI - pl.direction.yaw
 
@@ -143,7 +143,7 @@ function _ctx(pl, mixins={}) {
         setVelocity,
         yawToVec2,
         applyKnockbackAtVelocityDirection,
-        task: Task.get(pl.xuid),
+        task: Task.get(pl.uniqueId),
         lookAt,
         lookAtTarget,
         distanceToTarget,
@@ -160,7 +160,7 @@ function _ctx(pl, mixins={}) {
 }
 
 function watchMainhandChange(pl) {
-    const status = Status.get(pl.xuid)
+    const status = Status.get(pl.uniqueId)
     const hand = pl.getHand()?.type ?? 'minecraft:air'
     
     status.hand = hand
@@ -216,14 +216,14 @@ const dataPackers = {
         }
     },
     onEndOfLife(args) {
-        const status = Status.get(args[0].xuid)
+        const status = Status.get(args[0].uniqueId)
         return {
             preInput: status.preInput
         }
     },
     onTrap(args) {
         const [ pl, data ] = args
-        const status = Status.get(pl.xuid)
+        const status = Status.get(pl.uniqueId)
         return {
             preInput: status.preInput,
             ...data
@@ -374,10 +374,6 @@ function transition(pl, bind, status, eventName, prevent, args) {
         return
     }
 
-    // const track = timeTracks.get(pl.xuid) ?? []
-    // track.forEach(t => clearInterval(t))
-    // track.length = 0
-
     if (currentMove.onLeave) {
         currentMove.onLeave(pl, _ctx(pl, {
             rawArgs: args,
@@ -385,15 +381,6 @@ function transition(pl, bind, status, eventName, prevent, args) {
             nextStatus: next
         }))
     }
-
-    // let i = 0
-    // const _track = currentMove.timeTrack ?? {}
-    // for (const time in _track) {
-    //     const handler = _track[time]
-
-    //     track[i++] = setTimeout(() => handler.call(undefined, pl, _ctx(pl)), Math.round(+time))
-    // }
-    // timeTracks.set(pl.xuid, track)
 
     if (nextMove.onEnter) {
         nextMove.onEnter(pl, _ctx(pl, {
@@ -442,30 +429,30 @@ function listenPlayerItemChange(mods) {
         mc.getOnlinePlayers().forEach(pl => {
             const mainhand = pl.getHand().type
             const offhand = pl.getOffHand().type
-            const previousMainhand = playerMainhanded.get(pl.xuid)
-            const previousOffhand = playerOffhanded.get(pl.xuid)
+            const previousMainhand = playerMainhanded.get(pl.uniqueId)
+            const previousOffhand = playerOffhanded.get(pl.uniqueId)
 
             if (mainhand !== previousMainhand) {
                 em.emitNone('onChangeMainhand', pl, mainhand, previousMainhand)
-                playerMainhanded.set(pl.xuid, mainhand)
+                playerMainhanded.set(pl.uniqueId, mainhand)
             }
 
             if (offhand !== previousOffhand) {
                 em.emitNone('onChangeOffhand', pl, offhand, previousOffhand)
-                playerOffhanded.set(pl.xuid, offhand)
+                playerOffhanded.set(pl.uniqueId, offhand)
             }
         })
     })
 
     em.on('onChangeMainhand', (pl, hand, old) => {
-        const status = Status.get(pl.xuid)
+        const status = Status.get(pl.uniqueId)
         const oldBind = getMod(old)
 
         if (!status) {
             return
         }
 
-        releaseTarget(pl.xuid)
+        releaseTarget(pl.uniqueId)
 
         if (oldBind) {
             const move = oldBind.moves[status.status]
@@ -491,12 +478,12 @@ function listenAllCustomEvents(mods) {
 
     em.on('onTick', onTick(em))
     em.on('onTick', () => {
-        for (const [xuid, status] of Status.status.entries()) {
-            if (typeof xuid !== 'string') {
+        for (const [uniqueId, status] of Status.status.entries()) {
+            if (typeof uniqueId !== 'string') {
                 return
             }
 
-            const pl = mc.getPlayer(xuid)
+            const pl = mc.getPlayer(uniqueId)
             const bind = getMod(status.hand)
 
             if (!pl || !bind) {
@@ -530,11 +517,11 @@ function listenAllCustomEvents(mods) {
     em.on('onTick', () => {
         Tick.tick++
 
-        for (const [xuid, status] of Status.status.entries()) {
-            if (typeof xuid !== 'string') {
+        for (const [uniqueId, status] of Status.status.entries()) {
+            if (typeof uniqueId !== 'string') {
                 return
             }
-            const pl = mc.getPlayer(xuid)
+            const pl = mc.getPlayer(uniqueId)
             const bind = getMod(status.hand)
 
             if (!pl ||!bind) {
@@ -626,7 +613,7 @@ function listenAllCustomEvents(mods) {
         }
 
         const victimPlayer = victimIsEntity ? victim.toPlayer() : victim
-        const victimStatus = Status.get(victimPlayer.xuid)
+        const victimStatus = Status.get(victimPlayer.uniqueId)
 
         const _knockback = (h, repulsible) => {
             if (powerful || repulsible) {
@@ -685,7 +672,7 @@ function listenAllCustomEvents(mods) {
     })
 
     em.on('deflect', (abuser, victim, damageOpt) => {
-        const aStatus = Status.get(abuser.xuid)
+        const aStatus = Status.get(abuser.uniqueId)
         transition(
             abuser,
             getMod(aStatus.hand),
@@ -695,7 +682,7 @@ function listenAllCustomEvents(mods) {
             [abuser, victim, damageOpt]
         )
 
-        const vStatus = Status.get(victim.xuid)
+        const vStatus = Status.get(victim.uniqueId)
         transition(
             victim,
             getMod(vStatus.hand),
@@ -707,7 +694,7 @@ function listenAllCustomEvents(mods) {
     })
 
     em.on('dodge', (abuser, victim, damageOpt) => {
-        const aStatus = Status.get(abuser.xuid)
+        const aStatus = Status.get(abuser.uniqueId)
         transition(
             abuser,
             getMod(aStatus.hand),
@@ -717,7 +704,7 @@ function listenAllCustomEvents(mods) {
             [abuser, victim, damageOpt]
         )
 
-        const vStatus = Status.get(victim.xuid)
+        const vStatus = Status.get(victim.uniqueId)
         transition(
             victim,
             getMod(vStatus.hand),
@@ -729,7 +716,7 @@ function listenAllCustomEvents(mods) {
     })
 
     em.on('parried', (abuser, victim, damageOpt) => {
-        const aStatus = Status.get(abuser.xuid)
+        const aStatus = Status.get(abuser.uniqueId)
         transition(
             abuser,
             getMod(aStatus.hand),
@@ -739,7 +726,7 @@ function listenAllCustomEvents(mods) {
             [abuser, victim, damageOpt]
         )
 
-        const vStatus = Status.get(victim.xuid)
+        const vStatus = Status.get(victim.uniqueId)
         transition(
             victim,
             getMod(vStatus.hand),
@@ -754,7 +741,7 @@ function listenAllCustomEvents(mods) {
         transition(
             abuser,
             getMod(getHandedItemType(abuser)),
-            Status.get(abuser.xuid),
+            Status.get(abuser.uniqueId),
             'onBlocked',
             Function.prototype,
             [abuser, victim, damageOpt]
@@ -763,7 +750,7 @@ function listenAllCustomEvents(mods) {
         transition(
             victim,
             getMod(getHandedItemType(victim)),
-            Status.get(victim.xuid),
+            Status.get(victim.uniqueId),
             'onBlock',
             Function.prototype,
             [victim, abuser, damageOpt]
@@ -782,7 +769,7 @@ function listenAllCustomEvents(mods) {
         transition(
             abuser,
             getMod(getHandedItemType(abuser)),
-            Status.get(abuser.xuid),
+            Status.get(abuser.uniqueId),
             'onHit',
             Function.prototype,
             [abuser, victim, damageOpt]
@@ -791,7 +778,7 @@ function listenAllCustomEvents(mods) {
         let flag = true,
             prevent = () => flag = false
 
-        const victimStatus = Status.get(victim.xuid)
+        const victimStatus = Status.get(victim.uniqueId)
 
         transition(
             victim,
@@ -822,7 +809,7 @@ function listenAllCustomEvents(mods) {
         transition(
             victim,
             getMod(getHandedItemType(victim)),
-            Status.get(victim.xuid),
+            Status.get(victim.uniqueId),
             'onHurtByMob',
             prevent,
             [ victim, abuser, damageOpt ]
@@ -830,10 +817,10 @@ function listenAllCustomEvents(mods) {
     })
 
     em.on('knockdown', (abuser, victim, knockbackStrength, time=30) => {
-        const aStatus = Status.get(abuser.xuid)
+        const aStatus = Status.get(abuser.uniqueId)
         const aMod = getMod(aStatus.hand)
 
-        const vStatus = Status.get(victim.xuid)
+        const vStatus = Status.get(victim.uniqueId)
         const vMod = getMod(vStatus.hand)
 
         if (vStatus && !vStatus.repulsible) {
@@ -855,7 +842,7 @@ function listenAllCustomEvents(mods) {
 
     em.on('onReleaseLock', (pl, hand) => {
         const bind = getMod(hand)
-        const status = Status.get(pl.xuid)
+        const status = Status.get(pl.uniqueId)
 
         if (!bind || !status) {
             return
@@ -866,7 +853,7 @@ function listenAllCustomEvents(mods) {
 
     em.on('onLock', (pl, hand, target) => {
         const bind = getMod(hand)
-        const status = Status.get(pl.xuid)
+        const status = Status.get(pl.uniqueId)
 
         if (!bind || !status) {
             return
@@ -877,7 +864,7 @@ function listenAllCustomEvents(mods) {
 
     em.on('onFeint', (pl, hand, prevent) => {
         const bind = getMod(hand)
-        const status = Status.get(pl.xuid)
+        const status = Status.get(pl.uniqueId)
 
         if (!bind || !status) {
             return
@@ -887,7 +874,7 @@ function listenAllCustomEvents(mods) {
     })
 
     em.on('trap', (pl, data) => {
-        const status = Status.get(pl.xuid)
+        const status = Status.get(pl.uniqueId)
         const bind = getMod(status.hand)
 
         if (!bind || !status) {
@@ -923,7 +910,7 @@ function listenAllMcEvents(collection) {
             return true
         }
 
-        const status = Status.get(args[0].xuid)
+        const status = Status.get(args[0].uniqueId)
         const inputable = status.acceptableInput(type)
 
         if (inputable) {
@@ -966,7 +953,7 @@ function listenAllMcEvents(collection) {
         }
 
         if (!hasLock(pl)) {
-            const val = toggleLock(pl.xuid)
+            const val = toggleLock(pl.uniqueId)
             pl.setSprinting(false)
             if (val) {
                 em.emitNone('onLock', pl, item.type, val)
@@ -985,7 +972,7 @@ function listenAllMcEvents(collection) {
     mc.listen('onChangeSprinting', (...args) => {
         const pl = args[0]
         if (hasLock(pl)) {
-            if (toggleLock(pl.xuid) === null) {
+            if (toggleLock(pl.uniqueId) === null) {
                 em.emitNone('onReleaseLock', pl, pl.getHand().type, null)
             }
 
@@ -1001,11 +988,11 @@ function listenAllMcEvents(collection) {
 
     mc.listen('onJump', pl => {
         if (hasLock(pl)) {
-            if (toggleLock(pl.xuid) === null) {
+            if (toggleLock(pl.uniqueId) === null) {
                 em.emitNone('onReleaseLock', pl, pl.getHand().type, null)
                 pl.tell('不要在锁定后跳跃')
                 clearCamera(pl)
-                initCombatComponent(pl, getMod(getHandedItemType(pl)), Status.get(pl.xuid))
+                initCombatComponent(pl, getMod(getHandedItemType(pl)), Status.get(pl.uniqueId))
             }
         }
     })
@@ -1112,7 +1099,7 @@ function listenAllMcEvents(collection) {
 
     mc.listen('onAttackEntity', pl => {
         es.put('onAttack', [pl, Function.prototype, [ pl ]])
-        const status = Status.get(pl.xuid)
+        const status = Status.get(pl.uniqueId)
 
         status.acceptableInput('onAttack', false)
         setTimeout(() => {
@@ -1127,16 +1114,16 @@ function listenAllMcEvents(collection) {
         setTimeout(() => {
             unfreeze(pl)
             clearCamera(pl)
-            initCombatComponent(pl, getMod(getHandedItemType(pl)), Status.get(pl.xuid))
+            initCombatComponent(pl, getMod(getHandedItemType(pl)), Status.get(pl.uniqueId))
         }, 300)
     })
 
     mc.listen('onLeft', pl => {
-        Status.status.delete(pl.xuid)
+        Status.status.delete(pl.uniqueId)
     })
 
     mc.listen('onPlayerDie', pl => {
-        releaseTarget(pl.xuid)
+        releaseTarget(pl.uniqueId)
     })
 
     listenAllCustomEvents(mods)

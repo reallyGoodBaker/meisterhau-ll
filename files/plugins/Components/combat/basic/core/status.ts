@@ -1,6 +1,5 @@
 import { CameraComponent } from '../components/camera'
-import { Stamina } from '../components/stamina'
-import { Tick } from '../components/tick'
+import { Stamina } from '../components/core/stamina'
 import { ComponentManager } from './component'
 
 export const defaultAcceptableInputs = [
@@ -10,8 +9,8 @@ export const defaultAcceptableInputs = [
 
 export class Status {
     static status = new Map<string, Status>()
-    static get(xuid: string) {
-        return this.status.get(xuid) || new Status(xuid)
+    static get(uniqueId: string) {
+        return this.status.get(uniqueId) || new Status(uniqueId)
     }
 
     /**
@@ -84,8 +83,10 @@ export class Status {
      */
     readonly componentManager = new ComponentManager()
 
-    constructor(xuid: string) {
-        Status.status.set(xuid, this)
+    constructor(
+        private readonly uniqueId: string
+    ) {
+        Status.status.set(uniqueId, this)
         this.reset()
     }
 
@@ -101,10 +102,13 @@ export class Status {
         // this.componentManager.clear()
         defaultAcceptableInputs.forEach(type => this.acceptableInputs.add(type))
 
-        this.componentManager.attachComponent(
-            new CameraComponent(),
-            new Stamina(0),
-        )
+        this.componentManager.attachComponent(new Stamina(0))
+
+        if (mc.getPlayer(this.uniqueId)) {
+            this.componentManager.attachComponent(
+                new CameraComponent()
+            )
+        }
     }
 
     acceptableInput(name: string, accept: boolean) {

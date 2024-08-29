@@ -1,18 +1,18 @@
 const tasks = new Map()
 
 class Task {
-    constructor(xuid) {
-        if (!tasks.get(xuid)) {
-            tasks.set(xuid, this)
+    constructor(uniqueId) {
+        if (!tasks.get(uniqueId)) {
+            tasks.set(uniqueId, this)
         }
     }
 
     /**
-     * @param {string} xuid 
+     * @param {string} uniqueId 
      * @returns {Task}
      */
-    static get(xuid) {
-        return tasks.get(xuid) || new Task(xuid)
+    static get(uniqueId) {
+        return tasks.get(uniqueId) || new Task(uniqueId)
     }
 
     _queue = []

@@ -3,7 +3,7 @@ const { vec2, getAngleFromVector2 } = require('./vec')
 const defaultRange = {
     angle: 60,
     rotation: -30,
-    radius: 2
+    radius: 2.5
 }
 
 function selectFromRange(pl, range) {

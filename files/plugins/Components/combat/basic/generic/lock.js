@@ -5,7 +5,7 @@ const { knockback, faceTo } = require('../../../scripts-rpc/func/kinematics')
 const { setVelocity } = require('./kinematic')
 const { playAnim, DEFAULT_POSTURE_SPEED, DEFAULT_SPEED } = require('../index')
 const { Status } = require('../core/status')
-const { TargetLock } = require('../components/target-lock')
+const { TargetLock } = require('../components/core/target-lock')
 const { Optional } = require('@utils/optional')
 const { StatusHud } = require('../components/hud/statushud')
 
@@ -15,7 +15,7 @@ const cooldowns = new Set()
 function lockTarget(src, target) {
     const pl = mc.getPlayer(src)
 
-    if (cooldowns.has(pl.xuid)) {
+    if (cooldowns.has(pl.uniqueId)) {
         return
     }
 
@@ -41,8 +41,8 @@ function releaseTarget(src) {
     clearCamera(pl)
     locks.delete(src)
     pl.setMovementSpeed(DEFAULT_SPEED)
-    cooldowns.add(pl.xuid)
-    setTimeout(() => cooldowns.delete(pl.xuid), 500)
+    cooldowns.add(pl.uniqueId)
+    setTimeout(() => cooldowns.delete(pl.uniqueId), 500)
 }
 
 function toggleLock(src) {
@@ -102,7 +102,7 @@ function lookAt(pl, en) {
 }
 
 function lookAtTarget(pl) {
-    const en = locks.get(pl.xuid)
+    const en = locks.get(pl.uniqueId)
     if (!en) {
         return
     }
@@ -110,7 +110,7 @@ function lookAtTarget(pl) {
 }
 
 function hasLock(pl) {
-    return locks.has(pl.xuid)
+    return locks.has(pl.uniqueId)
 }
 
 function adsorbTo(pl, en, max, offset=2) {
@@ -126,7 +126,7 @@ function adsorbTo(pl, en, max, offset=2) {
 }
 
 function adsorbToTarget(pl, max, offset) {
-    const en = locks.get(pl.xuid)
+    const en = locks.get(pl.uniqueId)
     if (!en) {
         return
     }
@@ -135,7 +135,7 @@ function adsorbToTarget(pl, max, offset) {
 }
 
 function adsorbOrSetVelocity(pl, max, velocityRot=90, offset=1.5) {
-    const en = locks.get(pl.xuid)
+    const en = locks.get(pl.uniqueId)
     if (en) {
         // lookAtTarget(pl)
         adsorbToTarget(pl, max, offset)
@@ -146,7 +146,7 @@ function adsorbOrSetVelocity(pl, max, velocityRot=90, offset=1.5) {
 }
 
 function distanceToTarget(pl) {
-    const en = locks.get(pl.xuid)
+    const en = locks.get(pl.uniqueId)
 
     if (!en) {
         return Infinity

@@ -1,5 +1,6 @@
 /// <reference types="levilamina" />
 
+import { DefaultMoves } from '@combat/basic/default'
 import { Status } from './Components/combat/basic/core/status'
 
 declare global {
@@ -17,15 +18,15 @@ interface TrickModule {
      */
     bind: string[] | string
 
-    moves: Moves
+    moves: {
+        [key: string]: Move
+    }
 
     /**
      * 初始动作的名字，应为`moves`中的一个键名
      */
     entry: string
 }
-
-type Moves = {[p: string]: Move}
 
 interface Move<Ctx=any> {
     /**
@@ -203,7 +204,7 @@ type TransitionTypeOption = {
     [p in keyof TransitionTypeOptionMap]?: null | (TransitionTypeOptionMap[p] & DefaultTransitionOption & TransitionOptMixins & { tag?: string })
 }
 
-type MovementCallback = (source: Player, context: MovementContext) => any | Promise<any>
+type MovementCallback = (source: Player|Entity, context: MovementContext) => any | Promise<any>
 
 interface DefaultRawArgs extends Array<any> {
     0: Player
@@ -322,7 +323,7 @@ interface MovementContext<RawArgs = Array> {
     /**
      * 从范围中选择目标
      */
-    selectFromRange(pl: any, range: AttackRange): Entity[]
+    selectFromRange(pl: any, range?: AttackRange): Entity[]
     /**
      * 回调函数接受的参数
      * 详情参照liteloader文档
@@ -347,7 +348,7 @@ interface MovementContext<RawArgs = Array> {
      * @param damage 
      * @param damageType 
      */
-    attack(abuser: Player, victim: Player|Entity, damageOpt?: DamageOption): void
+    attack(abuser: Player|Entity, victim: Player|Entity, damageOpt?: DamageOption): void
     freeze(player: any): void
     unfreeze(player: any): void
     knockback(en: any, x: number, z: number, horizontal: number, vertical: number): Promise<void>
@@ -367,7 +368,7 @@ interface MovementContext<RawArgs = Array> {
     adsorbToTarget(pl: any, max: number, offset?: number): void
     adsorbTo(pl: any, en: any, max: number, offset?: number): void
     knockdown(abuser: any, victim: any, knockback?: number): void
-    releaseTarget(xuid: string): void
+    releaseTarget(uid: string): void
     adsorbOrSetVelocity(pl: any, max: number, velocityRot?: number, offset?: number): void
     getMoveDir(pl: any): Promise<number>
     trap(pl: any, data?: any): void
@@ -439,6 +440,10 @@ interface DamageOption {
      * 追踪正在闪避的目标
      */
     trace?: boolean
+    /**
+     * 处决动画id
+     */
+    execution?: 'cutHead'
 }
 
 interface TransitionOptMixins {

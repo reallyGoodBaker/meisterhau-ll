@@ -1,4 +1,4 @@
-export function playAnim(pl: Player, anim: string, nextAnim?: string, time?: number, stopExp?: string, controller?: string) {
+export function playAnim(pl: Player|Entity, anim: string, nextAnim?: string, time?: number, stopExp?: string, controller?: string) {
     mc.runcmdEx(`/playanimation "${pl.name}" ` + [anim, nextAnim, time, stopExp, controller].filter(x => x).join(' '))
 }
 

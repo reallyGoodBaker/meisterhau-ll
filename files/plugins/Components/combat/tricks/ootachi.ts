@@ -1,7 +1,7 @@
 import { playAnim, playSoundAll } from "../basic/index"
 import { randomRange } from '../../utils/math'
 import { DefaultMoves, DefaultTrickModule } from '../basic/default'
-import { Stamina } from 'combat/basic/components/stamina'
+import { Stamina } from '@combat/basic/components/core/stamina'
 
 class OotachiMoves extends DefaultMoves {
     constructor() {
@@ -11,45 +11,18 @@ class OotachiMoves extends DefaultMoves {
         this.parry.timeline = {
             14: (pl, ctx) => ctx.trap(pl)
         }
-        this.parry.transitions = {
-            combo2Cut: {
-                onTrap: {
-                    preInput: 'onAttack',
-                    allowedState: 'both'
-                },
-            },
-            combo2Sweap: {
-                onTrap: {
-                    preInput: 'onUseItem',
-                    allowedState: 'both'
-                },
-            },
-            resumeKamae: {
-                onEndOfLife: null
-            },
-            parry: {
-                onParry: {
-                    allowedState: 'both'
-                }
-            },
-            knockdown: {
-                onKnockdown: { allowedState: 'both' }
-            },
-        }
 
-        this.parried.transitions = {
-            resumeKamae: {
-                onEndOfLife: null
-            },
-            hurt: {
-                onHurt: {
-                    allowedState: 'both'
-                }
-            },
-            knockdown: {
-                onKnockdown: { allowedState: 'both' }
-            },
-        }
+        this.setTransition<OotachiMoves>('parry', 'combo2Cut', {
+            onTrap: {
+                preInput: 'onAttack',
+            }
+        })
+
+        this.setTransition<OotachiMoves>('parry', 'combo2Sweap', {
+            onTrap: {
+                preInput: 'onUseItem',
+            }
+        })
 
         this.animations.parry.left = 'animation.weapon.ootachi.parry.left'
         this.animations.parry.right = 'animation.weapon.ootachi.parry.right'
@@ -61,7 +34,7 @@ class OotachiMoves extends DefaultMoves {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.unfreeze(pl)
-            ctx.releaseTarget(pl.xuid)
+            ctx.releaseTarget(pl.uniqueId)
             if (ctx.previousStatus === 'running') {
                 ctx.task
                     .queue(() => playAnim(pl, 'animation.weapon.ootachi.trans.running.idle'), 0)
@@ -82,17 +55,12 @@ class OotachiMoves extends DefaultMoves {
                 onChangeSprinting: { sprinting: true }
             },
             hurt: {
-                onHurt: {
-                    allowedState: 'both'
-                }
+                onHurt: null
             },
             combo1Attack: {
                 onAttack: {
                     stamina: 16,
                 }
-            },
-            knockdown: {
-                onKnockdown: { allowedState: 'both' }
             },
         }
     }
@@ -108,24 +76,22 @@ class OotachiMoves extends DefaultMoves {
         },
         transitions: {
             idle: {
-                onReleaseLock: { allowedState: 'both' },
-                onJump: { allowedState: 'both' },
+                onReleaseLock: null,
+                onJump: null,
             },
             running: {
                 onChangeSprinting: {
                     sprinting: true,
-                    allowedState: 'both'
+                    
                 }
             },
             combo1Attack: {
                 onAttack: {
-                    allowedState: 'both',
                     stamina: 16,
                 }
             },
             combo1Chop: {
                 onUseItem: {
-                    allowedState: 'both',
                     stamina: 22,
                 }
             },
@@ -133,12 +99,7 @@ class OotachiMoves extends DefaultMoves {
                 onSneak: null
             },
             hurt: {
-                onHurt: {
-                    allowedState: 'both'
-                }
-            },
-            knockdown: {
-                onKnockdown: { allowedState: 'both' }
+                onHurt: null
             },
         }
     }
@@ -173,13 +134,16 @@ class OotachiMoves extends DefaultMoves {
                     hasTarget: true
                 }
             },
+            hurt: {
+                onHurt: null
+            }
         }
     }
 
     running: Move = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            ctx.releaseTarget(pl.xuid)
+            ctx.releaseTarget(pl.uniqueId)
             ctx.task
                 .queue(() => playAnim(pl, 'animation.weapon.ootachi.trans.idle.running'), 0)
                 .queue(() => playAnim(pl, 'animation.weapon.ootachi.running', 'animation.weapon.ootachi.running'), 210)
@@ -194,12 +158,7 @@ class OotachiMoves extends DefaultMoves {
                 onChangeSprinting: { sprinting: false }
             },
             hurt: {
-                onHurt: {
-                    allowedState: 'both'
-                }
-            },
-            knockdown: {
-                onKnockdown: { allowedState: 'both' }
+                onHurt: null
             },
         }
     }
@@ -250,12 +209,7 @@ class OotachiMoves extends DefaultMoves {
                 onHurt: null
             },
             parried: {
-                onParried: {
-                    allowedState: 'backswing'
-                }
-            },
-            knockdown: {
-                onKnockdown: { allowedState: 'both' }
+                onParried: null
             },
             combo2Cut: {
                 onTrap: {
@@ -274,9 +228,7 @@ class OotachiMoves extends DefaultMoves {
                 }
             },
             blocked: {
-                onBlocked: {
-                    allowedState: 'backswing',
-                }
+                onBlocked: null
             },
             block: {
                 onBlock: null
@@ -310,7 +262,7 @@ class OotachiMoves extends DefaultMoves {
                 rotation: -60,
             }).forEach(en => {
                 ctx.attack(pl, en, {
-                    damage: 24,
+                    damage: 26,
                     knockback: 1.5,
                     direction: 'left',
                 })
@@ -339,22 +291,13 @@ class OotachiMoves extends DefaultMoves {
                 onEndOfLife: null,
             },
             hurt: {
-                onHurt: {
-                    allowedState: 'both'
-                }
+                onHurt: null
             },
             parry: {
-                onParry: {
-                    allowedState: 'both'
-                }
+                onParry: null
             },
             parried: {
-                onParried: {
-                    allowedState: 'backswing'
-                }
-            },
-            knockdown: {
-                onKnockdown: { allowedState: 'both' }
+                onParried: null
             },
             combo2Cut: {
                 onTrap: {
@@ -422,17 +365,10 @@ class OotachiMoves extends DefaultMoves {
                 onEndOfLife: null,
             },
             hurt: {
-                onHurt: {
-                    allowedState: 'both'
-                }
+                onHurt: null
             },
             parried: {
-                onParried: {
-                    allowedState: 'backswing'
-                }
-            },
-            knockdown: {
-                onKnockdown: { allowedState: 'both' }
+                onParried: null
             },
             combo3Stab: {
                 onTrap: {
@@ -508,15 +444,10 @@ class OotachiMoves extends DefaultMoves {
                 onEndOfLife: null,
             },
             parried: {
-                onParried: {
-                    allowedState: 'backswing'
-                }
-            },
-            knockdown: {
-                onKnockdown: { allowedState: 'both' }
+                onParried: null
             },
             hurt: {
-                onInterrupted: { allowedState: 'both' }
+                onInterrupted: null
             },
             combo3Stab: {
                 onTrap: {
@@ -575,22 +506,13 @@ class OotachiMoves extends DefaultMoves {
                 onEndOfLife: null
             },
             hurt: {
-                onHurt: {
-                    allowedState: 'both'
-                }
+                onHurt: null
             },
             parried: {
-                onParried: {
-                    allowedState: 'backswing'
-                }
-            },
-            knockdown: {
-                onKnockdown: { allowedState: 'both' }
+                onParried: null
             },
             blocked: {
-                onBlocked: {
-                    allowedState: 'backswing',
-                }
+                onBlocked: null
             },
         }
     }
@@ -642,17 +564,10 @@ class OotachiMoves extends DefaultMoves {
                 }
             },
             hurt: {
-                onHurt: {
-                    allowedState: 'both'
-                }
+                onHurt: null
             },
             parried: {
-                onParried: {
-                    allowedState: 'backswing'
-                }
-            },
-            knockdown: {
-                onKnockdown: { allowedState: 'both' }
+                onParried: null
             },
         }
     }
@@ -715,17 +630,10 @@ class OotachiMoves extends DefaultMoves {
                 onEndOfLife: null
             },
             dodgeBlocking: {
-                onBlock: {
-                    allowedState: 'both'
-                }
-            },
-            knockdown: {
-                onKnockdown: {
-                    allowedState: 'both'
-                }
+                onBlock: null
             },
             hurt: {
-                onHurt: { allowedState: 'both' }
+                onHurt: null
             }
         }
     }
@@ -785,12 +693,7 @@ class OotachiMoves extends DefaultMoves {
                 onEndOfLife: null
             },
             hurt: {
-                onHurt: {
-                    allowedState: 'both'
-                }
-            },
-            knockdown: {
-                onKnockdown: { allowedState: 'both' }
+                onHurt: null
             },
             combo3Stab: {
                 onTrap: {

@@ -13,7 +13,7 @@
             "minecraft:max_stack_size": {
                 "value": 1
             },
-            "minecraft:icon": "stick",
+            "minecraft:icon": "moon_glaive",
             "minecraft:display_name": {
 				"value": "掩月刀"
 			},

@@ -13,7 +13,7 @@ module.exports = {
             cast: Infinity,
             onEnter(pl, ctx) {
                 ctx.unfreeze(pl)
-                ctx.releaseTarget(pl.xuid)
+                ctx.releaseTarget(pl.uniqueId)
                 if (ctx.previousStatus === 'running') {
                     ctx.task
                         .queue(() => playAnim(pl, 'animation.weapon.ootachi.trans.running.idle'), 0)
@@ -102,7 +102,7 @@ module.exports = {
         running: {
             cast: Infinity,
             onEnter(pl, ctx) {
-                ctx.releaseTarget(pl.xuid)
+                ctx.releaseTarget(pl.uniqueId)
                 ctx.task
                     .queue(() => playAnim(pl, 'animation.weapon.ootachi.trans.idle.running'), 0)
                     .queue(() => playAnim(pl, 'animation.weapon.ootachi.running', 'animation.weapon.ootachi.running'), 80)

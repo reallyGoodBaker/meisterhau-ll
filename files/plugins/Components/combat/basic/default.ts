@@ -1,7 +1,13 @@
 import { playAnim, playSoundAll } from "./index"
 import { CameraFading } from "./components/camera-fading"
 import { CameraComponent } from "./components/camera"
-import { Stamina } from "./components/stamina"
+import { Stamina } from "./components/core/stamina"
+
+function getApproximatelyDir(direction: string) {
+    return direction === 'right' ? 'right'
+            : direction === 'middle' ? 'right'
+                : 'left'
+}
 
 function getAnim(animCategory: any, direction: string) {
     const anim = animCategory[direction]
@@ -78,6 +84,12 @@ export class DefaultMoves {
             right: '',
             middle: '',
         },
+        execution: {
+            cutHead: 'animation.general.execution.cut_head',
+        },
+        executionNoGore: {
+            cutHead: 'animation.general.execution.cut_head_no_gore',
+        }
     }
 
     sounds = {
@@ -143,8 +155,13 @@ export class DefaultMoves {
                 'onAttack',
                 'onUseItem',
             ])
-            const { stiffness, customHurtAnimation, direction } = ctx.rawArgs[2] as DamageOption
+            const { stiffness, customHurtAnimation, direction, execution } = ctx.rawArgs[2] as DamageOption
             const hurtAnim = customHurtAnimation ?? this.animations.hit[direction || 'left']
+
+            if (execution) {
+                ctx.trap(pl, { tag: 'execution', execution })
+                return
+            }
 
             playAnim(pl, hurtAnim)
             ctx.task.queue(() => {
@@ -165,6 +182,18 @@ export class DefaultMoves {
             }
         },
         transitions: { }
+    }
+
+    execution: Move = {
+        cast: 60,
+        onEnter(pl, ctx) {
+            ctx.freeze(pl)
+            ctx.status.disableInputs([
+                'onAttack',
+                'onUseItem',
+            ])
+        },
+        transitions: {}
     }
 
     hitWall: Move = {
@@ -189,7 +218,6 @@ export class DefaultMoves {
     }
 
     parried: Move = {
-        cast: 35,
         onEnter: (pl, ctx) => {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 15
             ctx.movementInput(pl, false)
@@ -200,7 +228,27 @@ export class DefaultMoves {
             ])
             const { direction } = ctx.rawArgs[2]
             playAnim(pl, getAnim(this.animations.parried, direction))
+            ctx.trap(pl, { tag: getApproximatelyDir(direction) })
         },
+        transitions: {
+            parriedLeft: {
+                onTrap: {
+                    tag: 'left'
+                }
+            },
+            parriedRight: {
+                onTrap: {
+                    tag: 'right'
+                }
+            },
+            hurt: {
+                onHurt: null
+            }
+        }
+    }
+
+    parriedLeft: Move = {
+        cast: 34,
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
             ctx.status.enableInputs([
@@ -209,8 +257,24 @@ export class DefaultMoves {
             ])
         },
         timeline: {
-            4: (pl, ctx) => ctx.setVelocity(pl, -140, 1.5, -2),
-            12: (pl, ctx) => ctx.lookAtTarget(pl),
+            3: (pl, ctx) => ctx.setVelocity(pl, -40, 1.5, -2),
+            11: (pl, ctx) => ctx.lookAtTarget(pl),
+        },
+        transitions: { }
+    }
+
+    parriedRight: Move = {
+        cast: 34,
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl)
+            ctx.status.enableInputs([
+                'onAttack',
+                'onUseItem'
+            ])
+        },
+        timeline: {
+            3: (pl, ctx) => ctx.setVelocity(pl, -140, 1.5, -2),
+            11: (pl, ctx) => ctx.lookAtTarget(pl),
         },
         transitions: { }
     }
@@ -294,12 +358,21 @@ export class DefaultMoves {
             },
         }
 
-        this.parried.transitions = {
+        this.parriedLeft.transitions = {
             [init]: {
                 onEndOfLife: null
             },
             hurt: {
-                onHurt: { allowedState: 'both' }
+                onHurt: null
+            },
+        }
+
+        this.parriedRight.transitions = {
+            [init]: {
+                onEndOfLife: null
+            },
+            hurt: {
+                onHurt: null
             },
         }
 
@@ -310,7 +383,7 @@ export class DefaultMoves {
                 }
             },
             hurt: {
-                onHurt: { allowedState: 'both' }
+                onHurt: null
             },
             hitWall: {
                 onTrap: {
@@ -326,7 +399,7 @@ export class DefaultMoves {
                 onEndOfLife: null
             },
             hurt: {
-                onHurt: { allowedState: 'both' }
+                onHurt: null
             },
         }
 
@@ -335,10 +408,16 @@ export class DefaultMoves {
                 onEndOfLife: null
             },
             hurt: {
-                onHurt: { allowedState: 'both' }
+                onHurt: null
             },
             block: {
                 onBlock: null
+            }
+        }
+
+        this.execution.transitions = {
+            [init]: {
+                onEndOfLife: null
             }
         }
     }
@@ -348,7 +427,7 @@ export class DefaultMoves {
         this[state] = Object.assign(this[state], obj)
     }
 
-    setTransition<T extends DefaultMoves>(state: StateKey<T>, transitionName: StateKey<T>, transition: MoveTransition<StateKey<T>>) {
+    setTransition<T extends DefaultMoves>(state: StateKey<T>, transitionName: StateKey<T>, transition: TransitionTypeOption) {
         //@ts-ignore
         const _state = this[state]
         if (!_state) {

@@ -16,7 +16,7 @@
             "minecraft:max_stack_size": {
                 "value": 1
             },
-            "minecraft:icon": "katana",
+            "minecraft:icon": "ootachi",
             "minecraft:display_name": {
 				"value": "大太刀"
 			},

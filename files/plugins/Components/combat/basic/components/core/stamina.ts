@@ -1,8 +1,8 @@
-import { CustomComponent, ComponentManager } from "../core/component"
-import { Fields, PublicComponent } from "../core/config"
+import { CustomComponent, ComponentManager } from "../../core/component"
+import { Fields, PublicComponent } from "../../core/config"
 import { Optional } from "@utils/optional"
 import { constrictCalc, minmax } from "@utils/math"
-import { Timer } from "./timer"
+import { Timer } from "../timer"
 
 @PublicComponent('stamina')
 @Fields([ 'stamina', 'maxStamina', 'restorePerTick', 'restoreCooldown' ])

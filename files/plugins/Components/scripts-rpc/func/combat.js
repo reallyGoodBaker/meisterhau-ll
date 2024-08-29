@@ -21,5 +21,5 @@ function _damageLL(victim, damage, cause, abuser, projectile) {
 }
 
 module.exports = {
-    damage, _damageLL
+    damage, _damageLL,
 }

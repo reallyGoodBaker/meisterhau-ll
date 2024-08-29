@@ -31,7 +31,7 @@
 				}
 			}
 		},
-        "animation.hold.double_blade": {
+		"animation.hold.double_blade": {
 			"loop": "hold_on_last_frame",
 			"override_previous_animation": true,
 			"bones": {
@@ -40,7 +40,7 @@
 					"position": [0, 0, 0],
 					"scale": [2, 2, 2]
 				},
-                "leftItem": {
+				"leftItem": {
 					"rotation": [0, -90, 0],
 					"position": [0, 0, 0],
 					"scale": [2, 2, 2]
@@ -54,17 +54,36 @@
 					"scale": "v.item_scale"
 				},
 				"waistSword": {
-					"rotation": [0, 0, 180],
-					"position": [4.25, 2, 0],
 					"scale": "v.waist_item_scale"
-				},
-				"waistSaya": {
-					"rotation": [0, 0, 180],
-					"position": [4.25, 2, 0]
 				}
 			},
 			"timeline": {
 				"0.0": "v.item_scale = 1;v.waist_item_scale = 1;"
+			}
+		},
+		"animation.hold.db_morphidae": {
+			"loop": "hold_on_last_frame",
+			"override_previous_animation": true,
+			"bones": {
+				"leftItem": {
+					"rotation": [0, -90, 0]
+				},
+				"rightItem": {
+					"rotation": [0, -90, 0]
+				}
+			}
+		},
+		"animation.hold.morphidae": {
+			"loop": "hold_on_last_frame",
+			"override_previous_animation": true,
+			"bones": {
+				"rightItem": {
+					"rotation": [0, -90, 0]
+				},
+				"waistSword": {
+					"rotation": [0, 90, 0],
+					"position": [0, 0, -4]
+				}
 			}
 		}
 	}

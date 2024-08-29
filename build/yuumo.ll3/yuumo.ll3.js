@@ -1092,18 +1092,18 @@ const camera = (pl, easeTime, easeType, dPos, rot) => {
 const trackingPlayers = new Map();
 
 function clearCamera(pl) {
-    trackingPlayers.delete(pl.xuid);
+    trackingPlayers.delete(pl.uniqueId);
     mc.runcmdEx(`camera "${pl.name}" clear`);
 }
 
-function setOnShoulderCamera(xuid, left=false) {
-    trackingPlayers.set(xuid, left);
+function setOnShoulderCamera(uniqueId, left=false) {
+    trackingPlayers.set(uniqueId, left);
 }
 
 function setup$6() {
     mc.listen('onTick', () => {
-        trackingPlayers.forEach((left, xuid) => {
-            const pl = mc.getPlayer(xuid);
+        trackingPlayers.forEach((left, uniqueId) => {
+            const pl = mc.getPlayer(uniqueId);
 
             if (!pl) {
                 return
@@ -1124,10 +1124,10 @@ function setup$6() {
             clearCamera(ori.player);
         })
         .register('right', (_, ori) => {
-            setOnShoulderCamera(ori.player.xuid);
+            setOnShoulderCamera(ori.player.uniqueId);
         })
         .register('left', (_, ori) => {
-            setOnShoulderCamera(ori.player.xuid, true);
+            setOnShoulderCamera(ori.player.uniqueId, true);
         })
         .submit();
     });

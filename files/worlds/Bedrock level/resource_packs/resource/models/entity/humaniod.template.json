@@ -209,11 +209,10 @@
 					"name": "rightItem",
 					"parent": "rightForearm",
 					"pivot": [-5.48104, 12.46229, -0.4299],
-					"rotation": [-175, 0, 0],
 					"cubes": [
 						{
-							"origin": [-5.98104, 12.46229, -13.9299],
-							"size": [1, 1, 36],
+							"origin": [-5.68104, 12.46229, -13.9299],
+							"size": [0.7, 1, 36],
 							"uv": {
 								"north": {"uv": [0, 0], "uv_size": [1, 1]},
 								"east": {"uv": [0, 0], "uv_size": [36, 1]},
@@ -230,7 +229,7 @@
 					"parent": "rightItem",
 					"pivot": [-5.48104, 12.46229, -1.9299],
 					"locators": {
-						"right_emitter": [-5.98104, 12.96229, -1.9299]
+						"right_emitter": [-6, 13, -2]
 					}
 				},
 				{
@@ -253,14 +252,14 @@
 					]
 				},
 				{
-					"name": "waistSword",
-					"parent": "waist",
-					"pivot": [0, 12, 0]
-				},
-				{
 					"name": "waistSaya",
 					"parent": "waist",
-					"pivot": [0, 12, 0]
+					"pivot": [4.3, 15, 0]
+				},
+				{
+					"name": "waistSword",
+					"parent": "waistSaya",
+					"pivot": [4.3, 15, 0]
 				},
 				{
 					"name": "rightLeg",

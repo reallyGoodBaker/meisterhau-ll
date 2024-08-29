@@ -1,4 +1,4 @@
-import { BaseComponent, ComponentManager } from "../core/component"
+import { BaseComponent } from "../core/component"
 import { Fields, PublicComponent } from "../core/config"
 
 @PublicComponent('timer')

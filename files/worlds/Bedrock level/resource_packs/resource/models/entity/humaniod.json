@@ -512,14 +512,14 @@
 					"pivot": [0, 24, -3]
 				},
 				{
-					"name": "waistSword",
-					"parent": "waist",
-					"pivot": [0, 12, 0]
-				},
-				{
 					"name": "waistSaya",
 					"parent": "waist",
-					"pivot": [0, 12, 0]
+					"pivot": [4.3, 15, 0]
+				},
+				{
+					"name": "waistSword",
+					"parent": "waistSaya",
+					"pivot": [4.3, 15, 0]
 				},
 				{
 					"name": "rightLeg",

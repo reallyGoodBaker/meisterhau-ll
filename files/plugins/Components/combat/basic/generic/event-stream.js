@@ -1,5 +1,3 @@
-/// <reference path="../types.d.ts"/>
-
 const { EventEmitter } = require("../../../events")
 
 class EventInputStream {

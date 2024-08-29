@@ -1,7 +1,6 @@
 const { playAnim, playSoundAll } = require("../basic/index")
 const { DefaultMoves, DefaultTrickModule } = require('../basic/default')
-const { constrictCalc, randomRange } = require('../../utils/math')
-const { hud } = require('../basic/hud')
+const { randomRange } = require('../../utils/math')
 
 class ShieldSwordTricks extends DefaultTrickModule {
     constructor() {
@@ -464,7 +463,7 @@ class ShieldSwordMoves extends DefaultMoves {
      */
     jump = {
         onEnter(pl, ctx) {
-            ctx.releaseTarget(pl.xuid)
+            ctx.releaseTarget(pl.uniqueId)
         },
         transitions: {
             idle: {
@@ -483,7 +482,7 @@ class ShieldSwordMoves extends DefaultMoves {
         cast: Infinity,
         onEnter(pl, ctx) {
             playAnim(pl, 'animation.weapon.shield_with_sword.running', 'animation.weapon.shield_with_sword.running')
-            ctx.releaseTarget(pl.xuid)
+            ctx.releaseTarget(pl.uniqueId)
         },
         transitions: {
             hurt: {
@@ -535,7 +534,7 @@ class ShieldSwordMoves extends DefaultMoves {
             ctx.status.isBlocking = true
             playAnim(pl, 'animation.weapon.shield_with_sword.blocking', 'animation.weapon.shield_with_sword.blocking')
         },
-        onLeave(pl, ctx) {
+        onLeave(ctx) {
             ctx.status.isBlocking = false
         },
         transitions: {
@@ -578,7 +577,7 @@ class ShieldSwordMoves extends DefaultMoves {
             ctx.status.repulsible = false
             playAnim(pl, 'animation.weapon.shield_with_sword.rock_solid')
         },
-        onAct(pl, ctx) {
+        onAct(ctx) {
             ctx.status.repulsible = true
         },
         onLeave(pl, ctx) {

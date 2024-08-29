@@ -2,8 +2,8 @@ import { Optional } from "@utils/optional"
 import { ComponentManager } from "combat/basic/core/component"
 import { PublicComponent, Fields } from "../../core/config"
 import { HudComponent, HudComponentParams } from "./hud"
-import { TargetLock } from "../target-lock"
-import { Stamina } from "../stamina"
+import { TargetLock } from "../core/target-lock"
+import { Stamina } from "../core/stamina"
 import { Status } from '../../core/status'
 
 @PublicComponent('status-hud')
@@ -43,7 +43,7 @@ export class StatusHud extends HudComponent {
             }
 
             const target = lock.target.unwrap()
-            this.targetStamina = Status.get((target as Player).xuid).componentManager.getComponent(Stamina)
+            this.targetStamina = Status.get((target as Player).uniqueId).componentManager.getComponent(Stamina)
         })
     }
 
