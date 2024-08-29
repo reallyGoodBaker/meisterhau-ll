@@ -3,6 +3,7 @@ node_modules
 download
 package-lock.json
 .dll
+pnpm-lock.yaml
 
 build/**/*.js
 files/plugins/meisterhau/*.js
