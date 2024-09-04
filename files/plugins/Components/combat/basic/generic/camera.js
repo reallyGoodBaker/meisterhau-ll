@@ -120,7 +120,7 @@ const battleCamera = (pl, en) => {
     const cameraPos = {
         x: crossPos.x + cameraPosVec.dx,
         z: crossPos.z + cameraPosVec.dy,
-        y: plPos.y - .3 + offsetY,
+        y: plPos.y - .2 + offsetY,
     }
 
     // camera(pl, 0.1, 'linear', cameraPos, {

@@ -627,12 +627,6 @@
 					}
 				}
 			},
-			"particle_effects": {
-				"0.4167": {
-					"effect": "draw",
-					"locator": "right_emitter"
-				}
-			},
 			"timeline": {
 				"0.0": "v.overlay_color=v.white;",
 				"0.2083": "v.overlay_color=v.transparent;"

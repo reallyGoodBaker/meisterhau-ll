@@ -184,7 +184,7 @@ class DoubleBladeMoves extends DefaultMoves {
                     damageType: 'entityAttack',
                     knockback: 0.8,
                     permeable: true,
-                    direction: 'left'
+                    direction: 'vertical'
                 })
             })
         },

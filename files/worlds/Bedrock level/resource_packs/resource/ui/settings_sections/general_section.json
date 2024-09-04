@@ -1,0 +1,427 @@
+{
+  "namespace": "general_section",
+
+  "meisterhau_keys_button@settings_common.section_toggle_base": {
+    "$toggle_view_binding_name": "meisterhau_keys_button_toggle",
+    "$glyph_texture": "textures/ui/controller_glyph",
+    "$glyph_color_texture": "textures/ui/controller_glyph_color",
+    "$glyph_size": [ 21, 14 ],
+    "$button_text": "输入",
+    "$toggle_property_bag": {
+      "#panel_title": "Meisterhau 输入"
+    }
+  },
+
+  "meisterhau_nouns_button@settings_common.section_toggle_base": {
+    "$toggle_view_binding_name": "meisterhau_nouns_button_toggle",
+    "$glyph_texture": "textures/ui/icon_book_writable",
+    "$glyph_color_texture": "textures/ui/icon_book_writable",
+    "$glyph_size": [ 21, 14 ],
+    "$button_text": "名词",
+    "$toggle_property_bag": {
+      "#panel_title": "Meisterhau 名词解释"
+    }
+  },
+
+  "key_binding_info": {
+    "type": "stack_panel",
+    "orientation": "horizontal",
+    "size": [ "100%", 35 ],
+    "anchor_from": "top_left",
+    "anchor_to": "top_left",
+    "$key_info": "key_info",
+    "$key": "key",
+    "$keyboard_key": "keyboard_key",
+    "$controller_key": "controller_key",
+    "$touch_key": "touch_key",
+    "controls": [
+        {
+            "image": {
+                "type": "image",
+                "texture": "textures/ui/text_label_box",
+                "size": [ "40%", "100% - 4px" ],
+                "anchor_from": "top_left",
+                "anchor_to": "top_left",
+                "controls": [
+                    {
+                        "label": {
+                            "type": "label",
+                            "color": "$generic_button_text_color",
+                            "size": [ "100%", "default" ],
+                            "text_alignment": "center",
+                            "layer": 1,
+                            "text": "$key_info"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "image": {
+                "type": "image",
+                "texture": "textures/ui/text_label_box",
+                "size": [ "20%", "100% - 4px" ],
+                "anchor_from": "top_left",
+                "anchor_to": "top_left",
+                "controls": [
+                    {
+                        "label": {
+                            "type": "label",
+                            "color": "$generic_button_text_color",
+                            "size": [ "100%", "default" ],
+                            "text_alignment": "center",
+                            "layer": 1,
+                            "text": "$keyboard_key"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "image": {
+                "type": "image",
+                "texture": "textures/ui/text_label_box",
+                "size": [ "20%", "100% - 4px" ],
+                "anchor_from": "top_left",
+                "anchor_to": "top_left",
+                "controls": [
+                    {
+                        "label": {
+                            "type": "label",
+                            "color": "$generic_button_text_color",
+                            "size": [ "100%", "default" ],
+                            "text_alignment": "center",
+                            "layer": 1,
+                            "text": "$controller_key"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "image": {
+                "type": "image",
+                "texture": "textures/ui/text_label_box",
+                "size": [ "20%", "100% - 4px" ],
+                "anchor_from": "top_left",
+                "anchor_to": "top_left",
+                "controls": [
+                    {
+                        "label": {
+                            "type": "label",
+                            "color": "$generic_button_text_color",
+                            "size": [ "100%", "default" ],
+                            "text_alignment": "center",
+                            "layer": 1,
+                            "text": "$touch_key"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+  },
+
+  "meisterhau_keys_section": {
+    "type": "stack_panel",
+    "size": [ "100%", "100%c" ],
+    "anchor_from": "top_left",
+    "anchor_to": "top_left",
+    "bindings": [
+      {
+        "binding_type": "view",
+        "source_control_name": "meisterhau_keys_button_toggle",
+        "source_property_name": "#toggle_state",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+        {
+            "spacer": {
+                "type": "panel",
+                "size": [ 0, 8 ]
+            }
+        },
+        {
+            "@settings_common.white_label": {
+                "$text": "按键 (默认键位)"
+            }
+        },
+        {
+            "spacer": {
+                "type": "panel",
+                "size": [ 0, 8 ]
+            }
+        },
+        {
+            "light_attack@key_binding_info": {
+                "$key_info": "轻击/格挡",
+                "$keyboard_key": "",
+                "$controller_key": "",
+                "$touch_key": ""
+            }
+        },
+        {
+            "heavy_attack@key_binding_info": {
+                "$key_info": "重击/锁定",
+                "$keyboard_key": "",
+                "$controller_key": "",
+                "$touch_key": ""
+            }
+        },
+        {
+            "sneak@key_binding_info": {
+                "$key_info": "闪避/常驻格挡/架势",
+                "$keyboard_key": "LShift",
+                "$controller_key": "",
+                "$touch_key": ""
+            }
+        },
+        {
+            "sprint@key_binding_info": {
+                "$key_info": "取消锁定/跑步",
+                "$keyboard_key": "LCtrl",
+                "$controller_key": "",
+                "$touch_key": ""
+            }
+        },
+        {
+            "feint@key_binding_info": {
+                "$key_info": "佯攻",
+                "$keyboard_key": "E",
+                "$controller_key": "",
+                "$touch_key": ""
+            }
+        }
+    ]
+  },
+
+  "nouns_section": {
+    "type": "stack_panel",
+    "orientation": "horizontal",
+    "size": [ "100%", 35 ],
+    "anchor_from": "top_left",
+    "anchor_to": "top_left",
+    "$noun": "noun",
+    "$desc": "desc",
+    "$color": [0.086, 0.867, 0.922],
+    "controls": [
+        {
+            "noun": {
+                "type": "label",
+                "color": "$color",
+                "size": [ "30%", "default" ],
+                "layer": 1,
+                "text": "$noun"
+            }
+        },
+        {
+            "desc": {
+                "type": "label",
+                "color": "$generic_button_text_color",
+                "size": [ "70%", "default" ],
+                "text_alignment": "center",
+                "layer": 1,
+                "text": "$desc"
+            }
+        }
+    ]
+  },
+
+  "advance_nouns_section@nouns_section": {
+    "$color": [0.969, 0.953, 0.651]
+  },
+
+  "meisterhau_nouns_section": {
+    "type": "stack_panel",
+    "size": [ "100%", "100%c" ],
+    "anchor_from": "top_left",
+    "anchor_to": "top_left",
+    "$spatialPatternsPadding": [ "100%", 8 ],
+    "$paddingLineDivider": [ "100%", 16 ],
+    "bindings": [
+        {
+            "binding_type": "view",
+            "source_control_name": "meisterhau_nouns_button_toggle",
+            "source_property_name": "#toggle_state",
+            "target_property_name": "#visible"
+        }
+    ],
+    "controls": [
+        {
+            "combo@nouns_section": {
+                "$noun": "连击/连段",
+                "$desc": "在上一次攻击结束前在合适的时间内继续输入攻击"
+            }
+        },
+        {
+            "block@nouns_section": {
+                "$noun": "格挡",
+                "$desc": "可以封阻对手一般攻击的状态"
+            }
+        },
+        {
+            "reflect_block@nouns_section": {
+                "$noun": "反应格挡",
+                "$desc": "在将要受到攻击时输入轻击, 轻击将转变为格挡"
+            }
+        },
+        {
+            "parry@nouns_section": {
+                "$noun": "招架",
+                "$desc": "在将要受到攻击时输入重击, 重击将转变为招架, 被招架的一方一段时间内无法操作"
+            }
+        },
+        {
+            "block_long@nouns_section": {
+                "$noun": "常驻格挡",
+                "$desc": "能够保持格挡的输入"
+            }
+        },
+        {
+            "feint@nouns_section": {
+                "$noun": "佯攻",
+                "$desc": "在可以停止的动作输入后的一小段时间内输入佯攻, 以体力为代价停下动作"
+            }
+        },
+        {
+            "unstoppable@nouns_section": {
+                "$noun": "不可阻挡的攻击",
+                "$desc": "无法通过格挡进行阻挡的攻击"
+            }
+        },
+        {
+            "dodge@nouns_section": {
+                "$noun": "闪避",
+                "$desc": "输入闪避的一小段时间内无法被命中的状态"
+            }
+        },
+        {
+            "trace@nouns_section": {
+                "$noun": "追踪攻击",
+                "$desc": "可以命中闪避的攻击"
+            }
+        },
+        {
+            "dodge_block@nouns_section": {
+                "$noun": "优势格挡",
+                "$desc": "通过闪避或攻击发动的格挡, 格挡状态维持时间较短"
+            }
+        },
+        {
+            "deflect@nouns_section": {
+                "$noun": "偏斜",
+                "$desc": "通过闪避发动, 可以避免受到一般攻击伤害的状态, 无法封阻对手动作"
+            }
+        },
+        {
+            "counter@nouns_section": {
+                "$noun": "反击",
+                "$desc": "在格挡/偏斜/招架成功后合适时机输入特定操作可以触发的必定命中的动作"
+            }
+        },
+        {
+            "stamina@nouns_section": {
+                "$noun": "体力",
+                "$desc": "限制输入的资源, 体力不足时无法输入攻击 (包括反应格挡/招架)"
+            }
+        },
+        {
+            "stiffness@nouns_section": {
+                "$noun": "僵直",
+                "$desc": "一段时间内无法进行操作的状态"
+            }
+        },
+        {
+            "operation@nouns_section": {
+                "$noun": "搏击术/体术",
+                "$desc": "无法格挡和招架的攻击"
+            }
+        },
+        {
+            "confirm_attack@nouns_section": {
+                "$noun": "确认攻击",
+                "$desc": "攻击成功的状态"
+            }
+        },
+        {
+            "transform@nouns_section": {
+                "$noun": "变换攻击",
+                "$desc": "在一个动作进行时输入另一个动作, 从而使这个动作变为另一个动作"
+            }
+        },
+        {
+            "hegemony@nouns_section": {
+                "$noun": "霸体",
+                "$desc": "被攻击后不会获得僵直的状态"
+            }
+        },
+        {
+            "interrupt@nouns_section": {
+                "$noun": "打断",
+                "$desc": "能够使对手退出霸体状态的动作"
+            }
+        },
+        {
+            "posture@nouns_section": {
+                "$noun": "架势",
+                "$desc": "在不同架势下, 输入的操作可能导致不同的效果"
+            }
+        },
+        {
+            "reel@nouns_section": {
+                "$noun": "趔趄",
+                "$desc": "无法稳住重心移动的状态"
+            }
+        },
+        {
+            "hit_wall@nouns_section": {
+                "$noun": "撞墙",
+                "$desc": "在趔趄状态中撞到墙体后得到较长僵直时间的状态"
+            }
+        },
+        {
+            "trap@nouns_section": {
+                "$noun": "陷阱",
+                "$desc": "通过任何攻击动作格挡/招架时会获得较长僵直时间的状态"
+            }
+        },
+        {
+            "meistrhau@nouns_section": {
+                "$noun": "大师反击",
+                "$desc": "在将要受到一般攻击时输入轻击, 轻击会变成攻防兼备且必定命中的攻击"
+            }
+        },
+        {
+            "restore@advance_nouns_section": {
+                "$noun": "架势恢复",
+                "$desc": "在动作后一段时间内无法进行操作的状态"
+            }
+        },
+        {
+            "stop_restore@advance_nouns_section": {
+                "$noun": "取消架势恢复",
+                "$desc": "通过提前输入新的动作来取消架势恢复"
+            }
+        },
+        {
+            "input_replace@advance_nouns_section": {
+                "$noun": "预输入覆盖",
+                "$desc": "在预输入指令执行前通过输入新指令来覆盖旧的预输入指令"
+            }
+        },
+        {
+            "block_advantage@advance_nouns_section": {
+                "$noun": "反应格挡优势",
+                "$desc": "通过反应格挡封阻对手后, 你的动作将会比对手更先发起"
+            }
+        },
+        {
+            "enhance_attack@advance_nouns_section": {
+                "$noun": "强化攻击",
+                "$desc": "不会因为格挡而被封阻的攻击 (重击就是一种强化攻击)"
+            }
+        }
+    ]
+  }
+}

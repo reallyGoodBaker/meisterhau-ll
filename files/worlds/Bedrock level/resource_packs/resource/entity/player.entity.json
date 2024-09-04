@@ -6,11 +6,15 @@
             "materials": {
                 "default": "entity_alphatest",
                 "cape": "entity_alphatest",
+                "blend": "entity_alphablend",
                 "animated": "player_animated",
                 "spectator": "player_spectator"
             },
             "textures": {
                 "default": "textures/entity/steve",
+                "unstoppable": "textures/entity/unstoppable",
+                "trace": "textures/entity/trace",
+                "block": "textures/entity/block",
                 "cape": "textures/entity/cape_invisible"
             },
             "geometry": {
@@ -28,6 +32,7 @@
                     "variable.speed": "public",
                     "variable.restrict_rot": "public",
                     "variable.item_scale": "public",
+                    "variable.arm_status": "public",
                     "variable.waist_item_scale": "public"
                 },
                 "initialize": [
@@ -52,7 +57,8 @@
                     "v.posture = 0;",
                     "v.body_rot = 0;",
                     "v.body_rot_lastframe = 0;",
-                    "v.rerot = 0;"
+                    "v.rerot = 0;",
+                    "v.arm_status = 0;"
                 ],
                 "pre_animation": [
                     "variable.helmet_layer_visible = 1.0;",
@@ -169,7 +175,8 @@
                 },
                 {
                     "controller.render.player.map": "variable.map_face_icon"
-                }
+                },
+                "controller.render.player.arm_overlay"
             ],
             "enable_attachables": true
         }

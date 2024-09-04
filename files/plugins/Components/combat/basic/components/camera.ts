@@ -4,7 +4,7 @@ export class CameraComponent extends BaseComponent {
     /**
      * [ x, y, z ]
      */
-    static defaultOffset: [ number, number, number ] = [ 2.5, 0, 0.8 ]
+    static defaultOffset: [ number, number, number ] = [ 2, 0, 0.6 ]
     /**
      * [ yaw, pitch ]
      */

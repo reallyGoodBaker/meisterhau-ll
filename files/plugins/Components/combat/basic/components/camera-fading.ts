@@ -109,15 +109,15 @@ export class CameraFading extends BaseComponent {
 
         switch (direction) {
             case 'right':
-                to = [ 2.5, 0, 0.6, -15, 0 ]
+                to = [ 2, 0, 0.6, -15, 0 ]
                 break
 
             case 'left':
-                to = [ 2.5, 0, 1, 15, 0 ]
+                to = [ 2, 0, 0.6, 15, 0 ]
                 break
             
             case 'vertical':
-                to = [ 2.5, 0.3, 0.8, 0, -15 ]
+                to = [ 2, 0, 0.6, 0, -15 ]
                 break
         
             default:

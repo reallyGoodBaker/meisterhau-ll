@@ -1,7 +1,7 @@
 const { EventEmitter } = require('../../../events')
 const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = require('../../../scripts-rpc/func/kinematics')
 const { combat: { damage: _damage } } = require('../../../scripts-rpc/func/index')
-const { playAnim } = require('../index')
+const { playAnim, playParticle } = require('../index')
 const { movement, camera, movementInput } = require('../generic/index')
 const { selectFromRange } = require('../generic/range')
 const { Status, defaultAcceptableInputs } = require('./status')
@@ -35,6 +35,22 @@ const yawToVec2 = yaw => {
 function damageWithCameraFading(victim, damage, cause, abuser, projectile, damageOpt) {
     CameraFading.fadeFromAttackDirection(abuser, damageOpt)
     _damage(victim, damage, cause, abuser, projectile)
+
+    const victimPos = victim.feetPos
+    const abuserPos = abuser.feetPos
+    const dpos = {
+        x: 0.7 * victimPos.x + 0.3 * abuserPos.x,
+        z: 0.7 * victimPos.z + 0.3 * abuserPos.z,
+    }
+
+    setTimeout(() => {
+        playParticle(`weapon:hit_${damageOpt.direction || 'left'}`, {
+            x: dpos.x,
+            y: abuserPos.y + 1.2,
+            z: dpos.z,
+            dimid: victim.pos.dimid
+        })
+    }, 100)
 }
 
 function knockdown(abuser, victim, knockback=2) {

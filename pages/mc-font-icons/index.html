@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            background-color: #5e5e5e;
+        }
+
+        .icon {
+            --x: 0;
+            --y: 0;
+            --size: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+            width: calc(var(--size) * 1px);
+            height: calc(var(--size) * 1px);
+            border: solid 4px transparent;
+        }
+
+        .icon::after {
+            content: '';
+            background: url(./glyph_E0.png);
+            background-size: 512px 512px;
+            background-position: calc(var(--x) * -1) calc(var(--y) * -1);
+            width: 32px;
+            height: 32px;
+            image-rendering: pixelated;
+            scale: calc(var(--size) / 32);
+        }
+
+        .selectable {
+            cursor: pointer;
+        }
+        .selectable:hover {
+            border-color: #fff;
+            background-color: #799f35;
+        }
+        .selectable:active {
+            border-color: #fff;
+            background-color: #cad1ff;
+        }
+
+        .center {
+            background-color: #3d3d3d;
+            width: 100%;
+        }
+
+        #table {
+            --width: 32px;
+            display: grid;
+            grid-template-columns: repeat(16, var(--width));
+            grid-template-rows: repeat(16, var(--width));
+        }
+
+        #copied {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: fixed;
+            left: 50%;
+            bottom: 12px;
+            transform: translateX(-50%);
+            image-rendering: pixelated;
+            background-color: #3d3d3d;
+            border: solid 4px #000000;
+            padding: 8px 16px;
+            box-sizing: border-box;
+            pointer-events: none;
+            visibility: hidden;
+            color: #fff;
+        }
+    </style>
+
+    <div class="icon center display" style="--size: 200"></div>
+    <div style="overflow-y: scroll; height: calc(100vh - 200px);">
+        <div id="table"></div>
+    </div>
+    <div id="copied">
+        <div>已复制图标</div>
+        <div class="icon result" style="--size: 40; width: fit-content;"></div>
+    </div>
+
+    <script>
+        const copied = document.getElementById('copied')
+
+        let timer = null
+        function copy(i) {
+            navigator.clipboard.writeText(String.fromCodePoint(i + 57344))
+            copied.style.visibility = 'visible'
+
+            if (timer) {
+                clearTimeout(timer)
+            }
+
+            timer = setTimeout(() => {
+                copied.style.visibility = 'hidden'
+            }, 3000)
+
+            changeIcon(document.querySelector('.result').style, i)
+        }
+
+        function px(n) {
+            return n + 'px'
+        }
+
+        function changeIcon(style, value) {
+            const x = (value % 16) * 32
+            const y = Math.floor(value / 16) * 32
+
+            style.setProperty('--x', px(x))
+            style.setProperty('--y', px(y))
+        }
+
+        const table = document.getElementById('table')
+        const size = visualViewport.width / 16
+
+        table.style.setProperty('--width', px(size))
+
+        //57344 + i
+        Array.from(new Array(256), (_, i) => i).forEach(i => {
+            const div = document.createElement('div')
+            const x = (i % 16) * 32
+            const y = Math.floor(i / 16) * 32
+            const style = div.style
+
+            div.classList.add('icon', 'selectable')
+
+            style.setProperty('--x', px(x))
+            style.setProperty('--y', px(y))
+            style.setProperty('--size', size)
+
+            div.addEventListener('mouseenter', () => changeIcon(document.querySelector('.display').style, i))
+            div.addEventListener('click', () => copy(i))
+
+            table.appendChild(div)
+        })
+    </script>
+</body>
+</html>

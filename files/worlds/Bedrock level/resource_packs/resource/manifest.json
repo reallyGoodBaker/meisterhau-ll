@@ -1,8 +1,8 @@
 {
     "format_version": 2,
     "header": {
-        "description": "Kick your *",
-        "name": "Battle",
+        "description": "Required pack for Meisterhau",
+        "name": "Meisterhau",
         "uuid": "ad4bade0-ff31-46b8-804e-072d9c2730df",
         "version": [
             1,
@@ -17,7 +17,7 @@
     },
     "modules": [
         {
-            "description": "Battle",
+            "description": "Meisterhau",
             "type": "resources",
             "uuid": "97ac687f-7dc1-4419-bd5a-076d0dd8fda2",
             "version": [

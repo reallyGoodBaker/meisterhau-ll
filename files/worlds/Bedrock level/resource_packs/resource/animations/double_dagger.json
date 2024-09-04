@@ -199,12 +199,6 @@
 				"left_emitter": {
 					"position": [0, 0, -8]
 				}
-			},
-			"particle_effects": {
-				"0.375": {
-					"effect": "draw",
-					"locator": "left_emitter"
-				}
 			}
 		},
 		"animation.double_dagger.horizontal_swing.to.vertical_chop": {
@@ -394,15 +388,9 @@
 					"position": [0, 0, 8]
 				}
 			},
-			"particle_effects": {
-				"0.5833": {
-					"effect": "draw_unstoppable",
-					"locator": "right_emitter"
-				}
-			},
 			"timeline": {
-				"0.0": "v.overlay_color = v.orange;",
-				"0.1667": "v.overlay_color = v.transparent;"
+				"0.0": "v.arm_status=1;",
+				"0.1667": "v.arm_status=0;"
 			}
 		},
 		"animation.double_dagger.stab": {
@@ -610,15 +598,9 @@
 					"position": [0, 0, 10]
 				}
 			},
-			"particle_effects": {
-				"0.5": {
-					"effect": "draw",
-					"locator": "right_emitter"
-				}
-			},
 			"timeline": {
-				"0.4583": "v.overlay_color = v.white;",
-				"0.7083": "v.overlay_color = v.transparent;"
+				"0.4583": "v.arm_status=3;",
+				"0.7083": "v.arm_status=0;"
 			}
 		},
 		"animation.double_dagger.dodge.front": {
@@ -785,8 +767,8 @@
 				}
 			},
 			"timeline": {
-				"0.0": "v.overlay_color = v.white;",
-				"0.1667": "v.overlay_color = v.transparent;"
+				"0.0": "v.arm_status=3;",
+				"0.1667": "v.arm_status=0;"
 			}
 		},
 		"animation.double_dagger.deflection": {
@@ -1105,12 +1087,6 @@
 					"position": [0, 0, 10]
 				}
 			},
-			"particle_effects": {
-				"0.2917": {
-					"effect": "draw",
-					"locator": "right_emitter"
-				}
-			},
 			"timeline": {
 				"0.0": "v.overlay_color = v.transparent;"
 			}
@@ -1253,8 +1229,8 @@
 				}
 			},
 			"timeline": {
-				"0.125": "v.overlay_color = v.orange;",
-				"0.4583": "v.overlay_color = v.transparent;"
+				"0.125": "v.arm_status=1;",
+				"0.4583": "v.arm_status=0;"
 			}
 		},
 		"animation.double_dagger.dodge.catch": {
@@ -1402,8 +1378,8 @@
 				}
 			},
 			"timeline": {
-				"0.0": "v.overlay_color = v.orange;",
-				"0.5": "v.overlay_color = v.transparent;"
+				"0.0": "v.arm_status=1;",
+				"0.5": "v.arm_status=0;"
 			}
 		},
 		"animation.double_dagger.catch.stab": {
@@ -1549,12 +1525,6 @@
 				},
 				"right_emitter": {
 					"position": [0, 0, 10]
-				}
-			},
-			"particle_effects": {
-				"0.1667": {
-					"effect": "draw",
-					"locator": "right_emitter"
 				}
 			}
 		},
@@ -1718,8 +1688,8 @@
 				}
 			},
 			"timeline": {
-				"0.0": "v.overlay_color = v.orange;",
-				"0.5": "v.overlay_color = v.transparent;"
+				"0.0": "v.arm_status=1;",
+				"0.5": "v.arm_status=0;"
 			}
 		},
 		"animation.double_dagger.parry": {

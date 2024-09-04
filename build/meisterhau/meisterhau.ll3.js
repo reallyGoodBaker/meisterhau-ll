@@ -886,7 +886,7 @@ function playSoundAll$6(sound, pos, volume, pitch, minVolume) {
         pos.x, pos.y, pos.z, volume, pitch, minVolume
     ].join(' '));
 }
-function playParticle(particle, pos) {
+function playParticle$1(particle, pos) {
     mc.runcmdEx(`/particle ${particle} ` + [
         pos.x, pos.y, pos.z
     ].join(' '));
@@ -902,7 +902,7 @@ var basic = /*#__PURE__*/Object.freeze({
 	DEFAULT_SPEED: DEFAULT_SPEED$2,
 	movable: movable,
 	playAnim: playAnim$8,
-	playParticle: playParticle,
+	playParticle: playParticle$1,
 	playSound: playSound,
 	playSoundAll: playSoundAll$6
 });
@@ -1180,7 +1180,7 @@ let CameraComponent$1 = class CameraComponent extends BaseComponent {
     /**
      * [ x, y, z ]
      */
-    static defaultOffset = [2.5, 0, 0.8];
+    static defaultOffset = [2, 0, 0.6];
     /**
      * [ yaw, pitch ]
      */
@@ -1568,13 +1568,13 @@ let CameraFading$1 = CameraFading_1 = class CameraFading extends BaseComponent {
         let to = null;
         switch (direction) {
             case 'right':
-                to = [2.5, 0, 0.6, -15, 0];
+                to = [2, 0, 0.6, -15, 0];
                 break;
             case 'left':
-                to = [2.5, 0, 1, 15, 0];
+                to = [2, 0, 0.6, 15, 0];
                 break;
             case 'vertical':
-                to = [2.5, 0.3, 0.8, 0, -15];
+                to = [2, 0, 0.6, 0, -15];
                 break;
             default:
                 to = [1.5, 0, 0.5, 0, 0];
@@ -4316,7 +4316,6 @@ class OotachiMoves extends DefaultMoves$5 {
                 { handler: () => ctx.adsorbOrSetVelocity(pl, 0.8, 90), timeout: 300 },
             ]).run();
             playAnim$8(pl, 'animation.weapon.ootachi.combo1.attack');
-            ctx.lookAtTarget(pl);
         },
         onAct(pl, ctx) {
             ctx.selectFromRange(pl, {
@@ -4329,6 +4328,7 @@ class OotachiMoves extends DefaultMoves$5 {
                     knockback: 1,
                     direction: 'left',
                 });
+                ctx.lookAtTarget(pl);
             });
         },
         onLeave(_, ctx) {
@@ -4371,8 +4371,8 @@ class OotachiMoves extends DefaultMoves$5 {
         }
     };
     combo1Chop = {
-        cast: 11,
-        backswing: 13,
+        cast: 10,
+        backswing: 14,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 22;
@@ -4400,6 +4400,7 @@ class OotachiMoves extends DefaultMoves$5 {
                     knockback: 1.5,
                     direction: 'left',
                 });
+                ctx.lookAtTarget(pl);
             });
         },
         onLeave(pl, ctx) {
@@ -4459,8 +4460,8 @@ class OotachiMoves extends DefaultMoves$5 {
         }
     };
     combo2Cut = {
-        cast: 9,
-        backswing: 17,
+        cast: 8,
+        backswing: 18,
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 18;
             ctx.lookAtTarget(pl);
@@ -4481,6 +4482,7 @@ class OotachiMoves extends DefaultMoves$5 {
                     trace: true,
                     direction: 'middle',
                 });
+                ctx.lookAtTarget(pl);
             });
         },
         onLeave(_, ctx) {
@@ -4550,6 +4552,7 @@ class OotachiMoves extends DefaultMoves$5 {
                     direction: 'right',
                 });
             });
+            ctx.lookAtTarget(pl);
         },
         onLeave(_, ctx) {
             ctx.status.hegemony = false;
@@ -4668,13 +4671,17 @@ class OotachiMoves extends DefaultMoves$5 {
                     direction: 'vertical',
                 });
             });
+            ctx.lookAtTarget(pl);
         },
         onLeave(_, ctx) {
             ctx.task.cancel();
             ctx.unfreeze(_);
+            ctx.status.hegemony = false;
         },
         timeline: {
-            10: (pl, ctx) => ctx.trap(pl)
+            10: (pl, ctx) => ctx.trap(pl),
+            15: (_, ctx) => ctx.status.hegemony = true,
+            25: (_, ctx) => ctx.status.hegemony = false,
         },
         transitions: {
             resumeKamae: {
@@ -5772,8 +5779,8 @@ class UchigatanaMoves extends DefaultMoves$5 {
         }
     };
     attack1 = {
-        cast: 9,
-        backswing: 12,
+        cast: 7,
+        backswing: 14,
         onEnter(pl, ctx) {
             ctx.status.isBlocking = true;
             ctx.freeze(pl);
@@ -6062,7 +6069,7 @@ class DoubleBladeMoves extends DefaultMoves$5 {
                     damageType: 'entityAttack',
                     knockback: 0.8,
                     permeable: true,
-                    direction: 'left'
+                    direction: 'vertical'
                 });
             });
         },
@@ -6546,7 +6553,7 @@ const battleCamera$1 = (pl, en) => {
     const cameraPos = {
         x: crossPos.x + cameraPosVec.dx,
         z: crossPos.z + cameraPosVec.dy,
-        y: plPos.y - .3 + offsetY,
+        y: plPos.y - .2 + offsetY,
     };
 
     // camera(pl, 0.1, 'linear', cameraPos, {
@@ -7357,7 +7364,7 @@ var require$$18 = /*@__PURE__*/getAugmentedNamespace(stamina);
 const { EventEmitter } = requireEvents();
 const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = kinematics$1;
 const { combat: { damage: _damage } } = func;
-const { playAnim } = require$$3$1;
+const { playAnim, playParticle } = require$$3$1;
 const { movement, camera, movementInput } = generic;
 const { selectFromRange } = range;
 const { Status, defaultAcceptableInputs } = require$$6;
@@ -7391,6 +7398,22 @@ const yawToVec2 = yaw => {
 function damageWithCameraFading(victim, damage, cause, abuser, projectile, damageOpt) {
     CameraFading.fadeFromAttackDirection(abuser, damageOpt);
     _damage(victim, damage, cause, abuser, projectile);
+
+    const victimPos = victim.feetPos;
+    const abuserPos = abuser.feetPos;
+    const dpos = {
+        x: 0.7 * victimPos.x + 0.3 * abuserPos.x,
+        z: 0.7 * victimPos.z + 0.3 * abuserPos.z,
+    };
+
+    setTimeout(() => {
+        playParticle(`weapon:hit_${damageOpt.direction || 'left'}`, {
+            x: dpos.x,
+            y: abuserPos.y + 1.2,
+            z: dpos.z,
+            dimid: victim.pos.dimid
+        });
+    }, 100);
 }
 
 function knockdown(abuser, victim, knockback=2) {

@@ -111,8 +111,8 @@ class UchigatanaMoves extends DefaultMoves {
     }
 
     attack1: Move = {
-        cast: 9,
-        backswing: 12,
+        cast: 7,
+        backswing: 14,
         onEnter(pl, ctx) {
             ctx.status.isBlocking = true
             ctx.freeze(pl)

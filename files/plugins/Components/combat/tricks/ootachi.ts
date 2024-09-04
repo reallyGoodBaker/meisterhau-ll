@@ -181,7 +181,6 @@ class OotachiMoves extends DefaultMoves {
                 { handler: () => ctx.adsorbOrSetVelocity(pl, 0.8, 90), timeout: 300 },
             ]).run()
             playAnim(pl, 'animation.weapon.ootachi.combo1.attack')
-            ctx.lookAtTarget(pl)
         },
         onAct(pl, ctx) {
             ctx.selectFromRange(pl, {
@@ -194,6 +193,7 @@ class OotachiMoves extends DefaultMoves {
                     knockback: 1,
                     direction: 'left',
                 })
+                ctx.lookAtTarget(pl)
             })
         },
         onLeave(_, ctx) {
@@ -237,8 +237,8 @@ class OotachiMoves extends DefaultMoves {
     }
 
     combo1Chop: Move = {
-        cast: 11,
-        backswing: 13,
+        cast: 10,
+        backswing: 14,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 22
@@ -266,6 +266,7 @@ class OotachiMoves extends DefaultMoves {
                     knockback: 1.5,
                     direction: 'left',
                 })
+                ctx.lookAtTarget(pl)
             })
         },
         onLeave(pl, ctx) {
@@ -326,8 +327,8 @@ class OotachiMoves extends DefaultMoves {
     }
 
     combo2Cut: Move = {
-        cast: 9,
-        backswing: 17,
+        cast: 8,
+        backswing: 18,
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 18
             ctx.lookAtTarget(pl)
@@ -350,6 +351,7 @@ class OotachiMoves extends DefaultMoves {
                     trace: true,
                     direction: 'middle',
                 })
+                ctx.lookAtTarget(pl)
             })
         },
         onLeave(_, ctx) {
@@ -423,6 +425,7 @@ class OotachiMoves extends DefaultMoves {
                     direction: 'right',
                 })
             })
+            ctx.lookAtTarget(pl)
         },
         onLeave(_, ctx) {
             ctx.status.hegemony = false
@@ -547,13 +550,17 @@ class OotachiMoves extends DefaultMoves {
                     direction: 'vertical',
                 })
             })
+            ctx.lookAtTarget(pl)
         },
         onLeave(_, ctx) {
             ctx.task.cancel()
             ctx.unfreeze(_)
+            ctx.status.hegemony = false
         },
         timeline: {
-            10: (pl, ctx) => ctx.trap(pl)
+            10: (pl, ctx) => ctx.trap(pl),
+            15: (_, ctx) => ctx.status.hegemony = true,
+            25: (_, ctx) => ctx.status.hegemony = false,
         },
         transitions: {
             resumeKamae: {
