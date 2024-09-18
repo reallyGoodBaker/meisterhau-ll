@@ -430,6 +430,7 @@ interface DamageOption {
     powerful?: boolean
     /**
      * 僵直时间（毫秒）
+     * >= 500
      */
     stiffness?: number
     /**

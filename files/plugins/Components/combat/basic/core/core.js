@@ -16,7 +16,7 @@ const { vec2, vec2ToAngle } = require('../generic/vec')
 const { clearCamera } = require('../generic/camera')
 const { Tick } = require('../components/tick')
 const { CameraFading } = require('../components/camera-fading')
-const { DamageModifier } = require('./config')
+const { DamageModifier } = require('../components/damage-modifier')
 const { registerCommand } = require('./commands')
 const { antiTreeshaking } = require('../components/anti-treeshaking')
 const { Stamina } = require('../components/core/stamina')
@@ -649,12 +649,10 @@ function listenAllCustomEvents(mods) {
             _knockback(_k, victimStatus.repulsible)
             victimStatus.shocked = shock
 
-            const modifier = victimStatus.componentManager.getComponent(DamageModifier)
-            const actualDamage = damage * (
-                modifier.isEmpty() 
-                    ? DamageModifier.defaultModifier
-                    : modifier.unwrap().modifier
-                )
+            const modifier = victimStatus.componentManager
+                .getComponent(DamageModifier)
+                .orElse(DamageModifier.defaultModifierOpt).modifier
+            const actualDamage = damage * modifier
 
             em.emitNone('hurt', abuser, victimPlayer, {
                 ...damageOpt,
@@ -989,7 +987,12 @@ function listenAllMcEvents(collection) {
         const pl = args[0]
         if (hasLock(pl)) {
             if (toggleLock(pl.uniqueId) === null) {
-                em.emitNone('onReleaseLock', pl, pl.getHand().type, null)
+                const mod = getMod(getHandedItemType(pl))
+                const status = Status.get(pl.uniqueId)
+
+                clearCamera(pl)
+                initCombatComponent(pl, mod, status)
+                transition(pl, mod, status, 'onChangeSprinting', Function.prototype, args)
             }
 
             return false

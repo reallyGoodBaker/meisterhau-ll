@@ -20,9 +20,6 @@
 				"leftShank": {
 					"rotation": [50, 0, 0]
 				}
-			},
-			"timeline": {
-				"0.0": "v.restrict_rot=1;"
 			}
 		},
 		"animation.posture.left.walk_front": {

@@ -205,7 +205,7 @@ class Registry {
  * @param {number} [flag]
  * @param {string} [alias]
  */
-function cmd$7(head, desc, perm = 1) {
+function cmd$6(head, desc, perm = 1) {
     const command = mc.newCommand(head, desc, perm);
     const registry = new Registry(command);
     return {
@@ -218,7 +218,7 @@ function cmd$7(head, desc, perm = 1) {
 var command = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	Registry: Registry,
-	cmd: cmd$7
+	cmd: cmd$6
 });
 
 var require$$0 = /*@__PURE__*/getAugmentedNamespace(command);
@@ -417,7 +417,7 @@ var ui = {
     StepSlider: basicBuilder('StepSlider'),
 };
 
-const { cmd: cmd$6 } = require$$0;
+const { cmd: cmd$5 } = require$$0;
 const { alert: alert$5 } = ui;
 
 function distStr(entity, dest, showDiff=true) {
@@ -430,7 +430,7 @@ function distStr(entity, dest, showDiff=true) {
 }
 
 function setup$8() {
-    cmd$6('whoami', '我是谁？', 0)
+    cmd$5('whoami', '我是谁？', 0)
     .setup(registry => {
         registry
         .register('name', (cmd, ori, out) => {
@@ -1064,22 +1064,88 @@ var speed = {
     tick, setVelocity: setVelocity$1
 };
 
-const { cmd: cmd$5 } = require$$0;
 
+
+//@ts-ignore
+/*;
+const 
+    if (!(cond)) {
+        return;
+    }
+    => {
+    //#inline 
+    if (!(cond)) {
+        return;
+    }
+        if (!(cond)) {
+        return;
+    }
+    //!inline
+};
+//@ts-ignore
+*/;
+
+const _listeners = new WeakMap();
+function spawn(pos, name) {
+    return mc.spawnSimulatedPlayer(name, pos);
+}
+function despawn(pl) {
+    
+    if (!(pl.isSimulatedPlayer)) {
+        return;
+    }
+    
+    pl.simulateDisconnect();
+}
+function listener(pl, listeners) {
+    _listeners.set(pl, listeners);
+}
+function buildCallListener(type) {
+    return (mob, ...args) => {
+        if (!mob.isPlayer()) {
+            return;
+        }
+        const pl = mob.toPlayer();
+        if (!pl?.isSimulatedPlayer()) {
+            return;
+        }
+        const listeners = _listeners.get(pl);
+        if (!listeners) {
+            return;
+        }
+        listeners[type]?.apply(pl, args);
+    };
+}
+function listenMobEvent(type) {
+    mc.listen(type, buildCallListener(type));
+}
 function setup$7() {
-    cmd$5('simplayer', '假人', 1)
-    .setup(registry => {
-        registry.register('<pos:pos> <name:string>', (_, ori, out, res) => {
-            const { x, y, z, dimid } = res.pos;
-            mc.spawnSimulatedPlayer(res.name, x, y, z, dimid);
+    cmd$6('simplayer', '假人', 1)
+        .setup(registry => {
+        registry
+            .register('<pos:pos> <name:string>', (_, ori, out, { pos, name }) => {
+            spawn(pos, name);
         })
-        .submit();
+            .register('despawn <pl:player>', (_, ori, out, res) => {
+            res.pl.forEach(sim => {
+                despawn(sim);
+            });
+        })
+            .submit();
     });
+    listenMobEvent('onMobHurt');
+    listenMobEvent('onMobDie');
 }
 
-var simulatePlayer = {
-    setup: setup$7
-};
+var simulatePlayer = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	despawn: despawn,
+	listener: listener,
+	setup: setup$7,
+	spawn: spawn
+});
+
+var require$$3 = /*@__PURE__*/getAugmentedNamespace(simulatePlayer);
 
 const { cmd: cmd$4 } = require$$0;
 
@@ -3511,7 +3577,7 @@ const { load } = loadModule;
 const modules = [
     whoami,
     speed,
-    simulatePlayer,
+    require$$3,
     overShoulder,
     notification,
     motd,

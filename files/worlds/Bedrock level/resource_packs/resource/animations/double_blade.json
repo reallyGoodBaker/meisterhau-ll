@@ -23,7 +23,7 @@
 				}
 			},
 			"timeline": {
-				"0.0": ["v.overlay_color = v.transparent;", "v.posture=0;", "v.item_status=1;", "v.item_scale=1;", "v.waist_item_scale=0;", "v.restrict_rot=0;"]
+				"0.0": ["v.overlay_color = v.transparent;", "v.posture=0;", "v.item_status=1;", "v.item_scale=1;", "v.waist_item_scale=0;"]
 			}
 		},
 		"animation.double_blade.running": {
@@ -666,7 +666,7 @@
 				}
 			},
 			"timeline": {
-				"0.0": ["v.posture = 1;", "v.overlay_color = v.transparent;", "v.restrict_rot=1;"]
+				"0.0": ["v.posture = 1;", "v.overlay_color = v.transparent;"]
 			}
 		}
 	}

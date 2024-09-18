@@ -26,7 +26,7 @@
 				"linear_drag_coefficient": 0.1
 			},
 			"minecraft:particle_appearance_billboard": {
-				"size": [0.05, 0.05],
+				"size": [0.04, 0.04],
 				"facing_camera_mode": "rotate_xyz",
 				"uv": {
 					"texture_width": 128,
@@ -44,8 +44,7 @@
 				"collision_drag": 1,
 				"coefficient_of_restitution": 0.3,
 				"collision_radius": 0.2
-			},
-			"minecraft:particle_appearance_lighting": {}
+			}
 		}
 	}
 }

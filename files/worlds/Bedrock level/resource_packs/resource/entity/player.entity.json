@@ -15,6 +15,9 @@
                 "unstoppable": "textures/entity/unstoppable",
                 "trace": "textures/entity/trace",
                 "block": "textures/entity/block",
+                "unstoppable_steve": "textures/entity/unstoppable_steve",
+                "trace_steve": "textures/entity/trace_steve",
+                "block_steve": "textures/entity/block_steve",
                 "cape": "textures/entity/cape_invisible"
             },
             "geometry": {
@@ -30,16 +33,19 @@
                     "variable.item_status": "public",
                     "variable.posture": "public",
                     "variable.speed": "public",
-                    "variable.restrict_rot": "public",
                     "variable.item_scale": "public",
                     "variable.arm_status": "public",
+                    "variable.is_slim_arm": "public",
                     "variable.waist_item_scale": "public"
                 },
                 "initialize": [
-                    "variable.is_holding_right = 0.0;",
-                    "variable.is_blinking = 0.0;",
-                    "variable.last_blink_time = 0.0;",
-                    "variable.hand_bob = 0.0;",
+                    "v.arm_detector = query.bone_aabb('leftArm');",
+                    "v.is_slim_arm = v.arm_detector.max.x == 2;",
+
+                    "v.is_holding_right = 0.0;",
+                    "v.is_blinking = 0.0;",
+                    "v.last_blink_time = 0.0;",
+                    "v.hand_bob = 0.0;",
 
                     "v.item_status = 1;",
 
@@ -61,6 +67,8 @@
                     "v.arm_status = 0;"
                 ],
                 "pre_animation": [
+                    "variable.arm_detector = query.bone_aabb('leftArm');",
+                    "variable.is_slim_arm = v.arm_detector.max.x == 2;",
                     "variable.helmet_layer_visible = 1.0;",
                     "variable.leg_layer_visible = 1.0;",
                     "variable.boot_layer_visible = 1.0;",

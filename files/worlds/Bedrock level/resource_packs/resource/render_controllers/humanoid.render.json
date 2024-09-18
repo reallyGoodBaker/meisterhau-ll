@@ -10,7 +10,7 @@
                     ]
                 }
             },
-            "geometry": "Array.geos[1]",
+            "geometry": "Array.geos[v.is_slim_arm]",
             "materials": [
                 {
                     "*": "material.default"
@@ -62,20 +62,29 @@
                 "textures": {
                     "Array.t": [
                         "texture.default",
+                        "texture.unstoppable_steve",
+                        "texture.trace_steve",
+                        "texture.block_steve",
                         "texture.unstoppable",
                         "texture.trace",
                         "texture.block"
                     ]
+                },
+                "geometries": {
+                    "Array.geos": [
+                        "Geometry.steve",
+                        "Geometry.alex"
+                    ]
                 }
             },
-            "geometry": "geometry.alex",
+            "geometry": "Array.geos[v.is_slim_arm]",
             "materials": [
                 {
                     "*": "material.blend"
                 }
             ],
             "textures": [
-                "Array.t[v.arm_status]"
+                "Array.t[v.arm_status == 0 ? 0 : v.arm_status + v.is_slim_arm * 3]"
             ],
             "part_visibility": [
                 {

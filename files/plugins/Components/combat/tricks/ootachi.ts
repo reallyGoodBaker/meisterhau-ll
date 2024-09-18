@@ -277,9 +277,7 @@ class OotachiMoves extends DefaultMoves {
             8: (pl, ctx) => {
                 ctx.trap(pl, { tag: 'feint' })
             },
-            10: (pl, ctx) => {
-                ctx.trap(pl, { tag: 'hlit' })
-            },
+            9: (pl, ctx) => ctx.trap(pl, { tag: 'hlit' }),
             17: (pl, ctx) => ctx.trap(pl, { tag: 'combo' })
         },
         transitions: {
@@ -558,8 +556,8 @@ class OotachiMoves extends DefaultMoves {
             ctx.status.hegemony = false
         },
         timeline: {
-            10: (pl, ctx) => ctx.trap(pl),
-            15: (_, ctx) => ctx.status.hegemony = true,
+            9: (_, ctx) => ctx.status.hegemony = true,
+            8: (pl, ctx) => ctx.trap(pl),
             25: (_, ctx) => ctx.status.hegemony = false,
         },
         transitions: {
@@ -571,7 +569,7 @@ class OotachiMoves extends DefaultMoves {
                 }
             },
             hurt: {
-                onHurt: null
+                onInterrupted: null
             },
             parried: {
                 onParried: null
@@ -587,17 +585,18 @@ class OotachiMoves extends DefaultMoves {
             ctx.getMoveDir(pl).then(direct => {
                 direct = direct || 1
                 if (direct !== 1) {
-                    ctx.setVelocity(pl, direct * 90, 2)
+                    ctx.setVelocity(pl, direct * 90, 2.5)
                 } else {
                     ctx.adsorbToTarget(pl, 2)
                 }
-                direct !== 3 && ctx.adsorbToTarget(pl, 0.3)
 
                 if (direct !== 3) {
                     playAnim(pl, 'animation.weapon.ootachi.dodge.front')
                 } else {
                     playAnim(pl, 'animation.weapon.ootachi.dodge.back')
                 }
+
+                ctx.trap(pl, { tag: direct === 1 ? 'front' : 'side' })
             })
         },
         onLeave(pl, ctx) {
@@ -605,7 +604,14 @@ class OotachiMoves extends DefaultMoves {
         },
         transitions: {
             dodge: {
-                onEndOfLife: null
+                onTrap: {
+                    tag: 'side'
+                }
+            },
+            dodgeFront: {
+                onTrap: {
+                    tag: 'front'
+                }
             },
             hurt: {
                 onHurt: null
@@ -645,8 +651,34 @@ class OotachiMoves extends DefaultMoves {
         }
     }
 
+    dodgeFront: Move = {
+        cast: 4,
+        backswing: 4,
+        onEnter(_, ctx) {
+            const manager = ctx.status.componentManager
+            manager.getComponent(Stamina).unwrap().setCooldown(10)
+            ctx.status.isBlocking = true
+        },
+        onAct(_, ctx) {
+            ctx.status.isBlocking = false
+        },
+        onLeave(_, ctx) {
+            ctx.status.isBlocking = false
+        },
+        transitions: {
+            resumeKamae: {
+                onEndOfLife: null
+            },
+            dodgeBlocking: {
+                onBlock: null
+            },
+            hurt: {
+                onHurt: null
+            }
+        }
+    }
+
     dodgeBlocking: Move = {
-        cast: 0,
         onEnter(pl, ctx) {
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^^1^0.5`)
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^-0.1^1^0.5`)

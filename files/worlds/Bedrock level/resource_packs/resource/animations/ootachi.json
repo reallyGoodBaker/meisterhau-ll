@@ -20,15 +20,7 @@
 				}
 			},
 			"timeline": {
-				"0.0": [
-					"v.overlay_color = v.transparent;",
-					"v.posture=0;",
-					"v.item_status=1;",
-					"v.item_scale=1;",
-					"v.waist_item_scale=0;",
-					"v.restrict_rot=0;",
-					"v.arm_status=0;"
-				]
+				"0.0": ["v.overlay_color = v.transparent;", "v.posture=0;", "v.item_status=1;", "v.item_scale=1;", "v.waist_item_scale=0;", "v.arm_status=0;"]
 			}
 		},
 		"animation.weapon.ootachi.kamae.inno": {
@@ -87,7 +79,7 @@
 				}
 			},
 			"timeline": {
-				"0.0": ["v.overlay_color = v.transparent;", "v.restrict_rot=1;"]
+				"0.0": ["v.overlay_color = v.transparent;", "v.arm_status = 0;"]
 			}
 		},
 		"animation.weapon.ootachi.running": {
@@ -2605,7 +2597,7 @@
 							"lerp_mode": "catmullrom"
 						},
 						"0.5833": {
-							"post": [0, 0, 0],
+							"post": [0, 0, 12.5],
 							"lerp_mode": "catmullrom"
 						},
 						"0.6667": {
@@ -3719,7 +3711,7 @@
 			},
 			"timeline": {
 				"0.3333": "v.arm_status = 1;",
-				"0.7917": "v.overlay_color = v.white;",
+				"0.4167": "v.overlay_color = v.white;",
 				"1.25": ["v.overlay_color = v.transparent;", "v.arm_status = 0;"]
 			}
 		},
@@ -4455,8 +4447,8 @@
 				}
 			},
 			"timeline": {
-				"0.0": "v.overlay_color = v.orange;",
-				"0.5": "v.overlay_color = v.transparent;"
+				"0.0": "v.arm_status = 1;",
+				"0.5": "v.arm_status = 0;"
 			}
 		},
 		"animation.weapon.ootachi.parry.right": {
@@ -6223,7 +6215,7 @@
 							"lerp_mode": "catmullrom"
 						},
 						"0.5": {
-							"post": [0, 0, 0],
+							"post": [0, 0, 10],
 							"lerp_mode": "catmullrom"
 						},
 						"0.5833": {
@@ -7175,10 +7167,9 @@
 					}
 				}
 			},
-			"particle_effects": {},
 			"timeline": {
 				"0.3333": "v.arm_status = 1;",
-				"0.75": "v.overlay_color = v.white;",
+				"0.4167": "v.overlay_color = v.white;",
 				"1.25": ["v.overlay_color = v.transparent;", "v.arm_status = 0;"]
 			}
 		},
@@ -8146,7 +8137,7 @@
 					"position": [0, 0, 0]
 				},
 				"right_emitter": {
-					"position": [0.41298, 0.30847, -15.86746]
+					"position": [0.41298, 0.30847, -6.86746]
 				},
 				"rightLeg": {
 					"rotation": {
@@ -8265,6 +8256,12 @@
 						},
 						"1.0": [50, 0, 0]
 					}
+				}
+			},
+			"particle_effects": {
+				"0.0": {
+					"effect": "spark",
+					"locator": "right_emitter"
 				}
 			}
 		}

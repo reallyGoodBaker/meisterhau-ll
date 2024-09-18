@@ -178,7 +178,7 @@ export class DefaultMoves {
         },
         onTick(pl, ctx) {
             if (ctx.status.shocked) {
-                ctx.trap(pl, { tag: 'hitWall' })
+                // ctx.trap(pl, { tag: 'hitWall' })
             }
         },
         transitions: { }

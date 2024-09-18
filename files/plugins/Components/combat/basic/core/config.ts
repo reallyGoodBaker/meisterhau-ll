@@ -38,18 +38,3 @@ export function getFieldEntries(t: any): {muts: any[], lets: any[]} | null {
         lets: keys.lets.map(k => [k, t[k]]),
     }
 }
-
-@PublicComponent('damage-modifier')
-@Fields([ 'modifier' ])
-export class DamageModifier extends CustomComponent {
-    static defaultModifier = 0.2
-    static create({ modifier }: { modifier: number }) {
-        return new DamageModifier(modifier)
-    }
-
-    constructor(
-        public modifier = DamageModifier.defaultModifier
-    ) {
-        super()
-    }
-}

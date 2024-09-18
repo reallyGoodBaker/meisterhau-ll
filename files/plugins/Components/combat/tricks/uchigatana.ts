@@ -1,12 +1,13 @@
 import { playAnim, playSoundAll } from "../basic/index"
 import { DefaultMoves, DefaultTrickModule } from '../basic/default'
-import { randomRange } from "@utils/math"
 
 class UchigatanaMoves extends DefaultMoves {
     constructor() {
         super()
 
         this.setup<UchigatanaMoves>('resume')
+        this.animations.block.left = 'animation.weapon.uchigatana.block.left'
+        this.animations.block.right = 'animation.weapon.uchigatana.block.right'
     }
 
     hold: Move = {
@@ -41,15 +42,18 @@ class UchigatanaMoves extends DefaultMoves {
                 onJump: null,
             },
             hurt: {
-                onHurt: {
-                    allowedState: 'both'
-                }
+                onHurt: null
             },
             attack1: {
                 onAttack: {
                     hasTarget: true
                 },
             },
+            attack1Heavy: {
+                onUseItem: {
+                    hasTarget: true
+                }
+            }
         }
     }
 
@@ -69,7 +73,7 @@ class UchigatanaMoves extends DefaultMoves {
             },
             hurt: {
                 onHurt: null
-            }
+            },
         }
     }
 
@@ -103,9 +107,7 @@ class UchigatanaMoves extends DefaultMoves {
                 }
             },
             hurt: {
-                onHurt: {
-                    allowedState: 'both'
-                }
+                onHurt: null
             },
         }
     }
@@ -135,48 +137,50 @@ class UchigatanaMoves extends DefaultMoves {
             0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.5, 90),
             4: (_, ctx) => ctx.status.isBlocking = false,
             5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
-            7: pl => playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1),
-            12: (pl, ctx) => ctx.trap(pl)
+            7: pl => playSoundAll(`weapon.woosh.2`, pl.pos, 1),
+            20: (pl, ctx) => ctx.trap(pl)
         },
         transitions: {
             block: {
                 onBlock: null
             },
             jodanKamae: {
-                onEndOfLife: null
+                onEndOfLife: {
+                    hasTarget: true
+                }
+            },
+            resume: {
+                onEndOfLife: {
+                    hasTarget: false
+                }
             },
             hurt: {
-                onHurt: {
-                    allowedState: 'both'
-                }
+                onHurt: null
+            },
+            parried: {
+                onParried: null
+            },
+            blocked: {
+                onBlocked: null
             },
             attack2: {
                 onTrap: {
-                    preInput: 'onUseItem',
-                }
-            },
-            parried: {
-                onParried: {
-                    allowedState: 'both'
-                }
-            },
-            blocked: {
-                onBlocked: {
-                    allowedState: 'both'
+                    preInput: 'onAttack',
                 }
             },
         }
     }
 
-    attack2: Move = {
-        cast: 12,
-        backswing: 14,
+    attack1Heavy: Move = {
+        cast: 10,
+        backswing: 16,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
-            playAnim(pl, 'animation.weapon.uchigatana.attack2')
+            playAnim(pl, 'animation.weapon.uchigatana.attack1.heavy')
         },
         onAct(pl, ctx) {
+            playSoundAll(`weapon.woosh.2`, pl.pos, 1)
             ctx.selectFromRange(pl, {
                 radius: 3,
                 angle: 180,
@@ -184,6 +188,7 @@ class UchigatanaMoves extends DefaultMoves {
             }).forEach(en => {
                 ctx.attack(pl, en, {
                     damage: 24,
+                    direction: 'right',
                 })
             })
         },
@@ -192,25 +197,118 @@ class UchigatanaMoves extends DefaultMoves {
         },
         timeline: {
             3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
-            8: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2.2, 90),
+            6: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
+            7: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
+            25: (pl, ctx) => ctx.trap(pl, { tag: 'counter' }),
         },
         transitions: {
             block: {
                 onBlock: null
             },
+            jodanKamae: {
+                onEndOfLife: {
+                    hasTarget: true
+                }
+            },
+            resume: {
+                onTrap: {
+                    tag: 'feint',
+                    preInput: 'onFeint'
+                },
+                onEndOfLife: {
+                    hasTarget: false
+                },
+            },
+            attack2Heavy: {
+                onTrap: {
+                    tag: 'counter',
+                    preInput: 'onUseItem'
+                }
+            },
+            hurt: {
+                onHurt: null
+            },
+            parried: {
+                onParried: null
+            },
+        }
+    }
+
+    attack2: Move = {
+        cast: 2,
+        backswing: 13,
+        onEnter(pl, ctx) {
+            ctx.freeze(pl)
+            playAnim(pl, 'animation.weapon.uchigatana.attack2')
+            ctx.adsorbOrSetVelocity(pl, 1.5, 90, 1)
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl)
+        },
+        onAct(pl, ctx) {
+            playSoundAll('weapon.woosh.2', pl.pos)
+            ctx.selectFromRange(pl, {
+                radius: 2.6,
+                angle: 40,
+                rotation: 20,
+            }).forEach(en => {
+                ctx.attack(pl, en, {
+                    damage: 18,
+                    direction: 'vertical',
+                })
+            })
+        },
+        transitions: {
             resume: {
                 onEndOfLife: null
             },
             hurt: {
-                onHurt: {
-                    allowedState: 'both'
-                }
+                onHurt: null
+            },
+            blocked: {
+                onBlocked: null
             },
             parried: {
-                onParried: {
-                    allowedState: 'both'
-                }
+                onParried: null
+            }
+        }
+    }
+
+    attack2Heavy: Move = {
+        cast: 2,
+        backswing: 13,
+        onEnter(pl, ctx) {
+            ctx.freeze(pl)
+            playAnim(pl, 'animation.weapon.uchigatana.attack2.heavy')
+            ctx.adsorbOrSetVelocity(pl, 1.5, 90, 1)
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl)
+        },
+        onAct(pl, ctx) {
+            playSoundAll('weapon.woosh.2', pl.pos)
+            ctx.selectFromRange(pl, {
+                radius: 2.6,
+                angle: 40,
+                rotation: 20,
+            }).forEach(en => {
+                ctx.attack(pl, en, {
+                    damage: 25,
+                    permeable: true,
+                    direction: 'vertical',
+                })
+            })
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null
             },
+            hurt: {
+                onHurt: null
+            },
+            parried: {
+                onParried: null
+            }
         }
     }
 }

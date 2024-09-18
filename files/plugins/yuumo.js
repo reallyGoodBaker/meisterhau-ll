@@ -3,7 +3,7 @@ const { load } = require('./loadModule.js')
 const modules = [
     require('./Components/whoami.js'),
     require('./Components/speed.js'),
-    require('./Components/simulate-player.js'),
+    require('./Components/simulate-player'),
     require('./Components/over-shoulder.js'),
     require('./Components/notification.js'),
     require('./Components/motd.js'),
