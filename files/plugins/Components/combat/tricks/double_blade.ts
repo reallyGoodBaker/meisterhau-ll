@@ -1,5 +1,8 @@
-import { playAnim, playSoundAll } from "../basic/index"
+import { playAnim } from "../basic/index"
 import { DefaultMoves, DefaultTrickModule } from "../basic/default"
+import testMoveJson from './test.move.json'
+
+console.log(testMoveJson)
 
 class DoubleBladeMoves extends DefaultMoves {
     constructor() {

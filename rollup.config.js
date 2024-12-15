@@ -2,6 +2,7 @@ import commonjs from '@rollup/plugin-commonjs'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import ts from '@rollup/plugin-typescript'
 import { typescriptPaths as paths } from 'rollup-plugin-typescript-paths'
+import json from '@rollup/plugin-json'
 
 export default [
     {
@@ -15,6 +16,7 @@ export default [
             nodeResolve(),
             ts(),
             paths(),
+            json(),
         ]
     },
     {
@@ -28,6 +30,7 @@ export default [
             nodeResolve(),
             ts(),
             paths(),
+            json(),
         ]
     },
 ]

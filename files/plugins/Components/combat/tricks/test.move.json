@@ -1,0 +1,7 @@
+{
+    "animations": {
+        "parry": {
+            "left": "animation.double_blade.parry.left"
+        }
+    }
+}

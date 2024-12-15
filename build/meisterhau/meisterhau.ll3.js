@@ -5802,6 +5802,16 @@ var uchigatana = /*#__PURE__*/Object.freeze({
 
 var require$$7$1 = /*@__PURE__*/getAugmentedNamespace(uchigatana);
 
+var animations = {
+	parry: {
+		left: "animation.double_blade.parry.left"
+	}
+};
+var testMoveJson = {
+	animations: animations
+};
+
+console.log(testMoveJson);
 class DoubleBladeMoves extends DefaultMoves$4 {
     constructor() {
         super();
