@@ -4,7 +4,7 @@ import { Status } from '../core/status'
 import { alerpn, lerpn } from '@utils/math'
 import { CameraComponent } from './camera'
 import { Tick } from './tick'
-import { interruptExcept, interruptIf } from '@utils/defined'
+import { interruptIf } from '@utils/defined'
 
 interface TransInfo {
     curve?: 'linear'
@@ -109,15 +109,15 @@ export class CameraFading extends BaseComponent {
 
         switch (direction) {
             case 'right':
-                to = [ 2, 0, 0.6, -15, 0 ]
+                to = [ ...CameraComponent.defaultOffset, -15, 0 ]
                 break
 
             case 'left':
-                to = [ 2, 0, 0.6, 15, 0 ]
+                to = [ ...CameraComponent.defaultOffset, 15, 0 ]
                 break
             
             case 'vertical':
-                to = [ 2, 0, 0.6, 0, -15 ]
+                to = [ ...CameraComponent.defaultOffset, 0, -15 ]
                 break
         
             default:

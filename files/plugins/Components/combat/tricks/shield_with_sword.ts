@@ -1,6 +1,6 @@
-const { playAnim, playSoundAll } = require("../basic/index")
-const { DefaultMoves, DefaultTrickModule } = require('../basic/default')
-const { randomRange } = require('../../utils/math')
+import { playAnim, playSoundAll } from "../basic/index"
+import { DefaultMoves, DefaultTrickModule } from '../basic/default'
+import { randomRange } from '@utils/math'
 
 class ShieldSwordTricks extends DefaultTrickModule {
     constructor() {
@@ -17,26 +17,7 @@ class ShieldSwordMoves extends DefaultMoves {
     constructor() {
         super()
 
-        this.animations.parry.left = 'animation.weapon.shield_with_sword.parry'
-
-        this.setup('idle')
-
-        this.setTransition('parry', 'draw', {
-            draw: {
-                onTrap: {
-                    tag: 'parryCounter',
-                    preInput: 'onUseItem',
-                }
-            }
-        })
-
-        this.setTransition('parry', 'shieldStrike', {
-            onTrap: {
-                tag: 'parryCounter',
-                preInput: 'onAttack',
-            }
-        })
-
+        this.setup<ShieldSwordMoves>('resume')
         this.block =  {
             cast: 7,
             onEnter(pl, ctx) {
@@ -73,34 +54,111 @@ class ShieldSwordMoves extends DefaultMoves {
                 swordCounter: {
                     onTrap: {
                         preInput: 'onAttack',
-                        allowedState: 'both',
                         hasTarget: true,
                     }
-                },
-                knockdown: {
-                    onKnockdown: null
                 },
             },
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    draw = {
-        cast: 10,
-        backswing: 11,
+    idle: Move = {
+        cast: Infinity,
+        onEnter(pl, ctx) {
+            ctx.unfreeze(pl)
+            playAnim(pl, 'animation.weapon.shield_with_sword.idle', 'animation.weapon.shield_with_sword.idle')
+        },
+        transitions: {
+            hurt: {
+                onHurt: null,
+            },
+            running: {
+                onChangeSprinting: {
+                    sprinting: true
+                }
+            },
+            hold: {
+                onLock: null
+            }
+        }
+    }
+
+    hold: Move = {
+        cast: Infinity,
+        onEnter(pl, ctx) {
+            playAnim(pl, 'animation.weapon.shield_with_sword.hold', 'animation.weapon.shield_with_sword.hold')
+        },
+        transitions: {
+            idle: {
+                onReleaseLock: null
+            },
+            beforeBlocking: {
+                onSneak: {
+                    isSneaking: true,
+                },
+            },
+            draw: {
+                onUseItem: {
+                    hasTarget: true,
+                }
+            },
+            punch: {
+                onAttack: {
+                    hasTarget: true
+                }
+            },
+            hurt: {
+                onHurt: null,
+            },
+        }
+    }
+
+    resume: Move = {
+        transitions: {
+            idle: {
+                onEndOfLife: {
+                    hasTarget: false
+                }
+            },
+            hold: {
+                onEndOfLife: {
+                    hasTarget: true
+                }
+            },
+            hurt: {
+                onHurt: null,
+            },
+            beforeBlocking: {
+                onEndOfLife: {
+                    isSneaking: true,
+                },
+            },
+            draw: {
+                onEndOfLife: {
+                    preInput: 'onUseItem',
+                    hasTarget: true
+                }
+            },
+            punch: {
+                onEndOfLife: {
+                    preInput: 'onAttack',
+                    hasTarget: true
+                }
+            },
+        }
+    }
+
+    draw: Move = {
+        cast: 6,
+        backswing: 14,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             playAnim(pl, 'animation.weapon.shield_with_sword.draw')
-            ctx.task.queueList([
-                { handler() { ctx.status.isWaitingParry = true }, timeout: 0 },
-                { handler() { ctx.status.isWaitingParry = false }, timeout: 150 },
-            ]).run()
+            ctx.adsorbOrSetVelocity(pl, 1, 90)
+            ctx.status.isBlocking = true
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
-            ctx.task.cancel()
+            ctx.status.isBlocking = false
         },
         onAct(pl, ctx) {
             playSoundAll(`weapon.woosh.${randomRange(1, 3, true)}`, pl.pos, 1)
@@ -110,97 +168,51 @@ class ShieldSwordMoves extends DefaultMoves {
                 rotation: -30
             }).forEach(en => {
                 ctx.attack(pl, en, {
-                    damage: 14,
-                    knockback: 0.5,
+                    damage: 16,
                     direction: 'left'
                 })
             })
         },
         timeline: {
-            0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.5, 90),
-            3: (pl, ctx) => ctx.lookAtTarget(pl),
-            4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
-            16: (pl, ctx) => ctx.trap(pl)
+            3: (_, ctx) => ctx.status.isBlocking = false,
+            6: (pl, ctx) => ctx.lookAtTarget(pl),
+            14: (pl, ctx) => ctx.trap(pl, { tag: 'heavy' }),
+            16: (pl, ctx) => ctx.trap(pl, { tag: 'punch' })
         },
         transitions: {
             hurt: {
                 onHurt: null
             },
-            idle: {
+            resume: {
                 onEndOfLife: null
             },
             parried: {
-                onParried: {
-                    allowedState: 'backswing'
+                onParried: null
+            },
+            heavyChopAct: {
+                onTrap: {
+                    tag: 'heavy',
+                    preInput: 'onUseItem',
                 }
             },
             punch: {
                 onTrap: {
+                    tag: 'punch',
                     preInput: 'onAttack',
-                    allowedState: 'backswing',
                 }
-            },
-            heavyChopPre: {
-                onTrap: {
-                    preInput: 'onUseItem',
-                    allowedState: 'backswing',
-                }
-            },
-            knockdown: {
-                onKnockdown: null
-            },
-            parry: {
-                onParry: null
             },
             blocked: {
-                onBlocked: {
-                    allowedState: 'backswing',
-                }
+                onBlocked: null
             },
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    heavyChopPre = {
-        cast: 5,
+    heavyChopAct: Move = {
+        cast: 7,
+        backswing: 16,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
-            playAnim(pl, 'animation.weapon.shield_with_sword.heavy_chop_pre')
-            ctx.adsorbToTarget(pl, 5, 1)
-        },
-        timeline: {
-            4: (pl, ctx) => ctx.trap(pl)
-        },
-        transitions: {
-            idle: {
-                onTrap: {
-                    preInput: 'onFeint',
-                    allowedState: 'both',
-                }
-            },
-            heavyChopAct: {
-                onEndOfLife: null
-            },
-            hurt: {
-                onHurt: null
-            },
-            knockdown: {
-                onKnockdown: null
-            },
-        }
-    }
-
-    /**
-     * @type {Move}
-     */
-    heavyChopAct = {
-        cast: 5,
-        backswing: 8,
-        onEnter(pl, ctx) {
-            ctx.freeze(pl)
-            ctx.adsorbOrSetVelocity(pl, 1, 90)
+            ctx.adsorbOrSetVelocity(pl, 2, 90)
             playAnim(pl, 'animation.weapon.shield_with_sword.heavy_chop_act')
         },
         onLeave(pl, ctx) {
@@ -222,42 +234,40 @@ class ShieldSwordMoves extends DefaultMoves {
             })
         },
         timeline: {
-            3: (pl, ctx) => ctx.lookAtTarget(pl)
+            3: (pl, ctx) => ctx.lookAtTarget(pl),
+            6: (pl, ctx) => ctx.trap(pl),
+            8: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2.5, 90)
         },
         transitions: {
-            idle: {
-                onEndOfLife: null
+            resume: {
+                onEndOfLife: null,
+                onTrap: {
+                    preInput: 'onFeint',
+                }
             },
             hurt: {
                 onHurt: null
             },
             parried: {
-                onParried: {
-                    allowedState: 'backswing'
-                }
-            },
-            knockdown: {
-                onKnockdown: null
+                onParried: null
             },
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    shieldStrike = {
-        cast: 10,
-        backswing: 15,
+    punch: Move = {
+        cast: 6,
+        backswing: 14,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
-            playAnim(pl, 'animation.weapon.shield_with_sword.shield_strike')
+            playAnim(pl, 'animation.weapon.shield_with_sword.punch')
+            ctx.adsorbOrSetVelocity(pl, 2, 90, 1)
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
             ctx.selectFromRange(pl, {
-                radius: 2.2,
+                radius: 2.6,
                 angle: 120,
                 rotation: -60
             }).forEach(en => {
@@ -265,119 +275,54 @@ class ShieldSwordMoves extends DefaultMoves {
                     damage: 4,
                     permeable: true,
                     parryable: false,
-                    knockback: 0,
-                    direction: 'middle'
+                    knockback: 0.1,
+                    direction: 'middle',
                 })
             })
-        },
-        timeline: {
-            2: (pl, ctx) => ctx.lookAtTarget(pl),
-            0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.8, 90, 1),
-            6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2.6, 90, 1),
         },
         transitions: {
             hurt: {
                 onHurt: null
             },
             punchSomeone: {
-                onHit: {
-                    allowedState: 'both'
-                }
+                onHit: null
             },
-            idle: {
+            resume: {
                 onEndOfLife: null
-            },
-            knockdown: {
-                onKnockdown: null
             },
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    punch = {
-        cast: 10,
-        backswing: 15,
-        onEnter(pl, ctx) {
-            ctx.freeze(pl)
-            playAnim(pl, 'animation.weapon.shield_with_sword.punch')
-            
-        },
-        onLeave(pl, ctx) {
-            ctx.unfreeze(pl)
+    punchSomeone: Move = {
+        cast: 2,
+        backswing: 8,
+        onEnter(pl) {
+            playSoundAll(`weapon.sheild.hit${randomRange(1, 3, true)}`, pl.pos, 0.5)
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
-                radius: 2.2,
-                angle: 120,
-                rotation: -60
-            }).forEach(en => {
-                ctx.attack(pl, en, {
-                    damage: 4,
-                    permeable: true,
-                    parryable: false,
-                    knockback: 0.05,
-                    direction: 'middle',
-                })
-            })
-        },
-        timeline: {
-            0: (pl, ctx) => ctx.lookAtTarget(pl),
-            2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 3, 90, 1),
-            12: (pl, ctx) => ctx.trap(pl),
-        },
-        transitions: {
-            hurt: {
-                onHurt: null,
-            },
-            idle: {
-                onEndOfLife: null
-            },
-            punchSomeone: {
-                onHit: {
-                    allowedState: 'backswing'
-                }
-            },
-            knockdown: {
-                onKnockdown: null
-            },
-        }
-    }
-
-    /**
-     * @type {Move}
-     */
-    punchSomeone = {
-        cast: 15,
-        onEnter(pl, ctx) {
-            playSoundAll(`weapon.sheild.hit${randomRange(1, 3, true)}`, pl.pos, 0.5)
             ctx.trap(pl)
         },
         transitions: {
             chopCombo: {
                 onTrap: {
                     preInput: 'onUseItem',
-                    allowedState: 'both'
                 }
             },
-            idle: {
+            resume: {
                 onEndOfLife: null
             },
-            knockdown: {
-                onKnockdown: null
+            hurt: {
+                onHurt: null,
             },
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    chopCombo = {
-        cast: 5,
-        backswing: 7,
+    chopCombo: Move = {
+        cast: 6,
+        backswing: 14,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
+            ctx.adsorbOrSetVelocity(pl, 2, 90)
             playAnim(pl, 'animation.weapon.shield_with_sword.chop_combo')
         },
         onLeave(pl, ctx) {
@@ -391,21 +336,21 @@ class ShieldSwordMoves extends DefaultMoves {
                 rotation: -23
             }).forEach(en => {
                 ctx.attack(pl, en, {
-                    damage: 14,
+                    damage: 12,
                     knockback: 0.5,
-                    direction: 'vertical'
+                    direction: 'left'
                 })
             })
         },
         timeline: {
-            2: (pl, ctx) => ctx.adsorbToTarget(pl),
+            2: (pl, ctx) => ctx.adsorbToTarget(pl, 2),
             0: (pl, ctx) => ctx.lookAtTarget(pl),
         },
         transitions: {
             hurt: {
                 onHurt: null
             },
-            idle: {
+            resume: {
                 onEndOfLife: null
             },
             parried: {
@@ -414,71 +359,7 @@ class ShieldSwordMoves extends DefaultMoves {
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    idle = {
-        cast: Infinity,
-        onEnter(pl, ctx) {
-            ctx.trap(pl)
-            ctx.unfreeze(pl)
-            playAnim(pl, 'animation.weapon.shield_with_sword.idle', 'animation.weapon.shield_with_sword.idle')
-            pl.setSprinting(false)
-        },
-        transitions: {
-            hurt: {
-                onHurt: null,
-            },
-            running: {
-                onChangeSprinting: { sprinting: true }
-            },
-            beforeBlocking: {
-                onSneak: {
-                    isSneaking: true,
-                },
-                onTrap: {
-                    preInput: 'onSneak',
-                    isSneaking: true,
-                }
-            },
-            draw: {
-                onUseItem: {
-                    hasTarget: true,
-                }
-            },
-            shieldStrike: {
-                onAttack: null
-            },
-            jump: {
-                onJump: null
-            },
-            knockdown: {
-                onKnockdown: null
-            },
-        }
-    }
-
-    /**
-     * @type {Move}
-     */
-    jump = {
-        onEnter(pl, ctx) {
-            ctx.releaseTarget(pl.uniqueId)
-        },
-        transitions: {
-            idle: {
-                onEndOfLife: null
-            },
-            knockdown: {
-                onKnockdown: null
-            },
-        }
-    }
-
-    /**
-     * @type {Move}
-     */
-    running = {
+    running: Move = {
         cast: Infinity,
         onEnter(pl, ctx) {
             playAnim(pl, 'animation.weapon.shield_with_sword.running', 'animation.weapon.shield_with_sword.running')
@@ -488,19 +369,13 @@ class ShieldSwordMoves extends DefaultMoves {
             hurt: {
                 onHurt: null,
             },
-            idle: {
+            resume: {
                 onChangeSprinting: { sprinting: false }
-            },
-            knockdown: {
-                onKnockdown: null
             },
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    beforeBlocking = {
+    beforeBlocking: Move = {
         cast: 2,
         onEnter(pl) {
             playAnim(pl, 'animation.weapon.shield_with_sword.idle_to_blocking')
@@ -519,22 +394,16 @@ class ShieldSwordMoves extends DefaultMoves {
                     isSneaking: false
                 }
             },
-            knockdown: {
-                onKnockdown: null
-            },
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    blocking = {
+    blocking: Move = {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.status.isBlocking = true
             playAnim(pl, 'animation.weapon.shield_with_sword.blocking', 'animation.weapon.shield_with_sword.blocking')
         },
-        onLeave(ctx) {
+        onLeave(_, ctx) {
             ctx.status.isBlocking = false
         },
         transitions: {
@@ -557,58 +426,35 @@ class ShieldSwordMoves extends DefaultMoves {
                     hasTarget: true
                 }
             },
-            jump: {
-                onJump: null
-            },
-            knockdown: {
-                onKnockdown: null
-            },
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    rockSolid = {
-        cast: 4,
-        backswing: 7,
+    rockSolid: Move = {
+        cast: 3,
+        backswing: 8,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.status.repulsible = false
             playAnim(pl, 'animation.weapon.shield_with_sword.rock_solid')
         },
-        onAct(ctx) {
+        onAct(_, ctx) {
             ctx.status.repulsible = true
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
         },
         transitions: {
-            idle: {
+            resume: {
                 onEndOfLife: {
                     isSneaking: false
                 }
             },
             sweapCounter: {
                 onHurt: {
-                    allowedState: 'cast',
                     prevent: true,
                 },
-                onKnockdown: {
-                    allowedState: 'cast'
-                },
             },
-            hurt: {
-                onHurt: {
-                    allowedState: 'backswing'
-                }
-            },
-            knockdown: {
-                onKnockdown: {
-                    allowedState: 'backswing'
-                }
-            },
-            beforeBlocking: {
+            blocking: {
                 onEndOfLife: {
                     isSneaking: true
                 }
@@ -616,10 +462,7 @@ class ShieldSwordMoves extends DefaultMoves {
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    sweapCounter = {
+    sweapCounter: Move = {
         cast: 11,
         backswing: 10,
         onEnter(pl, ctx) {
@@ -667,19 +510,13 @@ class ShieldSwordMoves extends DefaultMoves {
             hurt: {
                 onHurt: null
             },
-            idle: {
+            resume: {
                 onEndOfLife: null
-            },
-            knockdown: {
-                onKnockdown: null
             },
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    afterBlocking = {
+    afterBlocking: Move = {
         cast: 3,
         onEnter(pl) {
             playAnim(pl, 'animation.weapon.shield_with_sword.blocking_to_idle')
@@ -688,19 +525,13 @@ class ShieldSwordMoves extends DefaultMoves {
             hurt: {
                 onHurt: null,
             },
-            idle: {
+            resume: {
                 onEndOfLife: null
-            },
-            knockdown: {
-                onKnockdown: null
             },
         }
     }
 
-    /**
-     * @type {Move}
-     */
-    swordCounter = {
+    swordCounter: Move = {
         cast: 6,
         backswing: 7,
         onEnter(pl, ctx) {
@@ -736,7 +567,7 @@ class ShieldSwordMoves extends DefaultMoves {
             hurt: {
                 onHurt: null,
             },
-            idle: {
+            resume: {
                 onEndOfLife: {
                     isSneaking: false
                 },
@@ -750,4 +581,4 @@ class ShieldSwordMoves extends DefaultMoves {
     }
 }
 
-exports.tricks = new ShieldSwordTricks()
+export const tricks = new ShieldSwordTricks()

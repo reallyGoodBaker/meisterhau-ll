@@ -873,7 +873,7 @@ function requireSetup () {
 
 var double_dagger = {};
 
-function playAnim$8(pl, anim, nextAnim, time, stopExp, controller) {
+function playAnim$7(pl, anim, nextAnim, time, stopExp, controller) {
     mc.runcmdEx(`/playanimation "${pl.name}" ` + [anim, nextAnim, time, stopExp, controller].filter(x => x).join(' '));
 }
 function playSound(pl, sound, pos, volume, pitch, minVolume) {
@@ -881,7 +881,7 @@ function playSound(pl, sound, pos, volume, pitch, minVolume) {
         pos.x, pos.y, pos.z, volume, pitch, minVolume
     ].join(' '));
 }
-function playSoundAll$6(sound, pos, volume, pitch, minVolume) {
+function playSoundAll$5(sound, pos, volume, pitch, minVolume) {
     mc.runcmdEx(`/playsound ${sound} @a ` + [
         pos.x, pos.y, pos.z, volume, pitch, minVolume
     ].join(' '));
@@ -901,10 +901,10 @@ var basic = /*#__PURE__*/Object.freeze({
 	DEFAULT_POSTURE_SPEED: DEFAULT_POSTURE_SPEED$3,
 	DEFAULT_SPEED: DEFAULT_SPEED$2,
 	movable: movable,
-	playAnim: playAnim$8,
+	playAnim: playAnim$7,
 	playParticle: playParticle$1,
 	playSound: playSound,
-	playSoundAll: playSoundAll$6
+	playSoundAll: playSoundAll$5
 });
 
 var require$$3$1 = /*@__PURE__*/getAugmentedNamespace(basic);
@@ -1153,7 +1153,7 @@ let CameraComponent$1 = class CameraComponent extends BaseComponent {
     /**
      * [ x, y, z ]
      */
-    static defaultOffset = [2, 0, 0.7];
+    static defaultOffset = [2.5, 0, 0.8];
     /**
      * [ yaw, pitch ]
      */
@@ -1185,7 +1185,7 @@ function minmax(min, max, val) {
     }
     return Math.max(min, Math.min(max, val));
 }
-function randomRange$2(min = 0, max = 1, integer = false) {
+function randomRange$1(min = 0, max = 1, integer = false) {
     const num = Math.random() * (max - min) + min;
     return integer ? Math.round(num) : num;
 }
@@ -1221,7 +1221,7 @@ var math = /*#__PURE__*/Object.freeze({
 	constrictCalc: constrictCalc$1,
 	lerpn: lerpn,
 	minmax: minmax,
-	randomRange: randomRange$2
+	randomRange: randomRange$1
 });
 
 let Timer = class Timer extends BaseComponent {
@@ -1541,13 +1541,13 @@ let CameraFading$1 = CameraFading_1 = class CameraFading extends BaseComponent {
         let to = null;
         switch (direction) {
             case 'right':
-                to = [2, 0, 0.6, -15, 0];
+                to = [...CameraComponent$1.defaultOffset, -15, 0];
                 break;
             case 'left':
-                to = [2, 0, 0.6, 15, 0];
+                to = [...CameraComponent$1.defaultOffset, 15, 0];
                 break;
             case 'vertical':
-                to = [2, 0, 0.6, 0, -15];
+                to = [...CameraComponent$1.defaultOffset, 0, -15];
                 break;
             default:
                 to = [1.5, 0, 0.5, 0, 0];
@@ -1596,7 +1596,7 @@ function getAnim(animCategory, direction) {
     }
     return anim;
 }
-let DefaultMoves$5 = class DefaultMoves {
+let DefaultMoves$4 = class DefaultMoves {
     animations = {
         parried: {
             /**
@@ -1670,8 +1670,8 @@ let DefaultMoves$5 = class DefaultMoves {
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2];
             ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 10;
-            playAnim$8(pl, getAnim(this.animations.blocked, direction));
-            playSoundAll$6(this.sounds.blocked, pl.pos, 1);
+            playAnim$7(pl, getAnim(this.animations.blocked, direction));
+            playSoundAll$5(this.sounds.blocked, pl.pos, 1);
             ctx.movementInput(pl, false);
             ctx.freeze(pl);
             ctx.setVelocity(pl, -100, 0.8, -2);
@@ -1693,8 +1693,8 @@ let DefaultMoves$5 = class DefaultMoves {
             stamina.setCooldown(5);
             stamina.stamina += 15;
             ctx.status.isBlocking = true;
-            playAnim$8(pl, getAnim(this.animations.block, direction));
-            playSoundAll$6(this.sounds.block, pl.pos, 1);
+            playAnim$7(pl, getAnim(this.animations.block, direction));
+            playSoundAll$5(this.sounds.block, pl.pos, 1);
             ctx.movementInput(pl, false);
             ctx.freeze(pl);
         },
@@ -1725,12 +1725,13 @@ let DefaultMoves$5 = class DefaultMoves {
                 ctx.trap(pl, { tag: 'execution', execution });
                 return;
             }
-            playAnim$8(pl, hurtAnim);
+            playAnim$7(pl, hurtAnim);
             ctx.task.queue(() => {
                 ctx.trap(pl, { tag: 'recover' });
             }, stiffness).run();
         },
         onLeave(pl, ctx) {
+            ctx.task.cancel();
             ctx.status.shocked = false;
             ctx.status.enableInputs([
                 'onAttack',
@@ -1763,7 +1764,7 @@ let DefaultMoves$5 = class DefaultMoves {
                 'onAttack',
                 'onUseItem',
             ]);
-            playAnim$8(pl, 'animation.general.hit_wall');
+            playAnim$7(pl, 'animation.general.hit_wall');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -1784,7 +1785,7 @@ let DefaultMoves$5 = class DefaultMoves {
                 'onUseItem',
             ]);
             const { direction } = ctx.rawArgs[2];
-            playAnim$8(pl, getAnim(this.animations.parried, direction));
+            playAnim$7(pl, getAnim(this.animations.parried, direction));
             ctx.trap(pl, { tag: getApproximatelyDir(direction) });
         },
         transitions: {
@@ -1840,9 +1841,9 @@ let DefaultMoves$5 = class DefaultMoves {
             const { direction } = ctx.rawArgs[2];
             ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina += 10;
             ctx.movementInput(pl, false);
-            playSoundAll$6(this.sounds.parry, pl.pos, 1);
+            playSoundAll$5(this.sounds.parry, pl.pos, 1);
             ctx.status.isWaitingParry = true;
-            playAnim$8(pl, getAnim(this.animations.parry, direction));
+            playAnim$7(pl, getAnim(this.animations.parry, direction));
             ctx.lookAtTarget(pl);
             ctx.status.componentManager.attachComponent(new CameraFading$1([
                 {
@@ -1874,11 +1875,11 @@ let DefaultMoves$5 = class DefaultMoves {
                 'onAttack',
                 'onUseItem'
             ]);
-            playAnim$8(pl, this.animations.knockdown);
+            playAnim$7(pl, this.animations.knockdown);
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
-            playAnim$8(pl, 'animation.general.stand');
+            playAnim$7(pl, 'animation.general.stand');
             ctx.status.enableInputs([
                 'onAttack',
                 'onUseItem'
@@ -1980,7 +1981,7 @@ let DefaultMoves$5 = class DefaultMoves {
 /**
  * @implements {TrickModule}
  */
-let DefaultTrickModule$5 = class DefaultTrickModule {
+let DefaultTrickModule$4 = class DefaultTrickModule {
     sid;
     entry;
     bind;
@@ -1995,16 +1996,16 @@ let DefaultTrickModule$5 = class DefaultTrickModule {
 
 var _default = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	DefaultMoves: DefaultMoves$5,
-	DefaultTrickModule: DefaultTrickModule$5
+	DefaultMoves: DefaultMoves$4,
+	DefaultTrickModule: DefaultTrickModule$4
 });
 
 var require$$1$1 = /*@__PURE__*/getAugmentedNamespace(_default);
 
-const { playAnim: playAnim$7, playSoundAll: playSoundAll$5 } = require$$3$1;
-const { DefaultMoves: DefaultMoves$4, DefaultTrickModule: DefaultTrickModule$4 } = require$$1$1;
+const { playAnim: playAnim$6, playSoundAll: playSoundAll$4 } = require$$3$1;
+const { DefaultMoves: DefaultMoves$3, DefaultTrickModule: DefaultTrickModule$3 } = require$$1$1;
 
-class DoubleDaggerMoves extends DefaultMoves$4 {
+class DoubleDaggerMoves extends DefaultMoves$3 {
     constructor() {
         super();
 
@@ -2046,7 +2047,7 @@ class DoubleDaggerMoves extends DefaultMoves$4 {
     init = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$7(pl, 'animation.posture.clear');
+            playAnim$6(pl, 'animation.posture.clear');
         },
         transitions: {
             hold: {
@@ -2064,7 +2065,7 @@ class DoubleDaggerMoves extends DefaultMoves$4 {
     hold = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim$7(pl, 'animation.double_dagger.hold', 'animation.double_dagger.hold');
+            playAnim$6(pl, 'animation.double_dagger.hold', 'animation.double_dagger.hold');
         },
         transitions: {
             init: {
@@ -2096,11 +2097,11 @@ class DoubleDaggerMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.status.isBlocking = true;
             ctx.freeze(pl);
-            playAnim$7(pl, 'animation.double_dagger.horizontal_swing');
+            playAnim$6(pl, 'animation.double_dagger.horizontal_swing');
             ctx.lookAtTarget(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll$5('weapon.woosh.1', pl.pos, 1);
+            playSoundAll$4('weapon.woosh.1', pl.pos, 1);
             ctx.selectFromRange(pl, {
                 angle: 90,
                 radius: 2,
@@ -2173,7 +2174,7 @@ class DoubleDaggerMoves extends DefaultMoves$4 {
         backswing: 11,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$7(pl, 'animation.double_dagger.horizontal_swing.to.vertical_chop');
+            playAnim$6(pl, 'animation.double_dagger.horizontal_swing.to.vertical_chop');
             ctx.lookAtTarget(pl);
         },
         onAct(pl, ctx) {
@@ -2195,7 +2196,7 @@ class DoubleDaggerMoves extends DefaultMoves$4 {
         timeline: {
             0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
             4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8),
-            9: pl => playSoundAll$5('weapon.woosh.3', pl.pos, 1),
+            9: pl => playSoundAll$4('weapon.woosh.3', pl.pos, 1),
             10: (pl, ctx) => ctx.trap(pl)
         },
         transitions: {
@@ -2236,7 +2237,7 @@ class DoubleDaggerMoves extends DefaultMoves$4 {
             ctx.status.isWaitingParry = true;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$7(pl, 'animation.double_dagger.stab');
+            playAnim$6(pl, 'animation.double_dagger.stab');
         },
         onAct(pl, ctx) {
             ctx.selectFromRange(pl, {
@@ -2260,7 +2261,7 @@ class DoubleDaggerMoves extends DefaultMoves$4 {
             3: (_, ctx) => ctx.status.isWaitingParry = false,
             6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8),
             8: (_, ctx) => ctx.status.isBlocking = true,
-            9: pl => playSoundAll$5('weapon.woosh.2', pl.pos, 1),
+            9: pl => playSoundAll$4('weapon.woosh.2', pl.pos, 1),
             12: (_, ctx) => ctx.status.isBlocking = false,
             14: (pl, ctx) => ctx.trap(pl)
         },
@@ -2304,7 +2305,7 @@ class DoubleDaggerMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.status.isWaitingDeflection = true;
             ctx.freeze(pl);
-            playAnim$7(pl, 'animation.double_dagger.dodge.front');
+            playAnim$6(pl, 'animation.double_dagger.dodge.front');
             ctx.lookAtTarget(pl);
         },
         onAct(_, ctx) {
@@ -2353,8 +2354,8 @@ class DoubleDaggerMoves extends DefaultMoves$4 {
             ctx.status.isDodging = true;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playSoundAll$5('weapon.deflection', pl.pos, 1);
-            playAnim$7(pl, 'animation.double_dagger.deflection');
+            playSoundAll$4('weapon.deflection', pl.pos, 1);
+            playAnim$6(pl, 'animation.double_dagger.deflection');
         },
         onAct(_, ctx) {
             ctx.status.isDodging = false;
@@ -2410,7 +2411,7 @@ class DoubleDaggerMoves extends DefaultMoves$4 {
         backswing: 9,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$7(pl, 'animation.double_dagger.deflection.stab');
+            playAnim$6(pl, 'animation.double_dagger.deflection.stab');
         },
         onAct(pl, ctx) {
             ctx.lookAtTarget(pl);
@@ -2431,7 +2432,7 @@ class DoubleDaggerMoves extends DefaultMoves$4 {
         },
         timeline: {
             5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 60, 0),
-            6: pl => playSoundAll$5('weapon.woosh.2', pl.pos, 1)
+            6: pl => playSoundAll$4('weapon.woosh.2', pl.pos, 1)
         },
         transitions: {
             hurt: {
@@ -2459,7 +2460,7 @@ class DoubleDaggerMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.adsorbOrSetVelocity(pl, 1.5, 90, 0.8);
-            playAnim$7(pl, 'animation.double_dagger.deflection.punch');
+            playAnim$6(pl, 'animation.double_dagger.deflection.punch');
         },
         onAct(pl, ctx) {
             ctx.lookAtTarget(pl);
@@ -2500,7 +2501,7 @@ class DoubleDaggerMoves extends DefaultMoves$4 {
         backswing: 15,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$7(pl, 'animation.double_dagger.dodge.catch');
+            playAnim$6(pl, 'animation.double_dagger.dodge.catch');
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.8);
         },
         onAct(pl, ctx) {
@@ -2586,7 +2587,7 @@ class DoubleDaggerMoves extends DefaultMoves$4 {
         backswing: 12,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$7(pl, 'animation.double_dagger.catch.stab');
+            playAnim$6(pl, 'animation.double_dagger.catch.stab');
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.8);
         },
         onAct(pl, ctx) {
@@ -2627,7 +2628,7 @@ class DoubleDaggerMoves extends DefaultMoves$4 {
         backswing: 11,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$7(pl, 'animation.double_dagger.catch.kick');
+            playAnim$6(pl, 'animation.double_dagger.catch.kick');
             ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8);
         },
         onAct(pl, ctx) {
@@ -2658,7 +2659,7 @@ class DoubleDaggerMoves extends DefaultMoves$4 {
     }
 }
 
-class DoubleDaggerTricks extends DefaultTrickModule$4 {
+class DoubleDaggerTricks extends DefaultTrickModule$3 {
     constructor() {
         super(
             'rgb:double_dagger',
@@ -2673,17 +2674,17 @@ double_dagger.tricks = new DoubleDaggerTricks();
 
 var emptyHand = {};
 
-const { playAnim: playAnim$6, playSoundAll: playSoundAll$4 } = require$$3$1;
-const { DefaultMoves: DefaultMoves$3, DefaultTrickModule: DefaultTrickModule$3 } = require$$1$1;
+const { playAnim: playAnim$5, playSoundAll: playSoundAll$3 } = require$$3$1;
+const { DefaultMoves: DefaultMoves$2, DefaultTrickModule: DefaultTrickModule$2 } = require$$1$1;
 
-class EmptyHandMoves extends DefaultMoves$3 {
+class EmptyHandMoves extends DefaultMoves$2 {
     /**
      * @type {Move}
      */
     blocking = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$6(pl, 'animation.general.empty_hand');
+            playAnim$5(pl, 'animation.general.empty_hand');
         },
         transitions: {
             cast: {
@@ -2699,7 +2700,7 @@ class EmptyHandMoves extends DefaultMoves$3 {
     }
 }
 
-class EmptyHandTricks extends DefaultTrickModule$3 {
+class EmptyHandTricks extends DefaultTrickModule$2 {
     constructor() {
         super(
             'rgb39.weapon.empty_hand',
@@ -2731,19 +2732,19 @@ var hud$2 = /*#__PURE__*/Object.freeze({
 
 var require$$3 = /*@__PURE__*/getAugmentedNamespace(hud$2);
 
-const { playAnim: playAnim$5, playSoundAll: playSoundAll$3 } = require$$3$1;
-const { DefaultMoves: DefaultMoves$2, DefaultTrickModule: DefaultTrickModule$2 } = require$$1$1;
-const { constrictCalc, randomRange: randomRange$1 } = require$$2$1;
+const { playAnim: playAnim$4, playSoundAll: playSoundAll$2 } = require$$3$1;
+const { DefaultMoves: DefaultMoves$1, DefaultTrickModule: DefaultTrickModule$1 } = require$$1$1;
+const { constrictCalc, randomRange } = require$$2$1;
 const { hud } = require$$3;
 
-class LightSaberMoves extends DefaultMoves$2 {
+class LightSaberMoves extends DefaultMoves$1 {
     /**
      * @type {Move}
      */
     hold = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim$5(pl, 'animation.weapon.light_saber.hold', 'animation.weapon.light_saber.hold');
+            playAnim$4(pl, 'animation.weapon.light_saber.hold', 'animation.weapon.light_saber.hold');
         },
         onTick(pl, ctx) {
             const { status } = ctx;
@@ -2791,7 +2792,7 @@ class LightSaberMoves extends DefaultMoves$2 {
     dodge = {
         cast: 15,
         onEnter(pl, ctx) {
-            playAnim$5(pl, 'animation.weapon.light_saber.dodge');
+            playAnim$4(pl, 'animation.weapon.light_saber.dodge');
             ctx.movement(pl, false);
             ctx.setVelocity(pl, -90, 2, 0);
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 10);
@@ -2846,7 +2847,7 @@ class LightSaberMoves extends DefaultMoves$2 {
         backswing: 10,
         onEnter(pl, ctx) {
             pl.setSprinting(false);
-            playAnim$5(pl, 'animation.weapon.light_saber.jump_attack');
+            playAnim$4(pl, 'animation.weapon.light_saber.jump_attack');
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 15);
             ctx.freeze(pl);
         },
@@ -2900,7 +2901,7 @@ class LightSaberMoves extends DefaultMoves$2 {
     beforeBlocking = {
         cast: 4,
         onEnter(pl, ctx) {
-            playAnim$5(pl, 'animation.weapon.light_saber.blocking', 'animation.weapon.light_saber.blocking');
+            playAnim$4(pl, 'animation.weapon.light_saber.blocking', 'animation.weapon.light_saber.blocking');
             ctx.status.isWaitingParry = true;
         },
         onLeave(pl, ctx) {
@@ -2982,7 +2983,7 @@ class LightSaberMoves extends DefaultMoves$2 {
             const damageOpt = ctx.rawArgs[2];
             const result = ctx.status.stamina - (damageOpt.damage || 0);
             ctx.status.stamina = result < 0 ? 0 : result;
-            playSoundAll$3(`weapon.sword.hit${randomRange$1(1, 4, true)}`, pl.pos, 1);
+            playSoundAll$2(`weapon.sword.hit${randomRange(1, 4, true)}`, pl.pos, 1);
         },
         transitions: {
             blocking: {
@@ -3007,7 +3008,7 @@ class LightSaberMoves extends DefaultMoves$2 {
     running = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$5(pl, 'animation.weapon.light_saber.run', 'animation.weapon.light_saber.run');
+            playAnim$4(pl, 'animation.weapon.light_saber.run', 'animation.weapon.light_saber.run');
         },
         onTick(pl, ctx) {
             pl.tell(hud(ctx.status.stamina/100, 20), 5);
@@ -3055,7 +3056,7 @@ class LightSaberMoves extends DefaultMoves$2 {
             ctx.movement(pl, false);
             ctx.setVelocity(pl, 90, 3, 0);
             pl.setSprinting(false);
-            playAnim$5(pl, 'animation.weapon.light_saber.dash');
+            playAnim$4(pl, 'animation.weapon.light_saber.dash');
         },
         onTick(pl, ctx) {
             pl.tell(hud(ctx.status.stamina/100, 20), 5);
@@ -3131,7 +3132,7 @@ class LightSaberMoves extends DefaultMoves$2 {
         cast: 10,
         backswing: 10,
         onEnter(pl, ctx) {
-            playAnim$5(pl, 'animation.weapon.light_saber.strike');
+            playAnim$4(pl, 'animation.weapon.light_saber.strike');
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 20);
             ctx.freeze(pl);
             ctx.adsorbOrSetVelocity(pl, 1, 90);
@@ -3184,7 +3185,7 @@ class LightSaberMoves extends DefaultMoves$2 {
         backswing: 11,
         onEnter(pl, ctx) {
             ctx.movement(pl, false);
-            playAnim$5(pl, 'animation.weapon.light_saber.attack1');
+            playAnim$4(pl, 'animation.weapon.light_saber.attack1');
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 10);
         },
         onTick(pl, ctx) {
@@ -3246,7 +3247,7 @@ class LightSaberMoves extends DefaultMoves$2 {
         backswing: 12,
         onEnter(pl, ctx) {
             ctx.movement(pl, false);
-            playAnim$5(pl, 'animation.weapon.light_saber.attack2');
+            playAnim$4(pl, 'animation.weapon.light_saber.attack2');
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 12);
         },
         onAct(pl, ctx) {
@@ -3309,7 +3310,7 @@ class LightSaberMoves extends DefaultMoves$2 {
     }
 }
 
-class LightSaberTrick extends DefaultTrickModule$2 {
+class LightSaberTrick extends DefaultTrickModule$1 {
     constructor() {
         super(
             'rgb39.weapon.light_saber',
@@ -3324,10 +3325,10 @@ lightSaber.tricks = new LightSaberTrick();
 
 var moon_glaive = {};
 
-const { playAnim: playAnim$4, playSoundAll: playSoundAll$2, DEFAULT_POSTURE_SPEED: DEFAULT_POSTURE_SPEED$2 } = require$$3$1;
-const { DefaultMoves: DefaultMoves$1, DefaultTrickModule: DefaultTrickModule$1 } = require$$1$1;
+const { playAnim: playAnim$3, playSoundAll: playSoundAll$1, DEFAULT_POSTURE_SPEED: DEFAULT_POSTURE_SPEED$2 } = require$$3$1;
+const { DefaultMoves, DefaultTrickModule } = require$$1$1;
 
-class MoonGlaiveTricks extends DefaultTrickModule$1 {
+class MoonGlaiveTricks extends DefaultTrickModule {
     constructor() {
         super(
             'rgb39.weapon.moon_glaive',
@@ -3338,7 +3339,7 @@ class MoonGlaiveTricks extends DefaultTrickModule$1 {
     }
 }
 
-class MoonGlaiveMoves extends DefaultMoves$1 {
+class MoonGlaiveMoves extends DefaultMoves {
 
     constructor() {
         super();
@@ -3370,7 +3371,7 @@ class MoonGlaiveMoves extends DefaultMoves$1 {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.releaseTarget(pl.uniqueId);
-            playAnim$4(pl, 'animation.weapon.moon_glaive.hold', 'animation.weapon.moon_glaive.hold');
+            playAnim$3(pl, 'animation.weapon.moon_glaive.hold', 'animation.weapon.moon_glaive.hold');
         },
         transitions: {
             hurt: {
@@ -3396,7 +3397,7 @@ class MoonGlaiveMoves extends DefaultMoves$1 {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.releaseTarget(pl.uniqueId);
-            playAnim$4(pl, 'animation.weapon.moon_glaive.running', 'animation.weapon.moon_glaive.running');
+            playAnim$3(pl, 'animation.weapon.moon_glaive.running', 'animation.weapon.moon_glaive.running');
         },
         transitions: {
             hurt: {
@@ -3424,7 +3425,7 @@ class MoonGlaiveMoves extends DefaultMoves$1 {
         onEnter(pl, ctx) {
             ctx.setSpeed(pl, 0);
             ctx.camera(pl, false);
-            playAnim$4(pl, 'animation.weapon.moon_glaive.retention.negative_spinning');
+            playAnim$3(pl, 'animation.weapon.moon_glaive.retention.negative_spinning');
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1);
         },
         onAct(pl, ctx) {
@@ -3480,7 +3481,7 @@ class MoonGlaiveMoves extends DefaultMoves$1 {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$4(pl, 'animation.weapon.moon_glaive.retention', 'animation.weapon.moon_glaive.retention');
+            playAnim$3(pl, 'animation.weapon.moon_glaive.retention', 'animation.weapon.moon_glaive.retention');
         },
         onTick(pl, ctx) {
             ctx.lookAtTarget(pl);
@@ -3518,7 +3519,7 @@ class MoonGlaiveMoves extends DefaultMoves$1 {
         cast: 5,
         onEnter(pl, ctx) {
             ctx.camera(pl, false);
-            playAnim$4(pl, 'animation.weapon.moon_glaive.to_retention');
+            playAnim$3(pl, 'animation.weapon.moon_glaive.to_retention');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -3555,7 +3556,7 @@ class MoonGlaiveMoves extends DefaultMoves$1 {
         cast: 5,
         onEnter(pl, ctx) {
             ctx.camera(pl, false);
-            playAnim$4(pl, 'animation.weapon.moon_glaive.from_retention');
+            playAnim$3(pl, 'animation.weapon.moon_glaive.from_retention');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -3577,7 +3578,7 @@ class MoonGlaiveMoves extends DefaultMoves$1 {
         cast: Infinity,
         onEnter(pl, ctx) {
             pl.setSprinting(false);
-            playAnim$4(pl, 'animation.weapon.moon_glaive.hold_locked', 'animation.weapon.moon_glaive.hold_locked');
+            playAnim$3(pl, 'animation.weapon.moon_glaive.hold_locked', 'animation.weapon.moon_glaive.hold_locked');
             ctx.trap(pl);
         },
         transitions: {
@@ -3640,7 +3641,7 @@ class MoonGlaiveMoves extends DefaultMoves$1 {
             ctx.status.isDodging = true;
             ctx.setSpeed(pl, 0);
             ctx.camera(pl);
-            playAnim$4(pl, 'animation.weapon.moon_glaive.dodge');
+            playAnim$3(pl, 'animation.weapon.moon_glaive.dodge');
             ctx.setVelocity(pl, -90, 2.5, 0);
         },
         onLeave(pl, ctx) {
@@ -3684,7 +3685,7 @@ class MoonGlaiveMoves extends DefaultMoves$1 {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$4(pl, 'animation.weapon.moon_glaive.push');
+            playAnim$3(pl, 'animation.weapon.moon_glaive.push');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -3750,7 +3751,7 @@ class MoonGlaiveMoves extends DefaultMoves$1 {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$4(pl, 'animation.weapon.moon_glaive.chop');
+            playAnim$3(pl, 'animation.weapon.moon_glaive.chop');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -3798,7 +3799,7 @@ class MoonGlaiveMoves extends DefaultMoves$1 {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
             ctx.status.repulsible = false;
-            playAnim$4(pl, 'animation.weapon.moon_glaive.vertical_chop');
+            playAnim$3(pl, 'animation.weapon.moon_glaive.vertical_chop');
         },
         onLeave(pl, ctx) {
             ctx.status.hegemony = true;
@@ -3855,7 +3856,7 @@ class MoonGlaiveMoves extends DefaultMoves$1 {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$4(pl, 'animation.weapon.moon_glaive.heavy_sweap');
+            playAnim$3(pl, 'animation.weapon.moon_glaive.heavy_sweap');
             ctx.status.isWaitingParry = true;
         },
         onLeave(pl, ctx) {
@@ -3936,7 +3937,7 @@ class MoonGlaiveMoves extends DefaultMoves$1 {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$4(pl, 'animation.weapon.moon_glaive.chop.combo');
+            playAnim$3(pl, 'animation.weapon.moon_glaive.chop.combo');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -3983,7 +3984,7 @@ class MoonGlaiveMoves extends DefaultMoves$1 {
             ctx.status.hegemony = true;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$4(pl, 'animation.weapon.moon_glaive.positive_spinning');
+            playAnim$3(pl, 'animation.weapon.moon_glaive.positive_spinning');
         },
         onLeave(pl, ctx) {
             ctx.status.hegemony = false;
@@ -4037,7 +4038,7 @@ class MoonGlaiveMoves extends DefaultMoves$1 {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$4(pl, 'animation.weapon.moon_glaive.parry.knock');
+            playAnim$3(pl, 'animation.weapon.moon_glaive.parry.knock');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -4078,7 +4079,7 @@ class MoonGlaiveMoves extends DefaultMoves$1 {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
             ctx.status.repulsible = false;
-            playAnim$4(pl, 'animation.weapon.moon_glaive.parry.chop');
+            playAnim$3(pl, 'animation.weapon.moon_glaive.parry.chop');
         },
         onLeave(pl, ctx) {
             ctx.status.repulsible = true;
@@ -4118,7 +4119,7 @@ class MoonGlaiveMoves extends DefaultMoves$1 {
 
 moon_glaive.tricks = new MoonGlaiveTricks();
 
-class OotachiMoves extends DefaultMoves$5 {
+class OotachiMoves extends DefaultMoves$4 {
     constructor() {
         super();
         this.setup('resumeKamae');
@@ -4147,12 +4148,12 @@ class OotachiMoves extends DefaultMoves$5 {
             ctx.releaseTarget(pl.uniqueId);
             if (ctx.previousStatus === 'running') {
                 ctx.task
-                    .queue(() => playAnim$8(pl, 'animation.weapon.ootachi.trans.running.idle'), 0)
-                    .queue(() => playAnim$8(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle'), 210)
+                    .queue(() => playAnim$7(pl, 'animation.weapon.ootachi.trans.running.idle'), 0)
+                    .queue(() => playAnim$7(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle'), 210)
                     .run();
             }
             else
-                playAnim$8(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle');
+                playAnim$7(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle');
         },
         onLeave(_, ctx) {
             ctx.task.cancel();
@@ -4180,7 +4181,7 @@ class OotachiMoves extends DefaultMoves$5 {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$8(pl, 'animation.weapon.ootachi.kamae.inno', 'animation.weapon.ootachi.kamae.inno');
+            playAnim$7(pl, 'animation.weapon.ootachi.kamae.inno', 'animation.weapon.ootachi.kamae.inno');
         },
         onTick(pl, ctx) {
             ctx.lookAtTarget(pl);
@@ -4253,8 +4254,8 @@ class OotachiMoves extends DefaultMoves$5 {
         onEnter(pl, ctx) {
             ctx.releaseTarget(pl.uniqueId);
             ctx.task
-                .queue(() => playAnim$8(pl, 'animation.weapon.ootachi.trans.idle.running'), 0)
-                .queue(() => playAnim$8(pl, 'animation.weapon.ootachi.running', 'animation.weapon.ootachi.running'), 210)
+                .queue(() => playAnim$7(pl, 'animation.weapon.ootachi.trans.idle.running'), 0)
+                .queue(() => playAnim$7(pl, 'animation.weapon.ootachi.running', 'animation.weapon.ootachi.running'), 210)
                 .run();
         },
         onLeave(_, ctx) {
@@ -4274,7 +4275,7 @@ class OotachiMoves extends DefaultMoves$5 {
         backswing: 13,
         timeline: {
             5: (_, ctx) => ctx.status.isBlocking = false,
-            7: pl => playSoundAll$6(`weapon.woosh.${randomRange$2(2, 4, true)}`, pl.pos, 1),
+            7: pl => playSoundAll$5(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1),
             14: (pl, ctx) => ctx.trap(pl, { tag: 'combo' })
         },
         onEnter(pl, ctx) {
@@ -4286,7 +4287,7 @@ class OotachiMoves extends DefaultMoves$5 {
                 { handler: () => ctx.adsorbOrSetVelocity(pl, 1, 90), timeout: 100 },
                 { handler: () => ctx.adsorbOrSetVelocity(pl, 0.8, 90), timeout: 300 },
             ]).run();
-            playAnim$8(pl, 'animation.weapon.ootachi.combo1.attack');
+            playAnim$7(pl, 'animation.weapon.ootachi.combo1.attack');
         },
         onAct(pl, ctx) {
             ctx.selectFromRange(pl, {
@@ -4356,11 +4357,11 @@ class OotachiMoves extends DefaultMoves$5 {
                     }, timeout: 50 },
                 { handler: () => ctx.adsorbOrSetVelocity(pl, 0.5, 90), timeout: 400 },
             ]).run();
-            playAnim$8(pl, 'animation.weapon.ootachi.combo1.chop');
+            playAnim$7(pl, 'animation.weapon.ootachi.combo1.chop');
             ctx.lookAtTarget(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll$6(`weapon.woosh.${randomRange$2(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$5(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromRange(pl, {
                 radius: 3,
                 angle: 120,
@@ -4435,11 +4436,11 @@ class OotachiMoves extends DefaultMoves$5 {
             ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 18;
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
-            playAnim$8(pl, `animation.weapon.ootachi.combo2.cut.${ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'}`);
+            playAnim$7(pl, `animation.weapon.ootachi.combo2.cut.${ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'}`);
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1.5);
         },
         onAct(pl, ctx) {
-            playSoundAll$6(`weapon.woosh.${randomRange$2(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$5(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromRange(pl, {
                 radius: 3.5,
                 angle: 50,
@@ -4502,14 +4503,14 @@ class OotachiMoves extends DefaultMoves$5 {
             ctx.freeze(pl);
             ctx.status.hegemony = true;
             ctx.status.repulsible = false;
-            playAnim$8(pl, `animation.weapon.ootachi.combo2.sweap.${ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'}`);
+            playAnim$7(pl, `animation.weapon.ootachi.combo2.sweap.${ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'}`);
             ctx.adsorbOrSetVelocity(pl, 0.2, 90);
             ctx.task
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 1.2, 90), 200)
                 .run();
         },
         onAct(pl, ctx) {
-            playSoundAll$6(`weapon.woosh.${randomRange$2(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$5(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromRange(pl, {
                 radius: 3,
                 angle: 80,
@@ -4572,7 +4573,7 @@ class OotachiMoves extends DefaultMoves$5 {
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 17;
             ctx.freeze(pl);
-            playAnim$8(pl, `animation.weapon.ootachi.combo3.stab.${ctx.previousStatus === 'combo2Cut' ? 'l' : 'r'}`);
+            playAnim$7(pl, `animation.weapon.ootachi.combo3.stab.${ctx.previousStatus === 'combo2Cut' ? 'l' : 'r'}`);
             ctx.task
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 0.5, 90), 0)
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 200)
@@ -4580,7 +4581,7 @@ class OotachiMoves extends DefaultMoves$5 {
         },
         onAct(pl, ctx) {
             ctx.lookAtTarget(pl);
-            playSoundAll$6(`weapon.woosh.${randomRange$2(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$5(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromRange(pl, {
                 radius: 3.5,
                 angle: 30,
@@ -4620,14 +4621,14 @@ class OotachiMoves extends DefaultMoves$5 {
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
             ctx.adsorbOrSetVelocity(pl, 1, 90);
-            playAnim$8(pl, `animation.weapon.ootachi.combo3.sweap.${ctx.previousStatus === 'combo2Cut' ? 'l' : 'r'}`);
+            playAnim$7(pl, `animation.weapon.ootachi.combo3.sweap.${ctx.previousStatus === 'combo2Cut' ? 'l' : 'r'}`);
             ctx.task
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 200)
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 280)
                 .run();
         },
         onAct(pl, ctx) {
-            playSoundAll$6(`weapon.woosh.${randomRange$2(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$5(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromRange(pl, {
                 radius: 3.5,
                 angle: 90,
@@ -4682,10 +4683,10 @@ class OotachiMoves extends DefaultMoves$5 {
                     ctx.adsorbToTarget(pl, 2);
                 }
                 if (direct !== 3) {
-                    playAnim$8(pl, 'animation.weapon.ootachi.dodge.front');
+                    playAnim$7(pl, 'animation.weapon.ootachi.dodge.front');
                 }
                 else {
-                    playAnim$8(pl, 'animation.weapon.ootachi.dodge.back');
+                    playAnim$7(pl, 'animation.weapon.ootachi.dodge.back');
                 }
                 ctx.trap(pl, { tag: direct === 1 ? 'front' : 'side' });
             });
@@ -4771,7 +4772,7 @@ class OotachiMoves extends DefaultMoves$5 {
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^^1^0.5`);
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^-0.1^1^0.5`);
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^0.1^1^0.5`);
-            playSoundAll$6('weapon.heavy', pl.pos, 1);
+            playSoundAll$5('weapon.heavy', pl.pos, 1);
         },
         transitions: {
             hlitStrike: {
@@ -4790,7 +4791,7 @@ class OotachiMoves extends DefaultMoves$5 {
         backswing: 4,
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 12;
-            playAnim$8(pl, 'animation.weapon.ootachi.hlit');
+            playAnim$7(pl, 'animation.weapon.ootachi.hlit');
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.5);
         },
         onAct(pl, ctx) {
@@ -4804,7 +4805,7 @@ class OotachiMoves extends DefaultMoves$5 {
                     knockback: 3,
                     parryable: false,
                     permeable: true,
-                    stiffness: 900,
+                    stiffness: 700,
                     shock: true,
                     powerful: true,
                     direction: 'middle',
@@ -4838,23 +4839,23 @@ class OotachiMoves extends DefaultMoves$5 {
         }
     };
 }
-class OotachiTricks extends DefaultTrickModule$5 {
+class OotachiTricks extends DefaultTrickModule$4 {
     constructor() {
         super('rgb39.weapon.ootachi', 'idle', ['weapon:ootachi', 'weapon:ootachi_akaoni', 'weapon:ootachi_dragon'], new OotachiMoves());
     }
 }
-const tricks$3 = new OotachiTricks();
+const tricks$4 = new OotachiTricks();
 
 var ootachi = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$3
+	tricks: tricks$4
 });
 
 var require$$4 = /*@__PURE__*/getAugmentedNamespace(ootachi);
 
 var sheathed_katana = {};
 
-const { playAnim: playAnim$3, playSoundAll: playSoundAll$1 } = require$$3$1;
+const { playAnim: playAnim$2, playSoundAll } = require$$3$1;
 
 /**
  * @type {TrickModule}
@@ -4868,7 +4869,7 @@ sheathed_katana.tricks = {
             cast: Infinity,
             onEnter(pl, ctx) {
                 ctx.status.isBlocking = true;
-                playAnim$3(pl, 'animation.general.stand');
+                playAnim$2(pl, 'animation.general.stand');
             },
             transitions: {
                 blocking: {
@@ -4884,7 +4885,7 @@ sheathed_katana.tricks = {
             cast: 5,
             onEnter(pl) {
                 const side = Math.random() > 0.5 ? 'left' : 'right';
-                playAnim$3(pl, 'animation.twohanded.block.' + side, 'animation.twohanded.block.' + side);
+                playAnim$2(pl, 'animation.twohanded.block.' + side, 'animation.twohanded.block.' + side);
             },
             transitions: {
                 default: { onEndOfLife: null },
@@ -4903,11 +4904,11 @@ sheathed_katana.tricks = {
                     'onAttack',
                     'onUseItem'
                 ]);
-                playAnim$3(pl, 'animation.general.fell');
+                playAnim$2(pl, 'animation.general.fell');
             },
             onLeave(pl, ctx) {
                 ctx.unfreeze(pl);
-                playAnim$3(pl, 'animation.general.stand');
+                playAnim$2(pl, 'animation.general.stand');
                 ctx.status.enableInputs([
                     'onAttack',
                     'onUseItem'
@@ -4922,55 +4923,23 @@ sheathed_katana.tricks = {
     }
 };
 
-var shield_with_sword = {};
-
-const { playAnim: playAnim$2, playSoundAll } = require$$3$1;
-const { DefaultMoves, DefaultTrickModule } = require$$1$1;
-const { randomRange } = require$$2$1;
-
-class ShieldSwordTricks extends DefaultTrickModule {
+class ShieldSwordTricks extends DefaultTrickModule$4 {
     constructor() {
-        super(
-            'rgb39.weapon.shield_sword',
-            'idle',
-            [ 'weapon:shield_with_sword' ],
-            new ShieldSwordMoves()
-        );
+        super('rgb39.weapon.shield_sword', 'idle', ['weapon:shield_with_sword'], new ShieldSwordMoves());
     }
 }
-
-class ShieldSwordMoves extends DefaultMoves {
+class ShieldSwordMoves extends DefaultMoves$4 {
     constructor() {
         super();
-
-        this.animations.parry.left = 'animation.weapon.shield_with_sword.parry';
-
-        this.setup('idle');
-
-        this.setTransition('parry', 'draw', {
-            draw: {
-                onTrap: {
-                    tag: 'parryCounter',
-                    preInput: 'onUseItem',
-                }
-            }
-        });
-
-        this.setTransition('parry', 'shieldStrike', {
-            onTrap: {
-                tag: 'parryCounter',
-                preInput: 'onAttack',
-            }
-        });
-
-        this.block =  {
+        this.setup('resume');
+        this.block = {
             cast: 7,
             onEnter(pl, ctx) {
-                playSoundAll(`weapon.sheild.hit${randomRange(1, 3, true)}`, pl.pos, 1);
+                playSoundAll$5(`weapon.sheild.hit${randomRange$1(1, 3, true)}`, pl.pos, 1);
                 ctx.status.isBlocking = true;
                 ctx.freeze(pl);
                 ctx.lookAtTarget(pl);
-                playAnim$2(pl, 'animation.weapon.shield_with_sword.block');
+                playAnim$7(pl, 'animation.weapon.shield_with_sword.block');
             },
             onLeave(pl, ctx) {
                 ctx.status.isBlocking = false;
@@ -4999,141 +4968,167 @@ class ShieldSwordMoves extends DefaultMoves {
                 swordCounter: {
                     onTrap: {
                         preInput: 'onAttack',
-                        allowedState: 'both',
                         hasTarget: true,
                     }
-                },
-                knockdown: {
-                    onKnockdown: null
                 },
             },
         };
     }
-
-    /**
-     * @type {Move}
-     */
+    idle = {
+        cast: Infinity,
+        onEnter(pl, ctx) {
+            ctx.unfreeze(pl);
+            playAnim$7(pl, 'animation.weapon.shield_with_sword.idle', 'animation.weapon.shield_with_sword.idle');
+        },
+        transitions: {
+            hurt: {
+                onHurt: null,
+            },
+            running: {
+                onChangeSprinting: {
+                    sprinting: true
+                }
+            },
+            hold: {
+                onLock: null
+            }
+        }
+    };
+    hold = {
+        cast: Infinity,
+        onEnter(pl, ctx) {
+            playAnim$7(pl, 'animation.weapon.shield_with_sword.hold', 'animation.weapon.shield_with_sword.hold');
+        },
+        transitions: {
+            idle: {
+                onReleaseLock: null
+            },
+            beforeBlocking: {
+                onSneak: {
+                    isSneaking: true,
+                },
+            },
+            draw: {
+                onUseItem: {
+                    hasTarget: true,
+                }
+            },
+            punch: {
+                onAttack: {
+                    hasTarget: true
+                }
+            },
+            hurt: {
+                onHurt: null,
+            },
+        }
+    };
+    resume = {
+        transitions: {
+            idle: {
+                onEndOfLife: {
+                    hasTarget: false
+                }
+            },
+            hold: {
+                onEndOfLife: {
+                    hasTarget: true
+                }
+            },
+            hurt: {
+                onHurt: null,
+            },
+            beforeBlocking: {
+                onEndOfLife: {
+                    isSneaking: true,
+                },
+            },
+            draw: {
+                onEndOfLife: {
+                    preInput: 'onUseItem',
+                    hasTarget: true
+                }
+            },
+            punch: {
+                onEndOfLife: {
+                    preInput: 'onAttack',
+                    hasTarget: true
+                }
+            },
+        }
+    };
     draw = {
-        cast: 10,
-        backswing: 11,
+        cast: 6,
+        backswing: 14,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$2(pl, 'animation.weapon.shield_with_sword.draw');
-            ctx.task.queueList([
-                { handler() { ctx.status.isWaitingParry = true; }, timeout: 0 },
-                { handler() { ctx.status.isWaitingParry = false; }, timeout: 150 },
-            ]).run();
+            playAnim$7(pl, 'animation.weapon.shield_with_sword.draw');
+            ctx.adsorbOrSetVelocity(pl, 1, 90);
+            ctx.status.isBlocking = true;
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
-            ctx.task.cancel();
+            ctx.status.isBlocking = false;
         },
         onAct(pl, ctx) {
-            playSoundAll(`weapon.woosh.${randomRange(1, 3, true)}`, pl.pos, 1);
+            playSoundAll$5(`weapon.woosh.${randomRange$1(1, 3, true)}`, pl.pos, 1);
             ctx.selectFromRange(pl, {
                 radius: 2.8,
                 angle: 60,
                 rotation: -30
             }).forEach(en => {
                 ctx.attack(pl, en, {
-                    damage: 14,
-                    knockback: 0.5,
+                    damage: 16,
                     direction: 'left'
                 });
             });
         },
         timeline: {
-            0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.5, 90),
-            3: (pl, ctx) => ctx.lookAtTarget(pl),
-            4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
-            16: (pl, ctx) => ctx.trap(pl)
+            3: (_, ctx) => ctx.status.isBlocking = false,
+            6: (pl, ctx) => ctx.lookAtTarget(pl),
+            14: (pl, ctx) => ctx.trap(pl, { tag: 'heavy' }),
+            16: (pl, ctx) => ctx.trap(pl, { tag: 'punch' })
         },
         transitions: {
             hurt: {
                 onHurt: null
             },
-            idle: {
+            resume: {
                 onEndOfLife: null
             },
             parried: {
-                onParried: {
-                    allowedState: 'backswing'
+                onParried: null
+            },
+            heavyChopAct: {
+                onTrap: {
+                    tag: 'heavy',
+                    preInput: 'onUseItem',
                 }
             },
             punch: {
                 onTrap: {
+                    tag: 'punch',
                     preInput: 'onAttack',
-                    allowedState: 'backswing',
                 }
-            },
-            heavyChopPre: {
-                onTrap: {
-                    preInput: 'onUseItem',
-                    allowedState: 'backswing',
-                }
-            },
-            knockdown: {
-                onKnockdown: null
-            },
-            parry: {
-                onParry: null
             },
             blocked: {
-                onBlocked: {
-                    allowedState: 'backswing',
-                }
+                onBlocked: null
             },
         }
-    }
-
-    /**
-     * @type {Move}
-     */
-    heavyChopPre = {
-        cast: 5,
-        onEnter(pl, ctx) {
-            ctx.freeze(pl);
-            playAnim$2(pl, 'animation.weapon.shield_with_sword.heavy_chop_pre');
-            ctx.adsorbToTarget(pl, 5, 1);
-        },
-        timeline: {
-            4: (pl, ctx) => ctx.trap(pl)
-        },
-        transitions: {
-            idle: {
-                onTrap: {
-                    preInput: 'onFeint',
-                    allowedState: 'both',
-                }
-            },
-            heavyChopAct: {
-                onEndOfLife: null
-            },
-            hurt: {
-                onHurt: null
-            },
-            knockdown: {
-                onKnockdown: null
-            },
-        }
-    }
-
-    /**
-     * @type {Move}
-     */
+    };
     heavyChopAct = {
-        cast: 5,
-        backswing: 8,
+        cast: 7,
+        backswing: 16,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            ctx.adsorbOrSetVelocity(pl, 1, 90);
-            playAnim$2(pl, 'animation.weapon.shield_with_sword.heavy_chop_act');
+            ctx.adsorbOrSetVelocity(pl, 2, 90);
+            playAnim$7(pl, 'animation.weapon.shield_with_sword.heavy_chop_act');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll(`weapon.woosh.${randomRange(3, 5, true)}`, pl.pos, 1);
+            playSoundAll$5(`weapon.woosh.${randomRange$1(3, 5, true)}`, pl.pos, 1);
             ctx.selectFromRange(pl, {
                 angle: 40,
                 rotation: -20,
@@ -5148,42 +5143,39 @@ class ShieldSwordMoves extends DefaultMoves {
             });
         },
         timeline: {
-            3: (pl, ctx) => ctx.lookAtTarget(pl)
+            3: (pl, ctx) => ctx.lookAtTarget(pl),
+            6: (pl, ctx) => ctx.trap(pl),
+            8: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2.5, 90)
         },
         transitions: {
-            idle: {
-                onEndOfLife: null
+            resume: {
+                onEndOfLife: null,
+                onTrap: {
+                    preInput: 'onFeint',
+                }
             },
             hurt: {
                 onHurt: null
             },
             parried: {
-                onParried: {
-                    allowedState: 'backswing'
-                }
-            },
-            knockdown: {
-                onKnockdown: null
+                onParried: null
             },
         }
-    }
-
-    /**
-     * @type {Move}
-     */
-    shieldStrike = {
-        cast: 10,
-        backswing: 15,
+    };
+    punch = {
+        cast: 6,
+        backswing: 14,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$2(pl, 'animation.weapon.shield_with_sword.shield_strike');
+            playAnim$7(pl, 'animation.weapon.shield_with_sword.punch');
+            ctx.adsorbOrSetVelocity(pl, 2, 90, 1);
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
             ctx.selectFromRange(pl, {
-                radius: 2.2,
+                radius: 2.6,
                 angle: 120,
                 rotation: -60
             }).forEach(en => {
@@ -5191,245 +5183,106 @@ class ShieldSwordMoves extends DefaultMoves {
                     damage: 4,
                     permeable: true,
                     parryable: false,
-                    knockback: 0,
-                    direction: 'middle'
+                    knockback: 0.1,
+                    direction: 'middle',
                 });
             });
-        },
-        timeline: {
-            2: (pl, ctx) => ctx.lookAtTarget(pl),
-            0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.8, 90, 1),
-            6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2.6, 90, 1),
         },
         transitions: {
             hurt: {
                 onHurt: null
             },
             punchSomeone: {
-                onHit: {
-                    allowedState: 'both'
-                }
+                onHit: null
             },
-            idle: {
+            resume: {
                 onEndOfLife: null
             },
-            knockdown: {
-                onKnockdown: null
-            },
         }
-    }
-
-    /**
-     * @type {Move}
-     */
-    punch = {
-        cast: 10,
-        backswing: 15,
-        onEnter(pl, ctx) {
-            ctx.freeze(pl);
-            playAnim$2(pl, 'animation.weapon.shield_with_sword.punch');
-            
-        },
-        onLeave(pl, ctx) {
-            ctx.unfreeze(pl);
+    };
+    punchSomeone = {
+        cast: 2,
+        backswing: 8,
+        onEnter(pl) {
+            playSoundAll$5(`weapon.sheild.hit${randomRange$1(1, 3, true)}`, pl.pos, 0.5);
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
-                radius: 2.2,
-                angle: 120,
-                rotation: -60
-            }).forEach(en => {
-                ctx.attack(pl, en, {
-                    damage: 4,
-                    permeable: true,
-                    parryable: false,
-                    knockback: 0.05,
-                    direction: 'middle',
-                });
-            });
-        },
-        timeline: {
-            0: (pl, ctx) => ctx.lookAtTarget(pl),
-            2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 3, 90, 1),
-            12: (pl, ctx) => ctx.trap(pl),
-        },
-        transitions: {
-            hurt: {
-                onHurt: null,
-            },
-            idle: {
-                onEndOfLife: null
-            },
-            punchSomeone: {
-                onHit: {
-                    allowedState: 'backswing'
-                }
-            },
-            knockdown: {
-                onKnockdown: null
-            },
-        }
-    }
-
-    /**
-     * @type {Move}
-     */
-    punchSomeone = {
-        cast: 15,
-        onEnter(pl, ctx) {
-            playSoundAll(`weapon.sheild.hit${randomRange(1, 3, true)}`, pl.pos, 0.5);
             ctx.trap(pl);
         },
         transitions: {
             chopCombo: {
                 onTrap: {
                     preInput: 'onUseItem',
-                    allowedState: 'both'
                 }
             },
-            idle: {
+            resume: {
                 onEndOfLife: null
             },
-            knockdown: {
-                onKnockdown: null
+            hurt: {
+                onHurt: null,
             },
         }
-    }
-
-    /**
-     * @type {Move}
-     */
+    };
     chopCombo = {
-        cast: 5,
-        backswing: 7,
+        cast: 6,
+        backswing: 14,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$2(pl, 'animation.weapon.shield_with_sword.chop_combo');
+            ctx.adsorbOrSetVelocity(pl, 2, 90);
+            playAnim$7(pl, 'animation.weapon.shield_with_sword.chop_combo');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll(`weapon.woosh.${randomRange(1, 2, true)}`, pl.pos, 1);
+            playSoundAll$5(`weapon.woosh.${randomRange$1(1, 2, true)}`, pl.pos, 1);
             ctx.selectFromRange(pl, {
                 radius: 3,
                 angle: 46,
                 rotation: -23
             }).forEach(en => {
                 ctx.attack(pl, en, {
-                    damage: 14,
+                    damage: 12,
                     knockback: 0.5,
-                    direction: 'vertical'
+                    direction: 'left'
                 });
             });
         },
         timeline: {
-            2: (pl, ctx) => ctx.adsorbToTarget(pl),
+            2: (pl, ctx) => ctx.adsorbToTarget(pl, 2),
             0: (pl, ctx) => ctx.lookAtTarget(pl),
         },
         transitions: {
             hurt: {
                 onHurt: null
             },
-            idle: {
+            resume: {
                 onEndOfLife: null
             },
             parried: {
                 onParried: null
             },
         }
-    }
-
-    /**
-     * @type {Move}
-     */
-    idle = {
-        cast: Infinity,
-        onEnter(pl, ctx) {
-            ctx.trap(pl);
-            ctx.unfreeze(pl);
-            playAnim$2(pl, 'animation.weapon.shield_with_sword.idle', 'animation.weapon.shield_with_sword.idle');
-            pl.setSprinting(false);
-        },
-        transitions: {
-            hurt: {
-                onHurt: null,
-            },
-            running: {
-                onChangeSprinting: { sprinting: true }
-            },
-            beforeBlocking: {
-                onSneak: {
-                    isSneaking: true,
-                },
-                onTrap: {
-                    preInput: 'onSneak',
-                    isSneaking: true,
-                }
-            },
-            draw: {
-                onUseItem: {
-                    hasTarget: true,
-                }
-            },
-            shieldStrike: {
-                onAttack: null
-            },
-            jump: {
-                onJump: null
-            },
-            knockdown: {
-                onKnockdown: null
-            },
-        }
-    }
-
-    /**
-     * @type {Move}
-     */
-    jump = {
-        onEnter(pl, ctx) {
-            ctx.releaseTarget(pl.uniqueId);
-        },
-        transitions: {
-            idle: {
-                onEndOfLife: null
-            },
-            knockdown: {
-                onKnockdown: null
-            },
-        }
-    }
-
-    /**
-     * @type {Move}
-     */
+    };
     running = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim$2(pl, 'animation.weapon.shield_with_sword.running', 'animation.weapon.shield_with_sword.running');
+            playAnim$7(pl, 'animation.weapon.shield_with_sword.running', 'animation.weapon.shield_with_sword.running');
             ctx.releaseTarget(pl.uniqueId);
         },
         transitions: {
             hurt: {
                 onHurt: null,
             },
-            idle: {
+            resume: {
                 onChangeSprinting: { sprinting: false }
             },
-            knockdown: {
-                onKnockdown: null
-            },
         }
-    }
-
-    /**
-     * @type {Move}
-     */
+    };
     beforeBlocking = {
         cast: 2,
         onEnter(pl) {
-            playAnim$2(pl, 'animation.weapon.shield_with_sword.idle_to_blocking');
+            playAnim$7(pl, 'animation.weapon.shield_with_sword.idle_to_blocking');
         },
         transitions: {
             hurt: {
@@ -5445,22 +5298,15 @@ class ShieldSwordMoves extends DefaultMoves {
                     isSneaking: false
                 }
             },
-            knockdown: {
-                onKnockdown: null
-            },
         }
-    }
-
-    /**
-     * @type {Move}
-     */
+    };
     blocking = {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.status.isBlocking = true;
-            playAnim$2(pl, 'animation.weapon.shield_with_sword.blocking', 'animation.weapon.shield_with_sword.blocking');
+            playAnim$7(pl, 'animation.weapon.shield_with_sword.blocking', 'animation.weapon.shield_with_sword.blocking');
         },
-        onLeave(ctx) {
+        onLeave(_, ctx) {
             ctx.status.isBlocking = false;
         },
         transitions: {
@@ -5483,75 +5329,47 @@ class ShieldSwordMoves extends DefaultMoves {
                     hasTarget: true
                 }
             },
-            jump: {
-                onJump: null
-            },
-            knockdown: {
-                onKnockdown: null
-            },
         }
-    }
-
-    /**
-     * @type {Move}
-     */
+    };
     rockSolid = {
-        cast: 4,
-        backswing: 7,
+        cast: 3,
+        backswing: 8,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.status.repulsible = false;
-            playAnim$2(pl, 'animation.weapon.shield_with_sword.rock_solid');
+            playAnim$7(pl, 'animation.weapon.shield_with_sword.rock_solid');
         },
-        onAct(ctx) {
+        onAct(_, ctx) {
             ctx.status.repulsible = true;
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
         },
         transitions: {
-            idle: {
+            resume: {
                 onEndOfLife: {
                     isSneaking: false
                 }
             },
             sweapCounter: {
                 onHurt: {
-                    allowedState: 'cast',
                     prevent: true,
                 },
-                onKnockdown: {
-                    allowedState: 'cast'
-                },
             },
-            hurt: {
-                onHurt: {
-                    allowedState: 'backswing'
-                }
-            },
-            knockdown: {
-                onKnockdown: {
-                    allowedState: 'backswing'
-                }
-            },
-            beforeBlocking: {
+            blocking: {
                 onEndOfLife: {
                     isSneaking: true
                 }
             }
         }
-    }
-
-    /**
-     * @type {Move}
-     */
+    };
     sweapCounter = {
         cast: 11,
         backswing: 10,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.adsorbToTarget(pl, 4, 0.5);
-            playAnim$2(pl, 'animation.weapon.shield_with_sword.sweap_counter');
+            playAnim$7(pl, 'animation.weapon.shield_with_sword.sweap_counter');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -5587,58 +5405,43 @@ class ShieldSwordMoves extends DefaultMoves {
                     });
                 });
             },
-
         },
         transitions: {
             hurt: {
                 onHurt: null
             },
-            idle: {
+            resume: {
                 onEndOfLife: null
             },
-            knockdown: {
-                onKnockdown: null
-            },
         }
-    }
-
-    /**
-     * @type {Move}
-     */
+    };
     afterBlocking = {
         cast: 3,
         onEnter(pl) {
-            playAnim$2(pl, 'animation.weapon.shield_with_sword.blocking_to_idle');
+            playAnim$7(pl, 'animation.weapon.shield_with_sword.blocking_to_idle');
         },
         transitions: {
             hurt: {
                 onHurt: null,
             },
-            idle: {
+            resume: {
                 onEndOfLife: null
             },
-            knockdown: {
-                onKnockdown: null
-            },
         }
-    }
-
-    /**
-     * @type {Move}
-     */
+    };
     swordCounter = {
         cast: 6,
         backswing: 7,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$2(pl, 'animation.weapon.shield_with_sword.sword_counter');
+            playAnim$7(pl, 'animation.weapon.shield_with_sword.sword_counter');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll(`weapon.woosh.${randomRange(1,3, true)}`, pl.pos, 1);
+            playSoundAll$5(`weapon.woosh.${randomRange$1(1, 3, true)}`, pl.pos, 1);
             ctx.selectFromRange(pl, {
                 angle: 30,
                 rotation: -15,
@@ -5662,7 +5465,7 @@ class ShieldSwordMoves extends DefaultMoves {
             hurt: {
                 onHurt: null,
             },
-            idle: {
+            resume: {
                 onEndOfLife: {
                     isSneaking: false
                 },
@@ -5673,12 +5476,18 @@ class ShieldSwordMoves extends DefaultMoves {
                 },
             }
         }
-    }
+    };
 }
+const tricks$3 = new ShieldSwordTricks();
 
-shield_with_sword.tricks = new ShieldSwordTricks();
+var shield_with_sword = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	tricks: tricks$3
+});
 
-class UchigatanaMoves extends DefaultMoves$5 {
+var require$$6$1 = /*@__PURE__*/getAugmentedNamespace(shield_with_sword);
+
+class UchigatanaMoves extends DefaultMoves$4 {
     constructor() {
         super();
         this.setup('resume');
@@ -5688,7 +5497,7 @@ class UchigatanaMoves extends DefaultMoves$5 {
     hold = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim$8(pl, 'animation.weapon.uchigatana.hold', 'animation.weapon.uchigatana.hold');
+            playAnim$7(pl, 'animation.weapon.uchigatana.hold', 'animation.weapon.uchigatana.hold');
         },
         transitions: {
             kamae: {
@@ -5707,7 +5516,7 @@ class UchigatanaMoves extends DefaultMoves$5 {
     kamae = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$8(pl, 'animation.weapon.uchigatana.kamae', 'animation.weapon.uchigatana.kamae');
+            playAnim$7(pl, 'animation.weapon.uchigatana.kamae', 'animation.weapon.uchigatana.kamae');
         },
         transitions: {
             hold: {
@@ -5735,7 +5544,7 @@ class UchigatanaMoves extends DefaultMoves$5 {
         backswing: 10,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$8(pl, 'animation.weapon.uchigatana.kamae.jodan');
+            playAnim$7(pl, 'animation.weapon.uchigatana.kamae.jodan');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -5752,7 +5561,7 @@ class UchigatanaMoves extends DefaultMoves$5 {
     running = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$8(pl, 'animation.weapon.uchigatana.running', 'animation.weapon.uchigatana.running');
+            playAnim$7(pl, 'animation.weapon.uchigatana.running', 'animation.weapon.uchigatana.running');
         },
         transitions: {
             resume: {
@@ -5789,7 +5598,7 @@ class UchigatanaMoves extends DefaultMoves$5 {
             ctx.status.isBlocking = true;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$8(pl, 'animation.weapon.uchigatana.attack1');
+            playAnim$7(pl, 'animation.weapon.uchigatana.attack1');
         },
         onAct(pl, ctx) {
             ctx.selectFromRange(pl).forEach(en => {
@@ -5807,7 +5616,7 @@ class UchigatanaMoves extends DefaultMoves$5 {
             0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.5, 90),
             4: (_, ctx) => ctx.status.isBlocking = false,
             5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
-            7: pl => playSoundAll$6(`weapon.woosh.2`, pl.pos, 1),
+            7: pl => playSoundAll$5(`weapon.woosh.2`, pl.pos, 1),
             20: (pl, ctx) => ctx.trap(pl)
         },
         transitions: {
@@ -5846,10 +5655,10 @@ class UchigatanaMoves extends DefaultMoves$5 {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$8(pl, 'animation.weapon.uchigatana.attack1.heavy');
+            playAnim$7(pl, 'animation.weapon.uchigatana.attack1.heavy');
         },
         onAct(pl, ctx) {
-            playSoundAll$6(`weapon.woosh.2`, pl.pos, 1);
+            playSoundAll$5(`weapon.woosh.2`, pl.pos, 1);
             ctx.selectFromRange(pl, {
                 radius: 3,
                 angle: 180,
@@ -5907,14 +5716,14 @@ class UchigatanaMoves extends DefaultMoves$5 {
         backswing: 13,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$8(pl, 'animation.weapon.uchigatana.attack2');
+            playAnim$7(pl, 'animation.weapon.uchigatana.attack2');
             ctx.adsorbOrSetVelocity(pl, 1.5, 90, 1);
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll$6('weapon.woosh.2', pl.pos);
+            playSoundAll$5('weapon.woosh.2', pl.pos);
             ctx.selectFromRange(pl, {
                 radius: 2.6,
                 angle: 40,
@@ -5946,14 +5755,14 @@ class UchigatanaMoves extends DefaultMoves$5 {
         backswing: 13,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$8(pl, 'animation.weapon.uchigatana.attack2.heavy');
+            playAnim$7(pl, 'animation.weapon.uchigatana.attack2.heavy');
             ctx.adsorbOrSetVelocity(pl, 1.5, 90, 1);
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll$6('weapon.woosh.2', pl.pos);
+            playSoundAll$5('weapon.woosh.2', pl.pos);
             ctx.selectFromRange(pl, {
                 radius: 2.6,
                 angle: 40,
@@ -5979,7 +5788,7 @@ class UchigatanaMoves extends DefaultMoves$5 {
         }
     };
 }
-class UchigatanaModule extends DefaultTrickModule$5 {
+class UchigatanaModule extends DefaultTrickModule$4 {
     constructor() {
         super('rgb39.weapon.empty_hand', 'hold', ['weapon:uchigatana', 'weapon:morphidae'], new UchigatanaMoves());
     }
@@ -5993,17 +5802,31 @@ var uchigatana = /*#__PURE__*/Object.freeze({
 
 var require$$7$1 = /*@__PURE__*/getAugmentedNamespace(uchigatana);
 
-class DoubleBladeMoves extends DefaultMoves$5 {
+class DoubleBladeMoves extends DefaultMoves$4 {
     constructor() {
         super();
         this.animations.parry.left = 'animation.double_blade.parry.left';
         this.animations.block.left = 'animation.double_blade.block.left';
         this.setup('resume');
     }
+    resume = {
+        transitions: {
+            hold: {
+                onEndOfLife: {
+                    hasTarget: true
+                }
+            },
+            idle: {
+                onEndOfLife: {
+                    hasTarget: false
+                }
+            }
+        }
+    };
     idle = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$8(pl, 'animation.double_blade.idle', 'animation.double_blade.idle');
+            playAnim$7(pl, 'animation.double_blade.idle', 'animation.double_blade.idle');
         },
         transitions: {
             i2r: {
@@ -6022,7 +5845,7 @@ class DoubleBladeMoves extends DefaultMoves$5 {
     running = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$8(pl, 'animation.double_blade.running', 'animation.double_blade.running');
+            playAnim$7(pl, 'animation.double_blade.running', 'animation.double_blade.running');
         },
         transitions: {
             r2i: {
@@ -6038,7 +5861,7 @@ class DoubleBladeMoves extends DefaultMoves$5 {
     i2r = {
         cast: 5,
         onEnter(pl) {
-            playAnim$8(pl, 'animation.double_blade.i2r');
+            playAnim$7(pl, 'animation.double_blade.i2r');
         },
         transitions: {
             running: {
@@ -6054,7 +5877,7 @@ class DoubleBladeMoves extends DefaultMoves$5 {
     r2i = {
         cast: 5,
         onEnter(pl) {
-            playAnim$8(pl, 'animation.double_blade.r2i');
+            playAnim$7(pl, 'animation.double_blade.r2i');
         },
         transitions: {
             idle: {
@@ -6070,7 +5893,7 @@ class DoubleBladeMoves extends DefaultMoves$5 {
     hold = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$8(pl, 'animation.double_blade.hold', 'animation.double_blade.hold');
+            playAnim$7(pl, 'animation.double_blade.hold', 'animation.double_blade.hold');
         },
         transitions: {
             hurt: {
@@ -6079,37 +5902,24 @@ class DoubleBladeMoves extends DefaultMoves$5 {
             idle: {
                 onReleaseLock: null
             },
-            startSweap: {
+            startLeft: {
                 onAttack: null
-            }
-        }
-    };
-    resume = {
-        transitions: {
-            hold: {
-                onEndOfLife: {
-                    hasTarget: true
-                }
             },
-            idle: {
-                onEndOfLife: {
-                    hasTarget: false
-                }
-            }
+            startRight: {
+                onUseItem: null
+            },
         }
     };
-    startSweap = {
-        cast: 8,
-        backswing: 13,
+    startLeft = {
+        cast: 7,
+        backswing: 14,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$8(pl, 'animation.double_blade.single_left');
-            ctx.status.isBlocking = true;
-            ctx.adsorbOrSetVelocity(pl, 0.5, 90, 1);
+            playAnim$7(pl, 'animation.double_blade.start_left');
+            ctx.adsorbOrSetVelocity(pl, 0.5, 90);
         },
         onLeave(pl, ctx) {
-            ctx.status.isBlocking = false;
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
@@ -6127,8 +5937,8 @@ class DoubleBladeMoves extends DefaultMoves$5 {
             });
         },
         timeline: {
-            3: (_, ctx) => ctx.status.isBlocking = false,
-            4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90, 1)
+            4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90),
+            13: (_, ctx) => ctx.trap(_),
         },
         transitions: {
             resume: {
@@ -6143,18 +5953,24 @@ class DoubleBladeMoves extends DefaultMoves$5 {
             blocked: {
                 onBlocked: null
             },
-            startMasterHit: {
-                onBlock: null
-            },
+            alternationLR: {
+                onTrap: {
+                    preInput: 'onUseItem'
+                }
+            }
         }
     };
-    startMasterHit = {
-        cast: 6,
-        backswing: 13,
+    startRight = {
+        cast: 7,
+        backswing: 14,
         onEnter(pl, ctx) {
-            playSoundAll$6('weapon.sword.hit2', pl.pos, 1);
             ctx.freeze(pl);
-            ctx.adsorbOrSetVelocity(pl, 1.4, 90, 1);
+            ctx.lookAtTarget(pl);
+            playAnim$7(pl, 'animation.double_blade.start_right');
+            ctx.adsorbOrSetVelocity(pl, 0.5, 90);
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
             ctx.selectFromRange(pl, {
@@ -6163,35 +5979,142 @@ class DoubleBladeMoves extends DefaultMoves$5 {
                 rotation: -20
             }).forEach(en => {
                 ctx.attack(pl, en, {
-                    damage: 20,
+                    damage: 17,
                     damageType: 'entityAttack',
                     knockback: 0.8,
-                    permeable: true,
-                    direction: 'vertical'
+                    direction: 'right'
                 });
             });
         },
-        onLeave(pl, ctx) {
-            ctx.unfreeze(pl);
+        timeline: {
+            4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90),
+            13: (_, ctx) => ctx.trap(_),
         },
         transitions: {
             resume: {
                 onEndOfLife: null
             },
             hurt: {
-                onHurt: {
-                    allowedState: 'both'
-                }
+                onHurt: null
             },
             parried: {
-                onParried: {
-                    allowedState: 'backswing'
-                }
+                onParried: null
             },
+            blocked: {
+                onBlocked: null
+            },
+            alternationRL: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            }
         }
     };
+    alternationLR = {
+        cast: 7,
+        backswing: 14,
+        onEnter(pl, ctx) {
+            ctx.freeze(pl);
+            ctx.lookAtTarget(pl);
+            playAnim$7(pl, 'animation.double_blade.lr');
+            ctx.adsorbOrSetVelocity(pl, 1, 90);
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl);
+        },
+        onAct(pl, ctx) {
+            ctx.selectFromRange(pl, {
+                angle: 40,
+                radius: 2.2,
+                rotation: -20
+            }).forEach(en => {
+                ctx.attack(pl, en, {
+                    damage: 19,
+                    damageType: 'entityAttack',
+                    knockback: 0.8,
+                    direction: 'right'
+                });
+            });
+        },
+        timeline: {
+            4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90),
+            13: (_, ctx) => ctx.trap(_),
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null
+            },
+            hurt: {
+                onHurt: null
+            },
+            parried: {
+                onParried: null
+            },
+            blocked: {
+                onBlocked: null
+            },
+            alternationRL: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            }
+        }
+    };
+    alternationRL = {
+        cast: 7,
+        backswing: 14,
+        onEnter(pl, ctx) {
+            ctx.freeze(pl);
+            ctx.lookAtTarget(pl);
+            playAnim$7(pl, 'animation.double_blade.rl');
+            ctx.adsorbOrSetVelocity(pl, 1, 90);
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl);
+        },
+        onAct(pl, ctx) {
+            ctx.selectFromRange(pl, {
+                angle: 40,
+                radius: 2.2,
+                rotation: -20
+            }).forEach(en => {
+                ctx.attack(pl, en, {
+                    damage: 19,
+                    damageType: 'entityAttack',
+                    knockback: 0.8,
+                    direction: 'left'
+                });
+            });
+        },
+        timeline: {
+            4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90),
+            13: (_, ctx) => ctx.trap(_),
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null
+            },
+            hurt: {
+                onHurt: null
+            },
+            parried: {
+                onParried: null
+            },
+            blocked: {
+                onBlocked: null
+            },
+            alternationLR: {
+                onTrap: {
+                    preInput: 'onUseItem'
+                }
+            }
+        }
+    };
+    finishingL = {
+        transitions: {}
+    };
 }
-class DoubleBlade extends DefaultTrickModule$5 {
+class DoubleBlade extends DefaultTrickModule$4 {
     constructor() {
         super('rgb:double_blade', 'idle', [
             'weapon:double_blade',
@@ -6208,7 +6131,7 @@ var double_blade = /*#__PURE__*/Object.freeze({
 
 var require$$8$1 = /*@__PURE__*/getAugmentedNamespace(double_blade);
 
-class StaffMoves extends DefaultMoves$5 {
+class StaffMoves extends DefaultMoves$4 {
     constructor() {
         super();
         this.setup('resume');
@@ -6230,7 +6153,7 @@ class StaffMoves extends DefaultMoves$5 {
     idle = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$8(pl, 'animation.weapon.staff.idle', 'animation.weapon.staff.idle');
+            playAnim$7(pl, 'animation.weapon.staff.idle', 'animation.weapon.staff.idle');
         },
         transitions: {
             transI2R: {
@@ -6249,7 +6172,7 @@ class StaffMoves extends DefaultMoves$5 {
     transI2R = {
         cast: 4,
         onEnter(pl) {
-            playAnim$8(pl, 'animation.weapon.staff.trans.i2r');
+            playAnim$7(pl, 'animation.weapon.staff.trans.i2r');
         },
         transitions: {
             running: {
@@ -6268,7 +6191,7 @@ class StaffMoves extends DefaultMoves$5 {
     transR2I = {
         cast: 4,
         onEnter(pl) {
-            playAnim$8(pl, 'animation.weapon.staff.trans.r2i');
+            playAnim$7(pl, 'animation.weapon.staff.trans.r2i');
         },
         transitions: {
             idle: {
@@ -6287,7 +6210,7 @@ class StaffMoves extends DefaultMoves$5 {
     running = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$8(pl, 'animation.weapon.staff.running', 'animation.weapon.staff.running');
+            playAnim$7(pl, 'animation.weapon.staff.running', 'animation.weapon.staff.running');
         },
         transitions: {
             transR2I: {
@@ -6303,7 +6226,7 @@ class StaffMoves extends DefaultMoves$5 {
     hold = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$8(pl, 'animation.weapon.staff.hold', 'animation.weapon.staff.hold');
+            playAnim$7(pl, 'animation.weapon.staff.hold', 'animation.weapon.staff.hold');
         },
         transitions: {
             idle: {
@@ -6315,7 +6238,7 @@ class StaffMoves extends DefaultMoves$5 {
         }
     };
 }
-class StaffModule extends DefaultTrickModule$5 {
+class StaffModule extends DefaultTrickModule$4 {
     constructor() {
         super('rgb:staff', 'idle', ['weapon:staff'], new StaffMoves());
     }
@@ -6336,7 +6259,7 @@ var collection = [
     moon_glaive,
     require$$4,
     sheathed_katana,
-    shield_with_sword,
+    require$$6$1,
     require$$7$1,
     require$$8$1,
     require$$9$1,
@@ -7706,7 +7629,6 @@ const defaultPacker = (pl, bind, status) => {
 
 const dataPackers = {
     onSneak(args) {
-        // console.log(args[1])
         return {
             isSneaking: args[1]
         }
@@ -7722,8 +7644,7 @@ const dataPackers = {
             preInput: status.preInput
         }
     },
-    onTrap(args) {
-        const [ pl, data ] = args;
+    onTrap([pl, data]) {
         const status = Status.get(pl.uniqueId);
         return {
             preInput: status.preInput,
@@ -7836,7 +7757,7 @@ function transition(pl, bind, status, eventName, prevent, args) {
 
     let dataPacker, data = defaultPacker(pl, bind, status);
     if (dataPacker = dataPackers[eventName]) {
-        data = Object.assign(dataPacker(args), data);
+        data = Object.assign(data, dataPacker(args));
     }
 
     for (const [ $next, $cond ] of candidates) {
@@ -8103,6 +8024,15 @@ function listenAllCustomEvents(mods) {
         const victimIsEntity = !victim.xuid;
 
         if (victimIsEntity) {
+            transition(
+                abuser,
+                getMod(getHandedItemType(abuser)),
+                Status.get(abuser.uniqueId),
+                'onHit',
+                Function.prototype,
+                [ abuser, victim, damageOpt ]
+            );
+
             return damageWithCameraFading(
                 victim,
                 damage,

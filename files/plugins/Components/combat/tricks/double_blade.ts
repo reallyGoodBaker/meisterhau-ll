@@ -10,6 +10,21 @@ class DoubleBladeMoves extends DefaultMoves {
         this.setup<DoubleBladeMoves>('resume')
     }
 
+    resume: Move = {
+        transitions: {
+            hold: {
+                onEndOfLife: {
+                    hasTarget: true
+                }
+            },
+            idle: {
+                onEndOfLife: {
+                    hasTarget: false
+                }
+            }
+        }
+    }
+
     idle: Move = {
         cast: Infinity,
         onEnter(pl) {
@@ -93,39 +108,25 @@ class DoubleBladeMoves extends DefaultMoves {
             idle: {
                 onReleaseLock: null
             },
-            startSweap: {
+            startLeft: {
                 onAttack: null
-            }
-        }
-    }
-
-    resume: Move = {
-        transitions: {
-            hold: {
-                onEndOfLife: {
-                    hasTarget: true
-                }
             },
-            idle: {
-                onEndOfLife: {
-                    hasTarget: false
-                }
-            }
+            startRight: {
+                onUseItem: null
+            },
         }
     }
 
-    startSweap: Move = {
-        cast: 8,
-        backswing: 13,
+    startLeft: Move = {
+        cast: 7,
+        backswing: 14,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
-            playAnim(pl, 'animation.double_blade.single_left')
-            ctx.status.isBlocking = true
-            ctx.adsorbOrSetVelocity(pl, 0.5, 90, 1)
+            playAnim(pl, 'animation.double_blade.start_left')
+            ctx.adsorbOrSetVelocity(pl, 0.5, 90)
         },
-        onLeave(pl, ctx) { 
-            ctx.status.isBlocking = false
+        onLeave(pl, ctx) {
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
@@ -143,8 +144,8 @@ class DoubleBladeMoves extends DefaultMoves {
             })
         },
         timeline: {
-            3: (_, ctx) => ctx.status.isBlocking = false,
-            4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90, 1)
+            4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90),
+            13: (_, ctx) => ctx.trap(_),
         },
         transitions: {
             resume: {
@@ -159,19 +160,25 @@ class DoubleBladeMoves extends DefaultMoves {
             blocked: {
                 onBlocked: null
             },
-            startMasterHit: {
-                onBlock: null
-            },
+            alternationLR: {
+                onTrap: {
+                    preInput: 'onUseItem'
+                }
+            }
         }
     }
 
-    startMasterHit: Move = {
-        cast: 6,
-        backswing: 13,
+    startRight: Move = {
+        cast: 7,
+        backswing: 14,
         onEnter(pl, ctx) {
-            playSoundAll('weapon.sword.hit2', pl.pos, 1)
             ctx.freeze(pl)
-            ctx.adsorbOrSetVelocity(pl, 1.4, 90, 1)
+            ctx.lookAtTarget(pl)
+            playAnim(pl, 'animation.double_blade.start_right')
+            ctx.adsorbOrSetVelocity(pl, 0.5, 90)
+        },
+        onLeave(pl, ctx) { 
+            ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
             ctx.selectFromRange(pl, {
@@ -180,31 +187,143 @@ class DoubleBladeMoves extends DefaultMoves {
                 rotation: -20
             }).forEach(en => {
                 ctx.attack(pl, en, {
-                    damage: 20,
+                    damage: 17,
                     damageType: 'entityAttack',
                     knockback: 0.8,
-                    permeable: true,
-                    direction: 'vertical'
+                    direction: 'right'
                 })
             })
         },
-        onLeave(pl, ctx) {
-            ctx.unfreeze(pl)
+        timeline: {
+            4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90),
+            13: (_, ctx) => ctx.trap(_),
         },
         transitions: {
             resume: {
                 onEndOfLife: null
             },
             hurt: {
-                onHurt: {
-                    allowedState: 'both'
-                }
+                onHurt: null
             },
             parried: {
-                onParried: {
-                    allowedState: 'backswing'
-                }
+                onParried: null
             },
+            blocked: {
+                onBlocked: null
+            },
+            alternationRL: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            }
+        }
+    }
+
+    alternationLR: Move = {
+        cast: 7,
+        backswing: 14,
+        onEnter(pl, ctx) {
+            ctx.freeze(pl)
+            ctx.lookAtTarget(pl)
+            playAnim(pl, 'animation.double_blade.lr')
+            ctx.adsorbOrSetVelocity(pl, 1, 90)
+        },
+        onLeave(pl, ctx) { 
+            ctx.unfreeze(pl)
+        },
+        onAct(pl, ctx) {
+            ctx.selectFromRange(pl, {
+                angle: 40,
+                radius: 2.2,
+                rotation: -20
+            }).forEach(en => {
+                ctx.attack(pl, en, {
+                    damage: 19,
+                    damageType: 'entityAttack',
+                    knockback: 0.8,
+                    direction: 'right'
+                })
+            })
+        },
+        timeline: {
+            4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90),
+            13: (_, ctx) => ctx.trap(_),
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null
+            },
+            hurt: {
+                onHurt: null
+            },
+            parried: {
+                onParried: null
+            },
+            blocked: {
+                onBlocked: null
+            },
+            alternationRL: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            }
+        }
+    }
+
+    alternationRL: Move = {
+        cast: 7,
+        backswing: 14,
+        onEnter(pl, ctx) {
+            ctx.freeze(pl)
+            ctx.lookAtTarget(pl)
+            playAnim(pl, 'animation.double_blade.rl')
+            ctx.adsorbOrSetVelocity(pl, 1, 90)
+        },
+        onLeave(pl, ctx) { 
+            ctx.unfreeze(pl)
+        },
+        onAct(pl, ctx) {
+            ctx.selectFromRange(pl, {
+                angle: 40,
+                radius: 2.2,
+                rotation: -20
+            }).forEach(en => {
+                ctx.attack(pl, en, {
+                    damage: 19,
+                    damageType: 'entityAttack',
+                    knockback: 0.8,
+                    direction: 'left'
+                })
+            })
+        },
+        timeline: {
+            4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90),
+            13: (_, ctx) => ctx.trap(_),
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null
+            },
+            hurt: {
+                onHurt: null
+            },
+            parried: {
+                onParried: null
+            },
+            blocked: {
+                onBlocked: null
+            },
+            alternationLR: {
+                onTrap: {
+                    preInput: 'onUseItem'
+                }
+            }
+        }
+    }
+
+    finishingL: Move = {
+        transitions: {
+
         }
     }
 }

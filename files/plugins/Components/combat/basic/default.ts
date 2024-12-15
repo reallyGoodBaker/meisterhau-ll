@@ -169,6 +169,7 @@ export class DefaultMoves {
             }, stiffness).run()
         },
         onLeave(pl, ctx) {
+            ctx.task.cancel()
             ctx.status.shocked = false
             ctx.status.enableInputs([
                 'onAttack',
@@ -181,7 +182,7 @@ export class DefaultMoves {
                 // ctx.trap(pl, { tag: 'hitWall' })
             }
         },
-        transitions: { }
+        transitions: {}
     }
 
     execution: Move = {

@@ -717,7 +717,7 @@ class OotachiMoves extends DefaultMoves {
                     knockback: 3,
                     parryable: false,
                     permeable: true,
-                    stiffness: 900,
+                    stiffness: 700,
                     shock: true,
                     powerful: true,
                     direction: 'middle',

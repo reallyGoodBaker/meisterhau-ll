@@ -221,7 +221,6 @@ const defaultPacker = (pl, bind, status) => {
 
 const dataPackers = {
     onSneak(args) {
-        // console.log(args[1])
         return {
             isSneaking: args[1]
         }
@@ -237,8 +236,7 @@ const dataPackers = {
             preInput: status.preInput
         }
     },
-    onTrap(args) {
-        const [ pl, data ] = args
+    onTrap([pl, data]) {
         const status = Status.get(pl.uniqueId)
         return {
             preInput: status.preInput,
@@ -351,7 +349,7 @@ function transition(pl, bind, status, eventName, prevent, args) {
 
     let dataPacker, data = defaultPacker(pl, bind, status)
     if (dataPacker = dataPackers[eventName]) {
-        data = Object.assign(dataPacker(args), data)
+        data = Object.assign(data, dataPacker(args))
     }
 
     for (const [ $next, $cond ] of candidates) {
@@ -618,6 +616,15 @@ function listenAllCustomEvents(mods) {
         const victimIsEntity = !victim.xuid
 
         if (victimIsEntity) {
+            transition(
+                abuser,
+                getMod(getHandedItemType(abuser)),
+                Status.get(abuser.uniqueId),
+                'onHit',
+                Function.prototype,
+                [ abuser, victim, damageOpt ]
+            )
+
             return damageWithCameraFading(
                 victim,
                 damage,
