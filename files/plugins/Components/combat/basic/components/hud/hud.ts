@@ -1,4 +1,4 @@
-import { BaseComponent, ComponentManager } from "../../core/component"
+import { BaseComponent, ComponentManager, CustomComponent } from '../../core/component';
 import { PublicComponent, Fields } from "../../core/config"
 import { Optional } from "@utils/optional"
 
@@ -40,8 +40,8 @@ export class HudComponent extends BaseComponent {
         super()
     }
 
-    onTick(_: ComponentManager, pl: Optional<Player>): void {
-        this.renderHud(pl)
+    onTick(manager: ComponentManager, pl: Optional<Player>): void {
+        this.renderHud(pl)   
     }
 
     renderHud(pl: Optional<Player>) {

@@ -144,6 +144,7 @@ function getMoveDir(pl) {
  * @returns {MovementContext}
  */
 function _ctx(pl, mixins={}) {
+    const status = _status(pl)
     return {
         camera,
         movement,
@@ -153,7 +154,8 @@ function _ctx(pl, mixins={}) {
         attack,
         freeze,
         unfreeze,
-        status: _status(pl),
+        status,
+        components: status.componentManager,
         clearVelocity,
         impulse,
         setVelocity,

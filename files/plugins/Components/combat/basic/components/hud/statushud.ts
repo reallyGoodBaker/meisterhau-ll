@@ -5,6 +5,7 @@ import { HudComponent, HudComponentParams } from "./hud"
 import { TargetLock } from "../core/target-lock"
 import { Stamina } from "../core/stamina"
 import { Status } from '../../core/status'
+import { HardmodeComponent } from "../hardmode"
 
 @PublicComponent('status-hud')
 @Fields([ 'content', 'type', 'fadeIn', 'fadeOut', 'stay' ])
@@ -88,8 +89,10 @@ export class StatusHud extends HudComponent {
             + String(Math.round(total)).padEnd(3, ' ')
     }
 
-    onTick(_: ComponentManager, pl: Optional<Player>): void {
-        this.renderStatus()
-        this.renderHud(pl)
+    onTick(manager: ComponentManager, pl: Optional<Player>): void {
+        if (!manager.has(HardmodeComponent)) {
+            this.renderStatus()
+            this.renderHud(pl)
+        }
     }
 }

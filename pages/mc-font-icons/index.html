@@ -11,6 +11,9 @@
             padding: 0;
             margin: 0;
             background-color: #5e5e5e;
+            display: flex;
+            align-items: center;
+            --url: url('./glyph_E0.png');
         }
 
         .icon {
@@ -28,7 +31,7 @@
 
         .icon::after {
             content: '';
-            background: url(./glyph_E0.png);
+            background: var(--url);
             background-size: 512px 512px;
             background-position: calc(var(--x) * -1) calc(var(--y) * -1);
             width: 32px;
@@ -78,23 +81,72 @@
             visibility: hidden;
             color: #fff;
         }
+
+        .nav {
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #fff;
+            border-bottom: 2px solid #989898;
+            width: 56px;
+            height: 56px;
+            outline: solid 2px #222;
+            color: #555;
+            user-select: none;
+        }
+
+        .nav.selected {
+            background-color: #d3d3d3;
+            border: 2px solid #888;
+            border-bottom: 2px solid #fff;
+            border-right: 2px solid #fff;
+            color: #222;
+            font-weight: bold;
+        }
+
+        .nav-rail {
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 56px;
+            height: 100vh;
+            gap: 3px;
+            border-right: solid 2px #989898;
+        }
+
+        .content {
+            display: flex;
+            flex-direction: column;
+            width: calc(100vw - 56px);
+        }
     </style>
 
-    <div class="icon center display" style="--size: 200"></div>
-    <div style="overflow-y: scroll; height: calc(100vh - 200px);">
-        <div id="table"></div>
+    <div class="nav-rail">
+        <div class="nav selected">E0</div>
+        <div class="nav">E1</div>
     </div>
-    <div id="copied">
-        <div>已复制图标</div>
-        <div class="icon result" style="--size: 40; width: fit-content;"></div>
+    <div class="content">
+        <div class="icon center display" style="--size: 200"></div>
+        <div style="overflow-y: scroll; height: calc(100vh - 200px);">
+            <div id="table"></div>
+        </div>
+        <div id="copied">
+            <div>已复制图标</div>
+            <div class="icon result" style="--size: 40; width: fit-content;"></div>
+        </div>
     </div>
 
     <script>
         const copied = document.getElementById('copied')
+        const e = 57344
+
+        let page = 0
 
         let timer = null
-        function copy(i) {
-            navigator.clipboard.writeText(String.fromCodePoint(i + 57344))
+        function copy(i, page = 0) {
+            navigator.clipboard.writeText(String.fromCodePoint(i + e + page * 256))
             copied.style.visibility = 'visible'
 
             if (timer) {
@@ -121,12 +173,12 @@
         }
 
         const table = document.getElementById('table')
-        const size = visualViewport.width / 16
+        const size = (visualViewport.width - 56) / 16
 
         table.style.setProperty('--width', px(size))
 
         //57344 + i
-        Array.from(new Array(256), (_, i) => i).forEach(i => {
+        const icons = Array.from(new Array(256), (_, i) => i).map(i => {
             const div = document.createElement('div')
             const x = (i % 16) * 32
             const y = Math.floor(i / 16) * 32
@@ -139,9 +191,34 @@
             style.setProperty('--size', size)
 
             div.addEventListener('mouseenter', () => changeIcon(document.querySelector('.display').style, i))
-            div.addEventListener('click', () => copy(i))
+            div.addEventListener('click', () => copy(i, page))
 
             table.appendChild(div)
+
+            return div
+        })
+
+        const rail = document.querySelector('.nav-rail')
+
+        function switchPage(p) {
+            if (p === page) {
+                return
+            }
+
+            document.body.style.setProperty('--url', `url(./glyph_E${p}.png)`)
+            rail.children[page].classList.remove('selected')
+            rail.children[p].classList.add('selected')
+            page = p
+        }
+
+        rail.addEventListener('click', ev => {
+            const i = [...rail.children].indexOf(ev.target)
+            if (i === -1) {
+                switchPage(0)
+                return
+            }
+
+            switchPage(i)
         })
     </script>
 </body>

@@ -1,0 +1,25 @@
+{
+  "name": "move-editor",
+  "version": "0.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "start": "node ./scripts/start.cjs",
+    "dev": "vite",
+    "build": "vite build",
+    "editor": "vite preview",
+    "server": "cd server && npm start"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vite": "^6.0.0",
+    "vite-plugin-solid": "^2.11.0"
+  },
+  "dependencies": {
+    "@solidjs/router": "^0.15.2",
+    "litegraph.js": "^0.7.18",
+    "solid-js": "^1.9.3",
+    "solid-keep-alive": "^0.2.3"
+  }
+}

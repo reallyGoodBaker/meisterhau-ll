@@ -2,6 +2,7 @@
 
 import { DefaultMoves } from '@combat/basic/default'
 import { Status } from './Components/combat/basic/core/status'
+import { ComponentManager } from '@combat/basic/core/component'
 
 declare global {
 
@@ -358,6 +359,7 @@ interface MovementContext<RawArgs = Array> {
     yawToVec2(yaw: number): {x: number, y: number}
     applyKnockbackAtVelocityDirection(en: any, h: number, v: number): Promise<void>
     readonly status: Status
+    readonly components: ComponentManager
     camera(pl: any, enable?: boolean): void
     movement(pl: any, enable?: boolean): void
     movementInput(pl: any, enable?: boolean): void

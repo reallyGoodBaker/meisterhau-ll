@@ -260,14 +260,14 @@ class ShieldSwordMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             playAnim(pl, 'animation.weapon.shield_with_sword.punch')
-            ctx.adsorbOrSetVelocity(pl, 2, 90, 1)
+            ctx.adsorbOrSetVelocity(pl, 2, 90, 0.5)
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
             ctx.selectFromRange(pl, {
-                radius: 2.6,
+                radius: 1,
                 angle: 120,
                 rotation: -60
             }).forEach(en => {
@@ -452,12 +452,16 @@ class ShieldSwordMoves extends DefaultMoves {
             sweapCounter: {
                 onHurt: {
                     prevent: true,
+                    allowedState: 'cast',
                 },
             },
             blocking: {
                 onEndOfLife: {
                     isSneaking: true
                 }
+            },
+            hurt: {
+                onHurt: null,
             }
         }
     }

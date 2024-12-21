@@ -1,0 +1,17 @@
+.container {
+    display: flex;
+    gap: 2px;
+    background-color: #181818;
+    box-sizing: border-box;
+    padding: 8px 12px 0;
+    height: 48px;
+    overflow: hidden;
+}
+
+.content {
+    width: 100vw;
+    height: calc(100vh - 48px);
+    overflow: auto;
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
+    background-color: #222;
+}

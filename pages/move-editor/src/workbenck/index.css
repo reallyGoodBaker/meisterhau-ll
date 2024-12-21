@@ -1,0 +1,56 @@
+body {
+    background-color: #181818;
+    color: #ccc;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+        'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
+        'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+        monospace;
+}
+
+a {
+    text-decoration: none;
+    color: #ccc;
+}
+
+/* 状态一: 未被访问过的链接 */
+a:link {
+    text-decoration: none;
+    color: #ccc;
+}
+
+/* 状态二: 已经访问过的链接 */
+a:visited {
+    text-decoration: none;
+    color: #ccc;
+}
+
+/* 状态三: 鼠标划过(停留)的链接(默认红色) */
+a:hover {
+    text-decoration: none;
+    color: #ccc;
+}
+/* 状态四: 被点击的链接 */
+a:active {
+    text-decoration: none;
+    color: #ccc;
+}
+
+#node-panel {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    width: 200px;
+    height: calc(100% - 48px);
+    background-color: #1f1f1f;
+    color: #ccc;
+    padding: 20px;
+    box-sizing: border-box;
+    z-index: 999;
+}

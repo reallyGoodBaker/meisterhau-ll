@@ -1,5 +1,6 @@
 import { CustomComponent } from "../core/component"
 import { PublicComponent, Fields } from "../core/config"
+import { HardmodeComponent } from "./hardmode"
 
 @PublicComponent('damage-modifier')
 @Fields([ 'modifier' ])
@@ -10,9 +11,20 @@ export class DamageModifier extends CustomComponent {
         return new DamageModifier(modifier)
     }
 
+    #modifier = DamageModifier.defaultModifier
+
+    get modifier() {
+        if (this.getManager().has(HardmodeComponent)) {
+            return HardmodeComponent.damageModifier
+        }
+
+        return this.#modifier
+    }
+
     constructor(
-        public modifier = DamageModifier.defaultModifier
+        modifier = DamageModifier.defaultModifier
     ) {
         super()
+        this.#modifier = modifier
     }
 }

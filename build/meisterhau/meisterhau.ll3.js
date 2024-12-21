@@ -5168,14 +5168,14 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             playAnim$7(pl, 'animation.weapon.shield_with_sword.punch');
-            ctx.adsorbOrSetVelocity(pl, 2, 90, 1);
+            ctx.adsorbOrSetVelocity(pl, 2, 90, 0.5);
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
             ctx.selectFromRange(pl, {
-                radius: 2.6,
+                radius: 1,
                 angle: 120,
                 rotation: -60
             }).forEach(en => {
@@ -5354,12 +5354,16 @@ class ShieldSwordMoves extends DefaultMoves$4 {
             sweapCounter: {
                 onHurt: {
                     prevent: true,
+                    allowedState: 'cast',
                 },
             },
             blocking: {
                 onEndOfLife: {
                     isSneaking: true
                 }
+            },
+            hurt: {
+                onHurt: null,
             }
         }
     };
@@ -5802,21 +5806,13 @@ var uchigatana = /*#__PURE__*/Object.freeze({
 
 var require$$7$1 = /*@__PURE__*/getAugmentedNamespace(uchigatana);
 
-var animations = {
-	parry: {
-		left: "animation.double_blade.parry.left"
-	}
-};
-var testMoveJson = {
-	animations: animations
-};
-
-console.log(testMoveJson);
 class DoubleBladeMoves extends DefaultMoves$4 {
     constructor() {
         super();
         this.animations.parry.left = 'animation.double_blade.parry.left';
         this.animations.block.left = 'animation.double_blade.block.left';
+        this.animations.parry.right = 'animation.double_blade.parry.right';
+        this.animations.block.right = 'animation.double_blade.block.right';
         this.setup('resume');
     }
     resume = {
@@ -5913,42 +5909,57 @@ class DoubleBladeMoves extends DefaultMoves$4 {
                 onReleaseLock: null
             },
             startLeft: {
-                onAttack: null
+                onAttack: {
+                    stamina: 22,
+                }
             },
             startRight: {
-                onUseItem: null
+                onUseItem: {
+                    stamina: 22,
+                }
+            },
+            dodge: {
+                onSneak: null
             },
         }
     };
     startLeft = {
-        cast: 7,
-        backswing: 14,
+        cast: 13,
+        backswing: 8,
         onEnter(pl, ctx) {
+            ctx.status.isBlocking = true;
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 22;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
             playAnim$7(pl, 'animation.double_blade.start_left');
-            ctx.adsorbOrSetVelocity(pl, 0.5, 90);
+            ctx.adsorbOrSetVelocity(pl, 0.5, 90, 1);
         },
         onLeave(pl, ctx) {
+            ctx.status.isBlocking = false;
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
-                angle: 40,
-                radius: 2.2,
-                rotation: -20
-            }).forEach(en => {
-                ctx.attack(pl, en, {
-                    damage: 17,
-                    damageType: 'entityAttack',
-                    knockback: 0.8,
-                    direction: 'left'
-                });
-            });
+            ctx.trap(pl);
         },
         timeline: {
-            4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90),
-            13: (_, ctx) => ctx.trap(_),
+            4: (_, ctx) => {
+                ctx.adsorbOrSetVelocity(_, 1.4, 90, 1);
+                ctx.status.isBlocking = false;
+            },
+            5: pl => playSoundAll$5('weapon.woosh.2', pl.pos),
+            7: (pl, ctx) => {
+                ctx.selectFromRange(pl, {
+                    angle: 40,
+                    radius: 2.2,
+                    rotation: -20
+                }).forEach(en => {
+                    ctx.attack(pl, en, {
+                        damage: 18,
+                        knockback: 0.8,
+                        direction: 'left'
+                    });
+                });
+            }
         },
         transitions: {
             resume: {
@@ -5965,40 +5976,65 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             },
             alternationLR: {
                 onTrap: {
-                    preInput: 'onUseItem'
+                    preInput: 'onUseItem',
+                    stamina: 22,
                 }
-            }
+            },
+            finishingL: {
+                onTrap: {
+                    preInput: 'onAttack',
+                    stamina: 30,
+                }
+            },
+            shield: {
+                onTrap: {
+                    preInput: 'onSneak',
+                    stamina: 10,
+                },
+            },
+            shieldFromBackswing: {
+                onSneak: {
+                    allowedState: 'backswing'
+                },
+            },
+            block: {
+                onBlock: null
+            },
         }
     };
     startRight = {
-        cast: 7,
-        backswing: 14,
+        cast: 13,
+        backswing: 8,
         onEnter(pl, ctx) {
+            ctx.status.isWaitingParry = true;
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 22;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
             playAnim$7(pl, 'animation.double_blade.start_right');
-            ctx.adsorbOrSetVelocity(pl, 0.5, 90);
+            ctx.adsorbOrSetVelocity(pl, 0.5, 90, 1);
         },
         onLeave(pl, ctx) {
+            ctx.status.isWaitingParry = false;
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.trap(pl);
+        },
+        timeline: {
+            3: (_, ctx) => ctx.status.isWaitingParry = false,
+            4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90, 1),
+            5: pl => playSoundAll$5('weapon.woosh.2', pl.pos),
+            7: (pl, ctx) => ctx.selectFromRange(pl, {
                 angle: 40,
                 radius: 2.2,
                 rotation: -20
             }).forEach(en => {
                 ctx.attack(pl, en, {
-                    damage: 17,
-                    damageType: 'entityAttack',
+                    damage: 18,
                     knockback: 0.8,
                     direction: 'right'
                 });
-            });
-        },
-        timeline: {
-            4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90),
-            13: (_, ctx) => ctx.trap(_),
+            }),
         },
         transitions: {
             resume: {
@@ -6010,45 +6046,64 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             parried: {
                 onParried: null
             },
-            blocked: {
-                onBlocked: null
-            },
             alternationRL: {
                 onTrap: {
-                    preInput: 'onAttack'
+                    preInput: 'onAttack',
+                    stamina: 22,
                 }
+            },
+            kick: {
+                onTrap: {
+                    preInput: 'onUseItem',
+                    stamina: 15,
+                }
+            },
+            shield: {
+                onTrap: {
+                    preInput: 'onSneak',
+                    stamina: 10,
+                },
+            },
+            shieldFromBackswing: {
+                onSneak: {
+                    allowedState: 'backswing'
+                },
+            },
+            parry: {
+                onParry: null
             }
         }
     };
     alternationLR = {
-        cast: 7,
-        backswing: 14,
+        cast: 13,
+        backswing: 8,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 22;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
             playAnim$7(pl, 'animation.double_blade.lr');
-            ctx.adsorbOrSetVelocity(pl, 1, 90);
+            ctx.adsorbOrSetVelocity(pl, 1, 90, 1);
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.trap(pl);
+        },
+        timeline: {
+            4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90, 1),
+            5: pl => playSoundAll$5('weapon.woosh.2', pl.pos),
+            7: (pl, ctx) => ctx.selectFromRange(pl, {
                 angle: 40,
                 radius: 2.2,
                 rotation: -20
             }).forEach(en => {
                 ctx.attack(pl, en, {
-                    damage: 19,
-                    damageType: 'entityAttack',
+                    damage: 23,
                     knockback: 0.8,
                     direction: 'right'
                 });
-            });
-        },
-        timeline: {
-            4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90),
-            13: (_, ctx) => ctx.trap(_),
+            }),
         },
         transitions: {
             resume: {
@@ -6060,45 +6115,264 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             parried: {
                 onParried: null
             },
-            blocked: {
-                onBlocked: null
-            },
             alternationRL: {
                 onTrap: {
-                    preInput: 'onAttack'
+                    preInput: 'onAttack',
+                    stamina: 22,
                 }
-            }
+            },
+            kick: {
+                onTrap: {
+                    preInput: 'onUseItem',
+                    stamina: 15,
+                }
+            },
+            shield: {
+                onTrap: {
+                    preInput: 'onSneak',
+                    stamina: 10,
+                },
+            },
+            shieldFromBackswing: {
+                onSneak: {
+                    allowedState: 'backswing'
+                },
+            },
         }
     };
     alternationRL = {
-        cast: 7,
-        backswing: 14,
+        cast: 13,
+        backswing: 8,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 22;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
             playAnim$7(pl, 'animation.double_blade.rl');
-            ctx.adsorbOrSetVelocity(pl, 1, 90);
+            ctx.adsorbOrSetVelocity(pl, 1, 90, 1);
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.trap(pl);
+        },
+        timeline: {
+            4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90, 1),
+            5: pl => playSoundAll$5('weapon.woosh.2', pl.pos),
+            7: (pl, ctx) => ctx.selectFromRange(pl, {
                 angle: 40,
                 radius: 2.2,
                 rotation: -20
             }).forEach(en => {
                 ctx.attack(pl, en, {
-                    damage: 19,
-                    damageType: 'entityAttack',
+                    damage: 23,
                     knockback: 0.8,
+                    direction: 'left'
+                });
+            }),
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null
+            },
+            hurt: {
+                onHurt: null
+            },
+            blocked: {
+                onBlocked: null
+            },
+            parried: {
+                onParried: null
+            },
+            alternationLR: {
+                onTrap: {
+                    preInput: 'onUseItem',
+                    stamina: 22,
+                },
+            },
+            finishingL: {
+                onTrap: {
+                    preInput: 'onAttack',
+                    stamina: 30,
+                },
+            },
+            shield: {
+                onTrap: {
+                    preInput: 'onSneak',
+                    stamina: 10,
+                },
+            },
+            shieldFromBackswing: {
+                onSneak: {
+                    allowedState: 'backswing'
+                },
+            },
+        }
+    };
+    dodge = {
+        cast: 3,
+        backswing: 9,
+        onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().setCooldown(10);
+            ctx.freeze(pl);
+            playAnim$7(pl, 'animation.double_blade.dodge');
+            ctx.setVelocity(pl, 180, 1);
+        },
+        onAct(_, ctx) {
+            ctx.status.isDodging = true;
+        },
+        onLeave(_, ctx) {
+            ctx.unfreeze(_);
+            ctx.status.isDodging = false;
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null
+            },
+            hurt: {
+                onHurt: null
+            },
+        }
+    };
+    finishingL = {
+        cast: 13,
+        backswing: 16,
+        onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
+            ctx.freeze(pl);
+            playAnim$7(pl, 'animation.double_blade.ll');
+            ctx.lookAtTarget(pl);
+        },
+        onLeave(pl, ctx) {
+            ctx.status.hegemony = false;
+            ctx.status.repulsible = true;
+            ctx.unfreeze(pl);
+        },
+        onAct(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 20;
+            ctx.selectFromRange(pl, {
+                angle: 120,
+                radius: 2.8,
+                rotation: -60
+            }).forEach(en => {
+                ctx.attack(pl, en, {
+                    damage: 34,
+                    damageType: 'entityAttack',
+                    knockback: 1.5,
                     direction: 'left'
                 });
             });
         },
         timeline: {
-            4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90),
-            13: (_, ctx) => ctx.trap(_),
+            3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
+            11: (pl, ctx) => {
+                ctx.adsorbOrSetVelocity(pl, 2, 90, 1);
+                playSoundAll$5('weapon.woosh.3', pl.pos);
+            },
+            10: (pl, ctx) => ctx.trap(pl, { tag: 'fient' }),
+            6: (_, ctx) => {
+                ctx.status.hegemony = true;
+                ctx.status.repulsible = false;
+            },
+            15: (_, ctx) => {
+                ctx.status.hegemony = false;
+                ctx.status.repulsible = true;
+            }
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null,
+                onTrap: {
+                    tag: 'fient',
+                    preInput: 'onFeint',
+                }
+            },
+            hurt: {
+                onHurt: null
+            },
+            parried: {
+                onParried: null
+            },
+            blocked: {
+                onBlocked: null
+            },
+        }
+    };
+    kick = {
+        cast: 7,
+        backswing: 13,
+        onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
+            ctx.freeze(pl);
+            ctx.lookAtTarget(pl);
+            playAnim$7(pl, 'animation.double_blade.rr');
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl);
+        },
+        onAct(pl, ctx) {
+            ctx.selectFromRange(pl, {
+                angle: 60,
+                radius: 2,
+                rotation: -30
+            }).forEach(en => {
+                ctx.attack(pl, en, {
+                    damage: 1,
+                    knockback: 1,
+                    direction: 'middle',
+                    stiffness: 700,
+                    parryable: false,
+                    permeable: true,
+                });
+            });
+        },
+        timeline: {
+            4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8),
+            14: (pl, ctx) => ctx.trap(pl),
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null
+            },
+            hurt: {
+                onHurt: null
+            },
+            kickCombo: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            },
+        }
+    };
+    kickCombo = {
+        cast: 7,
+        backswing: 16,
+        onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 25;
+            ctx.freeze(pl);
+            playAnim$7(pl, 'animation.double_blade.rrl');
+            ctx.adsorbOrSetVelocity(pl, 1, 90, 1);
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl);
+        },
+        onAct(pl, ctx) {
+            ctx.selectFromRange(pl, {
+                angle: 120,
+                radius: 2.8,
+                rotation: -60
+            }).forEach(en => {
+                ctx.attack(pl, en, {
+                    damage: 22,
+                    direction: 'left',
+                });
+            });
+        },
+        timeline: {
+            5: (pl, ctx) => {
+                ctx.adsorbOrSetVelocity(pl, 1.4, 90, 1);
+                playSoundAll$5('weapon.woosh.2', pl.pos);
+            },
         },
         transitions: {
             resume: {
@@ -6110,18 +6384,161 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             parried: {
                 onParried: null
             },
-            blocked: {
-                onBlocked: null
+        }
+    };
+    shield = {
+        cast: 15,
+        onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
+            ctx.freeze(pl);
+            const prevStatus = ctx.previousStatus;
+            if (prevStatus === 'shieldCounter') {
+                playAnim$7(pl, 'animation.double_blade.counter_shield');
+                ctx.adsorbOrSetVelocity(pl, 1, 90, 1);
+            }
+            else if (prevStatus.includes('RL') || prevStatus === 'startLeft') {
+                playAnim$7(pl, 'animation.double_blade.shield_left');
+            }
+            else {
+                playAnim$7(pl, 'animation.double_blade.shield_right');
+                ctx.adsorbOrSetVelocity(pl, 0.5, 90, 1);
+            }
+        },
+        onLeave(pl, ctx) {
+            ctx.status.isBlocking = false;
+            ctx.unfreeze(pl);
+        },
+        timeline: {
+            3: (_, ctx) => ctx.status.isBlocking = true,
+            10: (_, ctx) => ctx.status.isBlocking = false,
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null
             },
-            alternationLR: {
+            hurt: {
+                onHurt: null
+            },
+            shieldSuccess: {
+                onBlock: null
+            },
+        }
+    };
+    shieldSuccess = {
+        cast: 5,
+        backswing: 9,
+        onEnter(pl, ctx) {
+            ctx.status.isBlocking = true,
+                ctx.components.getComponent(Stamina$1).unwrap().stamina += 30;
+            ctx.freeze(pl);
+            playSoundAll$5('weapon.sword.hit2', pl.pos);
+            playAnim$7(pl, 'animation.double_blade.shield_success');
+            ctx.lookAtTarget(pl);
+        },
+        onLeave(pl, ctx) {
+            ctx.status.isBlocking = false;
+            ctx.unfreeze(pl);
+        },
+        onAct(_, ctx) {
+            ctx.status.isBlocking = false;
+        },
+        timeline: {
+            7: (_, ctx) => ctx.trap(_),
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null
+            },
+            hurt: {
+                onHurt: null
+            },
+            shieldSuccess: {
+                onBlock: null
+            },
+            shieldCounter: {
                 onTrap: {
                     preInput: 'onUseItem'
+                }
+            },
+            shieldFromBackswing: {
+                onSneak: {
+                    allowedState: 'backswing'
                 }
             }
         }
     };
-    finishingL = {
-        transitions: {}
+    shieldCounter = {
+        cast: 7,
+        backswing: 13,
+        onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 25;
+            ctx.freeze(pl);
+            playAnim$7(pl, 'animation.double_blade.shield_counter');
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl);
+        },
+        onAct(pl, ctx) {
+            ctx.selectFromRange(pl, {
+                angle: 60,
+                radius: 2.8,
+                rotation: -30
+            }).forEach(en => {
+                ctx.attack(pl, en, {
+                    damage: 25,
+                    direction: 'vertical',
+                });
+            });
+        },
+        timeline: {
+            3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
+            5: pl => playSoundAll$5('weapon.woosh.3', pl.pos),
+            14: (pl, ctx) => ctx.trap(pl),
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null,
+            },
+            hurt: {
+                onHurt: null
+            },
+            parried: {
+                onParried: null
+            },
+            shield: {
+                onTrap: {
+                    preInput: 'onSneak',
+                    stamina: 10,
+                }
+            },
+        }
+    };
+    shieldFromBackswing = {
+        cast: 15,
+        onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
+            ctx.freeze(pl);
+            playAnim$7(pl, 'animation.double_blade.shield');
+        },
+        onLeave(pl, ctx) {
+            ctx.status.isBlocking = false;
+            ctx.unfreeze(pl);
+        },
+        timeline: {
+            3: (_, ctx) => ctx.status.isBlocking = true,
+            10: (_, ctx) => ctx.status.isBlocking = false,
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null
+            },
+            hurt: {
+                onHurt: null
+            },
+            shieldSuccess: {
+                onBlock: null
+            },
+        }
     };
 }
 class DoubleBlade extends DefaultTrickModule$4 {
@@ -6706,7 +7123,7 @@ let HudComponent = class HudComponent extends BaseComponent {
         this.fadeOut = fadeOut;
         this.stay = stay;
     }
-    onTick(_, pl) {
+    onTick(manager, pl) {
         this.renderHud(pl);
     }
     renderHud(pl) {
@@ -6719,6 +7136,18 @@ HudComponent = HudComponent_1 = __decorate([
     PublicComponent('hud'),
     Fields(['content', 'type', 'fadeIn', 'fadeOut', 'stay'])
 ], HudComponent);
+
+var HardmodeComponent_1;
+let HardmodeComponent = class HardmodeComponent extends CustomComponent {
+    static { HardmodeComponent_1 = this; }
+    static damageModifier = 0.6;
+    static create() {
+        return new HardmodeComponent_1();
+    }
+};
+HardmodeComponent = HardmodeComponent_1 = __decorate([
+    PublicComponent('hardmode')
+], HardmodeComponent);
 
 var StatusHud_1;
 let StatusHud$1 = StatusHud_1 = class StatusHud extends HudComponent {
@@ -6780,9 +7209,11 @@ let StatusHud$1 = StatusHud_1 = class StatusHud extends HudComponent {
         return String(Math.round(val)).padStart(3, ' ') + '/'
             + String(Math.round(total)).padEnd(3, ' ');
     }
-    onTick(_, pl) {
-        this.renderStatus();
-        this.renderHud(pl);
+    onTick(manager, pl) {
+        if (!manager.has(HardmodeComponent)) {
+            this.renderStatus();
+            this.renderHud(pl);
+        }
     }
 };
 StatusHud$1 = StatusHud_1 = __decorate([
@@ -7175,15 +7606,21 @@ var require$$14 = /*@__PURE__*/getAugmentedNamespace(cameraFading);
 var DamageModifier_1;
 let DamageModifier$1 = class DamageModifier extends CustomComponent {
     static { DamageModifier_1 = this; }
-    modifier;
     static defaultModifier = 0.2;
     static defaultModifierOpt = new DamageModifier_1(DamageModifier_1.defaultModifier);
     static create({ modifier }) {
         return new DamageModifier_1(modifier);
     }
+    #modifier = DamageModifier_1.defaultModifier;
+    get modifier() {
+        if (this.getManager().has(HardmodeComponent)) {
+            return HardmodeComponent.damageModifier;
+        }
+        return this.#modifier;
+    }
     constructor(modifier = DamageModifier_1.defaultModifier) {
         super();
-        this.modifier = modifier;
+        this.#modifier = modifier;
     }
 };
 DamageModifier$1 = DamageModifier_1 = __decorate([
@@ -7404,6 +7841,7 @@ function antiTreeshaking$1() {
     return [
         HudComponent,
         HealthModifier,
+        HardmodeComponent,
     ];
 }
 
@@ -7562,6 +8000,7 @@ function getMoveDir(pl) {
  * @returns {MovementContext}
  */
 function _ctx(pl, mixins={}) {
+    const status = _status(pl);
     return {
         camera,
         movement,
@@ -7571,7 +8010,8 @@ function _ctx(pl, mixins={}) {
         attack,
         freeze,
         unfreeze,
-        status: _status(pl),
+        status,
+        components: status.componentManager,
         clearVelocity,
         impulse,
         setVelocity,

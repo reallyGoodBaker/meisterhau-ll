@@ -1,0 +1,9 @@
+@font-face {
+    font-family: 'Material Symbols Rounded';
+    font-style: normal;
+    src: url(./MaterialSymbolsRounded.woff2) format('woff');
+}
+
+.i {
+    font-family: 'Material Symbols Rounded', Roboto, 'Noto Sans', sans-serif;
+}

@@ -1,0 +1,28 @@
+.c {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+    padding: 12px;
+}
+
+.header {
+    display: flex;
+    font-size: x-large;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    width: 380px;
+    height: 160px;
+    border-radius: 12px;
+    border: solid 1px #444;
+    margin-bottom: 12px;
+    user-select: none;
+    cursor: pointer;
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+.header:hover {
+    background-color: #444;
+}
