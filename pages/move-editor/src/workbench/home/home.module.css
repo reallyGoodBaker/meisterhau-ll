@@ -5,22 +5,25 @@
     transform: translate(-50%, -50%);
     box-sizing: border-box;
     padding: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    width: 400px;
+    align-items: center;
+    gap: 12px;
 }
 
 .header {
+    box-sizing: border-box;
     display: flex;
-    font-size: x-large;
-    justify-content: center;
     align-items: center;
     gap: 12px;
-    width: 380px;
-    height: 160px;
+    width: 180px;
+    height: 52px;
     border-radius: 12px;
     border: solid 1px #444;
-    margin-bottom: 12px;
     user-select: none;
     cursor: pointer;
-    box-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
+    padding-left: 12px;
 }
 
 .header:hover {

@@ -54,3 +54,41 @@ a:active {
     box-sizing: border-box;
     z-index: 999;
 }
+
+.dialog-header  {
+    display: flex;
+    justify-content: space-between;
+}
+
+.node_type {
+    color: burlywood;
+}
+
+.property {
+    margin-top: 6px;
+    display: flex;
+    justify-content: space-between;
+}
+
+button {
+    appearance: none;
+    border: none;
+}
+
+.btn.delete {
+    width: 100%;
+    background-color: darkred;
+    height: 32px;
+    margin-top: 10px;
+    outline: none;
+    color: #fff;
+    border-radius: 16px;
+}
+
+.btn.delete:hover {
+    background-color: red;
+}
+
+.btn.delete:active {
+    background-color: darkred;
+}

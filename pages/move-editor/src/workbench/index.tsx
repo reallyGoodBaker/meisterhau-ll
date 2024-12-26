@@ -3,7 +3,6 @@ import { render } from 'solid-js/web'
 
 import './index.css'
 import App from './App'
-import { setupMoveEditorNodeTypes } from '../graph/graph'
 
 const root = document.getElementById('root')
 
@@ -14,5 +13,3 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 }
 
 render(() => <App />, root!)
-
-setupMoveEditorNodeTypes()

@@ -1,0 +1,36 @@
+.context_menu {
+    --x: 0;
+    --y: 0;
+    width: 240px;
+    max-height: 100vh;
+    position: fixed;
+    left: calc(var(--x) * 1px);
+    top: calc(var(--y) * 1px);
+    z-index: 999999999;
+    background-color: #1f1f1f;
+    border: 1px solid #454545;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+    padding: 8px 0px;
+    font-size: 14px;
+    border-radius: 8px;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+    user-select: none;
+    overflow: auto;
+}
+
+.menu_item {
+    box-sizing: border-box;
+    width: calc(100% - 16px);
+    padding: 5px 10px;
+    margin: 0 8px;
+    height: 32px;
+    display: flex;
+    position: relative;
+    align-items: center;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.menu_item:hover {
+    background-color: #333;
+}

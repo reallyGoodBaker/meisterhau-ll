@@ -211,8 +211,12 @@
             page = p
         }
 
-        rail.addEventListener('click', ev => {
-            const i = [...rail.children].indexOf(ev.target)
+        rail.addEventListener('click', ({ target }) => {
+            if (target === rail) {
+                return
+            }
+
+            const i = [...rail.children].indexOf(target)
             if (i === -1) {
                 switchPage(0)
                 return

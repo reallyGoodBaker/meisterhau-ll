@@ -16,11 +16,11 @@ const MoveList = () => {
 const Home = () => {
     return (
         <div class={styles.c}>
+            <MoveList/>
             <div class={styles.header}>
                 <Icon codePoint='e145' />
                 <div>添加状态图</div>
             </div>
-            <MoveList/>
         </div>
     )
 }

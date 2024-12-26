@@ -1,13 +1,12 @@
 import { createSignal } from 'solid-js'
 import { Tab } from '../tab/tab'
 import { createStore } from 'solid-js/store'
-import { useNavigate } from '@solidjs/router'
 
 export const defaultTab: Tab = { name: '主页', path: '/', persist: true }
 const [ tab, selectTab ] = createSignal<Tab>(defaultTab)
 
 export const [ tabs, setTabs ] = createStore([ defaultTab ])
-export const useTab = () => [ tab, selectTab ]
+export const useTab = () => [ tab, selectTab ] as const
 
 export function to(path: string, navigate: Function) {
     const tab = tabs.find(t => t.path === path)

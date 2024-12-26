@@ -1,0 +1,37 @@
+.line {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 6px;
+    position: absolute;
+    border: solid 1px transparent;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.line::after {
+    content: "";
+    width: 100%;
+    height: 2px;
+    background-color: #fff;
+}
+
+.line.selected {
+    background-color: #2d85f0;
+}
+
+.line.selected::after {
+    height: 3px;
+}
+
+.line:hover {
+    border-color: #fff;
+}
+
+.none_events {
+    pointer-events: none;
+}
+
+.canAttach {
+    background-color: #2d85f0;
+}

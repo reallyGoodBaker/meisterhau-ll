@@ -18,7 +18,6 @@
   },
   "dependencies": {
     "@solidjs/router": "^0.15.2",
-    "litegraph.js": "^0.7.18",
     "solid-js": "^1.9.3",
     "solid-keep-alive": "^0.2.3"
   }
