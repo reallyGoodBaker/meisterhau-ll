@@ -1,4 +1,3 @@
-const { rotateTo } = require('../../../scripts-rpc/func/combat')
 const { CameraComponent } = require('../components/camera')
 const { Status } = require('../core/status')
 const { rotate2, vec2, multiply2 } = require('./vec')
@@ -16,7 +15,7 @@ const cameraRot = (pl, easeTime, easeType, pos, rotX, rotY) => {
 }
 
 function clearCamera(pl) {
-    mc.runcmdEx(`camera "${pl.name}" set minecraft:third_person`)
+    mc.runcmdEx(`camera "${pl.name}" set meisterhau:battle`)
 }
 
 const ROT = Math.PI * 1

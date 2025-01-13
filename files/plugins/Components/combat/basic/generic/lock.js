@@ -168,6 +168,11 @@ const onTick = em => () => {
     })
 }
 
+const ignoreEntities = [
+    'minecraft:item',
+    'minecraft:xp_orb',
+]
+
 function getClosedEntity(en) {
     let closed = null
         ,dist = Infinity
@@ -177,7 +182,8 @@ function getClosedEntity(en) {
         angle: 46,
         rotate: -23,
     }).forEach(e => {
-        if (['minecraft:item'].includes(e.type)) {
+        console.log(e.type)
+        if (ignoreEntities.includes(e.type)) {
             return
         }
 

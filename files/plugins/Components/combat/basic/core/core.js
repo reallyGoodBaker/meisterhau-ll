@@ -1,4 +1,3 @@
-const { EventEmitter } = require('../../../events')
 const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = require('../../../scripts-rpc/func/kinematics')
 const { combat: { damage: _damage } } = require('../../../scripts-rpc/func/index')
 const { playAnim, playParticle } = require('../index')
@@ -20,8 +19,9 @@ const { DamageModifier } = require('../components/damage-modifier')
 const { registerCommand } = require('./commands')
 const { antiTreeshaking } = require('../components/anti-treeshaking')
 const { Stamina } = require('../components/core/stamina')
+const { eventCenter } = require('scripts-rpc/func/input')
 
-const em = new EventEmitter({ enableWatcher: true })
+const em = eventCenter({ enableWatcher: true })
 const es = EventInputStream.get(em)
 
 const yawToVec2 = yaw => {
@@ -48,7 +48,7 @@ function damageWithCameraFading(victim, damage, cause, abuser, projectile, damag
             x: dpos.x,
             y: abuserPos.y + 1.2,
             z: dpos.z,
-            dimid: victim.pos.dimid
+            dimid: victimPos.dimid
         })
     }, 100)
 }
@@ -79,14 +79,10 @@ function attack(abuser, victim, damageOpt) {
     em.emitNone('attack', abuser, victim, damageOpt)
 }
 
-const playerEvents = [
-    'onSneak',
-]
 const playerOverrideEvents = [
     'onUseItem',
     'onAttack',
     'onChangeSprinting',
-    'onJump',
 ]
 const mobEvents = [
     // 'onMobHurt',
@@ -954,19 +950,23 @@ function listenAllMcEvents(collection) {
             transition(pl, getMod(status.hand), status, n, prevent, args)
         }
 
-    playerEvents.forEach(n => {
-        mc.listen(n, (...args) => {
-            let cancelEvent = false,
-            prevent = () => cancelEvent = true
+    // playerEvents.forEach(n => {
+    //     mc.listen(n, (...args) => {
+    //         let cancelEvent = false,
+    //         prevent = () => cancelEvent = true
             
-            let pl = args[0]
-            es.put(n, [pl, prevent, args])
+    //         let pl = args[0]
+    //         es.put(n, [pl, prevent, args])
 
-            return !cancelEvent
-        })
+    //         return !cancelEvent
+    //     })
 
-        em.on(n, acceptableStreamHandler(n))
+    //     em.on(n, acceptableStreamHandler(n))
+    // })
+    em.on('input.sneak', (pl, isSneaking) => {
+        es.put('onSneak', [pl, Function.prototype, [ pl, isSneaking ]])
     })
+    em.on('onSneak', acceptableStreamHandler('onSneak'))
 
     mc.listen('onUseItem', (...args) => {
         const [ pl, item ] = args
@@ -1014,16 +1014,24 @@ function listenAllMcEvents(collection) {
         return !cancelEvent
     })
 
-    mc.listen('onJump', pl => {
-        if (hasLock(pl)) {
-            if (toggleLock(pl.uniqueId) === null) {
-                em.emitNone('onReleaseLock', pl, pl.getHand().type, null)
-                pl.tell('不要在锁定后跳跃')
-                clearCamera(pl)
-                initCombatComponent(pl, getMod(getHandedItemType(pl)), Status.get(pl.uniqueId))
-            }
+    // mc.listen('onJump', pl => {
+    //     if (hasLock(pl)) {
+    //         if (toggleLock(pl.uniqueId) === null) {
+    //             em.emitNone('onReleaseLock', pl, pl.getHand().type, null)
+    //             pl.tell('不要在锁定后跳跃')
+    //             clearCamera(pl)
+    //             initCombatComponent(pl, getMod(getHandedItemType(pl)), Status.get(pl.uniqueId))
+    //         }
+    //     }
+    // })
+    
+    em.on('input.jump', (pl, press) => {
+        if (hasLock(pl) && press) {
+            em.emitNone('onDodge', pl, pl.getHand().type, null)
         }
     })
+
+    em.on('onDodge', acceptableStreamHandler('onDodge'))
 
     playerOverrideEvents.forEach(n => em.on(n, acceptableStreamHandler(n)))
 

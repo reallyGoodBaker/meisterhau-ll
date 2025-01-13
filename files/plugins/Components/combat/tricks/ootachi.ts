@@ -82,7 +82,6 @@ class OotachiMoves extends DefaultMoves {
             running: {
                 onChangeSprinting: {
                     sprinting: true,
-                    
                 }
             },
             combo1Attack: {
@@ -96,7 +95,7 @@ class OotachiMoves extends DefaultMoves {
                 }
             },
             dodgePrepare: {
-                onSneak: null
+                onDodge: null
             },
             hurt: {
                 onHurt: null
@@ -114,7 +113,7 @@ class OotachiMoves extends DefaultMoves {
             dodgePrepare: {
                 onEndOfLife: {
                     hasTarget: true,
-                    preInput: 'onSneak'
+                    preInput: 'onDodge'
                 }
             },
             combo1Attack: {

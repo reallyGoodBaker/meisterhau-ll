@@ -171,7 +171,7 @@
         },
         {
             "sneak@key_binding_info": {
-                "$key_info": "闪避/常驻格挡/架势",
+                "$key_info": "常驻格挡/架势",
                 "$keyboard_key": "LShift",
                 "$controller_key": "",
                 "$touch_key": ""
@@ -191,6 +191,14 @@
                 "$keyboard_key": "E",
                 "$controller_key": "",
                 "$touch_key": ""
+            }
+        },
+        {
+            "feint@key_binding_info": {
+                "$key_info": "闪避",
+                "$keyboard_key": "Space",
+                "$controller_key": "",
+                "$touch_key": ""
             }
         }
     ]

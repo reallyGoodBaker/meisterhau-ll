@@ -5,7 +5,7 @@
         "name": "云梦之城",
         "uuid": "578e33d6-ad9c-4993-acca-e25434facc20",
         "version": [0, 0, 1],
-        "min_engine_version": [1, 20, 10]
+        "min_engine_version": [1, 20, 50]
     },
     "modules": [
         {
@@ -25,7 +25,7 @@
     "dependencies": [
         {
             "module_name": "@minecraft/server",
-            "version": "1.6.0"
+            "version": "1.11.0"
         }
     ]
 }

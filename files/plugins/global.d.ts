@@ -179,6 +179,7 @@ interface InputableTransitionMap {
     }
     onAttack: unknown
     onFeint: unknown
+    onDodge: unknown
 }
 
 interface TransitionTypeOptionMap extends InputableTransitionMap {

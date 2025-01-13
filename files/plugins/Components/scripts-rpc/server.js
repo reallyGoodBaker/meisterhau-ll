@@ -1,3 +1,5 @@
+const http = require('http')
+
 function handleCall(msg, em) {
     const { id, name, args } = msg
     em.emitNone('call', id, name, args)
@@ -35,6 +37,34 @@ function setup(list, em) {
     return server
 }
 
+function setupNodeHttpServer(list, em) {
+    return http.createServer((req, res) => {
+        if (req.url !== '/rpc') {
+            res.writeHead(404)
+            res.end()
+            return
+        }
+
+        let buf = Buffer.alloc(0)
+        req.on('data', chunk => buf = Buffer.concat([buf, chunk]))
+        req.on('end', () => {
+            const rpcMessages = JSON.parse(buf.toString())
+
+            rpcMessages.forEach(msg => {
+                if (msg.type === 'call') {
+                    handleCall(msg, em)
+                } else if (msg.type ==='return') {
+                    handleReturn(msg, em)
+                }
+            })
+
+            res.writeHead(200, { 'Content-Type': 'application/json' })
+            res.end(JSON.stringify(list.splice(0, list.length)))
+        })
+    })
+    .listen(19999)
+}
+
 module.exports = {
-    createServer: setup
+    createServer: setup, setupNodeHttpServer
 }

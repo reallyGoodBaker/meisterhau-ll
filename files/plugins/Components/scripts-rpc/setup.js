@@ -1,11 +1,11 @@
 const { EventEmitter } = require('../events')
 const { cmd } = require('../utils/command')
-const { createServer } = require('./server')
+const { setupNodeHttpServer } = require('./server')
 
 const em = new EventEmitter()
 const rpcChannel = []
 const remoteFuncs = new Map()
-const server = createServer(rpcChannel, em)
+const server = setupNodeHttpServer(rpcChannel, em)
 
 function rpcCall(id, name, args) {
     return {

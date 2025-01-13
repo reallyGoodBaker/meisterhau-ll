@@ -1,5 +1,7 @@
 'use strict';
 
+var require$$0$1 = require('http');
+
 function getDefaultExportFromCjs (x) {
 	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
 }
@@ -720,7 +722,7 @@ var command = /*#__PURE__*/Object.freeze({
 	cmd: cmd
 });
 
-var require$$1$2 = /*@__PURE__*/getAugmentedNamespace(command);
+var require$$1$1 = /*@__PURE__*/getAugmentedNamespace(command);
 
 var server;
 var hasRequiredServer;
@@ -728,6 +730,8 @@ var hasRequiredServer;
 function requireServer () {
 	if (hasRequiredServer) return server;
 	hasRequiredServer = 1;
+	const http = require$$0$1;
+
 	function handleCall(msg, em) {
 	    const { id, name, args } = msg;
 	    em.emitNone('call', id, name, args);
@@ -765,8 +769,36 @@ function requireServer () {
 	    return server
 	}
 
+	function setupNodeHttpServer(list, em) {
+	    return http.createServer((req, res) => {
+	        if (req.url !== '/rpc') {
+	            res.writeHead(404);
+	            res.end();
+	            return
+	        }
+
+	        let buf = Buffer.alloc(0);
+	        req.on('data', chunk => buf = Buffer.concat([buf, chunk]));
+	        req.on('end', () => {
+	            const rpcMessages = JSON.parse(buf.toString());
+
+	            rpcMessages.forEach(msg => {
+	                if (msg.type === 'call') {
+	                    handleCall(msg, em);
+	                } else if (msg.type ==='return') {
+	                    handleReturn(msg, em);
+	                }
+	            });
+
+	            res.writeHead(200, { 'Content-Type': 'application/json' });
+	            res.end(JSON.stringify(list.splice(0, list.length)));
+	        });
+	    })
+	    .listen(19999)
+	}
+
 	server = {
-	    createServer: setup
+	    createServer: setup, setupNodeHttpServer
 	};
 	return server;
 }
@@ -778,13 +810,13 @@ function requireSetup () {
 	if (hasRequiredSetup) return setup_1;
 	hasRequiredSetup = 1;
 	const { EventEmitter } = requireEvents();
-	const { cmd } = require$$1$2;
-	const { createServer } = requireServer();
+	const { cmd } = require$$1$1;
+	const { setupNodeHttpServer } = requireServer();
 
 	const em = new EventEmitter();
 	const rpcChannel = [];
 	const remoteFuncs = new Map();
-	const server = createServer(rpcChannel, em);
+	const server = setupNodeHttpServer(rpcChannel, em);
 
 	function rpcCall(id, name, args) {
 	    return {
@@ -907,7 +939,7 @@ var basic = /*#__PURE__*/Object.freeze({
 	playSoundAll: playSoundAll$5
 });
 
-var require$$3$1 = /*@__PURE__*/getAugmentedNamespace(basic);
+var require$$2$2 = /*@__PURE__*/getAugmentedNamespace(basic);
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -2000,10 +2032,10 @@ var _default = /*#__PURE__*/Object.freeze({
 	DefaultTrickModule: DefaultTrickModule$4
 });
 
-var require$$1$1 = /*@__PURE__*/getAugmentedNamespace(_default);
+var require$$1 = /*@__PURE__*/getAugmentedNamespace(_default);
 
-const { playAnim: playAnim$6, playSoundAll: playSoundAll$4 } = require$$3$1;
-const { DefaultMoves: DefaultMoves$3, DefaultTrickModule: DefaultTrickModule$3 } = require$$1$1;
+const { playAnim: playAnim$6, playSoundAll: playSoundAll$4 } = require$$2$2;
+const { DefaultMoves: DefaultMoves$3, DefaultTrickModule: DefaultTrickModule$3 } = require$$1;
 
 class DoubleDaggerMoves extends DefaultMoves$3 {
     constructor() {
@@ -2674,8 +2706,8 @@ double_dagger.tricks = new DoubleDaggerTricks();
 
 var emptyHand = {};
 
-const { playAnim: playAnim$5, playSoundAll: playSoundAll$3 } = require$$3$1;
-const { DefaultMoves: DefaultMoves$2, DefaultTrickModule: DefaultTrickModule$2 } = require$$1$1;
+const { playAnim: playAnim$5, playSoundAll: playSoundAll$3 } = require$$2$2;
+const { DefaultMoves: DefaultMoves$2, DefaultTrickModule: DefaultTrickModule$2 } = require$$1;
 
 class EmptyHandMoves extends DefaultMoves$2 {
     /**
@@ -2732,8 +2764,8 @@ var hud$2 = /*#__PURE__*/Object.freeze({
 
 var require$$3 = /*@__PURE__*/getAugmentedNamespace(hud$2);
 
-const { playAnim: playAnim$4, playSoundAll: playSoundAll$2 } = require$$3$1;
-const { DefaultMoves: DefaultMoves$1, DefaultTrickModule: DefaultTrickModule$1 } = require$$1$1;
+const { playAnim: playAnim$4, playSoundAll: playSoundAll$2 } = require$$2$2;
+const { DefaultMoves: DefaultMoves$1, DefaultTrickModule: DefaultTrickModule$1 } = require$$1;
 const { constrictCalc, randomRange } = require$$2$1;
 const { hud } = require$$3;
 
@@ -3325,8 +3357,8 @@ lightSaber.tricks = new LightSaberTrick();
 
 var moon_glaive = {};
 
-const { playAnim: playAnim$3, playSoundAll: playSoundAll$1, DEFAULT_POSTURE_SPEED: DEFAULT_POSTURE_SPEED$2 } = require$$3$1;
-const { DefaultMoves, DefaultTrickModule } = require$$1$1;
+const { playAnim: playAnim$3, playSoundAll: playSoundAll$1, DEFAULT_POSTURE_SPEED: DEFAULT_POSTURE_SPEED$2 } = require$$2$2;
+const { DefaultMoves, DefaultTrickModule } = require$$1;
 
 class MoonGlaiveTricks extends DefaultTrickModule {
     constructor() {
@@ -4207,7 +4239,7 @@ class OotachiMoves extends DefaultMoves$4 {
                 }
             },
             dodgePrepare: {
-                onSneak: null
+                onDodge: null
             },
             hurt: {
                 onHurt: null
@@ -4224,7 +4256,7 @@ class OotachiMoves extends DefaultMoves$4 {
             dodgePrepare: {
                 onEndOfLife: {
                     hasTarget: true,
-                    preInput: 'onSneak'
+                    preInput: 'onDodge'
                 }
             },
             combo1Attack: {
@@ -4855,7 +4887,7 @@ var require$$4 = /*@__PURE__*/getAugmentedNamespace(ootachi);
 
 var sheathed_katana = {};
 
-const { playAnim: playAnim$2, playSoundAll } = require$$3$1;
+const { playAnim: playAnim$2, playSoundAll } = require$$2$2;
 
 /**
  * @type {TrickModule}
@@ -5489,7 +5521,7 @@ var shield_with_sword = /*#__PURE__*/Object.freeze({
 	tricks: tricks$3
 });
 
-var require$$6$1 = /*@__PURE__*/getAugmentedNamespace(shield_with_sword);
+var require$$6 = /*@__PURE__*/getAugmentedNamespace(shield_with_sword);
 
 class UchigatanaMoves extends DefaultMoves$4 {
     constructor() {
@@ -6686,7 +6718,7 @@ var collection = [
     moon_glaive,
     require$$4,
     sheathed_katana,
-    require$$6$1,
+    require$$6,
     require$$7$1,
     require$$8$1,
     require$$9$1,
@@ -6856,7 +6888,7 @@ function selectFromRange$2(pl, range) {
             return
         }
 
-        if (dist <= 2) {
+        if (dist <= 1) {
             result.push(e);
             return
         }
@@ -6876,12 +6908,12 @@ var range = {
     selectFromRange: selectFromRange$2, defaultRange,
 };
 
-var require$$1 = /*@__PURE__*/getAugmentedNamespace(camera$3);
+var require$$0 = /*@__PURE__*/getAugmentedNamespace(camera$3);
 
-var require$$6 = /*@__PURE__*/getAugmentedNamespace(status);
+var require$$5 = /*@__PURE__*/getAugmentedNamespace(status);
 
-const { CameraComponent } = require$$1;
-const { Status: Status$2 } = require$$6;
+const { CameraComponent } = require$$0;
+const { Status: Status$2 } = require$$5;
 const { rotate2, vec2: vec2$1, multiply2 } = vec;
 
 const cameraInput$1 = (pl, enabled=true) => {
@@ -6897,7 +6929,7 @@ const cameraRot = (pl, easeTime, easeType, pos, rotX, rotY) => {
 };
 
 function clearCamera$2(pl) {
-    mc.runcmdEx(`camera "${pl.name}" set minecraft:third_person`);
+    mc.runcmdEx(`camera "${pl.name}" set meisterhau:battle`);
 }
 
 const ROT = Math.PI * 1;
@@ -7072,7 +7104,7 @@ var kinematic = {
     setVelocity: setVelocity$2, isCollide: isCollide$1
 };
 
-let TargetLock$1 = class TargetLock extends CustomComponent {
+let TargetLock$1 = class TargetLock extends BaseComponent {
     source;
     target;
     get sourcePlayer() {
@@ -7085,6 +7117,16 @@ let TargetLock$1 = class TargetLock extends CustomComponent {
         super();
         this.source = source;
         this.target = target;
+    }
+    onAttach(manager) {
+        this.sourcePlayer.use(p => {
+            mc.runcmdEx(`/inputpermission set ${p.name} jump disabled`);
+        });
+    }
+    onDetach(manager) {
+        this.sourcePlayer.use(p => {
+            mc.runcmdEx(`/inputpermission set ${p.name} jump enabled`);
+        });
     }
 };
 
@@ -7233,8 +7275,8 @@ const { selectFromRange: selectFromRange$1 } = range;
 const { battleCamera, cameraInput, clearCamera: clearCamera$1 } = camera_1;
 const { knockback: knockback$1, faceTo } = kinematics$1;
 const { setVelocity: setVelocity$1 } = kinematic;
-const { playAnim: playAnim$1, DEFAULT_POSTURE_SPEED: DEFAULT_POSTURE_SPEED$1, DEFAULT_SPEED: DEFAULT_SPEED$1 } = require$$3$1;
-const { Status: Status$1 } = require$$6;
+const { playAnim: playAnim$1, DEFAULT_POSTURE_SPEED: DEFAULT_POSTURE_SPEED$1, DEFAULT_SPEED: DEFAULT_SPEED$1 } = require$$2$2;
+const { Status: Status$1 } = require$$5;
 const { TargetLock } = require$$7;
 const { Optional } = require$$8;
 const { StatusHud } = require$$9;
@@ -7398,6 +7440,11 @@ const onTick$1 = em => () => {
     });
 };
 
+const ignoreEntities = [
+    'minecraft:item',
+    'minecraft:xp_orb',
+];
+
 function getClosedEntity(en) {
     let closed = null
         ,dist = Infinity;
@@ -7407,7 +7454,8 @@ function getClosedEntity(en) {
         angle: 46,
         rotate: -23,
     }).forEach(e => {
-        if (['minecraft:item'].includes(e.type)) {
+        console.log(e.type);
+        if (ignoreEntities.includes(e.type)) {
             return
         }
 
@@ -7432,7 +7480,7 @@ var lock = {
     adsorbTo: adsorbTo$1, adsorbOrSetVelocity: adsorbOrSetVelocity$1
 };
 
-const { DEFAULT_POSTURE_SPEED, DEFAULT_SPEED } = require$$3$1;
+const { DEFAULT_POSTURE_SPEED, DEFAULT_SPEED } = require$$2$2;
 const { hasLock: hasLock$1 } = lock;
 
 function movement$1(pl, enabled=true) {
@@ -7599,9 +7647,9 @@ var eventStream = {
     EventInputStream: EventInputStream$1
 };
 
-var require$$13 = /*@__PURE__*/getAugmentedNamespace(tick);
+var require$$12 = /*@__PURE__*/getAugmentedNamespace(tick);
 
-var require$$14 = /*@__PURE__*/getAugmentedNamespace(cameraFading);
+var require$$13 = /*@__PURE__*/getAugmentedNamespace(cameraFading);
 
 var DamageModifier_1;
 let DamageModifier$1 = class DamageModifier extends CustomComponent {
@@ -7633,7 +7681,7 @@ var damageModifier = /*#__PURE__*/Object.freeze({
 	get DamageModifier () { return DamageModifier$1; }
 });
 
-var require$$15 = /*@__PURE__*/getAugmentedNamespace(damageModifier);
+var require$$14 = /*@__PURE__*/getAugmentedNamespace(damageModifier);
 
 function registerCommand$1() {
     cmd('components', '管理组件', 1).setup(registry => {
@@ -7758,7 +7806,7 @@ var commands = /*#__PURE__*/Object.freeze({
 	registerCommand: registerCommand$1
 });
 
-var require$$16 = /*@__PURE__*/getAugmentedNamespace(commands);
+var require$$15 = /*@__PURE__*/getAugmentedNamespace(commands);
 
 class Scheduler extends BaseComponent {
     period;
@@ -7850,17 +7898,65 @@ var antiTreeshaking$2 = /*#__PURE__*/Object.freeze({
 	antiTreeshaking: antiTreeshaking$1
 });
 
-var require$$17 = /*@__PURE__*/getAugmentedNamespace(antiTreeshaking$2);
+var require$$16 = /*@__PURE__*/getAugmentedNamespace(antiTreeshaking$2);
 
-var require$$18 = /*@__PURE__*/getAugmentedNamespace(stamina);
+var require$$17 = /*@__PURE__*/getAugmentedNamespace(stamina);
 
-const { EventEmitter } = requireEvents();
+var setupExports = requireSetup();
+
+var eventsExports = requireEvents();
+
+var ButtonState;
+(function (ButtonState) {
+    ButtonState["Pressed"] = "Pressed";
+    ButtonState["Released"] = "Released";
+})(ButtonState || (ButtonState = {}));
+function eventCenter$1(opt) {
+    const em = new eventsExports.EventEmitter(opt);
+    setupExports.remote.expose('input.press.jump', (name) => {
+        const player = mc.getPlayer(name);
+        if (player) {
+            em.emit('input.jump', mc.getPlayer(name), true);
+        }
+    });
+    setupExports.remote.expose('input.release.jump', (name) => {
+        const player = mc.getPlayer(name);
+        if (player) {
+            em.emit('input.jump', mc.getPlayer(name), false);
+        }
+    });
+    setupExports.remote.expose('input.press.sneak', (name) => {
+        const player = mc.getPlayer(name);
+        if (player) {
+            em.emit('input.sneak', mc.getPlayer(name), true);
+        }
+    });
+    setupExports.remote.expose('input.release.sneak', (name) => {
+        const player = mc.getPlayer(name);
+        if (player) {
+            em.emit('input.sneak', mc.getPlayer(name), false);
+        }
+    });
+    setupExports.remote.expose('input.states.buttons', (states) => {
+        // console.log(states)
+    });
+    return em;
+}
+
+var input = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	get ButtonState () { return ButtonState; },
+	eventCenter: eventCenter$1
+});
+
+var require$$18 = /*@__PURE__*/getAugmentedNamespace(input);
+
 const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = kinematics$1;
 const { combat: { damage: _damage } } = func;
-const { playAnim, playParticle } = require$$3$1;
+const { playAnim, playParticle } = require$$2$2;
 const { movement, camera, movementInput } = generic;
 const { selectFromRange } = range;
-const { Status, defaultAcceptableInputs } = require$$6;
+const { Status, defaultAcceptableInputs } = require$$5;
 const { Task } = task;
 const { EventInputStream } = eventStream;
 const {
@@ -7870,14 +7966,15 @@ const {
 const { setVelocity, isCollide } = kinematic;
 const { vec2, vec2ToAngle } = vec;
 const { clearCamera } = camera_1;
-const { Tick } = require$$13;
-const { CameraFading } = require$$14;
-const { DamageModifier } = require$$15;
-const { registerCommand } = require$$16;
-const { antiTreeshaking } = require$$17;
-const { Stamina } = require$$18;
+const { Tick } = require$$12;
+const { CameraFading } = require$$13;
+const { DamageModifier } = require$$14;
+const { registerCommand } = require$$15;
+const { antiTreeshaking } = require$$16;
+const { Stamina } = require$$17;
+const { eventCenter } = require$$18;
 
-const em = new EventEmitter({ enableWatcher: true });
+const em = eventCenter({ enableWatcher: true });
 const es = EventInputStream.get(em);
 
 const yawToVec2 = yaw => {
@@ -7904,7 +8001,7 @@ function damageWithCameraFading(victim, damage, cause, abuser, projectile, damag
             x: dpos.x,
             y: abuserPos.y + 1.2,
             z: dpos.z,
-            dimid: victim.pos.dimid
+            dimid: victimPos.dimid
         });
     }, 100);
 }
@@ -7935,14 +8032,10 @@ function attack(abuser, victim, damageOpt) {
     em.emitNone('attack', abuser, victim, damageOpt);
 }
 
-const playerEvents = [
-    'onSneak',
-];
 const playerOverrideEvents = [
     'onUseItem',
     'onAttack',
     'onChangeSprinting',
-    'onJump',
 ];
 const mobEvents = [
     // 'onMobHurt',
@@ -8810,19 +8903,23 @@ function listenAllMcEvents(collection) {
             transition(pl, getMod(status.hand), status, n, prevent, args);
         };
 
-    playerEvents.forEach(n => {
-        mc.listen(n, (...args) => {
-            let cancelEvent = false,
-            prevent = () => cancelEvent = true;
+    // playerEvents.forEach(n => {
+    //     mc.listen(n, (...args) => {
+    //         let cancelEvent = false,
+    //         prevent = () => cancelEvent = true
             
-            let pl = args[0];
-            es.put(n, [pl, prevent, args]);
+    //         let pl = args[0]
+    //         es.put(n, [pl, prevent, args])
 
-            return !cancelEvent
-        });
+    //         return !cancelEvent
+    //     })
 
-        em.on(n, acceptableStreamHandler(n));
+    //     em.on(n, acceptableStreamHandler(n))
+    // })
+    em.on('input.sneak', (pl, isSneaking) => {
+        es.put('onSneak', [pl, Function.prototype, [ pl, isSneaking ]]);
     });
+    em.on('onSneak', acceptableStreamHandler('onSneak'));
 
     mc.listen('onUseItem', (...args) => {
         const [ pl, item ] = args;
@@ -8870,16 +8967,24 @@ function listenAllMcEvents(collection) {
         return !cancelEvent
     });
 
-    mc.listen('onJump', pl => {
-        if (hasLock(pl)) {
-            if (toggleLock(pl.uniqueId) === null) {
-                em.emitNone('onReleaseLock', pl, pl.getHand().type, null);
-                pl.tell('不要在锁定后跳跃');
-                clearCamera(pl);
-                initCombatComponent(pl, getMod(getHandedItemType(pl)), Status.get(pl.uniqueId));
-            }
+    // mc.listen('onJump', pl => {
+    //     if (hasLock(pl)) {
+    //         if (toggleLock(pl.uniqueId) === null) {
+    //             em.emitNone('onReleaseLock', pl, pl.getHand().type, null)
+    //             pl.tell('不要在锁定后跳跃')
+    //             clearCamera(pl)
+    //             initCombatComponent(pl, getMod(getHandedItemType(pl)), Status.get(pl.uniqueId))
+    //         }
+    //     }
+    // })
+    
+    em.on('input.jump', (pl, press) => {
+        if (hasLock(pl) && press) {
+            em.emitNone('onDodge', pl, pl.getHand().type, null);
         }
     });
+
+    em.on('onDodge', acceptableStreamHandler('onDodge'));
 
     playerOverrideEvents.forEach(n => em.on(n, acceptableStreamHandler(n)));
 
