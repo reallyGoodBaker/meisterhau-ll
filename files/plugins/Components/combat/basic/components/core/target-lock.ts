@@ -12,7 +12,7 @@ export class TargetLock extends BaseComponent {
 
     constructor(
         public source: string,
-        public target: Optional<Player|Entity> = Optional.none(),
+        public target = Optional.none<Player|Entity>(),
     ) {
         super()
     }
