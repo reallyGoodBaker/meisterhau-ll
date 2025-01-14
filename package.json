@@ -14,15 +14,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@minecraft/server": "^1.17.0-beta.1.21.51-stable",
-    "@minecraft/server-admin": "^1.0.0-beta.11940b24",
-    "@minecraft/server-net": "^1.0.0-beta.11940b24",
     "i": "^0.3.7",
     "node-watch": "^0.7.3",
     "npm": "^11.0.0",
     "unzipper": "^0.12.3"
   },
   "devDependencies": {
+    "@minecraft/server": "^1.17.0-beta.1.21.51-stable",
+    "@minecraft/server-admin": "^1.0.0-beta.11940b24",
+    "@minecraft/server-net": "^1.0.0-beta.11940b24",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
