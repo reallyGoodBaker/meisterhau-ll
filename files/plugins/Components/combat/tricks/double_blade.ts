@@ -1,7 +1,6 @@
 import { playAnim, playSoundAll } from "../basic/index"
 import { DefaultMoves, DefaultTrickModule } from "../basic/default"
 import { Stamina } from "@combat/basic/components/core/stamina"
-import { CustomComponent } from '../basic/core/component'
 
 class DoubleBladeMoves extends DefaultMoves {
     constructor() {
@@ -123,6 +122,9 @@ class DoubleBladeMoves extends DefaultMoves {
                 }
             },
             dodge: {
+                onDodge: null
+            },
+            shield: {
                 onSneak: null
             },
         }
@@ -193,7 +195,7 @@ class DoubleBladeMoves extends DefaultMoves {
             },
             shield: {
                 onTrap: {
-                    preInput: 'onSneak',
+                    preInput: 'onDodge',
                     stamina: 10,
                 },
             },
@@ -266,7 +268,7 @@ class DoubleBladeMoves extends DefaultMoves {
             },
             shield: {
                 onTrap: {
-                    preInput: 'onSneak',
+                    preInput: 'onDodge',
                     stamina: 10,
                 },
             },
@@ -337,7 +339,7 @@ class DoubleBladeMoves extends DefaultMoves {
             },
             shield: {
                 onTrap: {
-                    preInput: 'onSneak',
+                    preInput: 'onDodge',
                     stamina: 10,
                 },
             },
@@ -408,7 +410,7 @@ class DoubleBladeMoves extends DefaultMoves {
             },
             shield: {
                 onTrap: {
-                    preInput: 'onSneak',
+                    preInput: 'onDodge',
                     stamina: 10,
                 },
             },
@@ -615,9 +617,11 @@ class DoubleBladeMoves extends DefaultMoves {
                 ctx.adsorbOrSetVelocity(pl, 1, 90, 1)
             } else if (prevStatus.includes('RL') || prevStatus === 'startLeft') {
                 playAnim(pl, 'animation.double_blade.shield_left')
-            } else {
+            } else if (prevStatus.includes('LR') || prevStatus === 'startRight') {
                 playAnim(pl, 'animation.double_blade.shield_right')
                 ctx.adsorbOrSetVelocity(pl, 0.5, 90, 1)
+            } else {
+                playAnim(pl, 'animation.double_blade.shield')
             }
         },
         onLeave(pl, ctx) {
@@ -725,7 +729,7 @@ class DoubleBladeMoves extends DefaultMoves {
             },
             shield: {
                 onTrap: {
-                    preInput: 'onSneak',
+                    preInput: 'onDodge',
                     stamina: 10,
                 }
             },

@@ -79,7 +79,7 @@ function lookAt(pl, en) {
 
     const [ yaw, pitch ] = getAngle(pl, en)
 
-    pl.teleport(pl.feetPos, new DirectionAngle(pitch, yaw))
+    pl.teleport(pl.feetPos, new DirectionAngle(0, yaw))
     // const bs = new BinaryStream()
     // bs.writeVarInt64(+pl.uniqueId)
     // bs.writeVec3(pl.pos)
@@ -181,7 +181,6 @@ function getClosedEntity(en) {
         angle: 46,
         rotate: -23,
     }).forEach(e => {
-        console.log(e.type)
         if (ignoreEntities.includes(e.type)) {
             return
         }

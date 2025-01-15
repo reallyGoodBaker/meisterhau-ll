@@ -20,12 +20,14 @@ export class TargetLock extends BaseComponent {
     onAttach(manager: ComponentManager): boolean | void | Promise<boolean | void> {
         this.sourcePlayer.use(p => {
             mc.runcmdEx(`/inputpermission set ${p.name} jump disabled`)
+            mc.runcmdEx(`/inputpermission set ${p.name} sneak disabled`)
         })
     }
 
     onDetach(manager: ComponentManager): void | Promise<void> {
         this.sourcePlayer.use(p => {
             mc.runcmdEx(`/inputpermission set ${p.name} jump enabled`)
+            mc.runcmdEx(`/inputpermission set ${p.name} sneak enabled`)
         })
     }
 }

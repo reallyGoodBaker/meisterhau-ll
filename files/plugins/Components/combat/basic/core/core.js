@@ -1026,8 +1026,8 @@ function listenAllMcEvents(collection) {
     // })
     
     em.on('input.jump', (pl, press) => {
-        if (hasLock(pl) && press) {
-            em.emitNone('onDodge', pl, pl.getHand().type, null)
+        if (press) {
+            em.emitNone(hasLock(pl) ? 'onDodge' : 'onJump', pl, pl.getHand().type, null);
         }
     })
 
