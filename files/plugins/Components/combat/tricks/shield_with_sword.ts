@@ -148,8 +148,8 @@ class ShieldSwordMoves extends DefaultMoves {
     }
 
     draw: Move = {
-        cast: 6,
-        backswing: 14,
+        cast: 7,
+        backswing: 13,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             playAnim(pl, 'animation.weapon.shield_with_sword.draw')
@@ -208,8 +208,8 @@ class ShieldSwordMoves extends DefaultMoves {
     }
 
     heavyChopAct: Move = {
-        cast: 7,
-        backswing: 16,
+        cast: 8,
+        backswing: 15,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.adsorbOrSetVelocity(pl, 2, 90)
@@ -255,8 +255,8 @@ class ShieldSwordMoves extends DefaultMoves {
     }
 
     punch: Move = {
-        cast: 6,
-        backswing: 14,
+        cast: 7,
+        backswing: 13,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             playAnim(pl, 'animation.weapon.shield_with_sword.punch')
@@ -318,8 +318,8 @@ class ShieldSwordMoves extends DefaultMoves {
     }
 
     chopCombo: Move = {
-        cast: 6,
-        backswing: 14,
+        cast: 7,
+        backswing: 13,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.adsorbOrSetVelocity(pl, 2, 90)
@@ -467,8 +467,8 @@ class ShieldSwordMoves extends DefaultMoves {
     }
 
     sweapCounter: Move = {
-        cast: 11,
-        backswing: 10,
+        cast: 12,
+        backswing: 9,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.adsorbToTarget(pl, 4, 0.5)
@@ -536,8 +536,8 @@ class ShieldSwordMoves extends DefaultMoves {
     }
 
     swordCounter: Move = {
-        cast: 6,
-        backswing: 7,
+        cast: 7,
+        backswing: 6,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)

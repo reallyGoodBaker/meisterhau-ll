@@ -88,8 +88,8 @@ class DoubleDaggerMoves extends DefaultMoves {
      * @type {Move}
      */
     horizontalSwing = {
-        cast: 9,
-        backswing: 11,
+        cast: 10,
+        backswing: 10,
         onEnter(pl, ctx) {
             ctx.status.isBlocking = true
             ctx.freeze(pl)
@@ -166,8 +166,8 @@ class DoubleDaggerMoves extends DefaultMoves {
      * @type {Move}
      */
     horizontalSwingToVeticalChop = {
-        cast: 10,
-        backswing: 11,
+        cast: 11,
+        backswing: 10,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             playAnim(pl, 'animation.double_dagger.horizontal_swing.to.vertical_chop')
@@ -227,8 +227,8 @@ class DoubleDaggerMoves extends DefaultMoves {
      * @type {Move}
      */
     stab = {
-        cast: 10,
-        backswing: 12,
+        cast: 11,
+        backswing: 11,
         onEnter(pl, ctx) {
             ctx.status.isWaitingParry = true
             ctx.freeze(pl)
@@ -403,8 +403,8 @@ class DoubleDaggerMoves extends DefaultMoves {
      * @type {Move}
      */
     deflectionStab = {
-        cast: 7,
-        backswing: 9,
+        cast: 8,
+        backswing: 8,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             playAnim(pl, 'animation.double_dagger.deflection.stab')
@@ -451,8 +451,8 @@ class DoubleDaggerMoves extends DefaultMoves {
      * @type {Move}
      */
     deflectionPunch = {
-        cast: 3,
-        backswing: 9,
+        cast: 4,
+        backswing: 8,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.adsorbOrSetVelocity(pl, 1.5, 90, 0.8)
@@ -493,8 +493,8 @@ class DoubleDaggerMoves extends DefaultMoves {
      * @type {Move}
      */
     catchTargrt = {
-        cast: 5,
-        backswing: 15,
+        cast: 6,
+        backswing: 14,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             playAnim(pl, 'animation.double_dagger.dodge.catch')
@@ -579,8 +579,8 @@ class DoubleDaggerMoves extends DefaultMoves {
      * @type {Move}
      */
     quickStab = {
-        cast: 4,
-        backswing: 12,
+        cast: 5,
+        backswing: 11,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             playAnim(pl, 'animation.double_dagger.catch.stab')
@@ -620,8 +620,8 @@ class DoubleDaggerMoves extends DefaultMoves {
      * @type {Move}
      */
     kick = {
-        cast: 5,
-        backswing: 11,
+        cast: 6,
+        backswing: 10,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             playAnim(pl, 'animation.double_dagger.catch.kick')

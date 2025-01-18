@@ -113,8 +113,8 @@ class UchigatanaMoves extends DefaultMoves {
     }
 
     attack1: Move = {
-        cast: 7,
-        backswing: 14,
+        cast: 9,
+        backswing: 12,
         onEnter(pl, ctx) {
             ctx.status.isBlocking = true
             ctx.freeze(pl)
@@ -172,8 +172,8 @@ class UchigatanaMoves extends DefaultMoves {
     }
 
     attack1Heavy: Move = {
-        cast: 10,
-        backswing: 16,
+        cast: 11,
+        backswing: 15,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
@@ -235,8 +235,8 @@ class UchigatanaMoves extends DefaultMoves {
     }
 
     attack2: Move = {
-        cast: 2,
-        backswing: 13,
+        cast: 3,
+        backswing: 12,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             playAnim(pl, 'animation.weapon.uchigatana.attack2')
@@ -275,8 +275,8 @@ class UchigatanaMoves extends DefaultMoves {
     }
 
     attack2Heavy: Move = {
-        cast: 2,
-        backswing: 13,
+        cast: 3,
+        backswing: 12,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             playAnim(pl, 'animation.weapon.uchigatana.attack2.heavy')

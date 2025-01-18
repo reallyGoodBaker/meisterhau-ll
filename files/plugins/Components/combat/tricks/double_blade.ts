@@ -154,7 +154,7 @@ class DoubleBladeMoves extends DefaultMoves {
                 ctx.status.isBlocking = false
             },
             5: pl => playSoundAll('weapon.woosh.2', pl.pos),
-            7: (pl, ctx) => {
+            8: (pl, ctx) => {
                 ctx.selectFromRange(pl, {
                     angle: 40,
                     radius: 2.2,
@@ -232,7 +232,7 @@ class DoubleBladeMoves extends DefaultMoves {
             3: (_, ctx) => ctx.status.isWaitingParry = false,
             4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90, 1),
             5: pl => playSoundAll('weapon.woosh.2', pl.pos),
-            7: (pl, ctx) => ctx.selectFromRange(pl, {
+            8: (pl, ctx) => ctx.selectFromRange(pl, {
                 angle: 40,
                 radius: 2.2,
                 rotation: -20
@@ -302,7 +302,7 @@ class DoubleBladeMoves extends DefaultMoves {
         timeline: {
             4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90, 1),
             5: pl => playSoundAll('weapon.woosh.2', pl.pos),
-            7: (pl, ctx) => 
+            8: (pl, ctx) => 
                 ctx.selectFromRange(pl, {
                     angle: 40,
                     radius: 2.2,
@@ -370,7 +370,7 @@ class DoubleBladeMoves extends DefaultMoves {
         timeline: {
             4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90, 1),
             5: pl => playSoundAll('weapon.woosh.2', pl.pos),
-            7: (pl, ctx) =>
+            8: (pl, ctx) =>
                 ctx.selectFromRange(pl, {
                     angle: 40,
                     radius: 2.2,
@@ -449,8 +449,8 @@ class DoubleBladeMoves extends DefaultMoves {
     }
 
     finishingL: Move = {
-        cast: 13,
-        backswing: 16,
+        cast: 14,
+        backswing: 15,
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10
             ctx.freeze(pl)
@@ -516,8 +516,8 @@ class DoubleBladeMoves extends DefaultMoves {
     }
 
     kick: Move = {
-        cast: 7,
-        backswing: 13,
+        cast: 8,
+        backswing: 12,
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10
             ctx.freeze(pl)
@@ -563,8 +563,8 @@ class DoubleBladeMoves extends DefaultMoves {
     }
 
     kickCombo: Move = {
-        cast: 7,
-        backswing: 16,
+        cast: 8,
+        backswing: 15,
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 25
             ctx.freeze(pl)
@@ -690,8 +690,8 @@ class DoubleBladeMoves extends DefaultMoves {
     }
 
     shieldCounter: Move = {
-        cast: 7,
-        backswing: 13,
+        cast: 8,
+        backswing: 12,
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 25
             ctx.freeze(pl)

@@ -163,8 +163,8 @@ class OotachiMoves extends DefaultMoves {
     }
 
     combo1Attack: Move = {
-        cast: 7,
-        backswing: 13,
+        cast: 8,
+        backswing: 12,
         timeline: {
             5: (_, ctx) => ctx.status.isBlocking = false,
             7: pl => playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1),
@@ -236,8 +236,8 @@ class OotachiMoves extends DefaultMoves {
     }
 
     combo1Chop: Move = {
-        cast: 10,
-        backswing: 14,
+        cast: 11,
+        backswing: 13,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 22
@@ -324,8 +324,8 @@ class OotachiMoves extends DefaultMoves {
     }
 
     combo2Cut: Move = {
-        cast: 8,
-        backswing: 18,
+        cast: 9,
+        backswing: 17,
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 18
             ctx.lookAtTarget(pl)
@@ -393,8 +393,8 @@ class OotachiMoves extends DefaultMoves {
 
 
     combo2Sweap: Move = {
-        cast: 12,
-        backswing: 14,
+        cast: 13,
+        backswing: 13,
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 28
             ctx.lookAtTarget(pl)
@@ -469,8 +469,8 @@ class OotachiMoves extends DefaultMoves {
     }
 
     combo3Stab: Move = {
-        cast: 8,
-        backswing: 17,
+        cast: 9,
+        backswing: 16,
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 17
             ctx.freeze(pl)
@@ -518,8 +518,8 @@ class OotachiMoves extends DefaultMoves {
     }
 
     combo3Sweap: Move = {
-        cast: 16,
-        backswing: 19,
+        cast: 17,
+        backswing: 18,
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 33
             ctx.lookAtTarget(pl)
@@ -698,8 +698,8 @@ class OotachiMoves extends DefaultMoves {
      * @type {Move}
      */
     hlitStrike: Move = {
-        cast: 6,
-        backswing: 4,
+        cast: 7,
+        backswing: 3,
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 12
             playAnim(pl, 'animation.weapon.ootachi.hlit')
