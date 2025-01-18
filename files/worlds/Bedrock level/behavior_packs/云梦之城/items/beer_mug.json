@@ -4,7 +4,8 @@
         "description": {
             "identifier": "goblet:beer_mug",
             "menu_category": {
-                "category": "items"
+                "category": "items",
+                "group": "itemGroup.name.sword"
             }
         },
         "components": {
@@ -18,3 +19,4 @@
         }
     }
 }
+// 比如放在🗡的分类里面
