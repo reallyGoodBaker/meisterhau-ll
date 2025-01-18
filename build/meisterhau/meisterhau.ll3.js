@@ -6428,6 +6428,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
     shield = {
         cast: 15,
         onEnter(pl, ctx) {
+            ctx.status.isBlocking = true;
             ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
             ctx.freeze(pl);
             const prevStatus = ctx.previousStatus;
@@ -6451,7 +6452,6 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             ctx.unfreeze(pl);
         },
         timeline: {
-            1: (_, ctx) => ctx.status.isBlocking = true,
             10: (_, ctx) => ctx.status.isBlocking = false,
         },
         transitions: {
@@ -6931,7 +6931,7 @@ const camera$2 = (pl, easeTime, easeType, pos, lookAt) => {
 };
 
 const cameraRot = (pl, easeTime, easeType, pos, rotX, rotY) => {
-    mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} rot ${rotX} ${rotY}`); 
+    mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} rot ${0} ${rotY}`); 
 };
 
 function clearCamera$2(pl) {
