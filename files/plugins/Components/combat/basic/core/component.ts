@@ -142,11 +142,15 @@ export class ComponentManager {
 
         for (const component of this.#components.values()) {
 
-            if (REFLECT_ENTITY in component) {
+            //@ts-ignore
+            if (!component[REFLECT_ENTITY]) {
+                //@ts-ignore
                 component[REFLECT_ENTITY] = Optional.some(en)
             }
 
-            if (REFLECT_MANAGER in component) {
+            //@ts-ignore
+            if (!component[REFLECT_MANAGER]) {
+                //@ts-ignore
                 component[REFLECT_MANAGER] = this
             }
 

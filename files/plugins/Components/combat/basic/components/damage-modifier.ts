@@ -1,10 +1,10 @@
-import { CustomComponent } from "../core/component"
+import { BaseComponent, ComponentManager } from "../core/component"
 import { PublicComponent, Fields } from "../core/config"
 import { HardmodeComponent } from "./hardmode"
 
 @PublicComponent('damage-modifier')
 @Fields([ 'modifier' ])
-export class DamageModifier extends CustomComponent {
+export class DamageModifier extends BaseComponent {
     static defaultModifier = 0.2
     static defaultModifierOpt = new DamageModifier(DamageModifier.defaultModifier)
     static create({ modifier }: { modifier: number }) {
@@ -14,11 +14,16 @@ export class DamageModifier extends CustomComponent {
     #modifier = DamageModifier.defaultModifier
 
     get modifier() {
-        if (this.getManager().has(HardmodeComponent)) {
-            return HardmodeComponent.damageModifier
+        return this.#modifier
+    }
+
+    onAttach(manager: ComponentManager): boolean | void | Promise<boolean | void> {
+        const hardmode = manager.getComponent(HardmodeComponent)
+        if (hardmode.isEmpty()) {
+            return
         }
 
-        return this.#modifier
+        this.#modifier = HardmodeComponent.damageModifier
     }
 
     constructor(

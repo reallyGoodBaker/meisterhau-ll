@@ -991,7 +991,7 @@ let Optional$1 = class Optional {
         return this.value === undefined || this.value === null;
     }
     orElse(other) {
-        return this.value || other;
+        return this.value ?? other;
     }
     use(fn, self) {
         if (!this.isEmpty()) {
@@ -1100,10 +1100,14 @@ class ComponentManager {
         }
         this.#prependTicks.length = 0;
         for (const component of this.#components.values()) {
-            if (REFLECT_ENTITY in component) {
+            //@ts-ignore
+            if (!component[REFLECT_ENTITY]) {
+                //@ts-ignore
                 component[REFLECT_ENTITY] = Optional$1.some(en);
             }
-            if (REFLECT_MANAGER in component) {
+            //@ts-ignore
+            if (!component[REFLECT_MANAGER]) {
+                //@ts-ignore
                 component[REFLECT_MANAGER] = this;
             }
             const { onTick } = component;
@@ -6447,7 +6451,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             ctx.unfreeze(pl);
         },
         timeline: {
-            3: (_, ctx) => ctx.status.isBlocking = true,
+            1: (_, ctx) => ctx.status.isBlocking = true,
             10: (_, ctx) => ctx.status.isBlocking = false,
         },
         transitions: {
@@ -6786,16 +6790,12 @@ async function damage(victim, damage, cause, abuser, projectile) {
     // _damageLL(victim, damage)
 }
 
-/**
- * 
- * @param {Entity} victim
- */
-function _damageLL(victim, damage, cause, abuser, projectile) {
+function _damageLL$1(victim, damage) {
     victim.hurt(damage, ActorDamageCause.EntityAttack);
 }
 
 var combat$1 = {
-    damage, _damageLL,
+    damage, _damageLL: _damageLL$1,
 };
 
 const kinematics = kinematics$1;
@@ -6930,11 +6930,16 @@ const camera$2 = (pl, easeTime, easeType, pos, lookAt) => {
     mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} facing ${lookAt.x} ${lookAt.y} ${lookAt.z}`);
 };
 
+const cameraRot = (pl, easeTime, easeType, pos, rotX, rotY) => {
+    mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} rot ${rotX} ${rotY}`); 
+};
+
 function clearCamera$2(pl) {
     mc.runcmdEx(`camera "${pl.name}" set meisterhau:battle`);
 }
 
 const ROT = Math.PI * 1;
+const ANGLE = 180 / Math.PI;
 
 const battleCameraMiddlePoint = (pl, en) => {
     const plPos = pl.pos;
@@ -7042,13 +7047,16 @@ const battleCamera$1 = (pl, en) => {
     //     z: enPos.z,
     //     y: cameraPos.y
     // })
-    ({
+    const cameraEntityVec = {
         x: enPos.x - cameraPos.x,
         z: enPos.z - cameraPos.z,
         y: cameraPos.y
-    });
-    cameraComponent.rot;
-    // cameraRot(pl, 0.1, 'linear', cameraPos, pitch + dPitch, yaw + dYaw)
+    };
+
+    const yaw = Math.atan2(cameraEntityVec.z, cameraEntityVec.x) * ANGLE - 90;
+    const pitch = (Math.atan2(Math.sqrt(cameraEntityVec.x * cameraEntityVec.x + cameraEntityVec.z * cameraEntityVec.z), cameraEntityVec.y)) * ANGLE;
+    const [ dYaw, dPitch ] = cameraComponent.rot;
+    cameraRot(pl, 0.1, 'linear', cameraPos, pitch + dPitch, yaw + dYaw);
 };
 
 var camera_1 = {
@@ -7650,7 +7658,7 @@ var require$$12 = /*@__PURE__*/getAugmentedNamespace(tick);
 var require$$13 = /*@__PURE__*/getAugmentedNamespace(cameraFading);
 
 var DamageModifier_1;
-let DamageModifier$1 = class DamageModifier extends CustomComponent {
+let DamageModifier$1 = class DamageModifier extends BaseComponent {
     static { DamageModifier_1 = this; }
     static defaultModifier = 0.2;
     static defaultModifierOpt = new DamageModifier_1(DamageModifier_1.defaultModifier);
@@ -7659,10 +7667,14 @@ let DamageModifier$1 = class DamageModifier extends CustomComponent {
     }
     #modifier = DamageModifier_1.defaultModifier;
     get modifier() {
-        if (this.getManager().has(HardmodeComponent)) {
-            return HardmodeComponent.damageModifier;
-        }
         return this.#modifier;
+    }
+    onAttach(manager) {
+        const hardmode = manager.getComponent(HardmodeComponent);
+        if (hardmode.isEmpty()) {
+            return;
+        }
+        this.#modifier = HardmodeComponent.damageModifier;
     }
     constructor(modifier = DamageModifier_1.defaultModifier) {
         super();
@@ -7950,7 +7962,7 @@ var input = /*#__PURE__*/Object.freeze({
 var require$$18 = /*@__PURE__*/getAugmentedNamespace(input);
 
 const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = kinematics$1;
-const { combat: { damage: _damage } } = func;
+const { combat: { damage: _damage, _damageLL } } = func;
 const { playAnim, playParticle } = require$$2$2;
 const { movement, camera, movementInput } = generic;
 const { selectFromRange } = range;
@@ -7985,7 +7997,8 @@ const yawToVec2 = yaw => {
 
 function damageWithCameraFading(victim, damage, cause, abuser, projectile, damageOpt) {
     CameraFading.fadeFromAttackDirection(abuser, damageOpt);
-    _damage(victim, damage, cause, abuser, projectile);
+    // _damage(victim, damage, cause, abuser, projectile)
+    _damageLL(victim, damage);
 
     const victimPos = victim.feetPos;
     const abuserPos = abuser.feetPos;
@@ -8516,7 +8529,7 @@ function listenAllCustomEvents(mods) {
                 }
             }
 
-            status.componentManager.handleTicks(pl, _context);
+            status.componentManager.handleTicks(pl);
 
             if (duration >= (currentMove.cast || 0) + (currentMove.backswing || 0)) {
                 if (currentMove.onLeave) {

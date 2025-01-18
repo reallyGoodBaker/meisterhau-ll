@@ -1,5 +1,5 @@
 const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = require('../../../scripts-rpc/func/kinematics')
-const { combat: { damage: _damage } } = require('../../../scripts-rpc/func/index')
+const { combat: { damage: _damage, _damageLL } } = require('../../../scripts-rpc/func/index')
 const { playAnim, playParticle } = require('../index')
 const { movement, camera, movementInput } = require('../generic/index')
 const { selectFromRange } = require('../generic/range')
@@ -34,7 +34,8 @@ const yawToVec2 = yaw => {
 
 function damageWithCameraFading(victim, damage, cause, abuser, projectile, damageOpt) {
     CameraFading.fadeFromAttackDirection(abuser, damageOpt)
-    _damage(victim, damage, cause, abuser, projectile)
+    // _damage(victim, damage, cause, abuser, projectile)
+    _damageLL(victim, damage)
 
     const victimPos = victim.feetPos
     const abuserPos = abuser.feetPos
@@ -565,7 +566,7 @@ function listenAllCustomEvents(mods) {
                 }
             }
 
-            status.componentManager.handleTicks(pl, _context)
+            status.componentManager.handleTicks(pl)
 
             if (duration >= (currentMove.cast || 0) + (currentMove.backswing || 0)) {
                 if (currentMove.onLeave) {

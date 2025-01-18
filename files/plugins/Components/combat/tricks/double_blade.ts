@@ -608,6 +608,7 @@ class DoubleBladeMoves extends DefaultMoves {
     shield: Move = {
         cast: 15,
         onEnter(pl, ctx) {
+            ctx.status.isBlocking = true
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10
             ctx.freeze(pl)
 
@@ -629,7 +630,6 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.unfreeze(pl)
         },
         timeline: {
-            3: (_, ctx) => ctx.status.isBlocking = true,
             10: (_, ctx) => ctx.status.isBlocking = false,
         },
         transitions: {

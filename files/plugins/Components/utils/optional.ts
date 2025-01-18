@@ -25,7 +25,7 @@ export class Optional<T = any> {
     }
 
     orElse(other: T): T {
-        return this.value || other
+        return this.value ?? other
     }
 
     use(fn: (v: T) => void, self?: any) {
