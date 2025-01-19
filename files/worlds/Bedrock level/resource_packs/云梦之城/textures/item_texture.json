@@ -7,6 +7,9 @@
         },
         "highball": {
             "textures": "textures/items/highball"
+        },
+        "stick": {
+            "textures": "textures/items/stick"
         }
     }
 }
