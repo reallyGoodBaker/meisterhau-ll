@@ -405,7 +405,11 @@ class OotachiMoves extends DefaultMoves {
                 ctx.previousStatus === 'combo1Attack' ? 'l' :
                     ctx.previousStatus === 'parry' ? 'r2' : 'r'
             }`)
-            ctx.adsorbOrSetVelocity(pl, 0.2, 90)
+            if (ctx.previousStatus === 'parry') {
+                ctx.adsorbOrSetVelocity(pl, 1, 150)
+            } else {
+                ctx.adsorbOrSetVelocity(pl, 0.2, 90)
+            }
             ctx.task
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 1.2, 90), 200)
                 .run()
