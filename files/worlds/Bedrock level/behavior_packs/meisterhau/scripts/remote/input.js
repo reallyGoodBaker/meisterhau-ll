@@ -1,15 +1,17 @@
 import { ButtonState, InputButton, world } from "@minecraft/server"
 import { remote } from "../llrpc"
+import { SyncPacket } from "../inputSync/client"
 
-const inputStates = {}
+const inputStates = new Map()
 
 export function syncInputButtons() {
-    const states = world.getAllPlayers().reduce((prev, cur) => {
+    world.getAllPlayers().forEach(cur => {
         const { inputInfo, name } = cur
-        const prevState = inputStates[name]
+        const prevState = inputStates.get(name)
         const currentState = {
             jump: inputInfo.getButtonState(InputButton.Jump),
             sneak: inputInfo.getButtonState(InputButton.Sneak),
+            vec: inputInfo.getMovementVector()
         }
 
         if (prevState) {
@@ -30,11 +32,7 @@ export function syncInputButtons() {
             }
         }
 
-        inputStates[name] = currentState
-        prev[name] = currentState
-
-        return prev
-    }, {})
-
-    remote.call('input.states.buttons', states)
+        inputStates.set(name, currentState)
+        SyncPacket.sendPackFromInputInfo(name, inputInfo)
+    })
 }

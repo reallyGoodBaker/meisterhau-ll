@@ -19,7 +19,7 @@ const { DamageModifier } = require('../components/damage-modifier')
 const { registerCommand } = require('./commands')
 const { antiTreeshaking } = require('../components/anti-treeshaking')
 const { Stamina } = require('../components/core/stamina')
-const { eventCenter } = require('scripts-rpc/func/input')
+const { eventCenter, inputStates, ButtonState } = require('scripts-rpc/func/input')
 
 const em = eventCenter({ enableWatcher: true })
 const es = EventInputStream.get(em)
@@ -187,10 +187,11 @@ const pick = (obj, arr) =>
 
 const playerAttrPickList = [
     'inAir', 'inWater', 'inLava', 'inRain', 'inSnow', 'inWall', 'inWaterOrRain', 'isInvisible', 'isHungry',
-    'isOnFire', 'isOnGround', 'isOnHotBlock', 'isGliding', 'isFlying', 'isMoving', 'isSneaking'
+    'isOnFire', 'isOnGround', 'isOnHotBlock', 'isGliding', 'isFlying', 'isMoving'
 ]
 
 /**
+ * @param {Player} pl
  * @param {Status} status 
  * @returns 
  */
@@ -208,6 +209,7 @@ const defaultPacker = (pl, bind, status) => {
         repulsible: status.repulsible,
         isCollide: isCollide(pl),
         preInput: status.preInput,
+        isSneaking: inputStates.get(pl.name)?.sneak ?? false,
     }
 
     return {
@@ -965,9 +967,10 @@ function listenAllMcEvents(collection) {
     //     em.on(n, acceptableStreamHandler(n))
     // })
     em.on('input.sneak', (pl, isSneaking) => {
-        es.put('onSneak', [pl, Function.prototype, [ pl, isSneaking ]])
+        es.put(isSneaking ? 'onSneak' : 'onReleaseSneak', [pl, Function.prototype, [ pl, isSneaking ]])
     })
     em.on('onSneak', acceptableStreamHandler('onSneak'))
+    em.on('onReleaseSneak', acceptableStreamHandler('onReleaseSneak'))
 
     mc.listen('onUseItem', (...args) => {
         const [ pl, item ] = args

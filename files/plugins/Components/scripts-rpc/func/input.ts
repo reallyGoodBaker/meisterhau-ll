@@ -6,6 +6,35 @@ export enum ButtonState {
     Released = 'Released',
 }
 
+export interface InputInfo {
+    jump: boolean
+    sneak: boolean
+    x: number
+    y: number
+}
+
+export const inputStates = new Map<string, InputInfo>()
+
+function decodeSyncInput(buffer: ArrayBuffer): InputInfo {
+    const view = new DataView(buffer)
+    const jump = view.getUint8(0) === 1
+    const sneak = view.getUint8(1) === 1
+    const x = view.getFloat64(2, true)
+    const y = view.getFloat64(10, true)
+    return { jump, sneak, x, y }
+}
+
+export function updateInput(name: string, encodedInput: string) {
+    const buffer = new ArrayBuffer(18)
+    const uint8 = new Uint8Array(buffer)
+    for (let i = 0; i < 18; i++) {
+        uint8[i] = encodedInput.charCodeAt(i)
+    }
+
+    const input = decodeSyncInput(buffer)
+    inputStates.set(name, input)
+}
+
 export function eventCenter(opt: any) {
     const em = new EventEmitter(opt)
 
@@ -35,10 +64,6 @@ export function eventCenter(opt: any) {
         if (player) {
             em.emit('input.sneak', mc.getPlayer(name), false)
         }
-    })
-
-    remote.expose('input.states.buttons', (states: { [key: string]: { jump: ButtonState, sneak: ButtonState } }) => {
-        // console.log(states)
     })
 
     return em

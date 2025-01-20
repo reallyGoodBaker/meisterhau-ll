@@ -39,6 +39,10 @@ function setup(list, em) {
 
 function setupNodeHttpServer(list, em) {
     return http.createServer((req, res) => {
+        if (req.url.startsWith('/sync')) {
+            
+        }
+
         if (req.url !== '/rpc') {
             res.writeHead(404)
             res.end()

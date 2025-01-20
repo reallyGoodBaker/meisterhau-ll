@@ -725,7 +725,7 @@ class DoubleBladeMoves extends DefaultMoves {
                 onHurt: null
             },
             parried: {
-                onParried: null
+                onParried: null,
             },
             shield: {
                 onTrap: {

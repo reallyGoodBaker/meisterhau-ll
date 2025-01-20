@@ -173,6 +173,7 @@ interface InputableTransitionMap {
     onSneak: {
         isSneaking?: boolean
     }
+    onReleaseSneak: unknown
     onUseItem: unknown
     onChangeSprinting: {
         sprinting?: boolean
