@@ -1,4 +1,4 @@
-import { Component, ComponentCtor, CustomComponent } from "./component"
+import { Component, ComponentCtor } from "./component"
 
 type CommandConstructableCtor = ComponentCtor & {
     create(...args: any[]): Component

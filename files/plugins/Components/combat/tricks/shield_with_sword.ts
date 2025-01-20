@@ -414,9 +414,7 @@ class ShieldSwordMoves extends DefaultMoves {
                 onChangeSprinting: { sprinting: true }
             },
             afterBlocking: {
-                onSneak: {
-                    isSneaking: false
-                },
+                onReleaseSneak: null,
             },
             block: {
                 onBlock: null

@@ -67,13 +67,13 @@ function setupReturnHandler() {
 function setup() {
     setupCallHandler()
     setupReturnHandler()
-    cmd('func', '函数', 1).setup(registry => {
-        registry.register('<name:string> <args:string>', async (cmd, origin, output, res) => {
+    cmd('func', '函数', 1).setup(register => {
+        register('<name:string> <args:string>', async (cmd, origin, output, res) => {
             const pl = origin.player
             remoteCall(res.name, ...res.args.split(' '))
                 .then(v => pl.tell(v.toString()))
                 .catch(e => pl.tell(e.toString()))
-        }).submit()
+        })
     })
 }
 

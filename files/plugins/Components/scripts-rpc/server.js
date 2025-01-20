@@ -1,4 +1,10 @@
 const http = require('http')
+/**@type {Map<string, {jump: boolean, sneak: boolean, x: number, y: number}>} */
+const inputStates = new Map()
+
+function syncInput(name, [ jump, sneak, x, y ]) {
+    inputStates.set(name, { jump, sneak, x, y })
+}
 
 function handleCall(msg, em) {
     const { id, name, args } = msg
@@ -40,7 +46,13 @@ function setup(list, em) {
 function setupNodeHttpServer(list, em) {
     return http.createServer((req, res) => {
         if (req.url.startsWith('/sync')) {
-            
+            const playerName = req.url.slice(6)
+            let buf = Buffer.alloc(0)
+            req.on('data', chunk => buf = Buffer.concat([buf, chunk]))
+            req.on('end', () => {
+                syncInput(playerName, JSON.parse(buf))
+                res.end()
+            })
         }
 
         if (req.url !== '/rpc') {
@@ -70,5 +82,5 @@ function setupNodeHttpServer(list, em) {
 }
 
 module.exports = {
-    createServer: setup, setupNodeHttpServer
+    createServer: setup, setupNodeHttpServer, inputStates
 }

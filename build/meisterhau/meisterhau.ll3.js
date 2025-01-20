@@ -561,37 +561,40 @@ function requireEvents () {
 }
 
 const stringParamTypeMap = {
-    bool: 0,
-    int: 1,
-    float: 2,
-    string: 3,
-    entity: 4,
-    player: 5,
-    xyz: 6,
-    pos: 7,
-    vec: 7,
-    text: 8,
-    message: 9,
-    json: 10,
-    item: 11,
-    block: 12,
-    effect: 13,
-    enum: 14,
-    // softEnum: 15,
-    entities: 16,
-    command: 17
+    bool: ParamType.Bool,
+    int: ParamType.Int,
+    float: ParamType.Float,
+    string: ParamType.String,
+    entity: ParamType.Actor,
+    actor: ParamType.Actor,
+    player: ParamType.Player,
+    xyz: ParamType.BlockPos,
+    pos: ParamType.Vec3,
+    vec: ParamType.Vec3,
+    text: ParamType.RawText,
+    message: ParamType.Message,
+    json: ParamType.JsonValue,
+    item: ParamType.Item,
+    block: ParamType.Block,
+    effect: ParamType.Effect,
+    enum: ParamType.Enum,
+    softEnum: ParamType.SoftEnum,
+    entities: ParamType.ActorType,
+    actor_type: ParamType.ActorType,
+    command: ParamType.Command,
+    selector: ParamType.WildcardSelector,
 };
 const matchers = {
     required: /^<([\w:]+)>$/,
     optional: /^\[([\w:]+)\]$/,
 };
-function newToken(index, type = 'enum', id, isOptional = true) {
+function tk(index, type, id, isOptional = true) {
     return {
         index, type, id, isOptional
     };
 }
 function parseCmdStr(str) {
-    const frags = str.split(/ +/);
+    const frags = str.trim().split(/ +/);
     const tokens = [];
     frags.forEach((frag, i) => {
         let res, isOptional = -1;
@@ -604,10 +607,10 @@ function parseCmdStr(str) {
         if (isOptional !== -1) {
             const data = res[1];
             const typeDef = data.split(':');
-            tokens.push(newToken(i, typeDef[1], typeDef[0], !!isOptional));
+            tokens.push(tk(i, typeDef[1], typeDef[0], !!isOptional));
             return;
         }
-        tokens.push(newToken(i, 'enum', frag, false));
+        tokens.push(tk(i, 'enum', frag, false));
     });
     return tokens;
 }
@@ -615,19 +618,19 @@ function parseCmdArr(arr) {
     const tokens = [];
     arr.forEach((el, i) => {
         const [id, typeDesc] = Object.entries(el)[0];
-        let isOptional = true, type = typeDesc;
-        if (typeDesc.startsWith('!')) {
-            isOptional = false;
+        let isOptional = false, type = typeDesc;
+        if (typeDesc.startsWith('?')) {
+            isOptional = true;
             type = typeDesc.slice(1);
         }
-        tokens.push(newToken(i, type, id, isOptional));
+        tokens.push(tk(i, type, id, isOptional));
     });
     return tokens;
 }
 class Registry {
-    /**@private*/ _cmd;
-    /**@private*/ _tokenListCollection = new Set();
-    /**@private*/ _handlerCollection = [];
+    _cmd;
+    _tokenListCollection = new Set();
+    _handlerCollection = [];
     constructor(cmd) {
         this._cmd = cmd;
     }
@@ -654,6 +657,43 @@ class Registry {
             .push([finalList.map(l => l.id), handler]);
         return this;
     }
+    sameArr(arr1, arr2) {
+        if (arr1.length !== arr2.length) {
+            return false;
+        }
+        return new Set(arr1.concat(arr2)).size === arr1.length;
+    }
+    setCallback() {
+        this._cmd.setCallback((cmd, origin, out, args) => {
+            const argv = Object
+                .keys(args)
+                .filter(v => args[v]);
+            const pairs = this._handlerCollection[argv.length];
+            const [_, handler] = pairs.find(([ids]) => this.sameArr(argv, ids)) || [, Function.prototype];
+            handler.call(undefined, cmd, origin, out, args);
+        });
+    }
+    registeredArgs = new Set();
+    enumIndex = 0;
+    createArg(name, type, isOptional) {
+        let argId = name;
+        if (this.registeredArgs.has(name)) {
+            return;
+        }
+        let enumId = null;
+        if (type === 'enum') {
+            enumId = `enum_${this.enumIndex++}`;
+            this._cmd.setEnum(enumId, [name]);
+            argId = enumId;
+        }
+        let extArgs = enumId ? [enumId, enumId, 1] : [];
+        isOptional
+            ? this._cmd.optional(name, stringParamTypeMap[type], ...extArgs)
+            : this._cmd.mandatory(name, stringParamTypeMap[type], ...extArgs);
+        this.registeredArgs.add(name);
+        return argId;
+    }
+    _submitted = false;
     submit() {
         this._tokenListCollection.forEach(tokens => {
             let ids = [];
@@ -665,59 +705,36 @@ class Registry {
         });
         this.setCallback();
         this._cmd.setup();
+        this._submitted = true;
     }
-    /**@private*/ sameArr(arr1, arr2) {
-        if (arr1.length !== arr2.length) {
-            return false;
-        }
-        return new Set(arr1.concat(arr2)).size === arr1.length;
-    }
-    /**@private*/ setCallback() {
-        this._cmd.setCallback((cmd, origin, out, args) => {
-            const argv = Object
-                .keys(args)
-                .filter(v => args[v]);
-            const pairs = this._handlerCollection[argv.length];
-            const [_, handler] = pairs.find(([ids]) => this.sameArr(argv, ids)) || [, Function.prototype];
-            handler.call(undefined, cmd, origin, out, args);
-        });
-    }
-    /**@private*/ registeredArgs = new Set();
-    /**@private*/ createArg(name, type, isOptional) {
-        if (this.registeredArgs.has(name)) {
-            return;
-        }
-        let enumId = null;
-        if (type === 'enum') {
-            enumId = `enum_${name}`;
-            this._cmd.setEnum(enumId, [name]);
-        }
-        let extArgs = enumId ? [enumId, name, 1] : [];
-        isOptional
-            ? this._cmd.optional(name, stringParamTypeMap[type], ...extArgs)
-            : this._cmd.mandatory(name, stringParamTypeMap[type], ...extArgs);
-        this.registeredArgs.add(name);
+    isSubmitted() {
+        return this._submitted;
     }
 }
-/**
- * @param {string} head
- * @param {string} desc
- * @param {0|1|2} [perm] 0 普通，1 管理员，2 控制台
- * @param {number} [flag]
- * @param {string} [alias]
- */
-function cmd(head, desc, perm = 1) {
+var CommandPermission;
+(function (CommandPermission) {
+    CommandPermission[CommandPermission["Everyone"] = 0] = "Everyone";
+    CommandPermission[CommandPermission["OP"] = 1] = "OP";
+    CommandPermission[CommandPermission["Console"] = 2] = "Console";
+})(CommandPermission || (CommandPermission = {}));
+function cmd(head, desc, perm = CommandPermission.OP) {
     const command = mc.newCommand(head, desc, perm);
     const registry = new Registry(command);
+    const register = (...args) => { registry.register.apply(registry, args); };
     return {
         setup: (executor) => {
-            executor.call(undefined, registry);
-        }
+            executor.call(undefined, register, registry);
+            if (!registry.isSubmitted()) {
+                registry.submit();
+            }
+        },
+        getRegistry: () => registry,
     };
 }
 
 var command = /*#__PURE__*/Object.freeze({
 	__proto__: null,
+	get CommandPermission () { return CommandPermission; },
 	Registry: Registry,
 	cmd: cmd
 });
@@ -731,6 +748,12 @@ function requireServer () {
 	if (hasRequiredServer) return server;
 	hasRequiredServer = 1;
 	const http = require$$0$1;
+	/**@type {Map<string, {jump: boolean, sneak: boolean, x: number, y: number}>} */
+	const inputStates = new Map();
+
+	function syncInput(name, [ jump, sneak, x, y ]) {
+	    inputStates.set(name, { jump, sneak, x, y });
+	}
 
 	function handleCall(msg, em) {
 	    const { id, name, args } = msg;
@@ -771,7 +794,15 @@ function requireServer () {
 
 	function setupNodeHttpServer(list, em) {
 	    return http.createServer((req, res) => {
-	        if (req.url.startsWith('/sync')) ;
+	        if (req.url.startsWith('/sync')) {
+	            const playerName = req.url.slice(6);
+	            let buf = Buffer.alloc(0);
+	            req.on('data', chunk => buf = Buffer.concat([buf, chunk]));
+	            req.on('end', () => {
+	                syncInput(playerName, JSON.parse(buf));
+	                res.end();
+	            });
+	        }
 
 	        if (req.url !== '/rpc') {
 	            res.writeHead(404);
@@ -800,7 +831,7 @@ function requireServer () {
 	}
 
 	server = {
-	    createServer: setup, setupNodeHttpServer
+	    createServer: setup, setupNodeHttpServer, inputStates
 	};
 	return server;
 }
@@ -880,13 +911,13 @@ function requireSetup () {
 	function setup() {
 	    setupCallHandler();
 	    setupReturnHandler();
-	    cmd('func', '函数', 1).setup(registry => {
-	        registry.register('<name:string> <args:string>', async (cmd, origin, output, res) => {
+	    cmd('func', '函数', 1).setup(register => {
+	        register('<name:string> <args:string>', async (cmd, origin, output, res) => {
 	            const pl = origin.player;
 	            remoteCall(res.name, ...res.args.split(' '))
 	                .then(v => pl.tell(v.toString()))
 	                .catch(e => pl.tell(e.toString()));
-	        }).submit();
+	        });
 	    });
 	}
 
@@ -4541,7 +4572,8 @@ class OotachiMoves extends DefaultMoves$4 {
             ctx.freeze(pl);
             ctx.status.hegemony = true;
             ctx.status.repulsible = false;
-            playAnim$6(pl, `animation.weapon.ootachi.combo2.sweap.${ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'}`);
+            playAnim$6(pl, `animation.weapon.ootachi.combo2.sweap.${ctx.previousStatus === 'combo1Attack' ? 'l' :
+                ctx.previousStatus === 'parry' ? 'r2' : 'r'}`);
             ctx.adsorbOrSetVelocity(pl, 0.2, 90);
             ctx.task
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 1.2, 90), 200)
@@ -5355,9 +5387,7 @@ class ShieldSwordMoves extends DefaultMoves$4 {
                 onChangeSprinting: { sprinting: true }
             },
             afterBlocking: {
-                onSneak: {
-                    isSneaking: false
-                },
+                onReleaseSneak: null,
             },
             block: {
                 onBlock: null
@@ -7189,12 +7219,51 @@ HudComponent = HudComponent_1 = __decorate([
     Fields(['content', 'type', 'fadeIn', 'fadeOut', 'stay'])
 ], HudComponent);
 
+var DamageModifier_1;
+let DamageModifier$1 = class DamageModifier extends BaseComponent {
+    static { DamageModifier_1 = this; }
+    static defaultModifier = 0.2;
+    static defaultModifierOpt = new DamageModifier_1(DamageModifier_1.defaultModifier);
+    static create({ modifier }) {
+        return new DamageModifier_1(modifier);
+    }
+    #modifier = DamageModifier_1.defaultModifier;
+    get modifier() {
+        return this.#modifier;
+    }
+    constructor(modifier = DamageModifier_1.defaultModifier) {
+        super();
+        this.#modifier = modifier;
+    }
+};
+DamageModifier$1 = DamageModifier_1 = __decorate([
+    PublicComponent('damage-modifier'),
+    Fields(['modifier'])
+], DamageModifier$1);
+
+var damageModifier = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	get DamageModifier () { return DamageModifier$1; }
+});
+
 var HardmodeComponent_1;
-let HardmodeComponent = class HardmodeComponent extends CustomComponent {
+let HardmodeComponent = class HardmodeComponent extends BaseComponent {
     static { HardmodeComponent_1 = this; }
     static damageModifier = 0.6;
     static create() {
         return new HardmodeComponent_1();
+    }
+    shouldRemoveDamageModifier = false;
+    onAttach(manager) {
+        if (manager.getComponent(DamageModifier$1).isEmpty()) {
+            this.shouldRemoveDamageModifier = true;
+            manager.attachComponent(new DamageModifier$1(HardmodeComponent_1.damageModifier));
+        }
+    }
+    onDetach(manager) {
+        if (this.shouldRemoveDamageModifier) {
+            manager.detachComponent(DamageModifier$1);
+        }
     }
 };
 HardmodeComponent = HardmodeComponent_1 = __decorate([
@@ -7659,45 +7728,11 @@ var require$$12 = /*@__PURE__*/getAugmentedNamespace(tick);
 
 var require$$13 = /*@__PURE__*/getAugmentedNamespace(cameraFading);
 
-var DamageModifier_1;
-let DamageModifier$1 = class DamageModifier extends BaseComponent {
-    static { DamageModifier_1 = this; }
-    static defaultModifier = 0.2;
-    static defaultModifierOpt = new DamageModifier_1(DamageModifier_1.defaultModifier);
-    static create({ modifier }) {
-        return new DamageModifier_1(modifier);
-    }
-    #modifier = DamageModifier_1.defaultModifier;
-    get modifier() {
-        return this.#modifier;
-    }
-    onAttach(manager) {
-        const hardmode = manager.getComponent(HardmodeComponent);
-        if (hardmode.isEmpty()) {
-            return;
-        }
-        this.#modifier = HardmodeComponent.damageModifier;
-    }
-    constructor(modifier = DamageModifier_1.defaultModifier) {
-        super();
-        this.#modifier = modifier;
-    }
-};
-DamageModifier$1 = DamageModifier_1 = __decorate([
-    PublicComponent('damage-modifier'),
-    Fields(['modifier'])
-], DamageModifier$1);
-
-var damageModifier = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	get DamageModifier () { return DamageModifier$1; }
-});
-
 var require$$14 = /*@__PURE__*/getAugmentedNamespace(damageModifier);
 
 function registerCommand$1() {
-    cmd('components', '管理组件', 1).setup(registry => {
-        registry.register('add <pl:player> <name:string> [args:json]', (_, __, output, args) => {
+    cmd('components', '管理组件', 1).setup(register => {
+        register('add <pl:player> <name:string> [args:json]', (_, __, output, args) => {
             const targets = args.pl;
             const jsonArgs = args.args;
             const componentCtor = getComponentCtor(args.name);
@@ -7715,8 +7750,8 @@ function registerCommand$1() {
             catch (_) {
                 output.error('无效的组件参数');
             }
-        })
-            .register('remove <pl:player> <name:string>', (_, __, output, args) => {
+        });
+        register('remove <pl:player> <name:string>', (_, __, output, args) => {
             const targets = args.pl;
             const componentCtor = getComponentCtor(args.name);
             if (!componentCtor || !componentCtor.create) {
@@ -7726,8 +7761,8 @@ function registerCommand$1() {
                 Status$3.get(terget.uniqueId).componentManager.detachComponent(componentCtor);
             }
             output.success(`已为 ${targets.length} 个玩家移除组件 '${args.name}'`);
-        })
-            .register('list <pl:player> [detail:bool]', async (_, ori, output, args) => {
+        });
+        register('list <pl:player> [detail:bool]', async (_, ori, output, args) => {
             const pl = args.pl;
             const useDetail = args.detail ?? false;
             for (const p of pl) {
@@ -7751,8 +7786,8 @@ function registerCommand$1() {
                 }
                 output.success(`玩家 ${p.name} 拥有组件:\n${componentNames.join('\n')}`);
             }
-        })
-            .register('check <pl:player> <name:string>', (_, __, output, args) => {
+        });
+        register('check <pl:player> <name:string>', (_, __, output, args) => {
             const componentCtor = getComponentCtor(args.name);
             if (!componentCtor) {
                 return output.error('无效的组件名');
@@ -7786,8 +7821,8 @@ function registerCommand$1() {
                     output.success(`${pl.name} 的组件 ${args.name}:\n${entries.join('\n')}`);
                 }
             }
-        })
-            .register('update <pl:player> <name:string> <args:json>', (_, __, output, args) => {
+        });
+        register('update <pl:player> <name:string> <args:json>', (_, __, output, args) => {
             const { pl, args: jsonArgs, name } = args;
             const componentCtor = getComponentCtor(name);
             if (!componentCtor) {
@@ -7808,8 +7843,7 @@ function registerCommand$1() {
                     }
                 });
             }
-        })
-            .submit();
+        });
     });
 }
 
@@ -7918,29 +7952,13 @@ var setupExports = requireSetup();
 
 var eventsExports = requireEvents();
 
-var ButtonState$1;
+var serverExports = requireServer();
+
+var ButtonState;
 (function (ButtonState) {
     ButtonState["Pressed"] = "Pressed";
     ButtonState["Released"] = "Released";
-})(ButtonState$1 || (ButtonState$1 = {}));
-const inputStates$1 = new Map();
-function decodeSyncInput(buffer) {
-    const view = new DataView(buffer);
-    const jump = view.getUint8(0) === 1;
-    const sneak = view.getUint8(1) === 1;
-    const x = view.getFloat64(2, true);
-    const y = view.getFloat64(10, true);
-    return { jump, sneak, x, y };
-}
-function updateInput(name, encodedInput) {
-    const buffer = new ArrayBuffer(18);
-    const uint8 = new Uint8Array(buffer);
-    for (let i = 0; i < 18; i++) {
-        uint8[i] = encodedInput.charCodeAt(i);
-    }
-    const input = decodeSyncInput(buffer);
-    inputStates$1.set(name, input);
-}
+})(ButtonState || (ButtonState = {}));
 function eventCenter$1(opt) {
     const em = new eventsExports.EventEmitter(opt);
     setupExports.remote.expose('input.press.jump', (name) => {
@@ -7969,16 +7987,39 @@ function eventCenter$1(opt) {
     });
     return em;
 }
+var input$1;
+(function (input) {
+    function isPressing(pl, button) {
+        return serverExports.inputStates.get(pl.name)?.[button] ?? false;
+    }
+    input.isPressing = isPressing;
+    function movementVector(pl) {
+        const inputInfo = serverExports.inputStates.get(pl.name);
+        if (!inputInfo) {
+            return { x: 0, y: 0 };
+        }
+        return { x: inputInfo.x, y: inputInfo.y };
+    }
+    input.movementVector = movementVector;
+    function moveDir(pl) {
+        const yaw = pl.direction.yaw;
+        const vx = Math.cos(yaw);
+        const vy = Math.sin(yaw);
+        const vdir = { x: vx, y: vy };
+        const result = vec.getAngleFromVector2(vdir, movementVector(pl));
+        console.log(result);
+    }
+    input.moveDir = moveDir;
+})(input$1 || (input$1 = {}));
 
-var input = /*#__PURE__*/Object.freeze({
+var input$2 = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	get ButtonState () { return ButtonState$1; },
+	get ButtonState () { return ButtonState; },
 	eventCenter: eventCenter$1,
-	inputStates: inputStates$1,
-	updateInput: updateInput
+	get input () { return input$1; }
 });
 
-var require$$18 = /*@__PURE__*/getAugmentedNamespace(input);
+var require$$18 = /*@__PURE__*/getAugmentedNamespace(input$2);
 
 const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = kinematics$1;
 const { combat: { damage: _damage, _damageLL } } = func;
@@ -8001,7 +8042,7 @@ const { DamageModifier } = require$$14;
 const { registerCommand } = require$$15;
 const { antiTreeshaking } = require$$16;
 const { Stamina } = require$$17;
-const { eventCenter, inputStates, ButtonState } = require$$18;
+const { eventCenter, input } = require$$18;
 
 const em = eventCenter({ enableWatcher: true });
 const es = EventInputStream.get(em);
@@ -8182,16 +8223,15 @@ const defaultPacker = (pl, bind, status) => {
     const picked = pick(pl, playerAttrPickList);
     const stamina = status.componentManager.getComponent(Stamina).unwrap();
 
-    // console.log(pl.name, ' packer:', isCollide(pl))
-
     /**@type {TransitionOptMixins}*/
     const mixins = {
         stamina: stamina.stamina,
         hasTarget: hasLock(pl),
         repulsible: status.repulsible,
-        isCollide: isCollide(pl),
+        isCollide: false,//isCollide(pl),
         preInput: status.preInput,
-        isSneaking: inputStates.get(pl.name)?.sneak ?? false,
+        isSneaking: input.isPressing(pl, 'sneak'),
+        isDodging: input.isPressing(pl, 'jump'),
     };
 
     return {
@@ -9068,7 +9108,7 @@ function listenAllMcEvents(collection) {
 
         const pl = rider.toPlayer();
 
-        if (mods.has(pl.getHand().type) && !pl.isSneaking) {
+        if (mods.has(pl.getHand().type) && !input.isPressing(pl, 'sneak')) {
             return false
         }
     });

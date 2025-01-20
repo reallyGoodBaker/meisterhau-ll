@@ -3,8 +3,8 @@ import { getComponentId, getComponentCtor, getFieldEntries } from './config';
 import { Status } from "./status"
 
 export function registerCommand() {
-    cmd('components', '管理组件', 1).setup(registry => {
-        registry.register('add <pl:player> <name:string> [args:json]', (_, __, output, args) => {
+    cmd('components', '管理组件', 1).setup(register => {
+        register('add <pl:player> <name:string> [args:json]', (_, __, output, args) => {
             const targets = args.pl
             const jsonArgs = args.args
             const componentCtor = getComponentCtor(args.name)
@@ -26,7 +26,7 @@ export function registerCommand() {
                 output.error('无效的组件参数')
             }
         })
-        .register('remove <pl:player> <name:string>', (_, __, output, args) => {
+        register('remove <pl:player> <name:string>', (_, __, output, args) => {
             const targets = args.pl
             const componentCtor = getComponentCtor(args.name)
 
@@ -40,7 +40,7 @@ export function registerCommand() {
 
             output.success(`已为 ${targets.length} 个玩家移除组件 '${args.name}'`)
         })
-        .register('list <pl:player> [detail:bool]', async (_, ori, output, args) => {
+        register('list <pl:player> [detail:bool]', async (_, ori, output, args) => {
             const pl = args.pl
             const useDetail = args.detail ?? false
             
@@ -71,7 +71,7 @@ export function registerCommand() {
                 output.success(`玩家 ${p.name} 拥有组件:\n${componentNames.join('\n')}`)
             }
         })
-        .register('check <pl:player> <name:string>', (_, __, output, args) => {
+        register('check <pl:player> <name:string>', (_, __, output, args) => {
             const componentCtor = getComponentCtor(args.name)
 
             if (!componentCtor) {
@@ -112,7 +112,7 @@ export function registerCommand() {
                 }
             }
         })
-        .register('update <pl:player> <name:string> <args:json>', (_, __, output, args) => {
+        register('update <pl:player> <name:string> <args:json>', (_, __, output, args) => {
             const { pl, args: jsonArgs, name } = args
             const componentCtor = getComponentCtor(name)
 
@@ -138,6 +138,5 @@ export function registerCommand() {
                 })
             }
         })
-        .submit()
     })
 }

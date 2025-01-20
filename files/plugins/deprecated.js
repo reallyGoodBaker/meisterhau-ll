@@ -106,7 +106,7 @@ function loadComponent(filePath, fromRoot=false) {
 
 function setupCmd() {
     cmd('yumo', '云梦', 1)
-    .setup(registry => {
+    .setup(register => {
         registry.register('reload <name:text>', (_, ori, out, data) => {
             events.emitNone('reload', data.name)
         })
@@ -114,7 +114,6 @@ function setupCmd() {
             events.emitNone(data.name, data.args.split(/ /g))
             out.success('事件发送成功')
         })
-        .submit()
     })
 }
 

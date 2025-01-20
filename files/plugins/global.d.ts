@@ -473,6 +473,10 @@ interface TransitionOptMixins {
      * 是否碰撞
      */
     isCollide?: boolean
+    /**
+     * 是否按下闪避
+     */
+    isDodging?: boolean
 }
 
 type ObjKeyType<Obj, Val> = { [K in keyof Obj]: Val extends Obj[K] ? K : never }[keyof Obj]

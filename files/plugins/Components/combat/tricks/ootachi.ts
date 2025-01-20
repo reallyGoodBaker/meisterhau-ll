@@ -402,7 +402,8 @@ class OotachiMoves extends DefaultMoves {
             ctx.status.hegemony = true
             ctx.status.repulsible = false
             playAnim(pl, `animation.weapon.ootachi.combo2.sweap.${
-                ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'
+                ctx.previousStatus === 'combo1Attack' ? 'l' :
+                    ctx.previousStatus === 'parry' ? 'r2' : 'r'
             }`)
             ctx.adsorbOrSetVelocity(pl, 0.2, 90)
             ctx.task

@@ -105,17 +105,16 @@ function setup() {
     mc.listen('onTick', freshStatus)
 
     cmd('kinematics', '设置运动学属性')
-    .setup(regsitry => {
-        regsitry
-        .register('watch <entity:entity>', (_1, _2, out, { entity }) => {
+    .setup(register => {
+        register('watch <entity:entity>', (_1, _2, out, { entity }) => {
             const list = entity.map(e => addWatchable(e)).filter(v => v)
             out.success(`添加 ${list.length} 个运动学监视对象`)
         })
-        .register('unwatch <watched:entity>', (_1, _2, out, {watched}) => {
+        register('unwatch <watched:entity>', (_1, _2, out, {watched}) => {
             const list = watched.map(e => rmWatchable(e)).filter(v => v)
             out.success(`移除 ${list.length} 个运动学监视对象`)
         })
-        .register('velocity <v:vec>', (_, { entity: ori }, out, args) => {
+        register('velocity <v:vec>', (_, { entity: ori }, out, args) => {
             const { v } = args
             let suid = getScoreUid(ori.uniqueId)
 
@@ -125,7 +124,7 @@ function setup() {
 
             setVelocity(suid, v.x - 0.5, v.y, v.z - 0.5)
         })
-        .register('accelerate <a:vec>', (_, { entity: ori }, out, args) => {
+        register('accelerate <a:vec>', (_, { entity: ori }, out, args) => {
             const { a } = args
             let suid = getScoreUid(ori.uniqueId)
             if (!suid) {
@@ -134,7 +133,6 @@ function setup() {
 
             setAccelerate(suid, a.x - 0.5, a.y, a.z - 0.5)
         })
-        .submit()
     })
 }
 

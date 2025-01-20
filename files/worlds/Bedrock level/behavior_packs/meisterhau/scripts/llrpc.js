@@ -1,6 +1,7 @@
 import { system, world } from '@minecraft/server'
 import { EventEmitter } from './events'
 import { http, HttpRequest } from '@minecraft/server-net'
+import { syncInputButtons } from './remote/input'
 
 const uri = 'http://localhost:19999/rpc'
 
@@ -98,4 +99,5 @@ function handleReturn(msg) {
 
 world.afterEvents.worldInitialize.subscribe(ev => {
     system.runInterval(handleOnce)
+    system.runInterval(syncInputButtons)
 })

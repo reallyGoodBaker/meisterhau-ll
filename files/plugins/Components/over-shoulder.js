@@ -36,17 +36,16 @@ function setup() {
         })
     })
 
-    cmd('overshoulder', '过肩视角', 0).setup(registry => {
-        registry.register('clear', (_, ori) => {
+    cmd('overshoulder', '过肩视角', 0).setup(register => {
+        register('clear', (_, ori) => {
             clearCamera(ori.player)
         })
-        .register('right', (_, ori) => {
+        register('right', (_, ori) => {
             setOnShoulderCamera(ori.player.uniqueId)
         })
-        .register('left', (_, ori) => {
+        register('left', (_, ori) => {
             setOnShoulderCamera(ori.player.uniqueId, true)
         })
-        .submit()
     })
 }
 

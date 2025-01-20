@@ -1,6 +1,5 @@
-import { BaseComponent, ComponentManager } from "../core/component"
+import { BaseComponent } from "../core/component"
 import { PublicComponent, Fields } from "../core/config"
-import { HardmodeComponent } from "./hardmode"
 
 @PublicComponent('damage-modifier')
 @Fields([ 'modifier' ])
@@ -15,15 +14,6 @@ export class DamageModifier extends BaseComponent {
 
     get modifier() {
         return this.#modifier
-    }
-
-    onAttach(manager: ComponentManager): boolean | void | Promise<boolean | void> {
-        const hardmode = manager.getComponent(HardmodeComponent)
-        if (hardmode.isEmpty()) {
-            return
-        }
-
-        this.#modifier = HardmodeComponent.damageModifier
     }
 
     constructor(

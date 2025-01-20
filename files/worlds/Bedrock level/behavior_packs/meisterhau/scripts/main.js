@@ -1,6 +1,5 @@
 import { remote } from './llrpc.js'
-import { system, world } from '@minecraft/server'
-import { syncInputButtons } from './remote/input.js'
+import { world } from '@minecraft/server'
 
 remote.expose('cat', (str1, str2) => {
     return str1 + str2
@@ -119,11 +118,4 @@ remote.expose('faceTo', (src, t) => {
     } catch (error) {
         world.sendMessage(error + '')
     }
-})
-
-system.runInterval(() => {
-    // world.getAllPlayers().forEach(pl => {
-    //     pl.sendMessage('' + pl.inputInfo.getButtonState(InputButton.Jump))
-    // })
-    syncInputButtons()
 })

@@ -60,37 +60,40 @@ var loadModule = {
 };
 
 const stringParamTypeMap = {
-    bool: 0,
-    int: 1,
-    float: 2,
-    string: 3,
-    entity: 4,
-    player: 5,
-    xyz: 6,
-    pos: 7,
-    vec: 7,
-    text: 8,
-    message: 9,
-    json: 10,
-    item: 11,
-    block: 12,
-    effect: 13,
-    enum: 14,
-    // softEnum: 15,
-    entities: 16,
-    command: 17
+    bool: ParamType.Bool,
+    int: ParamType.Int,
+    float: ParamType.Float,
+    string: ParamType.String,
+    entity: ParamType.Actor,
+    actor: ParamType.Actor,
+    player: ParamType.Player,
+    xyz: ParamType.BlockPos,
+    pos: ParamType.Vec3,
+    vec: ParamType.Vec3,
+    text: ParamType.RawText,
+    message: ParamType.Message,
+    json: ParamType.JsonValue,
+    item: ParamType.Item,
+    block: ParamType.Block,
+    effect: ParamType.Effect,
+    enum: ParamType.Enum,
+    softEnum: ParamType.SoftEnum,
+    entities: ParamType.ActorType,
+    actor_type: ParamType.ActorType,
+    command: ParamType.Command,
+    selector: ParamType.WildcardSelector,
 };
 const matchers = {
     required: /^<([\w:]+)>$/,
     optional: /^\[([\w:]+)\]$/,
 };
-function newToken(index, type = 'enum', id, isOptional = true) {
+function tk(index, type, id, isOptional = true) {
     return {
         index, type, id, isOptional
     };
 }
 function parseCmdStr(str) {
-    const frags = str.split(/ +/);
+    const frags = str.trim().split(/ +/);
     const tokens = [];
     frags.forEach((frag, i) => {
         let res, isOptional = -1;
@@ -103,10 +106,10 @@ function parseCmdStr(str) {
         if (isOptional !== -1) {
             const data = res[1];
             const typeDef = data.split(':');
-            tokens.push(newToken(i, typeDef[1], typeDef[0], !!isOptional));
+            tokens.push(tk(i, typeDef[1], typeDef[0], !!isOptional));
             return;
         }
-        tokens.push(newToken(i, 'enum', frag, false));
+        tokens.push(tk(i, 'enum', frag, false));
     });
     return tokens;
 }
@@ -114,19 +117,19 @@ function parseCmdArr(arr) {
     const tokens = [];
     arr.forEach((el, i) => {
         const [id, typeDesc] = Object.entries(el)[0];
-        let isOptional = true, type = typeDesc;
-        if (typeDesc.startsWith('!')) {
-            isOptional = false;
+        let isOptional = false, type = typeDesc;
+        if (typeDesc.startsWith('?')) {
+            isOptional = true;
             type = typeDesc.slice(1);
         }
-        tokens.push(newToken(i, type, id, isOptional));
+        tokens.push(tk(i, type, id, isOptional));
     });
     return tokens;
 }
 class Registry {
-    /**@private*/ _cmd;
-    /**@private*/ _tokenListCollection = new Set();
-    /**@private*/ _handlerCollection = [];
+    _cmd;
+    _tokenListCollection = new Set();
+    _handlerCollection = [];
     constructor(cmd) {
         this._cmd = cmd;
     }
@@ -153,6 +156,43 @@ class Registry {
             .push([finalList.map(l => l.id), handler]);
         return this;
     }
+    sameArr(arr1, arr2) {
+        if (arr1.length !== arr2.length) {
+            return false;
+        }
+        return new Set(arr1.concat(arr2)).size === arr1.length;
+    }
+    setCallback() {
+        this._cmd.setCallback((cmd, origin, out, args) => {
+            const argv = Object
+                .keys(args)
+                .filter(v => args[v]);
+            const pairs = this._handlerCollection[argv.length];
+            const [_, handler] = pairs.find(([ids]) => this.sameArr(argv, ids)) || [, Function.prototype];
+            handler.call(undefined, cmd, origin, out, args);
+        });
+    }
+    registeredArgs = new Set();
+    enumIndex = 0;
+    createArg(name, type, isOptional) {
+        let argId = name;
+        if (this.registeredArgs.has(name)) {
+            return;
+        }
+        let enumId = null;
+        if (type === 'enum') {
+            enumId = `enum_${this.enumIndex++}`;
+            this._cmd.setEnum(enumId, [name]);
+            argId = enumId;
+        }
+        let extArgs = enumId ? [enumId, enumId, 1] : [];
+        isOptional
+            ? this._cmd.optional(name, stringParamTypeMap[type], ...extArgs)
+            : this._cmd.mandatory(name, stringParamTypeMap[type], ...extArgs);
+        this.registeredArgs.add(name);
+        return argId;
+    }
+    _submitted = false;
     submit() {
         this._tokenListCollection.forEach(tokens => {
             let ids = [];
@@ -164,59 +204,36 @@ class Registry {
         });
         this.setCallback();
         this._cmd.setup();
+        this._submitted = true;
     }
-    /**@private*/ sameArr(arr1, arr2) {
-        if (arr1.length !== arr2.length) {
-            return false;
-        }
-        return new Set(arr1.concat(arr2)).size === arr1.length;
-    }
-    /**@private*/ setCallback() {
-        this._cmd.setCallback((cmd, origin, out, args) => {
-            const argv = Object
-                .keys(args)
-                .filter(v => args[v]);
-            const pairs = this._handlerCollection[argv.length];
-            const [_, handler] = pairs.find(([ids]) => this.sameArr(argv, ids)) || [, Function.prototype];
-            handler.call(undefined, cmd, origin, out, args);
-        });
-    }
-    /**@private*/ registeredArgs = new Set();
-    /**@private*/ createArg(name, type, isOptional) {
-        if (this.registeredArgs.has(name)) {
-            return;
-        }
-        let enumId = null;
-        if (type === 'enum') {
-            enumId = `enum_${name}`;
-            this._cmd.setEnum(enumId, [name]);
-        }
-        let extArgs = enumId ? [enumId, name, 1] : [];
-        isOptional
-            ? this._cmd.optional(name, stringParamTypeMap[type], ...extArgs)
-            : this._cmd.mandatory(name, stringParamTypeMap[type], ...extArgs);
-        this.registeredArgs.add(name);
+    isSubmitted() {
+        return this._submitted;
     }
 }
-/**
- * @param {string} head
- * @param {string} desc
- * @param {0|1|2} [perm] 0 普通，1 管理员，2 控制台
- * @param {number} [flag]
- * @param {string} [alias]
- */
-function cmd$6(head, desc, perm = 1) {
+var CommandPermission;
+(function (CommandPermission) {
+    CommandPermission[CommandPermission["Everyone"] = 0] = "Everyone";
+    CommandPermission[CommandPermission["OP"] = 1] = "OP";
+    CommandPermission[CommandPermission["Console"] = 2] = "Console";
+})(CommandPermission || (CommandPermission = {}));
+function cmd$6(head, desc, perm = CommandPermission.OP) {
     const command = mc.newCommand(head, desc, perm);
     const registry = new Registry(command);
+    const register = (...args) => { registry.register.apply(registry, args); };
     return {
         setup: (executor) => {
-            executor.call(undefined, registry);
-        }
+            executor.call(undefined, register, registry);
+            if (!registry.isSubmitted()) {
+                registry.submit();
+            }
+        },
+        getRegistry: () => registry,
     };
 }
 
 var command = /*#__PURE__*/Object.freeze({
 	__proto__: null,
+	get CommandPermission () { return CommandPermission; },
 	Registry: Registry,
 	cmd: cmd$6
 });
@@ -431,27 +448,26 @@ function distStr(entity, dest, showDiff=true) {
 
 function setup$8() {
     cmd$5('whoami', '我是谁？', 0)
-    .setup(registry => {
-        registry
-        .register('name', (cmd, ori, out) => {
+    .setup(register => {
+        register('name', (cmd, ori, out) => {
             out.success(ori.entity.name);
-        })
-        .register('type', (_, ori, out) => {
+        });
+        register('type', (_, ori, out) => {
             out.success(ori.entity.type);
-        })
-        .register('id <mob:entity>', (_, ori, out, args) => {
+        });
+        register('id <mob:entity>', (_, ori, out, args) => {
             const source = ori.player ?? ori.entity;
             const targets = args.mob;
 
             targets.forEach(t => {
                 source.tell(t.uniqueId);
             });
-        })
-        .register('dist <position:pos>', (_, ori, out, args) => {
+        });
+        register('dist <position:pos>', (_, ori, out, args) => {
             const dest = args.position;
             out.success(distStr(ori.entity, dest));
-        })
-        .register('dist <mob:entity>', (_, ori, out, args) => {
+        });
+        register('dist <mob:entity>', (_, ori, out, args) => {
             const source = ori.player ?? ori.entity;
             const targets = args.mob;
             
@@ -468,8 +484,7 @@ function setup$8() {
                     source.tell(distStr(source, dest, false));
                 }).send(target.toPlayer());
             }
-        })
-        .submit();
+        });
     });
 }
 
@@ -1121,17 +1136,15 @@ function listenMobEvent(type) {
 }
 function setup$7() {
     cmd$6('simplayer', '假人', 1)
-        .setup(registry => {
-        registry
-            .register('<pos:pos> <name:string>', (_, ori, out, { pos, name }) => {
+        .setup(register => {
+        register('<pos:pos> <name:string>', (_, ori, out, { pos, name }) => {
             spawn(pos, name);
-        })
-            .register('despawn <pl:player>', (_, ori, out, res) => {
+        });
+        register('despawn <pl:player>', (_, ori, out, res) => {
             res.pl.forEach(sim => {
                 despawn(sim);
             });
-        })
-            .submit();
+        });
     });
     listenMobEvent('onMobHurt');
     listenMobEvent('onMobDie');
@@ -1185,17 +1198,16 @@ function setup$6() {
         });
     });
 
-    cmd$4('overshoulder', '过肩视角', 0).setup(registry => {
-        registry.register('clear', (_, ori) => {
+    cmd$4('overshoulder', '过肩视角', 0).setup(register => {
+        register('clear', (_, ori) => {
             clearCamera(ori.player);
-        })
-        .register('right', (_, ori) => {
+        });
+        register('right', (_, ori) => {
             setOnShoulderCamera(ori.player.uniqueId);
-        })
-        .register('left', (_, ori) => {
+        });
+        register('left', (_, ori) => {
             setOnShoulderCamera(ori.player.uniqueId, true);
-        })
-        .submit();
+        });
     });
 }
 
@@ -2553,24 +2565,23 @@ function setup$4() {
         }
     };
 
-    cmd$3('virtentity', '操作虚拟实体', 1).setup(registry => {
-        registry.register('add <pl:player> <entites:string>', (_, ori, out, res) => {
+    cmd$3('virtentity', '操作虚拟实体', 1).setup(register => {
+        register('add <pl:player> <entites:string>', (_, ori, out, res) => {
             const pl = res.pl[0];
             done(pl, () => addVirtEntites(pl.xuid, ...res.entites.split(',').map(en => en.trim())));
-        })
-        .register('delete <entity:string>', (_, ori, out, res) => {
+        });
+        register('delete <entity:string>', (_, ori, out, res) => {
             const pl = ori.player;
             done(pl, () => deleteEntity(res.entity));
-        })
-        .register('owner <entity:string>', (_, ori, out, res) => {
+        });
+        register('owner <entity:string>', (_, ori, out, res) => {
             ori.player.tell(mc.getPlayer(getVirtEntityLeader$2(res.entity)).name);
-        })
-        .register('list <pl:player>', (_, ori, out, res) => {
+        });
+        register('list <pl:player>', (_, ori, out, res) => {
             const pl = res.pl[0];
             ori.player.tell(getControlledEntites$1(pl.xuid).join('\n'));
             
-        })
-        .submit();
+        });
     });
 }
 
@@ -2756,16 +2767,12 @@ function queryOrder(pl) {
 
 function setupOrder() {
     cmd$2('orderop', '管理订单', 1)
-    .setup(registry => {
-        registry
-        .register('list', (_, { player }) => {
+    .setup(register => {
+        register('list', (_, { player }) => {
             listOrders(player);
-        })
-        .register('add', (_, { player }) => addOrder(player))
-        .register('query', (_, { player }) => queryOrder(player));
-
-
-        registry.submit();
+        });
+        register('add', (_, { player }) => addOrder(player));
+        register('query', (_, { player }) => queryOrder(player));
     });
 }
 
@@ -3011,14 +3018,13 @@ const { Menu } = customer;
 const Vendor = vendor;
 
 var user = () => {
-    cmd$1('order', '订单操作', 0).setup(registry => {
-        registry.register('customer', (_, o) => {
+    cmd$1('order', '订单操作', 0).setup(register => {
+        register('customer', (_, o) => {
             action(...Menu()).send(o.player);
-        })
-        .register('vendor', (_, o) => {
+        });
+        register('vendor', (_, o) => {
             action(...Vendor()).send(o.player);
-        })
-        .submit();
+        });
     });
 };
 
@@ -3233,17 +3239,16 @@ function setup$1() {
     mc.listen('onTick', freshStatus);
 
     cmd('kinematics', '设置运动学属性')
-    .setup(regsitry => {
-        regsitry
-        .register('watch <entity:entity>', (_1, _2, out, { entity }) => {
+    .setup(register => {
+        register('watch <entity:entity>', (_1, _2, out, { entity }) => {
             const list = entity.map(e => addWatchable(e)).filter(v => v);
             out.success(`添加 ${list.length} 个运动学监视对象`);
-        })
-        .register('unwatch <watched:entity>', (_1, _2, out, {watched}) => {
+        });
+        register('unwatch <watched:entity>', (_1, _2, out, {watched}) => {
             const list = watched.map(e => rmWatchable(e)).filter(v => v);
             out.success(`移除 ${list.length} 个运动学监视对象`);
-        })
-        .register('velocity <v:vec>', (_, { entity: ori }, out, args) => {
+        });
+        register('velocity <v:vec>', (_, { entity: ori }, out, args) => {
             const { v } = args;
             let suid = getScoreUid(ori.uniqueId);
 
@@ -3252,8 +3257,8 @@ function setup$1() {
             }
 
             setVelocity(suid, v.x - 0.5, v.y, v.z - 0.5);
-        })
-        .register('accelerate <a:vec>', (_, { entity: ori }, out, args) => {
+        });
+        register('accelerate <a:vec>', (_, { entity: ori }, out, args) => {
             const { a } = args;
             let suid = getScoreUid(ori.uniqueId);
             if (!suid) {
@@ -3261,8 +3266,7 @@ function setup$1() {
             }
 
             setAccelerate(suid, a.x - 0.5, a.y, a.z - 0.5);
-        })
-        .submit();
+        });
     });
 }
 

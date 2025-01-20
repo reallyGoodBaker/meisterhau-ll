@@ -19,7 +19,7 @@ const { DamageModifier } = require('../components/damage-modifier')
 const { registerCommand } = require('./commands')
 const { antiTreeshaking } = require('../components/anti-treeshaking')
 const { Stamina } = require('../components/core/stamina')
-const { eventCenter, inputStates, ButtonState } = require('scripts-rpc/func/input')
+const { eventCenter, input } = require('scripts-rpc/func/input')
 
 const em = eventCenter({ enableWatcher: true })
 const es = EventInputStream.get(em)
@@ -200,16 +200,15 @@ const defaultPacker = (pl, bind, status) => {
     const picked = pick(pl, playerAttrPickList)
     const stamina = status.componentManager.getComponent(Stamina).unwrap()
 
-    // console.log(pl.name, ' packer:', isCollide(pl))
-
     /**@type {TransitionOptMixins}*/
     const mixins = {
         stamina: stamina.stamina,
         hasTarget: hasLock(pl),
         repulsible: status.repulsible,
-        isCollide: isCollide(pl),
+        isCollide: false,//isCollide(pl),
         preInput: status.preInput,
-        isSneaking: inputStates.get(pl.name)?.sneak ?? false,
+        isSneaking: input.isPressing(pl, 'sneak'),
+        isDodging: input.isPressing(pl, 'jump'),
     }
 
     return {
@@ -1086,7 +1085,7 @@ function listenAllMcEvents(collection) {
 
         const pl = rider.toPlayer()
 
-        if (mods.has(pl.getHand().type) && !pl.isSneaking) {
+        if (mods.has(pl.getHand().type) && !input.isPressing(pl, 'sneak')) {
             return false
         }
     })

@@ -12,15 +12,14 @@ function distStr(entity, dest, showDiff=true) {
 
 function setup() {
     cmd('whoami', '我是谁？', 0)
-    .setup(registry => {
-        registry
-        .register('name', (cmd, ori, out) => {
+    .setup(register => {
+        register('name', (cmd, ori, out) => {
             out.success(ori.entity.name)
         })
-        .register('type', (_, ori, out) => {
+        register('type', (_, ori, out) => {
             out.success(ori.entity.type)
         })
-        .register('id <mob:entity>', (_, ori, out, args) => {
+        register('id <mob:entity>', (_, ori, out, args) => {
             const source = ori.player ?? ori.entity
             const targets = args.mob
 
@@ -28,11 +27,11 @@ function setup() {
                 source.tell(t.uniqueId)
             })
         })
-        .register('dist <position:pos>', (_, ori, out, args) => {
+        register('dist <position:pos>', (_, ori, out, args) => {
             const dest = args.position
             out.success(distStr(ori.entity, dest))
         })
-        .register('dist <mob:entity>', (_, ori, out, args) => {
+        register('dist <mob:entity>', (_, ori, out, args) => {
             const source = ori.player ?? ori.entity
             const targets = args.mob
             
@@ -50,7 +49,6 @@ function setup() {
                 }).send(target.toPlayer())
             }
         })
-        .submit()
     })
 }
 

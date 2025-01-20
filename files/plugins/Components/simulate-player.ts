@@ -43,17 +43,15 @@ function listenMobEvent(type: string) {
 
 export function setup() {
     cmd('simplayer', '假人', 1)
-    .setup(registry => {
-        registry
-            .register('<pos:pos> <name:string>', (_, ori, out, { pos, name }) => {
-                spawn(pos, name)
+    .setup(register => {
+        register('<pos:pos> <name:string>', (_, ori, out, { pos, name }) => {
+            spawn(pos, name)
+        })
+        register('despawn <pl:player>',(_, ori, out, res) => {
+            (res.pl as SimulatedPlayer[]).forEach(sim => {
+                despawn(sim)
             })
-            .register('despawn <pl:player>',(_, ori, out, res) => {
-                (res.pl as SimulatedPlayer[]).forEach(sim => {
-                    despawn(sim)
-                })
-            })
-            .submit()
+        })
     })
 
     listenMobEvent('onMobHurt')

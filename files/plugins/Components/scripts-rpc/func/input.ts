@@ -13,28 +13,6 @@ export interface InputInfo {
     y: number
 }
 
-export const inputStates = new Map<string, InputInfo>()
-
-function decodeSyncInput(buffer: ArrayBuffer): InputInfo {
-    const view = new DataView(buffer)
-    const jump = view.getUint8(0) === 1
-    const sneak = view.getUint8(1) === 1
-    const x = view.getFloat64(2, true)
-    const y = view.getFloat64(10, true)
-    return { jump, sneak, x, y }
-}
-
-export function updateInput(name: string, encodedInput: string) {
-    const buffer = new ArrayBuffer(18)
-    const uint8 = new Uint8Array(buffer)
-    for (let i = 0; i < 18; i++) {
-        uint8[i] = encodedInput.charCodeAt(i)
-    }
-
-    const input = decodeSyncInput(buffer)
-    inputStates.set(name, input)
-}
-
 export function eventCenter(opt: any) {
     const em = new EventEmitter(opt)
 
@@ -67,4 +45,32 @@ export function eventCenter(opt: any) {
     })
 
     return em
+}
+
+import { inputStates } from '../server'
+import { getAngleFromVector2 } from "@combat/basic/generic/vec"
+
+export namespace input {
+    export function isPressing(pl: Player, button: 'jump' | 'sneak') {
+        return inputStates.get(pl.name)?.[button] ?? false
+    }
+
+    export function movementVector(pl: Player) {
+        const inputInfo = inputStates.get(pl.name)
+        if (!inputInfo) {
+            return { x: 0, y: 0 }
+        }
+
+        return { x: inputInfo.x, y: inputInfo.y }
+    }
+
+    export function moveDir(pl: Player) {
+        const yaw = pl.direction.yaw
+        const vx = Math.cos(yaw)
+        const vy = Math.sin(yaw)
+        const vdir = { x: vx, y: vy }
+        const result = getAngleFromVector2(vdir, movementVector(pl))
+
+        console.log(result)
+    }
 }

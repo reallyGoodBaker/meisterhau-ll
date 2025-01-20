@@ -43,24 +43,23 @@ function setup() {
         }
     }
 
-    cmd('virtentity', '操作虚拟实体', 1).setup(registry => {
-        registry.register('add <pl:player> <entites:string>', (_, ori, out, res) => {
+    cmd('virtentity', '操作虚拟实体', 1).setup(register => {
+        register('add <pl:player> <entites:string>', (_, ori, out, res) => {
             const pl = res.pl[0]
             done(pl, () => addVirtEntites(pl.xuid, ...res.entites.split(',').map(en => en.trim())))
         })
-        .register('delete <entity:string>', (_, ori, out, res) => {
+        register('delete <entity:string>', (_, ori, out, res) => {
             const pl = ori.player
             done(pl, () => deleteEntity(res.entity))
         })
-        .register('owner <entity:string>', (_, ori, out, res) => {
+        register('owner <entity:string>', (_, ori, out, res) => {
             ori.player.tell(mc.getPlayer(getVirtEntityLeader(res.entity)).name)
         })
-        .register('list <pl:player>', (_, ori, out, res) => {
+        register('list <pl:player>', (_, ori, out, res) => {
             const pl = res.pl[0]
             ori.player.tell(getControlledEntites(pl.xuid).join('\n'))
             
         })
-        .submit()
     })
 }
 

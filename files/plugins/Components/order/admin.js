@@ -153,16 +153,12 @@ function queryOrder(pl) {
 
 function setupOrder() {
     cmd('orderop', '管理订单', 1)
-    .setup(registry => {
-        registry
-        .register('list', (_, { player }) => {
+    .setup(register => {
+        register('list', (_, { player }) => {
             listOrders(player)
         })
-        .register('add', (_, { player }) => addOrder(player))
-        .register('query', (_, { player }) => queryOrder(player))
-
-
-        registry.submit()
+        register('add', (_, { player }) => addOrder(player))
+        register('query', (_, { player }) => queryOrder(player))
     })
 }
 
