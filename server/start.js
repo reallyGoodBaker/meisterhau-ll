@@ -26,14 +26,15 @@ function startDevServer() {
     const child = cp.spawn(
         'bedrock_server_mod', [],
         {
-            cwd: path.resolve(__dirname, '../dev'),
+            env: process.env,
+            cwd: path.join(__dirname, '../dev'),
             shell: true,
         }
     )
 
-    child.stdout.pipe(process.stdout)
-    child.stderr.pipe(process.stderr)
-    process.stdin.pipe(child.stdin)
+    child.stderr.on('data', data => process.stderr.write(data))
+    child.stdout.on('data', data => process.stdout.write(data))
+    process.stdin.on('data', data => child.stdin.write(data))
 }
 
 async function start() {

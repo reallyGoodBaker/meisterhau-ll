@@ -1,6 +1,6 @@
 import { playAnim, playSoundAll } from "../basic/index"
 import { randomRange } from '../../utils/math'
-import { DefaultMoves, DefaultTrickModule } from '../basic/default'
+import { DefaultMoves, DefaultTrickModule, ParryDirection } from '../basic/default'
 import { Stamina } from '@combat/basic/components/core/stamina'
 
 class OotachiMoves extends DefaultMoves {
@@ -401,13 +401,17 @@ class OotachiMoves extends DefaultMoves {
             ctx.freeze(pl)
             ctx.status.hegemony = true
             ctx.status.repulsible = false
-            playAnim(pl, `animation.weapon.ootachi.combo2.sweap.${
-                ctx.previousStatus === 'combo1Attack' ? 'l' :
-                    ctx.previousStatus === 'parry' ? 'r2' : 'r'
-            }`)
             if (ctx.previousStatus === 'parry') {
-                ctx.adsorbOrSetVelocity(pl, 1, 150)
+                const parryDir = ctx.components.getComponent(ParryDirection).unwrap()
+                if (parryDir.direction === 'left') {
+                    playAnim(pl, 'animation.weapon.ootachi.combo2.sweap.r2')
+                    ctx.adsorbOrSetVelocity(pl, 1, 180)
+                } else {
+                    playAnim(pl, 'animation.weapon.ootachi.combo2.sweap.r')
+                    ctx.adsorbOrSetVelocity(pl, 0.2, 90)
+                }
             } else {
+                playAnim(pl, `animation.weapon.ootachi.combo2.sweap.${ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'}`)
                 ctx.adsorbOrSetVelocity(pl, 0.2, 90)
             }
             ctx.task

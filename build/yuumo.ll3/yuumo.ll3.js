@@ -3284,7 +3284,7 @@ var setup_1 = {
     setup
 };
 
-const {EventEmitter} = events;
+const { EventEmitter } = events;
 const em = new EventEmitter();
 
 const affairToken$1 = {

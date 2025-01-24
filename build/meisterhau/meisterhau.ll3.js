@@ -1658,12 +1658,19 @@ function getAnim(animCategory, direction) {
     if (!anim) {
         switch (direction) {
             case 'middle':
-                return animCategory.right || animCategory.left;
+                return animCategory.right ?? animCategory.left;
             default:
                 return animCategory.left;
         }
     }
     return anim;
+}
+class ParryDirection extends CustomComponent {
+    direction;
+    constructor(direction = 'left') {
+        super();
+        this.direction = direction;
+    }
 }
 let DefaultMoves$4 = class DefaultMoves {
     animations = {
@@ -1908,6 +1915,7 @@ let DefaultMoves$4 = class DefaultMoves {
         backswing: 11,
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2];
+            ctx.components.attachComponent(new ParryDirection(getApproximatelyDir(direction)));
             ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina += 10;
             ctx.movementInput(pl, false);
             playSoundAll$5(this.sounds.parry, pl.pos, 1);
@@ -2066,7 +2074,9 @@ let DefaultTrickModule$4 = class DefaultTrickModule {
 var _default = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	DefaultMoves: DefaultMoves$4,
-	DefaultTrickModule: DefaultTrickModule$4
+	DefaultTrickModule: DefaultTrickModule$4,
+	ParryDirection: ParryDirection,
+	getApproximatelyDir: getApproximatelyDir
 });
 
 var require$$1 = /*@__PURE__*/getAugmentedNamespace(_default);
@@ -4572,12 +4582,19 @@ class OotachiMoves extends DefaultMoves$4 {
             ctx.freeze(pl);
             ctx.status.hegemony = true;
             ctx.status.repulsible = false;
-            playAnim$6(pl, `animation.weapon.ootachi.combo2.sweap.${ctx.previousStatus === 'combo1Attack' ? 'l' :
-                ctx.previousStatus === 'parry' ? 'r2' : 'r'}`);
             if (ctx.previousStatus === 'parry') {
-                ctx.adsorbOrSetVelocity(pl, 1, 150);
+                const parryDir = ctx.components.getComponent(ParryDirection).unwrap();
+                if (parryDir.direction === 'left') {
+                    playAnim$6(pl, 'animation.weapon.ootachi.combo2.sweap.r2');
+                    ctx.adsorbOrSetVelocity(pl, 1, 180);
+                }
+                else {
+                    playAnim$6(pl, 'animation.weapon.ootachi.combo2.sweap.r');
+                    ctx.adsorbOrSetVelocity(pl, 0.2, 90);
+                }
             }
             else {
+                playAnim$6(pl, `animation.weapon.ootachi.combo2.sweap.${ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'}`);
                 ctx.adsorbOrSetVelocity(pl, 0.2, 90);
             }
             ctx.task

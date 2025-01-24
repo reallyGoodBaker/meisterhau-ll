@@ -400,6 +400,8 @@ type EntityDamageCause = 'anvil' | 'blockExplosion' | 'charging' | 'contact' | '
     | 'stalactite' | 'stalagmite' | 'starve' | 'suffocation' | 'suicide' | 'temperature' | 'thorns'
     | 'void' | 'wither'
 
+type AttackDirection = 'left' | 'right' | 'vertical' | 'middle'
+
 interface DamageOption {
     damage: number
     damageType?: EntityDamageCause
@@ -427,7 +429,7 @@ interface DamageOption {
      * 垂直方向只能从上往下，所以不需要考虑方向
      * 'middle' 用于刺击
      */
-    direction?: 'left' | 'right' | 'vertical' | 'middle'
+    direction?: AttackDirection
     /**
      * 打断霸体
      */

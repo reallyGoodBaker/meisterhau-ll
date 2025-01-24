@@ -1,9 +1,10 @@
 import { playAnim, playSoundAll } from "./index"
-import { CameraFading } from "./components/camera-fading"
-import { CameraComponent } from "./components/camera"
-import { Stamina } from "./components/core/stamina"
+import { CameraFading } from "@components/camera-fading"
+import { CameraComponent } from "@components/camera"
+import { Stamina } from "@components/core/stamina"
+import { CustomComponent } from "@combat/basic/core/component"
 
-function getApproximatelyDir(direction: string) {
+export function getApproximatelyDir(direction: AttackDirection) {
     return direction === 'right' ? 'right'
             : direction === 'middle' ? 'right'
                 : 'left'
@@ -15,7 +16,7 @@ function getAnim(animCategory: any, direction: string) {
     if (!anim) {
         switch (direction) {
             case 'middle':
-                return animCategory.right || animCategory.left
+                return animCategory.right ?? animCategory.left
 
             default:
                 return animCategory.left
@@ -26,6 +27,14 @@ function getAnim(animCategory: any, direction: string) {
 }
 
 type StateKey<T> = ObjKeyType<T, Move>
+
+export class ParryDirection extends CustomComponent {
+    constructor(
+        public direction: 'left' | 'right' = 'left'
+    ) {
+        super()
+    }
+}
 
 export class DefaultMoves {
     animations = {
@@ -286,6 +295,7 @@ export class DefaultMoves {
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2]
 
+            ctx.components.attachComponent(new ParryDirection(getApproximatelyDir(direction)))
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina += 10
             ctx.movementInput(pl, false)
             playSoundAll(this.sounds.parry, pl.pos, 1)
