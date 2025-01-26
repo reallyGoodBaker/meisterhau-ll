@@ -20,6 +20,7 @@ const { registerCommand } = require('./commands')
 const { antiTreeshaking } = require('../components/anti-treeshaking')
 const { Stamina } = require('../components/core/stamina')
 const { eventCenter, input } = require('scripts-rpc/func/input')
+// const { Team } = require('../components/team')
 
 const em = eventCenter({ enableWatcher: true })
 const es = EventInputStream.get(em)
@@ -110,30 +111,31 @@ function unfreeze(pl) {
 }
 
 function getMoveDir(pl) {
-    const previusPos = {
-        x: pl.feetPos.x,
-        z: pl.feetPos.z
-    }
-    const uniqueId = pl.uniqueId
+    // const previusPos = {
+    //     x: pl.feetPos.x,
+    //     z: pl.feetPos.z
+    // }
+    // const uniqueId = pl.uniqueId
 
-    return new Promise(res => {
-        setTimeout(() => {
-            const currentPos = mc.getPlayer(uniqueId).feetPos
-            const movVec = vec2(currentPos.x, currentPos.z, previusPos.x, previusPos.z)
-            let rot = vec2ToAngle(movVec) * 180 / Math.PI - pl.direction.yaw
+    // return new Promise(res => {
+    //     setTimeout(() => {
+    //         const currentPos = mc.getPlayer(uniqueId).feetPos
+    //         const movVec = vec2(currentPos.x, currentPos.z, previusPos.x, previusPos.z)
+    //         let rot = vec2ToAngle(movVec) * 180 / Math.PI - pl.direction.yaw
 
-            rot = rot < -180 ? rot + 360
-                : rot > 190 ? rot - 360 : rot
+    //         rot = rot < -180 ? rot + 360
+    //             : rot > 190 ? rot - 360 : rot
 
-            const direct = isNaN(rot) ? 0
-                : rot < -135 ? 3
-                    : rot < -45 ? 4
-                        : rot < 45 ? 1
-                            : rot < 135 ? 2 : 3
+    //         const direct = isNaN(rot) ? 0
+    //             : rot < -135 ? 3
+    //                 : rot < -45 ? 4
+    //                     : rot < 45 ? 1
+    //                         : rot < 135 ? 2 : 3
             
-            res(direct)
-        }, 50);
-    })
+    //         res(direct)
+    //     }, 50);
+    // })
+    return input.moveDir(pl)
 }
 
 /**
@@ -497,6 +499,10 @@ function listenAllCustomEvents(mods) {
                 return
             }
 
+            if (uniqueId === 'global_status') {
+                continue
+            }
+
             const pl = mc.getPlayer(uniqueId)
             const bind = getMod(status.hand)
 
@@ -535,6 +541,11 @@ function listenAllCustomEvents(mods) {
             if (typeof uniqueId !== 'string') {
                 return
             }
+
+            if (uniqueId === 'global_status') {
+                continue
+            }
+
             const pl = mc.getPlayer(uniqueId)
             const bind = getMod(status.hand)
 
@@ -614,12 +625,13 @@ function listenAllCustomEvents(mods) {
         } = damageOpt
 
         const victimIsEntity = !victim.xuid
+        const abuserStatus = Status.get(abuser.uniqueId)
 
         if (victimIsEntity) {
             transition(
                 abuser,
                 getMod(getHandedItemType(abuser)),
-                Status.get(abuser.uniqueId),
+                abuserStatus,
                 'onHit',
                 Function.prototype,
                 [ abuser, victim, damageOpt ]
@@ -689,7 +701,12 @@ function listenAllCustomEvents(mods) {
             return em.emitNone('block', abuser, victimPlayer, damageOpt)
         }
 
-        doDamage()
+        const victimTeam = victimStatus.componentManager.getComponent(Team)
+        const abuserTeam = abuserStatus.componentManager.getComponent(Team)
+
+        if (victimTeam.isEmpty() || abuserTeam.isEmpty() || victimTeam.unwrap().name !== abuserTeam.unwrap().name) {
+            doDamage()
+        }
     })
 
     em.on('deflect', (abuser, victim, damageOpt) => {

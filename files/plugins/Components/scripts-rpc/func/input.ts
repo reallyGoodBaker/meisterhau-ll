@@ -48,7 +48,7 @@ export function eventCenter(opt: any) {
 }
 
 import { inputStates } from '../server'
-import { getAngleFromVector2 } from "@combat/basic/generic/vec"
+import { vec2ToAngle } from "@combat/basic/generic/vec"
 
 export namespace input {
     export function isPressing(pl: Player, button: 'jump' | 'sneak') {
@@ -69,8 +69,9 @@ export namespace input {
         const vx = Math.cos(yaw)
         const vy = Math.sin(yaw)
         const vdir = { x: vx, y: vy }
-        const result = getAngleFromVector2(vdir, movementVector(pl))
+        const rot = vec2ToAngle(vdir) * 180 / Math.PI - pl.direction.yaw
 
-        console.log(result)
+        console.log(vdir, movementVector(pl))
+        return 1
     }
 }

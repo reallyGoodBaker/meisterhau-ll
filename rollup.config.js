@@ -33,4 +33,18 @@ export default [
             json(),
         ]
     },
+    {
+        input: './files/plugins/Components/utils/command.ts',
+        output: {
+            file: './build/utils/command.ll3.js',
+            format: 'cjs',
+        },
+        plugins: [
+            commonjs(),
+            nodeResolve(),
+            ts(),
+            paths(),
+            json(),
+        ]
+    },
 ]

@@ -157,7 +157,7 @@ export class Registry {
 
     private registeredArgs = new Set()
 
-    private enumIndex = 0
+    static enumIndex = 0
 
     private createArg(name: string, type: keyof typeof stringParamTypeMap, isOptional: boolean) {
         let argId = name
@@ -169,7 +169,7 @@ export class Registry {
         let enumId = null
 
         if (type === 'enum') {
-            enumId = `enum_${this.enumIndex++}`
+            enumId = `enum_${Registry.enumIndex++}`
             this._cmd.setEnum(enumId, [ name ])
             argId = enumId
         }

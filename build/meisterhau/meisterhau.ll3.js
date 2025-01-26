@@ -674,7 +674,7 @@ class Registry {
         });
     }
     registeredArgs = new Set();
-    enumIndex = 0;
+    static enumIndex = 0;
     createArg(name, type, isOptional) {
         let argId = name;
         if (this.registeredArgs.has(name)) {
@@ -682,7 +682,7 @@ class Registry {
         }
         let enumId = null;
         if (type === 'enum') {
-            enumId = `enum_${this.enumIndex++}`;
+            enumId = `enum_${Registry.enumIndex++}`;
             this._cmd.setEnum(enumId, [name]);
             argId = enumId;
         }
@@ -1063,6 +1063,7 @@ class BaseComponent extends CustomComponent {
 }
 class ComponentManager {
     static profilerEnable = false;
+    static global = new ComponentManager();
     #components = new Map();
     #prependTicks = [];
     #nextTicks = [];
@@ -1380,6 +1381,7 @@ let Status$3 = class Status {
     static get(uniqueId) {
         return this.status.get(uniqueId) || new Status(uniqueId);
     }
+    static global = this.get('global_status');
     /**
      * 手上物品的type
      */
@@ -1458,7 +1460,6 @@ let Status$3 = class Status {
         this.isWaitingParry = false;
         this.stamina = 0;
         this.stiffness = 0;
-        // this.componentManager.clear()
         defaultAcceptableInputs$1.forEach(type => this.acceptableInputs.add(type));
         this.componentManager.attachComponent(new Stamina$1(0));
         if (mc.getPlayer(this.uniqueId)) {
@@ -4574,8 +4575,8 @@ class OotachiMoves extends DefaultMoves$4 {
         }
     };
     combo2Sweap = {
-        cast: 13,
-        backswing: 13,
+        cast: 14,
+        backswing: 12,
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 28;
             ctx.lookAtTarget(pl);
@@ -4766,22 +4767,20 @@ class OotachiMoves extends DefaultMoves$4 {
         backswing: 1,
         onEnter(pl, ctx) {
             ctx.movement(pl);
-            ctx.getMoveDir(pl).then(direct => {
-                direct = direct || 1;
-                if (direct !== 1) {
-                    ctx.setVelocity(pl, direct * 90, 2.5);
-                }
-                else {
-                    ctx.adsorbToTarget(pl, 2);
-                }
-                if (direct !== 3) {
-                    playAnim$6(pl, 'animation.weapon.ootachi.dodge.front');
-                }
-                else {
-                    playAnim$6(pl, 'animation.weapon.ootachi.dodge.back');
-                }
-                ctx.trap(pl, { tag: direct === 1 ? 'front' : 'side' });
-            });
+            const direct = ctx.getMoveDir(pl) || 1;
+            if (direct !== 1) {
+                ctx.setVelocity(pl, direct * 90, 2.5);
+            }
+            else {
+                ctx.adsorbToTarget(pl, 2);
+            }
+            if (direct !== 3) {
+                playAnim$6(pl, 'animation.weapon.ootachi.dodge.front');
+            }
+            else {
+                playAnim$6(pl, 'animation.weapon.ootachi.dodge.back');
+            }
+            ctx.trap(pl, { tag: direct === 1 ? 'front' : 'side' });
         },
         onLeave(pl, ctx) {
             ctx.movement(pl, false);
@@ -6859,7 +6858,7 @@ var func = {
     kinematics, combat,
 };
 
-function vec2$3(x1, y1, x2, y2) {
+function vec2$2(x1, y1, x2, y2) {
     const dx = x2 - x1,
         dy = y2 - y1;
     return {
@@ -6886,19 +6885,19 @@ function rotate2$1(v, rad) {
 
 function multiply2$1(v, factor) {
     const { dx, dy } = v;
-    return vec2$3(0, 0, dx*factor, dy*factor)
+    return vec2$2(0, 0, dx*factor, dy*factor)
 }
 
 function minus(a, b) {
-    return vec2$3(
+    return vec2$2(
         0, 0,
         a.dx - b.dx,
         a.dy - b.dy
     )
 }
 
-function vec2ToAngle$1(v) {
-    let angle = getAngleFromVector2$1(v, vec2$3(0, 0, 0, -1));
+function vec2ToAngle(v) {
+    let angle = getAngleFromVector2$1(v, vec2$2(0, 0, 0, -1));
 
     if (v.dx < 0) {
         angle = -angle;
@@ -6908,11 +6907,11 @@ function vec2ToAngle$1(v) {
 }
 
 var vec = {
-    vec2: vec2$3, getAngleFromVector2: getAngleFromVector2$1, rotate2: rotate2$1, multiply2: multiply2$1, minus,
-    vec2ToAngle: vec2ToAngle$1, 
+    vec2: vec2$2, getAngleFromVector2: getAngleFromVector2$1, rotate2: rotate2$1, multiply2: multiply2$1, minus,
+    vec2ToAngle, 
 };
 
-const { vec2: vec2$2, getAngleFromVector2 } = vec;
+const { vec2: vec2$1, getAngleFromVector2 } = vec;
 
 const defaultRange = {
     angle: 60,
@@ -6935,8 +6934,8 @@ function selectFromRange$2(pl, range) {
         ,Tx = sx + Math.cos(endAngle * RAD) * radius
         ,Tz = sz + Math.sin(endAngle * RAD) * radius;
 
-    const v1 = vec2$2(sx, sz, tx, tz)
-        ,v2 = vec2$2(sx, sz, Tx, Tz)
+    const v1 = vec2$1(sx, sz, tx, tz)
+        ,v2 = vec2$1(sx, sz, Tx, Tz)
         ,rangeAngle = getAngleFromVector2(v1, v2);
 
     const result = [];
@@ -6953,7 +6952,7 @@ function selectFromRange$2(pl, range) {
             return
         }
 
-        const v = vec2$2(sx, sz, e.pos.x, e.pos.z);
+        const v = vec2$1(sx, sz, e.pos.x, e.pos.z);
         const angle = getAngleFromVector2(v1, v);
 
         if (!isNaN(angle) && angle <= rangeAngle) {
@@ -6974,7 +6973,7 @@ var require$$5 = /*@__PURE__*/getAugmentedNamespace(status);
 
 const { CameraComponent } = require$$0;
 const { Status: Status$2 } = require$$5;
-const { rotate2, vec2: vec2$1, multiply2 } = vec;
+const { rotate2, vec2, multiply2 } = vec;
 
 const cameraInput$1 = (pl, enabled=true) => {
     mc.runcmdEx(`inputpermission set "${pl.name}" camera ${enabled ? 'enabled' : 'disabled'}`);
@@ -6998,7 +6997,7 @@ const ANGLE = 180 / Math.PI;
 const battleCameraMiddlePoint = (pl, en) => {
     const plPos = pl.pos;
     const enPos = en.pos;
-    const initVec = vec2$1(plPos.x, plPos.z, enPos.x, enPos.z);
+    const initVec = vec2(plPos.x, plPos.z, enPos.x, enPos.z);
     const dist = initVec.m;
     const offsetZ = 1.5;
     const offsetX = 5;
@@ -7025,7 +7024,7 @@ const battleCameraMiddlePoint = (pl, en) => {
         z: plPos.z - cameraVec.dy,
     };
 
-    const cameraTargetVec = vec2$1(
+    const cameraTargetVec = vec2(
         crossPos.x,
         crossPos.z,
         enPos.x, enPos.z
@@ -7052,7 +7051,7 @@ const battleCamera$1 = (pl, en) => {
 
     const plPos = pl.pos;
     const enPos = en.pos;
-    const initVec = vec2$1(plPos.x, plPos.z, enPos.x, enPos.z);
+    const initVec = vec2(plPos.x, plPos.z, enPos.x, enPos.z);
     const dist = initVec.m;
     const manager = Status$2.get(pl.uniqueId).componentManager;
     const cameraComponentOpt = manager.getComponent(CameraComponent);
@@ -7079,7 +7078,7 @@ const battleCamera$1 = (pl, en) => {
         z: plPos.z - cameraVec.dy,
     };
 
-    const cameraTargetVec = vec2$1(
+    const cameraTargetVec = vec2(
         crossPos.x,
         crossPos.z,
         enPos.x, enPos.z
@@ -8028,8 +8027,9 @@ var input$1;
         const vx = Math.cos(yaw);
         const vy = Math.sin(yaw);
         const vdir = { x: vx, y: vy };
-        const result = vec.getAngleFromVector2(vdir, movementVector(pl));
-        console.log(result);
+        vec.vec2ToAngle(vdir) * 180 / Math.PI - pl.direction.yaw;
+        console.log(vdir, movementVector(pl));
+        return 1;
     }
     input.moveDir = moveDir;
 })(input$1 || (input$1 = {}));
@@ -8056,7 +8056,6 @@ const {
     onTick, toggleLock, hasLock, releaseTarget, adsorbOrSetVelocity
 } = lock;
 const { setVelocity, isCollide } = kinematic;
-const { vec2, vec2ToAngle } = vec;
 const { clearCamera } = camera_1;
 const { Tick } = require$$12;
 const { CameraFading } = require$$13;
@@ -8065,6 +8064,7 @@ const { registerCommand } = require$$15;
 const { antiTreeshaking } = require$$16;
 const { Stamina } = require$$17;
 const { eventCenter, input } = require$$18;
+// const { Team } = require('../components/team')
 
 const em = eventCenter({ enableWatcher: true });
 const es = EventInputStream.get(em);
@@ -8155,30 +8155,31 @@ function unfreeze(pl) {
 }
 
 function getMoveDir(pl) {
-    const previusPos = {
-        x: pl.feetPos.x,
-        z: pl.feetPos.z
-    };
-    const uniqueId = pl.uniqueId;
+    // const previusPos = {
+    //     x: pl.feetPos.x,
+    //     z: pl.feetPos.z
+    // }
+    // const uniqueId = pl.uniqueId
 
-    return new Promise(res => {
-        setTimeout(() => {
-            const currentPos = mc.getPlayer(uniqueId).feetPos;
-            const movVec = vec2(currentPos.x, currentPos.z, previusPos.x, previusPos.z);
-            let rot = vec2ToAngle(movVec) * 180 / Math.PI - pl.direction.yaw;
+    // return new Promise(res => {
+    //     setTimeout(() => {
+    //         const currentPos = mc.getPlayer(uniqueId).feetPos
+    //         const movVec = vec2(currentPos.x, currentPos.z, previusPos.x, previusPos.z)
+    //         let rot = vec2ToAngle(movVec) * 180 / Math.PI - pl.direction.yaw
 
-            rot = rot < -180 ? rot + 360
-                : rot > 190 ? rot - 360 : rot;
+    //         rot = rot < -180 ? rot + 360
+    //             : rot > 190 ? rot - 360 : rot
 
-            const direct = isNaN(rot) ? 0
-                : rot < -135 ? 3
-                    : rot < -45 ? 4
-                        : rot < 45 ? 1
-                            : rot < 135 ? 2 : 3;
+    //         const direct = isNaN(rot) ? 0
+    //             : rot < -135 ? 3
+    //                 : rot < -45 ? 4
+    //                     : rot < 45 ? 1
+    //                         : rot < 135 ? 2 : 3
             
-            res(direct);
-        }, 50);
-    })
+    //         res(direct)
+    //     }, 50);
+    // })
+    return input.moveDir(pl)
 }
 
 /**
@@ -8542,6 +8543,10 @@ function listenAllCustomEvents(mods) {
                 return
             }
 
+            if (uniqueId === 'global_status') {
+                continue
+            }
+
             const pl = mc.getPlayer(uniqueId);
             const bind = getMod(status.hand);
 
@@ -8580,6 +8585,11 @@ function listenAllCustomEvents(mods) {
             if (typeof uniqueId !== 'string') {
                 return
             }
+
+            if (uniqueId === 'global_status') {
+                continue
+            }
+
             const pl = mc.getPlayer(uniqueId);
             const bind = getMod(status.hand);
 
@@ -8659,12 +8669,13 @@ function listenAllCustomEvents(mods) {
         } = damageOpt;
 
         const victimIsEntity = !victim.xuid;
+        const abuserStatus = Status.get(abuser.uniqueId);
 
         if (victimIsEntity) {
             transition(
                 abuser,
                 getMod(getHandedItemType(abuser)),
-                Status.get(abuser.uniqueId),
+                abuserStatus,
                 'onHit',
                 Function.prototype,
                 [ abuser, victim, damageOpt ]
@@ -8734,7 +8745,12 @@ function listenAllCustomEvents(mods) {
             return em.emitNone('block', abuser, victimPlayer, damageOpt)
         }
 
-        doDamage();
+        const victimTeam = victimStatus.componentManager.getComponent(Team);
+        const abuserTeam = abuserStatus.componentManager.getComponent(Team);
+
+        if (victimTeam.isEmpty() || abuserTeam.isEmpty() || victimTeam.unwrap().name !== abuserTeam.unwrap().name) {
+            doDamage();
+        }
     });
 
     em.on('deflect', (abuser, victim, damageOpt) => {

@@ -173,7 +173,7 @@ class Registry {
         });
     }
     registeredArgs = new Set();
-    enumIndex = 0;
+    static enumIndex = 0;
     createArg(name, type, isOptional) {
         let argId = name;
         if (this.registeredArgs.has(name)) {
@@ -181,7 +181,7 @@ class Registry {
         }
         let enumId = null;
         if (type === 'enum') {
-            enumId = `enum_${this.enumIndex++}`;
+            enumId = `enum_${Registry.enumIndex++}`;
             this._cmd.setEnum(enumId, [name]);
             argId = enumId;
         }

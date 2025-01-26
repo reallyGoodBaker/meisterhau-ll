@@ -46,6 +46,7 @@ export interface ComponentCtor<T extends Component | BasicComponent = Component>
 
 export class ComponentManager {
     static profilerEnable = false
+    static readonly global = new ComponentManager()
 
     #components = new Map<ComponentCtor, Component>()
     #prependTicks: Function[] = []

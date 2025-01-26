@@ -374,7 +374,7 @@ interface MovementContext<RawArgs = Array> {
     knockdown(abuser: any, victim: any, knockback?: number): void
     releaseTarget(uid: string): void
     adsorbOrSetVelocity(pl: any, max: number, velocityRot?: number, offset?: number): void
-    getMoveDir(pl: any): Promise<number>
+    getMoveDir(pl: any): number
     trap(pl: any, data?: any): void
     setSpeed(pl: any, speed?: number): void
 }

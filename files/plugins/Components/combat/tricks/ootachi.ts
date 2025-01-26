@@ -393,8 +393,8 @@ class OotachiMoves extends DefaultMoves {
 
 
     combo2Sweap: Move = {
-        cast: 13,
-        backswing: 13,
+        cast: 14,
+        backswing: 12,
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 28
             ctx.lookAtTarget(pl)
@@ -590,22 +590,20 @@ class OotachiMoves extends DefaultMoves {
         backswing: 1,
         onEnter(pl, ctx) {
             ctx.movement(pl)
-            ctx.getMoveDir(pl).then(direct => {
-                direct = direct || 1
-                if (direct !== 1) {
-                    ctx.setVelocity(pl, direct * 90, 2.5)
-                } else {
-                    ctx.adsorbToTarget(pl, 2)
-                }
+            const direct = ctx.getMoveDir(pl) || 1
+            if (direct !== 1) {
+                ctx.setVelocity(pl, direct * 90, 2.5)
+            } else {
+                ctx.adsorbToTarget(pl, 2)
+            }
 
-                if (direct !== 3) {
-                    playAnim(pl, 'animation.weapon.ootachi.dodge.front')
-                } else {
-                    playAnim(pl, 'animation.weapon.ootachi.dodge.back')
-                }
+            if (direct !== 3) {
+                playAnim(pl, 'animation.weapon.ootachi.dodge.front')
+            } else {
+                playAnim(pl, 'animation.weapon.ootachi.dodge.back')
+            }
 
-                ctx.trap(pl, { tag: direct === 1 ? 'front' : 'side' })
-            })
+            ctx.trap(pl, { tag: direct === 1 ? 'front' : 'side' })
         },
         onLeave(pl, ctx) {
             ctx.movement(pl, false)

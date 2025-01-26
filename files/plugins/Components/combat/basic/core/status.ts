@@ -8,10 +8,12 @@ export const defaultAcceptableInputs = [
 ]
 
 export class Status {
-    static status = new Map<string, Status>()
+    static readonly status = new Map<string, Status>()
     static get(uniqueId: string) {
         return this.status.get(uniqueId) || new Status(uniqueId)
     }
+
+    static readonly global = this.get('global_status')
 
     /**
      * 手上物品的type
@@ -99,7 +101,6 @@ export class Status {
         this.isWaitingParry = false
         this.stamina = 0
         this.stiffness = 0
-        // this.componentManager.clear()
         defaultAcceptableInputs.forEach(type => this.acceptableInputs.add(type))
 
         this.componentManager.attachComponent(new Stamina(0))
