@@ -8043,6 +8043,46 @@ var input$2 = /*#__PURE__*/Object.freeze({
 
 var require$$18 = /*@__PURE__*/getAugmentedNamespace(input$2);
 
+var Team_1;
+let Team$1 = class Team extends BaseComponent {
+    static { Team_1 = this; }
+    name;
+    static players = new Map();
+    constructor(name = 'default') {
+        super();
+        this.name = name;
+    }
+    static create({ name }) {
+        return new Team_1(name);
+    }
+    onAttach() {
+        this.getEntity().use(pl => {
+            const players = Team_1.players.get(this) || new Set();
+            players.add(pl);
+            Team_1.players.set(this, players);
+        });
+    }
+    onDetach() {
+        this.getEntity().use(pl => {
+            const players = Team_1.players.get(this);
+            if (players) {
+                players.delete(pl);
+            }
+        });
+    }
+};
+Team$1 = Team_1 = __decorate([
+    PublicComponent('team'),
+    Fields(['name'])
+], Team$1);
+
+var team = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	get Team () { return Team$1; }
+});
+
+var require$$19 = /*@__PURE__*/getAugmentedNamespace(team);
+
 const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = kinematics$1;
 const { combat: { damage: _damage, _damageLL } } = func;
 const { playAnim, playParticle } = require$$2$2;
@@ -8064,7 +8104,7 @@ const { registerCommand } = require$$15;
 const { antiTreeshaking } = require$$16;
 const { Stamina } = require$$17;
 const { eventCenter, input } = require$$18;
-// const { Team } = require('../components/team')
+const { Team } = require$$19;
 
 const em = eventCenter({ enableWatcher: true });
 const es = EventInputStream.get(em);
@@ -8728,6 +8768,12 @@ function listenAllCustomEvents(mods) {
             return doDamage()
         }
 
+        const victimTeam = victimStatus.componentManager.getComponent(Team);
+        const abuserTeam = abuserStatus.componentManager.getComponent(Team);
+        if (!victimTeam.isEmpty() && !abuserTeam.isEmpty() && victimTeam.unwrap().name === abuserTeam.unwrap().name) {
+            return
+        }
+
         if (victimStatus.isWaitingDeflection && !permeable && !powerful) {
             return em.emitNone('deflect', abuser, victimPlayer, damageOpt)
         }
@@ -8745,12 +8791,8 @@ function listenAllCustomEvents(mods) {
             return em.emitNone('block', abuser, victimPlayer, damageOpt)
         }
 
-        const victimTeam = victimStatus.componentManager.getComponent(Team);
-        const abuserTeam = abuserStatus.componentManager.getComponent(Team);
-
-        if (victimTeam.isEmpty() || abuserTeam.isEmpty() || victimTeam.unwrap().name !== abuserTeam.unwrap().name) {
-            doDamage();
-        }
+        
+        doDamage();
     });
 
     em.on('deflect', (abuser, victim, damageOpt) => {

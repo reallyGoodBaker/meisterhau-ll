@@ -20,7 +20,7 @@ const { registerCommand } = require('./commands')
 const { antiTreeshaking } = require('../components/anti-treeshaking')
 const { Stamina } = require('../components/core/stamina')
 const { eventCenter, input } = require('scripts-rpc/func/input')
-// const { Team } = require('../components/team')
+const { Team } = require('../components/team')
 
 const em = eventCenter({ enableWatcher: true })
 const es = EventInputStream.get(em)
@@ -684,6 +684,12 @@ function listenAllCustomEvents(mods) {
             return doDamage()
         }
 
+        const victimTeam = victimStatus.componentManager.getComponent(Team)
+        const abuserTeam = abuserStatus.componentManager.getComponent(Team)
+        if (!victimTeam.isEmpty() && !abuserTeam.isEmpty() && victimTeam.unwrap().name === abuserTeam.unwrap().name) {
+            return
+        }
+
         if (victimStatus.isWaitingDeflection && !permeable && !powerful) {
             return em.emitNone('deflect', abuser, victimPlayer, damageOpt)
         }
@@ -701,12 +707,8 @@ function listenAllCustomEvents(mods) {
             return em.emitNone('block', abuser, victimPlayer, damageOpt)
         }
 
-        const victimTeam = victimStatus.componentManager.getComponent(Team)
-        const abuserTeam = abuserStatus.componentManager.getComponent(Team)
-
-        if (victimTeam.isEmpty() || abuserTeam.isEmpty() || victimTeam.unwrap().name !== abuserTeam.unwrap().name) {
-            doDamage()
-        }
+        
+        doDamage()
     })
 
     em.on('deflect', (abuser, victim, damageOpt) => {
