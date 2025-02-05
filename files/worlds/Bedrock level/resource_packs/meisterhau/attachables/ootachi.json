@@ -19,11 +19,17 @@
             "scripts": {
                 "initialize": [
                     "v.item_status = 0;"
+                ],
+                "animate": [
+                    "fix"
                 ]
             },
             "render_controllers": [
                 "controller.render.weapon"
-            ]
+            ],
+            "animations": {
+                "fix": "animation.hold.ootachi"
+            }
         }
     }
 }
