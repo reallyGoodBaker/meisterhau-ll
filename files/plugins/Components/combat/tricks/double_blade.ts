@@ -279,7 +279,10 @@ class DoubleBladeMoves extends DefaultMoves {
             },
             parry: {
                 onParry: null
-            }
+            },
+            blocked: {
+                onBlocked: null
+            },
         }
     }
 
@@ -347,6 +350,9 @@ class DoubleBladeMoves extends DefaultMoves {
                 onSneak: {
                     allowedState: 'backswing'
                 },
+            },
+            blocked: {
+                onBlocked: null
             },
         }
     }
@@ -423,8 +429,8 @@ class DoubleBladeMoves extends DefaultMoves {
     }
 
     dodge: Move = {
-        cast: 3,
-        backswing: 9,
+        cast: 1,
+        backswing: 10,
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().setCooldown(10)
             ctx.freeze(pl)
@@ -437,6 +443,9 @@ class DoubleBladeMoves extends DefaultMoves {
         onLeave(_, ctx) {
             ctx.unfreeze(_)
             ctx.status.isDodging = false
+        },
+        timeline: {
+            5: (_, ctx) => ctx.status.isDodging = false,
         },
         transitions: {
             resume: {
@@ -458,8 +467,6 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.lookAtTarget(pl)
         },
         onLeave(pl, ctx) {
-            ctx.status.hegemony = false
-            ctx.status.repulsible = true
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
@@ -470,6 +477,7 @@ class DoubleBladeMoves extends DefaultMoves {
                 rotation: -60
             }).forEach(en => {
                 ctx.attack(pl, en, {
+                    permeable: true,
                     damage: 34,
                     damageType: 'entityAttack',
                     knockback: 1.5,
@@ -485,15 +493,7 @@ class DoubleBladeMoves extends DefaultMoves {
             },
 
             10: (pl, ctx) => ctx.trap(pl, { tag: 'fient' }),
-
-            6: (_, ctx) => {
-                ctx.status.hegemony = true
-                ctx.status.repulsible = false
-            },
-            15: (_, ctx) => {
-                ctx.status.hegemony = false
-                ctx.status.repulsible = true
-            }
+            17: (pl, ctx) => ctx.trap(pl, { tag: 'dodge' }),
         },
         transitions: {
             resume: {
@@ -512,6 +512,12 @@ class DoubleBladeMoves extends DefaultMoves {
             blocked: {
                 onBlocked: null
             },
+            dodge: {
+                onTrap: {
+                    tag: 'dodge',
+                    preInput: 'onDodge',
+                }
+            }
         }
     }
 
@@ -545,7 +551,7 @@ class DoubleBladeMoves extends DefaultMoves {
         },
         timeline: {
             4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8),
-            14: (pl, ctx) => ctx.trap(pl),
+            12: (pl, ctx) => ctx.trap(pl),
         },
         transitions: {
             resume: {
@@ -693,12 +699,16 @@ class DoubleBladeMoves extends DefaultMoves {
         cast: 8,
         backswing: 12,
         onEnter(pl, ctx) {
+            ctx.status.hegemony = true
+            ctx.status.repulsible = false
             ctx.components.getComponent(Stamina).unwrap().stamina -= 25
             ctx.freeze(pl)
             playAnim(pl, 'animation.double_blade.shield_counter')
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
+            ctx.status.hegemony = false
+            ctx.status.repulsible = true
         },
         onAct(pl, ctx) {
             ctx.selectFromRange(pl, {
@@ -727,9 +737,15 @@ class DoubleBladeMoves extends DefaultMoves {
             parried: {
                 onParried: null,
             },
-            shield: {
+            dodge: {
                 onTrap: {
                     preInput: 'onDodge',
+                    stamina: 10,
+                }
+            },
+            shield: {
+                onTrap: {
+                    preInput: 'onSneak',
                     stamina: 10,
                 }
             },

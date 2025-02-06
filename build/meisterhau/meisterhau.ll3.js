@@ -6163,7 +6163,10 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             },
             parry: {
                 onParry: null
-            }
+            },
+            blocked: {
+                onBlocked: null
+            },
         }
     };
     alternationLR = {
@@ -6229,6 +6232,9 @@ class DoubleBladeMoves extends DefaultMoves$4 {
                 onSneak: {
                     allowedState: 'backswing'
                 },
+            },
+            blocked: {
+                onBlocked: null
             },
         }
     };
@@ -6302,8 +6308,8 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         }
     };
     dodge = {
-        cast: 3,
-        backswing: 9,
+        cast: 1,
+        backswing: 10,
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina$1).unwrap().setCooldown(10);
             ctx.freeze(pl);
@@ -6316,6 +6322,9 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         onLeave(_, ctx) {
             ctx.unfreeze(_);
             ctx.status.isDodging = false;
+        },
+        timeline: {
+            5: (_, ctx) => ctx.status.isDodging = false,
         },
         transitions: {
             resume: {
@@ -6336,8 +6345,6 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             ctx.lookAtTarget(pl);
         },
         onLeave(pl, ctx) {
-            ctx.status.hegemony = false;
-            ctx.status.repulsible = true;
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
@@ -6348,6 +6355,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
                 rotation: -60
             }).forEach(en => {
                 ctx.attack(pl, en, {
+                    permeable: true,
                     damage: 34,
                     damageType: 'entityAttack',
                     knockback: 1.5,
@@ -6362,14 +6370,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
                 playSoundAll$5('weapon.woosh.3', pl.pos);
             },
             10: (pl, ctx) => ctx.trap(pl, { tag: 'fient' }),
-            6: (_, ctx) => {
-                ctx.status.hegemony = true;
-                ctx.status.repulsible = false;
-            },
-            15: (_, ctx) => {
-                ctx.status.hegemony = false;
-                ctx.status.repulsible = true;
-            }
+            17: (pl, ctx) => ctx.trap(pl, { tag: 'dodge' }),
         },
         transitions: {
             resume: {
@@ -6388,6 +6389,12 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             blocked: {
                 onBlocked: null
             },
+            dodge: {
+                onTrap: {
+                    tag: 'dodge',
+                    preInput: 'onDodge',
+                }
+            }
         }
     };
     kick = {
@@ -6420,7 +6427,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         },
         timeline: {
             4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8),
-            14: (pl, ctx) => ctx.trap(pl),
+            12: (pl, ctx) => ctx.trap(pl),
         },
         transitions: {
             resume: {
@@ -6566,12 +6573,16 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         cast: 8,
         backswing: 12,
         onEnter(pl, ctx) {
+            ctx.status.hegemony = true;
+            ctx.status.repulsible = false;
             ctx.components.getComponent(Stamina$1).unwrap().stamina -= 25;
             ctx.freeze(pl);
             playAnim$6(pl, 'animation.double_blade.shield_counter');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
+            ctx.status.hegemony = false;
+            ctx.status.repulsible = true;
         },
         onAct(pl, ctx) {
             ctx.selectFromRange(pl, {
@@ -6600,9 +6611,15 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             parried: {
                 onParried: null,
             },
-            shield: {
+            dodge: {
                 onTrap: {
                     preInput: 'onDodge',
+                    stamina: 10,
+                }
+            },
+            shield: {
+                onTrap: {
+                    preInput: 'onSneak',
                     stamina: 10,
                 }
             },
@@ -7952,11 +7969,175 @@ HealthModifier = HealthModifier_1 = __decorate([
     Fields(['remain'], ['delta', 'duration'])
 ], HealthModifier);
 
+var Team_1;
+let Team$1 = class Team extends BaseComponent {
+    static { Team_1 = this; }
+    name;
+    static players = new Map();
+    constructor(name = 'default') {
+        super();
+        this.name = name;
+    }
+    static create({ name }) {
+        return new Team_1(name);
+    }
+    onAttach() {
+        this.getEntity().use(pl => {
+            const players = Team_1.players.get(this) || new Set();
+            players.add(pl);
+            Team_1.players.set(this, players);
+        });
+    }
+    onDetach() {
+        this.getEntity().use(pl => {
+            const players = Team_1.players.get(this);
+            if (players) {
+                players.delete(pl);
+            }
+        });
+    }
+};
+Team$1 = Team_1 = __decorate([
+    PublicComponent('team'),
+    Fields(['name'])
+], Team$1);
+
+var team = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	get Team () { return Team$1; }
+});
+
+var MatchRules;
+(function (MatchRules) {
+    MatchRules[MatchRules["BestOf"] = 0] = "BestOf";
+    MatchRules[MatchRules["FixedRounds"] = 1] = "FixedRounds";
+})(MatchRules || (MatchRules = {}));
+class Match {
+    team1;
+    team2;
+    rule;
+    rounds;
+    wins;
+    currentRound;
+    static matches = new Map();
+    constructor(team1, team2, rule = MatchRules.BestOf, rounds = 5, wins = [0, 0], currentRound = 1) {
+        this.team1 = team1;
+        this.team2 = team2;
+        this.rule = rule;
+        this.rounds = rounds;
+        this.wins = wins;
+        this.currentRound = currentRound;
+        Match.matches.set(team1, this);
+        Match.matches.set(team2, this);
+    }
+    static findMatch(team) {
+        return Match.matches.get(team);
+    }
+    destroy() {
+        Match.matches.delete(this.team1);
+        Match.matches.delete(this.team2);
+    }
+    lead() {
+        return Math.max(...this.wins);
+    }
+    finished() {
+        if (this.rule === MatchRules.BestOf) {
+            return this.lead() > Math.floor(this.rounds / 2);
+        }
+        if (this.rule === MatchRules.FixedRounds) {
+            return this.currentRound < this.rounds;
+        }
+        return false;
+    }
+    win(team) {
+        const won = this.team1 === team ? 0 :
+            this.team2 === team ? 1 : -1;
+        if (won === -1) {
+            return;
+        }
+        this.wins[won]++;
+        this.currentRound++;
+    }
+    lose(team) {
+        const won = this.team1 === team ? 1 :
+            this.team2 === team ? 0 : -1;
+        if (won === -1) {
+            return;
+        }
+        this.wins[won]++;
+        this.currentRound++;
+    }
+    result() {
+        if (this.wins[0] > this.wins[1]) {
+            return [this.team1, this.team2];
+        }
+        return [this.team2, this.team1];
+    }
+}
+mc.listen('onPlayerDie', pl => {
+    Status$3.get(pl.uniqueId).componentManager.getComponent(Team$1).use(team => {
+        const match = Match.findMatch(team);
+        if (!match) {
+            return;
+        }
+        match.lose(team);
+        const [winner, loser] = match.result();
+        const winningPlayers = Team$1.players.get(winner);
+        const losingPlayers = Team$1.players.get(loser);
+        if (match.finished()) {
+            if (winningPlayers) {
+                winningPlayers.forEach(pl => {
+                    pl.setTitle(`获胜`);
+                });
+            }
+            if (losingPlayers) {
+                losingPlayers.forEach(pl => {
+                    pl.setTitle(`失败`);
+                });
+            }
+            return;
+        }
+        if (winningPlayers) {
+            winningPlayers.forEach(pl => {
+                pl.setTitle(`第 ${match.currentRound} 回合`);
+                pl.setTitle(`共 ${match.rounds} 回合`);
+            });
+        }
+        if (losingPlayers) {
+            losingPlayers.forEach(pl => {
+                pl.setTitle(`第 ${match.currentRound} 回合`);
+                pl.setTitle(`共 ${match.rounds} 回合`);
+            });
+        }
+    });
+});
+cmd('match', '开启对局', CommandPermission.Everyone).setup(register => {
+    register('<pl:player> best_of <rounds:int>', (cmd, ori, out, res) => {
+        const source = ori.player;
+        const { pl, rounds } = res;
+        const sourceTeamOpt = Status$3.get(source.uniqueId).componentManager.getComponent(Team$1);
+        const targetTeamOpt = Status$3.get(pl[0].uniqueId).componentManager.getComponent(Team$1);
+        if (sourceTeamOpt.isEmpty() || targetTeamOpt.isEmpty()) {
+            return out.error('必须在不同伍中才能进行对局');
+        }
+        const sourceTeam = sourceTeamOpt.unwrap();
+        const targetTeam = targetTeamOpt.unwrap();
+        if (Match.findMatch(sourceTeam)) {
+            return out.error('你已经在进行对局了');
+        }
+        if (Match.findMatch(targetTeam)) {
+            return out.error('对方已经在进行对局了');
+        }
+        new Match(sourceTeam, targetTeam, MatchRules.BestOf, rounds);
+    });
+});
+
 function antiTreeshaking$1() {
     return [
         HudComponent,
         HealthModifier,
         HardmodeComponent,
+        Match,
     ];
 }
 
@@ -8042,44 +8223,6 @@ var input$2 = /*#__PURE__*/Object.freeze({
 });
 
 var require$$18 = /*@__PURE__*/getAugmentedNamespace(input$2);
-
-var Team_1;
-let Team$1 = class Team extends BaseComponent {
-    static { Team_1 = this; }
-    name;
-    static players = new Map();
-    constructor(name = 'default') {
-        super();
-        this.name = name;
-    }
-    static create({ name }) {
-        return new Team_1(name);
-    }
-    onAttach() {
-        this.getEntity().use(pl => {
-            const players = Team_1.players.get(this) || new Set();
-            players.add(pl);
-            Team_1.players.set(this, players);
-        });
-    }
-    onDetach() {
-        this.getEntity().use(pl => {
-            const players = Team_1.players.get(this);
-            if (players) {
-                players.delete(pl);
-            }
-        });
-    }
-};
-Team$1 = Team_1 = __decorate([
-    PublicComponent('team'),
-    Fields(['name'])
-], Team$1);
-
-var team = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	get Team () { return Team$1; }
-});
 
 var require$$19 = /*@__PURE__*/getAugmentedNamespace(team);
 

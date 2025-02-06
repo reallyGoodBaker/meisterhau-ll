@@ -777,7 +777,7 @@
 				}
 			},
 			"timeline": {
-				"0.0": ["v.posture = 1;", "v.overlay_color = v.transparent;"]
+				"0.0": ["v.posture = 1;", "v.overlay_color = v.transparent;", "v.arm_status = 0;"]
 			}
 		},
 		"animation.double_blade.start_right": {
@@ -2406,7 +2406,7 @@
 							"lerp_mode": "catmullrom"
 						},
 						"0.3333": {
-							"post": [-0.72, -1.17, 0],
+							"post": [-0.72, -1.97, 0],
 							"lerp_mode": "catmullrom"
 						},
 						"0.5833": {
@@ -2438,7 +2438,7 @@
 							"lerp_mode": "catmullrom"
 						},
 						"0.3333": {
-							"post": [15.1421, 12.02175, 3.57209],
+							"post": [15.6409, 11.35811, 6.03347],
 							"lerp_mode": "catmullrom"
 						},
 						"0.5833": {
@@ -2775,7 +2775,7 @@
 							"lerp_mode": "catmullrom"
 						},
 						"0.3333": {
-							"post": [-28.83881, 26.85321, -18.02169],
+							"post": [-35.79154, 23.99692, -22.56664],
 							"lerp_mode": "catmullrom"
 						},
 						"0.5833": {
@@ -2842,7 +2842,7 @@
 							"lerp_mode": "catmullrom"
 						},
 						"0.3333": {
-							"post": [-12.01614, -9.65031, -6.90942],
+							"post": [-2.41533, -20.38826, -19.15511],
 							"lerp_mode": "catmullrom"
 						},
 						"0.5833": {
@@ -2927,8 +2927,8 @@
 				}
 			},
 			"timeline": {
-				"0.3333": "v.overlay_color = v.white;",
-				"0.75": "v.overlay_color = v.transparent;"
+				"0.3333": "v.arm_status = 1;",
+				"0.75": "v.arm_status = 0;"
 			}
 		},
 		"animation.double_blade.rr": {
@@ -5107,6 +5107,10 @@
 						"1.0": [27.5, 0, 0]
 					}
 				}
+			},
+			"timeline": {
+				"0.25": "v.overlay_color = v.white;",
+				"0.5417": "v.overlay_color = v.transparent;"
 			}
 		},
 		"animation.double_blade.counter_shield": {

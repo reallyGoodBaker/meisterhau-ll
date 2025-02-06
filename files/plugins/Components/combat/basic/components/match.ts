@@ -1,6 +1,6 @@
 import { Team } from './team'
 import { Status } from '../core/status'
-import { cmd } from '@utils/command'
+import { cmd, CommandPermission } from '@utils/command'
 
 export enum MatchRules {
     BestOf,
@@ -125,13 +125,13 @@ mc.listen('onPlayerDie', pl => {
     })
 })
 
-cmd('match', '开启对局').setup(register => {
+cmd('match', '开启对局', CommandPermission.Everyone).setup(register => {
     register('<pl:player> best_of <rounds:int>', (cmd, ori, out, res) => {
         const source = ori.player as Player
-        const { pl, rounds } = res as { pl: Player, rounds: number }
+        const { pl, rounds } = res as { pl: Player[], rounds: number }
         
         const sourceTeamOpt = Status.get(source.uniqueId).componentManager.getComponent(Team)
-        const targetTeamOpt = Status.get(pl.uniqueId).componentManager.getComponent(Team)
+        const targetTeamOpt = Status.get(pl[0].uniqueId).componentManager.getComponent(Team)
 
         if (sourceTeamOpt.isEmpty() || targetTeamOpt.isEmpty()) {
             return out.error('必须在不同伍中才能进行对局')

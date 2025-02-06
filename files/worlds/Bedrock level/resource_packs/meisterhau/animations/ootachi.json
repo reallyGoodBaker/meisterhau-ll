@@ -784,7 +784,7 @@
 		},
 		"animation.weapon.ootachi.combo1.chop": {
 			"loop": "hold_on_last_frame",
-			"animation_length": 1.25,
+			"animation_length": 1.75,
 			"override_previous_animation": true,
 			"bones": {
 				"root": {
@@ -4384,7 +4384,7 @@
 		},
 		"animation.weapon.ootachi.dodge.front": {
 			"loop": "hold_on_last_frame",
-			"animation_length": 0.5833,
+			"animation_length": 0.75,
 			"override_previous_animation": true,
 			"bones": {
 				"root": {
@@ -4676,7 +4676,7 @@
 		},
 		"animation.weapon.ootachi.dodge.back": {
 			"loop": "hold_on_last_frame",
-			"animation_length": 0.625,
+			"animation_length": 0.75,
 			"override_previous_animation": true,
 			"bones": {
 				"root": {
@@ -4875,7 +4875,7 @@
 		},
 		"animation.weapon.ootachi.hlit": {
 			"loop": "hold_on_last_frame",
-			"animation_length": 0.6667,
+			"animation_length": 1,
 			"override_previous_animation": true,
 			"bones": {
 				"root": {
@@ -9250,7 +9250,7 @@
 		},
 		"animation.weapon.ootachi.combo2.sweap.r2": {
 			"loop": "hold_on_last_frame",
-			"animation_length": 1.25,
+			"animation_length": 1.75,
 			"override_previous_animation": true,
 			"bones": {
 				"root": {
