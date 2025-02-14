@@ -108,7 +108,7 @@ export class DefaultMoves {
     }
 
     blocked: Move = {
-        cast: 10,
+        cast: 15,
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2]
 
@@ -130,7 +130,7 @@ export class DefaultMoves {
     }
 
     block: Move = {
-        cast: 5,
+        cast: 10,
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2]
             const stamina = ctx.status.componentManager.getComponent(Stamina).unwrap()
@@ -148,7 +148,7 @@ export class DefaultMoves {
             ctx.status.isBlocking = false
         },
         timeline: {
-            4: (pl, ctx) => ctx.trap(pl, { tag: 'blockCounter' })
+            9: (pl, ctx) => ctx.trap(pl, { tag: 'blockCounter' })
         },
         transitions: {}
     }

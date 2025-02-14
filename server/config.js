@@ -9,7 +9,6 @@ module.exports = {
         'worlds/**/*',
         'config/**/*',
         'lib/*',
-        'Glacie.dll',
     ],
     builds: [
         'meisterhau',

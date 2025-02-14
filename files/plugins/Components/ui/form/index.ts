@@ -5,20 +5,22 @@ export abstract class Widget<Ctx> implements FormWidget<Ctx> {
     abstract render(): FormView<Ctx>[]
 
     back(pl: Player) {
-        back(this, pl)
+        return back(pl)
     }
 }
 
-export function back(widget: FormWidget<any>, pl: Player) {
+export function back(pl: Player) {
     const formStack = getMapping(pl.xuid)
     if (!formStack.length) {
         return
     }
 
-    let [ type, currentWidget ] = formStack.pop()!
-    if (currentWidget === widget) {
-        [ type, currentWidget ] = formStack.pop()!
+    formStack.pop()
+    if (!formStack.length) {
+        return
     }
+
+    let [ type, widget ] = formStack.at(-1)!
 
     switch (type) {
         case 'alert':

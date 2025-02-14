@@ -1,5 +1,6 @@
 import { playAnim, playSoundAll } from "../basic/index"
 import { DefaultMoves, DefaultTrickModule } from '../basic/default'
+import { input } from "scripts-rpc/func/input"
 
 class UchigatanaMoves extends DefaultMoves {
     constructor() {
@@ -35,6 +36,9 @@ class UchigatanaMoves extends DefaultMoves {
         onEnter(pl) {
             playAnim(pl, 'animation.weapon.uchigatana.kamae', 'animation.weapon.uchigatana.kamae')
         },
+        onTick(pl) {
+            input.moveDir(pl as Player)
+        },
         transitions: {
             hold: {
                 onReleaseLock: null,
@@ -54,26 +58,6 @@ class UchigatanaMoves extends DefaultMoves {
                     hasTarget: true
                 }
             }
-        }
-    }
-
-    jodanKamae: Move = {
-        cast: 10,
-        backswing: 10,
-        onEnter(pl, ctx) {
-            ctx.freeze(pl)
-            playAnim(pl, 'animation.weapon.uchigatana.kamae.jodan')
-        },
-        onLeave(pl, ctx) {
-            ctx.unfreeze(pl)
-        },
-        transitions: {
-            resume: {
-                onEndOfLife: null,
-            },
-            hurt: {
-                onHurt: null
-            },
         }
     }
 
@@ -113,8 +97,8 @@ class UchigatanaMoves extends DefaultMoves {
     }
 
     attack1: Move = {
-        cast: 9,
-        backswing: 12,
+        cast: 8,
+        backswing: 13,
         onEnter(pl, ctx) {
             ctx.status.isBlocking = true
             ctx.freeze(pl)
@@ -138,21 +122,14 @@ class UchigatanaMoves extends DefaultMoves {
             4: (_, ctx) => ctx.status.isBlocking = false,
             5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
             7: pl => playSoundAll(`weapon.woosh.2`, pl.pos, 1),
-            20: (pl, ctx) => ctx.trap(pl)
+            11: (pl, ctx) => ctx.trap(pl)
         },
         transitions: {
             block: {
                 onBlock: null
             },
-            jodanKamae: {
-                onEndOfLife: {
-                    hasTarget: true
-                }
-            },
             resume: {
-                onEndOfLife: {
-                    hasTarget: false
-                }
+                onEndOfLife: null
             },
             hurt: {
                 onHurt: null
@@ -166,6 +143,11 @@ class UchigatanaMoves extends DefaultMoves {
             attack2: {
                 onTrap: {
                     preInput: 'onAttack',
+                }
+            },
+            attack2Heavy: {
+                onTrap: {
+                    preInput: 'onUseItem',
                 }
             },
         }
@@ -199,30 +181,29 @@ class UchigatanaMoves extends DefaultMoves {
             3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
             6: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             7: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
-            25: (pl, ctx) => ctx.trap(pl, { tag: 'counter' }),
+            17: (pl, ctx) => ctx.trap(pl, { tag: 'counter' }),
         },
         transitions: {
             block: {
                 onBlock: null
-            },
-            jodanKamae: {
-                onEndOfLife: {
-                    hasTarget: true
-                }
             },
             resume: {
                 onTrap: {
                     tag: 'feint',
                     preInput: 'onFeint'
                 },
-                onEndOfLife: {
-                    hasTarget: false
-                },
+                onEndOfLife: null,
             },
             attack2Heavy: {
                 onTrap: {
                     tag: 'counter',
                     preInput: 'onUseItem'
+                }
+            },
+            attack2: {
+                onTrap: {
+                    tag: 'counter',
+                    preInput: 'onAttack'
                 }
             },
             hurt: {
@@ -235,11 +216,16 @@ class UchigatanaMoves extends DefaultMoves {
     }
 
     attack2: Move = {
-        cast: 3,
-        backswing: 12,
+        cast: 11,
+        backswing: 9,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
-            playAnim(pl, 'animation.weapon.uchigatana.attack2')
+            playAnim(
+                pl,
+                ctx.previousStatus === 'attack1'
+                    ? 'animation.weapon.uchigatana.attack2.ll'
+                    : 'animation.weapon.uchigatana.attack2.hl'
+            )
             ctx.adsorbOrSetVelocity(pl, 1.5, 90, 1)
         },
         onLeave(pl, ctx) {
@@ -275,18 +261,22 @@ class UchigatanaMoves extends DefaultMoves {
     }
 
     attack2Heavy: Move = {
-        cast: 3,
-        backswing: 12,
+        cast: 15,
+        backswing: 10,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
-            playAnim(pl, 'animation.weapon.uchigatana.attack2.heavy')
+            playAnim(
+                pl,
+                ctx.previousStatus === 'attack1'
+                    ? 'animation.weapon.uchigatana.attack2.lh'
+                    : 'animation.weapon.uchigatana.attack2.hh'
+            )
             ctx.adsorbOrSetVelocity(pl, 1.5, 90, 1)
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
-            playSoundAll('weapon.woosh.2', pl.pos)
             ctx.selectFromRange(pl, {
                 radius: 2.6,
                 angle: 40,
@@ -299,16 +289,28 @@ class UchigatanaMoves extends DefaultMoves {
                 })
             })
         },
+        timeline: {
+            8: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90, 1),
+            10: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90, 1),
+            13: pl => playSoundAll('weapon.woosh.2', pl.pos),
+            7: (pl, ctx) => ctx.trap(pl, { tag: 'fient' }),
+            18: (pl, ctx) => ctx.trap(pl, { tag: 'dodge' }),
+        },
         transitions: {
             resume: {
-                onEndOfLife: null
+                onEndOfLife: null,
+                onTrap: {
+                    tag: 'fient',
+                    preInput: 'onFeint'
+                }
             },
             hurt: {
                 onHurt: null
             },
             parried: {
                 onParried: null
-            }
+            },
+
         }
     }
 }

@@ -13,7 +13,7 @@ export namespace Alert {
         cancel?: AlertButton
     }
 
-    export function ApplyButton(
+    export function Apply(
         text: string, 
         onClick: (pl: Player) => void
     ): FormView<State> {
@@ -25,7 +25,7 @@ export namespace Alert {
         }
     }
 
-    export function CancelButton(
+    export function Cancel(
         text: string, 
         onClick: (pl: Player) => void
     ): FormView<State> {

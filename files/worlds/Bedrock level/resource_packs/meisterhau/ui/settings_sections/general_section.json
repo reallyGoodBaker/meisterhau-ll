@@ -567,20 +567,26 @@
             },
             {
                 "move_hlit_strike@nouns_section": {
-                    "$noun": "剑柄打击",
+                    "$noun": "剑柄打击 (变换攻击, 不可防御)",
                     "$desc": "重击 -> 轻击"
                 }
             },
             {
                 "move_seal@nouns_section": {
-                    "$noun": "封锁",
+                    "$noun": "封锁 (优势格挡)",
                     "$desc": "向前闪避"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "借力打力 (反击)",
+                    "$desc": "招架成功后, 重击"
                 }
             },
             {
                 "trait_superior_hlit_strike@advance_nouns_section": {
                     "$noun": "剑圣之姿",
-                    "$desc": "通过优势格挡自动触发剑柄打击"
+                    "$desc": "通过 '封锁' 自动触发剑柄打击"
                 }
             },
             {
@@ -664,13 +670,13 @@
             },
             {
                 "@nouns_section": {
-                    "$noun": "双倍痛击",
+                    "$noun": "双倍痛击 (不可阻挡)",
                     "$desc": "轻击, 轻击"
                 }
             },
             {
                 "@nouns_section": {
-                    "$noun": "快速踢击",
+                    "$noun": "快速踢击 (体术)",
                     "$desc": "重击, 重击"
                 }
             },
@@ -700,6 +706,12 @@
             },
             {
                 "@advance_nouns_section": {
+                    "$noun": "收放自如",
+                    "$desc": "所有飓风招式均可佯攻"
+                }
+            },
+            {
+                "@advance_nouns_section": {
                     "$noun": "迷踪",
                     "$desc": "闪避间隔大幅缩短"
                 }
@@ -708,6 +720,12 @@
                 "@advance_nouns_section": {
                     "$noun": "识破",
                     "$desc": "在任何攻击后摇均可施放剑刃封锁"
+                }
+            },
+            {
+                "@advance_nouns_section": {
+                    "$noun": "单手持刀",
+                    "$desc": "飓风招式会被封阻"
                 }
             }
         ]

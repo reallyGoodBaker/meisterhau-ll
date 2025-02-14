@@ -1963,34 +1963,32 @@ function showRemovePosUi(pl) {
     }).send(pl);
 }
 
+function calcDist(current, target) {
+    const dx = current.x - target.x,
+        dz = current.z - target.z;
+    return Math.sqrt(dx * dx + dz * dz)
+}
+
 function calcAmountByPos(currentPos, targetPos) {
-    let amount = 0;
-
     if (currentPos.dimid === targetPos.dimid) {
-        const dx = currentPos.x - targetPos.x,
-            dz = currentPos.z - targetPos.z,
-            dist = Math.sqrt(dx * dx + dz * dz);
-
-        amount = Math.ceil(dist/80);
-    } else if(currentPos.dimid === 1 && targetPos.dimid === 0) {   
-        const translatedPos = netherToMainWorld(currentPos);
-        const dx = translatedPos.x - targetPos.x,
-            dz = translatedPos.z - targetPos.z,
-            dist = Math.sqrt(dx * dx + dz * dz);
-
-        amount = Math.ceil(dist/60);
-    } else if(targetPos.dimid === 1 && currentPos.dimid === 0) {
-        const translatedPos = netherToMainWorld(targetPos);
-        const dx = currentPos.x - translatedPos.x,
-            dz = currentPos.z - translatedPos.z,
-            dist = Math.sqrt(dx * dx + dz * dz);
-
-        amount = Math.ceil(dist/60);
-    } else {
-        amount = 100;
+        return Math.ceil(
+            calcDist(currentPos, targetPos) / 80
+        )
+    }
+    
+    if(currentPos.dimid === 1 && targetPos.dimid === 0) {   
+        return Math.ceil(
+            calcDist(netherToMainWorld(currentPos), targetPos) / 60
+        )
+    }
+    
+    if(targetPos.dimid === 1 && currentPos.dimid === 0) {
+        return Math.ceil(
+            calcDist(currentPos, netherToMainWorld(targetPos)) / 60
+        )
     }
 
-    return amount
+    return 100
 }
 
 function requestTeleportToPlayer(from, to) {
@@ -3464,7 +3462,7 @@ function getMapping(xuid) {
 
 var Alert;
 (function (Alert) {
-    function ApplyButton(text, onClick) {
+    function Apply(text, onClick) {
         return context => {
             context.apply = {
                 text,
@@ -3472,8 +3470,8 @@ var Alert;
             };
         };
     }
-    Alert.ApplyButton = ApplyButton;
-    function CancelButton(text, onClick) {
+    Alert.Apply = Apply;
+    function Cancel(text, onClick) {
         return context => {
             context.cancel = {
                 text,
@@ -3481,7 +3479,7 @@ var Alert;
             };
         };
     }
-    Alert.CancelButton = CancelButton;
+    Alert.Cancel = Cancel;
     function View(title, content) {
         return context => {
             context.title = title;
@@ -3529,18 +3527,19 @@ function Export(id) {
 
 class Widget {
     back(pl) {
-        back(this, pl);
+        return back(pl);
     }
 }
-function back(widget, pl) {
+function back(pl) {
     const formStack = getMapping(pl.xuid);
     if (!formStack.length) {
         return;
     }
-    let [type, currentWidget] = formStack.pop();
-    if (currentWidget === widget) {
-        [type, currentWidget] = formStack.pop();
+    formStack.pop();
+    if (!formStack.length) {
+        return;
     }
+    let [type, widget] = formStack.at(-1);
     switch (type) {
         case 'alert':
             return Alert.back(widget, pl);
@@ -3548,15 +3547,19 @@ function back(widget, pl) {
 }
 
 var MyWidget_1;
-let MyWidget = MyWidget_1 = class MyWidget extends Widget {
+let MyWidget = class MyWidget extends Widget {
+    static { MyWidget_1 = this; }
+    static depth = 1;
     render() {
         return [
-            Alert.View('test', 'content'),
-            Alert.ApplyButton('是', pl => {
+            Alert.View('test', `stack ${MyWidget_1.depth}`),
+            Alert.Apply('new stack', pl => {
+                MyWidget_1.depth++;
                 pl.tell('yes');
                 Alert.start(MyWidget_1, pl);
             }),
-            Alert.CancelButton('否', pl => {
+            Alert.Cancel('back', pl => {
+                MyWidget_1.depth--;
                 pl.tell('no');
                 this.back(pl);
             }),
@@ -3569,6 +3572,11 @@ MyWidget = MyWidget_1 = __decorate([
 // mc.listen('onJump', pl => {
 //     Alert.start(MyWidget, pl)
 // })
+cmd$6('testui', '测试ui').setup(register => {
+    register('test1', (cmd, ori, out, res) => {
+        Alert.start(MyWidget, ori.player);
+    });
+});
 
 var testui = /*#__PURE__*/Object.freeze({
 	__proto__: null

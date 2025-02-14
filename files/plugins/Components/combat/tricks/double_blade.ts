@@ -146,14 +146,15 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
-            ctx.trap(pl)
+            ctx.trap(pl, { tag: 'after' })
         },
         timeline: {
             4: (_, ctx) => {
                 ctx.adsorbOrSetVelocity(_, 1.4, 90, 1)
                 ctx.status.isBlocking = false
             },
-            5: pl => playSoundAll('weapon.woosh.2', pl.pos),
+            6: pl => playSoundAll('weapon.woosh.2', pl.pos),
+            5: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             8: (pl, ctx) => {
                 ctx.selectFromRange(pl, {
                     angle: 40,
@@ -170,7 +171,11 @@ class DoubleBladeMoves extends DefaultMoves {
         },
         transitions: {
             resume: {
-                onEndOfLife: null
+                onEndOfLife: null,
+                onTrap: {
+                    tag: 'feint',
+                    preInput: 'onFeint'
+                }
             },
             hurt: {
                 onHurt: null
@@ -183,19 +188,22 @@ class DoubleBladeMoves extends DefaultMoves {
             },
             alternationLR: {
                 onTrap: {
+                    tag: 'after',
                     preInput: 'onUseItem',
                     stamina: 22,
                 }
             },
             finishingL: {
                 onTrap: {
+                    tag: 'after',
                     preInput: 'onAttack',
                     stamina: 30,
                 }
             },
             shield: {
                 onTrap: {
-                    preInput: 'onDodge',
+                    tag: 'after',
+                    preInput: 'onSneak',
                     stamina: 10,
                 },
             },
@@ -226,12 +234,13 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
-            ctx.trap(pl)
+            ctx.trap(pl, { tag: 'after' })
         },
         timeline: {
             3: (_, ctx) => ctx.status.isWaitingParry = false,
             4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90, 1),
-            5: pl => playSoundAll('weapon.woosh.2', pl.pos),
+            6: pl => playSoundAll('weapon.woosh.2', pl.pos),
+            5: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             8: (pl, ctx) => ctx.selectFromRange(pl, {
                 angle: 40,
                 radius: 2.2,
@@ -246,7 +255,11 @@ class DoubleBladeMoves extends DefaultMoves {
         },
         transitions: {
             resume: {
-                onEndOfLife: null
+                onEndOfLife: null,
+                onTrap: {
+                    tag: 'feint',
+                    preInput: 'onFeint'
+                }
             },
             hurt: {
                 onHurt: null
@@ -256,19 +269,22 @@ class DoubleBladeMoves extends DefaultMoves {
             },
             alternationRL: {
                 onTrap: {
+                    tag: 'after',
                     preInput: 'onAttack',
                     stamina: 22,
                 }
             },
             kick: {
                 onTrap: {
+                    tag: 'after',
                     preInput: 'onUseItem',
                     stamina: 15,
                 }
             },
             shield: {
                 onTrap: {
-                    preInput: 'onDodge',
+                    tag: 'after',
+                    preInput: 'onSneak',
                     stamina: 10,
                 },
             },
@@ -300,11 +316,12 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
-            ctx.trap(pl)
+            ctx.trap(pl, { tag: 'after' })
         },
         timeline: {
             4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90, 1),
-            5: pl => playSoundAll('weapon.woosh.2', pl.pos),
+            6: pl => playSoundAll('weapon.woosh.2', pl.pos),
+            5: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             8: (pl, ctx) => 
                 ctx.selectFromRange(pl, {
                     angle: 40,
@@ -320,7 +337,11 @@ class DoubleBladeMoves extends DefaultMoves {
         },
         transitions: {
             resume: {
-                onEndOfLife: null
+                onEndOfLife: null,
+                onTrap: {
+                    tag: 'feint',
+                    preInput: 'onFeint'
+                }
             },
             hurt: {
                 onHurt: null
@@ -330,19 +351,22 @@ class DoubleBladeMoves extends DefaultMoves {
             },
             alternationRL: {
                 onTrap: {
+                    tag: 'after',
                     preInput: 'onAttack',
                     stamina: 22,
                 }
             },
             kick: {
                 onTrap: {
+                    tag: 'after',
                     preInput: 'onUseItem',
                     stamina: 15,
                 }
             },
             shield: {
                 onTrap: {
-                    preInput: 'onDodge',
+                    tag: 'after',
+                    preInput: 'onSneak',
                     stamina: 10,
                 },
             },
@@ -371,11 +395,12 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
-            ctx.trap(pl)
+            ctx.trap(pl, { tag: 'after' })
         },
         timeline: {
             4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90, 1),
-            5: pl => playSoundAll('weapon.woosh.2', pl.pos),
+            6: pl => playSoundAll('weapon.woosh.2', pl.pos),
+            5: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             8: (pl, ctx) =>
                 ctx.selectFromRange(pl, {
                     angle: 40,
@@ -391,7 +416,11 @@ class DoubleBladeMoves extends DefaultMoves {
         },
         transitions: {
             resume: {
-                onEndOfLife: null
+                onEndOfLife: null,
+                onTrap: {
+                    tag: 'feint',
+                    preInput: 'onFeint'
+                }
             },
             hurt: {
                 onHurt: null
@@ -404,19 +433,22 @@ class DoubleBladeMoves extends DefaultMoves {
             },
             alternationLR: {
                 onTrap: {
+                    tag: 'after',
                     preInput: 'onUseItem',
                     stamina: 22,
                 },
             },
             finishingL: {
                 onTrap: {
+                    tag: 'after',
                     preInput: 'onAttack',
                     stamina: 30,
                 },
             },
             shield: {
                 onTrap: {
-                    preInput: 'onDodge',
+                    tag: 'after',
+                    preInput: 'onSneak',
                     stamina: 10,
                 },
             },
@@ -492,14 +524,14 @@ class DoubleBladeMoves extends DefaultMoves {
                 playSoundAll('weapon.woosh.3', pl.pos)
             },
 
-            10: (pl, ctx) => ctx.trap(pl, { tag: 'fient' }),
+            10: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             17: (pl, ctx) => ctx.trap(pl, { tag: 'dodge' }),
         },
         transitions: {
             resume: {
                 onEndOfLife: null,
                 onTrap: {
-                    tag: 'fient',
+                    tag: 'feint',
                     preInput: 'onFeint',
                 }
             },

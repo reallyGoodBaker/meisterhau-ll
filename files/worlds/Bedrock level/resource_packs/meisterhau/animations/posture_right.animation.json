@@ -122,18 +122,6 @@
 					}
 				}
 			}
-		},
-		"animation.posture.right.faceto": {
-			"loop": true,
-			"timeline": {
-				"0.0": "v.posture = 1;"
-			}
-		},
-		"animation.posture.clear": {
-			"loop": true,
-			"timeline": {
-				"0.0": "v.posture = 0;"
-			}
 		}
 	}
 }

@@ -1421,7 +1421,7 @@
 			}
 		},
 		"animation.general.blocked.right": {
-			"animation_length": 0.75,
+			"animation_length": 1,
 			"override_previous_animation": true,
 			"bones": {
 				"root": {
@@ -3723,7 +3723,7 @@
 			}
 		},
 		"animation.general.blocked.left": {
-			"animation_length": 0.75,
+			"animation_length": 1,
 			"override_previous_animation": true,
 			"bones": {
 				"root": {

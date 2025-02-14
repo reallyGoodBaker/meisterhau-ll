@@ -194,34 +194,32 @@ function showRemovePosUi(pl) {
     }).send(pl)
 }
 
+function calcDist(current, target) {
+    const dx = current.x - target.x,
+        dz = current.z - target.z
+    return Math.sqrt(dx * dx + dz * dz)
+}
+
 function calcAmountByPos(currentPos, targetPos) {
-    let amount = 0
-
     if (currentPos.dimid === targetPos.dimid) {
-        const dx = currentPos.x - targetPos.x,
-            dz = currentPos.z - targetPos.z,
-            dist = Math.sqrt(dx * dx + dz * dz)
-
-        amount = Math.ceil(dist/80)
-    } else if(currentPos.dimid === 1 && targetPos.dimid === 0) {   
-        const translatedPos = netherToMainWorld(currentPos)
-        const dx = translatedPos.x - targetPos.x,
-            dz = translatedPos.z - targetPos.z,
-            dist = Math.sqrt(dx * dx + dz * dz)
-
-        amount = Math.ceil(dist/60)
-    } else if(targetPos.dimid === 1 && currentPos.dimid === 0) {
-        const translatedPos = netherToMainWorld(targetPos)
-        const dx = currentPos.x - translatedPos.x,
-            dz = currentPos.z - translatedPos.z,
-            dist = Math.sqrt(dx * dx + dz * dz)
-
-        amount = Math.ceil(dist/60)
-    } else {
-        amount = 100
+        return Math.ceil(
+            calcDist(currentPos, targetPos) / 80
+        )
+    }
+    
+    if(currentPos.dimid === 1 && targetPos.dimid === 0) {   
+        return Math.ceil(
+            calcDist(netherToMainWorld(currentPos), targetPos) / 60
+        )
+    }
+    
+    if(targetPos.dimid === 1 && currentPos.dimid === 0) {
+        return Math.ceil(
+            calcDist(currentPos, netherToMainWorld(targetPos)) / 60
+        )
     }
 
-    return amount
+    return 100
 }
 
 function requestTeleportToPlayer(from, to) {

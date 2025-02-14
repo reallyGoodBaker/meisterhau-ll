@@ -4,7 +4,7 @@
         "description": {
             "identifier": "goblet:martini_entity",
             "is_summonable": true,
-            "is_spawnable": false,
+            "is_spawnable": true,
             "is_experimental": false
         },
         "components": {

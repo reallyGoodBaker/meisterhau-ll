@@ -1182,6 +1182,8 @@ function listenAllMcEvents(collection) {
 
     mc.listen('onPlayerDie', pl => {
         releaseTarget(pl.uniqueId)
+        mc.runcmdEx(`/inputpermission set ${pl.name} jump enabled`)
+        mc.runcmdEx(`/inputpermission set ${pl.name} sneak enabled`)
     })
 
     listenAllCustomEvents(mods)

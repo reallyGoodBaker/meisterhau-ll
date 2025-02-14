@@ -118,21 +118,7 @@
 				{
 					"name": "leftItem",
 					"parent": "leftForearm",
-					"pivot": [5.5, 12.5, 0],
-					"cubes": [
-						{
-							"origin": [5, 12, -15.75],
-							"size": [0.75, 1, 19.75],
-							"uv": {
-								"north": {"uv": [0, 0], "uv_size": [0.75, 1]},
-								"east": {"uv": [0, 0], "uv_size": [19.75, 1]},
-								"south": {"uv": [0, 0], "uv_size": [0.75, 1]},
-								"west": {"uv": [0, 0], "uv_size": [19.75, 1]},
-								"up": {"uv": [0.75, 19.75], "uv_size": [-0.75, -19.75]},
-								"down": {"uv": [0.75, 19.75], "uv_size": [-0.75, -19.75]}
-							}
-						}
-					]
+					"pivot": [5.5, 12.5, 0]
 				},
 				{
 					"name": "left_emitter",
