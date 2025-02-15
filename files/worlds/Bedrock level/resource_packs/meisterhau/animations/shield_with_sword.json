@@ -2350,7 +2350,7 @@
 		},
 		"animation.weapon.shield_with_sword.rock_solid": {
 			"loop": "hold_on_last_frame",
-			"animation_length": 0.75,
+			"animation_length": 1,
 			"override_previous_animation": true,
 			"bones": {
 				"root": {

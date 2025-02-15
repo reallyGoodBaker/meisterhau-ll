@@ -1437,6 +1437,10 @@ let Status$3 = class Status {
      */
     isDodging = false;
     /**
+     * 玩家是否处于无敌状态
+     */
+    isInvulnerable = false;
+    /**
      * 玩家接受的事件输入
      */
     acceptableInputs = new Set(defaultAcceptableInputs$1);
@@ -4199,6 +4203,113 @@ class MoonGlaiveMoves extends DefaultMoves {
 
 moon_glaive.tricks = new MoonGlaiveTricks();
 
+var setupExports = requireSetup();
+
+var eventsExports = requireEvents();
+
+var serverExports = requireServer();
+
+var ButtonState;
+(function (ButtonState) {
+    ButtonState["Pressed"] = "Pressed";
+    ButtonState["Released"] = "Released";
+})(ButtonState || (ButtonState = {}));
+function eventCenter$1(opt) {
+    const em = new eventsExports.EventEmitter(opt);
+    setupExports.remote.expose('input.press.jump', (name) => {
+        const player = mc.getPlayer(name);
+        if (player) {
+            em.emit('input.jump', mc.getPlayer(name), true);
+        }
+    });
+    setupExports.remote.expose('input.release.jump', (name) => {
+        const player = mc.getPlayer(name);
+        if (player) {
+            em.emit('input.jump', mc.getPlayer(name), false);
+        }
+    });
+    setupExports.remote.expose('input.press.sneak', (name) => {
+        const player = mc.getPlayer(name);
+        if (player) {
+            em.emit('input.sneak', mc.getPlayer(name), true);
+        }
+    });
+    setupExports.remote.expose('input.release.sneak', (name) => {
+        const player = mc.getPlayer(name);
+        if (player) {
+            em.emit('input.sneak', mc.getPlayer(name), false);
+        }
+    });
+    return em;
+}
+var input$1;
+(function (input) {
+    function isPressing(pl, button) {
+        return serverExports.inputStates.get(pl.name)?.[button] ?? false;
+    }
+    input.isPressing = isPressing;
+    function movementVector(pl) {
+        const inputInfo = serverExports.inputStates.get(pl.name);
+        if (!inputInfo) {
+            return { x: 0, y: 0 };
+        }
+        return { x: inputInfo.x, y: inputInfo.y };
+    }
+    input.movementVector = movementVector;
+    let Direction;
+    (function (Direction) {
+        Direction[Direction["Forward"] = 1] = "Forward";
+        Direction[Direction["Backward"] = 2] = "Backward";
+        Direction[Direction["Left"] = 4] = "Left";
+        Direction[Direction["Right"] = 8] = "Right";
+    })(Direction = input.Direction || (input.Direction = {}));
+    function moveDir(pl) {
+        let result = 0;
+        const { x, y } = movementVector(pl);
+        if (x < 0) {
+            result |= Direction.Left;
+        }
+        if (x > 0) {
+            result |= Direction.Right;
+        }
+        if (y < 0) {
+            result |= Direction.Backward;
+        }
+        if (y > 0) {
+            result |= Direction.Forward;
+        }
+        return result;
+    }
+    input.moveDir = moveDir;
+    let Orientation;
+    (function (Orientation) {
+        Orientation[Orientation["None"] = 0] = "None";
+        Orientation[Orientation["Forward"] = 1] = "Forward";
+        Orientation[Orientation["Backward"] = 3] = "Backward";
+        Orientation[Orientation["Left"] = 2] = "Left";
+        Orientation[Orientation["Right"] = 4] = "Right";
+    })(Orientation = input.Orientation || (input.Orientation = {}));
+    function approximateOrientation(pl) {
+        const { x, y } = movementVector(pl);
+        if (x === y && x === 0) {
+            return 0;
+        }
+        const preferHorizontal = Math.abs(x) > Math.abs(y);
+        if (preferHorizontal) {
+            return x > 0 ? Orientation.Right : Orientation.Left;
+        }
+        return y > 0 ? Orientation.Forward : Orientation.Backward;
+    }
+    input.approximateOrientation = approximateOrientation;
+})(input$1 || (input$1 = {}));
+
+var input$2 = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	get ButtonState () { return ButtonState; },
+	eventCenter: eventCenter$1,
+	get input () { return input$1; }
+});
+
 class OotachiMoves extends DefaultMoves$4 {
     constructor() {
         super();
@@ -4767,7 +4878,7 @@ class OotachiMoves extends DefaultMoves$4 {
         backswing: 1,
         onEnter(pl, ctx) {
             ctx.movement(pl);
-            const direct = ctx.getMoveDir(pl) || 1;
+            const direct = input$1.approximateOrientation(pl);
             if (direct !== 1) {
                 ctx.setVelocity(pl, direct * 90, 2.5);
             }
@@ -5422,16 +5533,20 @@ class ShieldSwordMoves extends DefaultMoves$4 {
     };
     rockSolid = {
         cast: 3,
-        backswing: 8,
+        backswing: 11,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.status.repulsible = false;
+            ctx.status.isInvulnerable = true;
             playAnim$6(pl, 'animation.weapon.shield_with_sword.rock_solid');
         },
         onAct(_, ctx) {
             ctx.status.repulsible = true;
+            ctx.status.isInvulnerable = false;
         },
         onLeave(pl, ctx) {
+            ctx.status.repulsible = true;
+            ctx.status.isInvulnerable = false;
             ctx.unfreeze(pl);
         },
         transitions: {
@@ -5441,10 +5556,7 @@ class ShieldSwordMoves extends DefaultMoves$4 {
                 }
             },
             sweapCounter: {
-                onHurt: {
-                    prevent: true,
-                    allowedState: 'cast',
-                },
+                onNotHurt: null,
             },
             blocking: {
                 onEndOfLife: {
@@ -5580,131 +5692,6 @@ var shield_with_sword = /*#__PURE__*/Object.freeze({
 
 var require$$6$1 = /*@__PURE__*/getAugmentedNamespace(shield_with_sword);
 
-var setupExports = requireSetup();
-
-var eventsExports = requireEvents();
-
-var serverExports = requireServer();
-
-function vec2$2(x1, y1, x2, y2) {
-    const dx = x2 - x1,
-        dy = y2 - y1;
-    return {
-        dx, dy,
-        m: Math.sqrt(dx * dx + dy * dy)
-    }
-}
-
-function getAngleFromVector2$1(v1, v2) {
-    const dotProduct = v1.dx * v2.dx + v1.dy * v2.dy;
-    const angle = dotProduct / (v1.m * v2.m);
-
-    return Math.acos(angle)
-}
-
-function rotate2$1(v, rad) {
-    const { dx, dy, m } = v;
-    const x = dx * Math.cos(rad) - dy * Math.sin(rad);
-    const y = dx * Math.sin(rad) + dy * Math.cos(rad);
-    return {
-        dx: x, dy: y, m
-    }
-}
-
-function multiply2$1(v, factor) {
-    const { dx, dy } = v;
-    return vec2$2(0, 0, dx*factor, dy*factor)
-}
-
-function minus(a, b) {
-    return vec2$2(
-        0, 0,
-        a.dx - b.dx,
-        a.dy - b.dy
-    )
-}
-
-function vec2ToAngle(v) {
-    let angle = getAngleFromVector2$1(v, vec2$2(0, 0, 0, -1));
-
-    if (v.dx < 0) {
-        angle = -angle;
-    }
-    
-    return angle
-}
-
-var vec = {
-    vec2: vec2$2, getAngleFromVector2: getAngleFromVector2$1, rotate2: rotate2$1, multiply2: multiply2$1, minus,
-    vec2ToAngle, 
-};
-
-var ButtonState;
-(function (ButtonState) {
-    ButtonState["Pressed"] = "Pressed";
-    ButtonState["Released"] = "Released";
-})(ButtonState || (ButtonState = {}));
-function eventCenter$1(opt) {
-    const em = new eventsExports.EventEmitter(opt);
-    setupExports.remote.expose('input.press.jump', (name) => {
-        const player = mc.getPlayer(name);
-        if (player) {
-            em.emit('input.jump', mc.getPlayer(name), true);
-        }
-    });
-    setupExports.remote.expose('input.release.jump', (name) => {
-        const player = mc.getPlayer(name);
-        if (player) {
-            em.emit('input.jump', mc.getPlayer(name), false);
-        }
-    });
-    setupExports.remote.expose('input.press.sneak', (name) => {
-        const player = mc.getPlayer(name);
-        if (player) {
-            em.emit('input.sneak', mc.getPlayer(name), true);
-        }
-    });
-    setupExports.remote.expose('input.release.sneak', (name) => {
-        const player = mc.getPlayer(name);
-        if (player) {
-            em.emit('input.sneak', mc.getPlayer(name), false);
-        }
-    });
-    return em;
-}
-var input$1;
-(function (input) {
-    function isPressing(pl, button) {
-        return serverExports.inputStates.get(pl.name)?.[button] ?? false;
-    }
-    input.isPressing = isPressing;
-    function movementVector(pl) {
-        const inputInfo = serverExports.inputStates.get(pl.name);
-        if (!inputInfo) {
-            return { x: 0, y: 0 };
-        }
-        return { x: inputInfo.x, y: inputInfo.y };
-    }
-    input.movementVector = movementVector;
-    function moveDir(pl) {
-        const yaw = pl.direction.yaw;
-        const vx = Math.cos(yaw);
-        const vy = Math.sin(yaw);
-        const vdir = { x: vx, y: vy };
-        vec.vec2ToAngle(vdir) * 180 / Math.PI - pl.direction.yaw;
-        console.log(vdir, movementVector(pl));
-        return 1;
-    }
-    input.moveDir = moveDir;
-})(input$1 || (input$1 = {}));
-
-var input$2 = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	get ButtonState () { return ButtonState; },
-	eventCenter: eventCenter$1,
-	get input () { return input$1; }
-});
-
 class UchigatanaMoves extends DefaultMoves$4 {
     constructor() {
         super();
@@ -5735,9 +5722,6 @@ class UchigatanaMoves extends DefaultMoves$4 {
         cast: Infinity,
         onEnter(pl) {
             playAnim$6(pl, 'animation.weapon.uchigatana.kamae', 'animation.weapon.uchigatana.kamae');
-        },
-        onTick(pl) {
-            input$1.moveDir(pl);
         },
         transitions: {
             hold: {
@@ -7025,6 +7009,59 @@ const combat = combat$1;
 
 var func = {
     kinematics, combat,
+};
+
+function vec2$2(x1, y1, x2, y2) {
+    const dx = x2 - x1,
+        dy = y2 - y1;
+    return {
+        dx, dy,
+        m: Math.sqrt(dx * dx + dy * dy)
+    }
+}
+
+function getAngleFromVector2$1(v1, v2) {
+    const dotProduct = v1.dx * v2.dx + v1.dy * v2.dy;
+    const angle = dotProduct / (v1.m * v2.m);
+
+    return Math.acos(angle)
+}
+
+function rotate2$1(v, rad) {
+    const { dx, dy, m } = v;
+    const x = dx * Math.cos(rad) - dy * Math.sin(rad);
+    const y = dx * Math.sin(rad) + dy * Math.cos(rad);
+    return {
+        dx: x, dy: y, m
+    }
+}
+
+function multiply2$1(v, factor) {
+    const { dx, dy } = v;
+    return vec2$2(0, 0, dx*factor, dy*factor)
+}
+
+function minus(a, b) {
+    return vec2$2(
+        0, 0,
+        a.dx - b.dx,
+        a.dy - b.dy
+    )
+}
+
+function vec2ToAngle(v) {
+    let angle = getAngleFromVector2$1(v, vec2$2(0, 0, 0, -1));
+
+    if (v.dx < 0) {
+        angle = -angle;
+    }
+    
+    return angle
+}
+
+var vec = {
+    vec2: vec2$2, getAngleFromVector2: getAngleFromVector2$1, rotate2: rotate2$1, multiply2: multiply2$1, minus,
+    vec2ToAngle, 
 };
 
 const { vec2: vec2$1, getAngleFromVector2 } = vec;
@@ -8936,6 +8973,18 @@ function listenAllCustomEvents(mods) {
 
         if (!victimStatus) {
             return doDamage()
+        }
+
+        if (victimStatus.isInvulnerable) {
+            transition(
+                victim,
+                getMod(getHandedItemType(victim)),
+                victimStatus,
+                'onNotHurt',
+                Function.prototype,
+                [victim, abuser, damageOpt]
+            );
+            return
         }
 
         const victimTeam = victimStatus.componentManager.getComponent(Team);

@@ -429,16 +429,20 @@ class ShieldSwordMoves extends DefaultMoves {
 
     rockSolid: Move = {
         cast: 3,
-        backswing: 8,
+        backswing: 11,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.status.repulsible = false
+            ctx.status.isInvulnerable = true
             playAnim(pl, 'animation.weapon.shield_with_sword.rock_solid')
         },
         onAct(_, ctx) {
             ctx.status.repulsible = true
+            ctx.status.isInvulnerable = false
         },
         onLeave(pl, ctx) {
+            ctx.status.repulsible = true
+            ctx.status.isInvulnerable = false
             ctx.unfreeze(pl)
         },
         transitions: {
@@ -448,10 +452,7 @@ class ShieldSwordMoves extends DefaultMoves {
                 }
             },
             sweapCounter: {
-                onHurt: {
-                    prevent: true,
-                    allowedState: 'cast',
-                },
+                onNotHurt: null,
             },
             blocking: {
                 onEndOfLife: {

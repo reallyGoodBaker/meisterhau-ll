@@ -36,9 +36,6 @@ class UchigatanaMoves extends DefaultMoves {
         onEnter(pl) {
             playAnim(pl, 'animation.weapon.uchigatana.kamae', 'animation.weapon.uchigatana.kamae')
         },
-        onTick(pl) {
-            input.moveDir(pl as Player)
-        },
         transitions: {
             hold: {
                 onReleaseLock: null,

@@ -72,6 +72,10 @@ export class Status {
      */
     isDodging = false
     /**
+     * 玩家是否处于无敌状态
+     */
+    isInvulnerable = false
+    /**
      * 玩家接受的事件输入
      */
     readonly acceptableInputs = new Set(defaultAcceptableInputs)

@@ -2,6 +2,7 @@ import { playAnim, playSoundAll } from "../basic/index"
 import { randomRange } from '../../utils/math'
 import { DefaultMoves, DefaultTrickModule, ParryDirection } from '../basic/default'
 import { Stamina } from '@combat/basic/components/core/stamina'
+import { input } from "scripts-rpc/func/input"
 
 class OotachiMoves extends DefaultMoves {
     constructor() {
@@ -590,7 +591,7 @@ class OotachiMoves extends DefaultMoves {
         backswing: 1,
         onEnter(pl, ctx) {
             ctx.movement(pl)
-            const direct = ctx.getMoveDir(pl) || 1
+            const direct = input.approximateOrientation(pl as Player)
             if (direct !== 1) {
                 ctx.setVelocity(pl, direct * 90, 2.5)
             } else {

@@ -202,6 +202,7 @@ interface TransitionTypeOptionMap extends InputableTransitionMap {
     onMissAttack: unknown
     onDodge: unknown
     onDeflection: unknown
+    onNotHurt: unknown
 }
 type TransitionTypeOption = {
     [p in keyof TransitionTypeOptionMap]?: null | (TransitionTypeOptionMap[p] & DefaultTransitionOption & TransitionOptMixins & { tag?: string })

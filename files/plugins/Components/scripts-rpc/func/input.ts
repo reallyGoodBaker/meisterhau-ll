@@ -48,7 +48,6 @@ export function eventCenter(opt: any) {
 }
 
 import { inputStates } from '../server'
-import { vec2ToAngle } from "@combat/basic/generic/vec"
 
 export namespace input {
     export function isPressing(pl: Player, button: 'jump' | 'sneak') {
@@ -64,14 +63,56 @@ export namespace input {
         return { x: inputInfo.x, y: inputInfo.y }
     }
 
-    export function moveDir(pl: Player) {
-        const yaw = pl.direction.yaw
-        const vx = Math.cos(yaw)
-        const vy = Math.sin(yaw)
-        const vdir = { x: vx, y: vy }
-        const rot = vec2ToAngle(vdir) * 180 / Math.PI - pl.direction.yaw
+    export enum Direction {
+        Forward = 1,
+        Backward = 2,
+        Left = 4,
+        Right = 8,
+    }
 
-        console.log(vdir, movementVector(pl))
-        return 1
+    export function moveDir(pl: Player) {
+        let result = 0
+        const { x, y } = movementVector(pl)
+
+        if (x < 0) {
+            result |= Direction.Left
+        }
+
+        if (x > 0) {
+            result |= Direction.Right
+        }
+
+        if (y < 0) {
+            result |= Direction.Backward
+        }
+
+        if (y > 0) {
+            result |= Direction.Forward
+        }
+
+        return result
+    }
+
+    export enum Orientation {
+        None = 0,
+        Forward = 1,
+        Backward = 3,
+        Left = 2,
+        Right = 4,
+    }
+
+    export function approximateOrientation(pl: Player) {
+        const { x, y } = movementVector(pl)
+        if (x === y && x === 0) {
+            return 0
+        }
+
+        const preferHorizontal = Math.abs(x) > Math.abs(y)
+
+        if (preferHorizontal) {
+            return x > 0 ? Orientation.Right : Orientation.Left
+        }
+
+        return y > 0 ? Orientation.Forward : Orientation.Backward
     }
 }

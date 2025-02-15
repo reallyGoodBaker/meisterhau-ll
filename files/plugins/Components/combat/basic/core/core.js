@@ -684,6 +684,18 @@ function listenAllCustomEvents(mods) {
             return doDamage()
         }
 
+        if (victimStatus.isInvulnerable) {
+            transition(
+                victim,
+                getMod(getHandedItemType(victim)),
+                victimStatus,
+                'onNotHurt',
+                Function.prototype,
+                [victim, abuser, damageOpt]
+            )
+            return
+        }
+
         const victimTeam = victimStatus.componentManager.getComponent(Team)
         const abuserTeam = abuserStatus.componentManager.getComponent(Team)
         if (!victimTeam.isEmpty() && !abuserTeam.isEmpty() && victimTeam.unwrap().name === abuserTeam.unwrap().name) {
