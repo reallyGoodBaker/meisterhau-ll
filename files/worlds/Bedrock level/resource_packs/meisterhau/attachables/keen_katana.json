@@ -1,0 +1,35 @@
+{
+    "format_version": "1.10.0",
+    "minecraft:attachable": {
+        "description": {
+            "identifier": "crossover:keen_katana",
+            "materials": {
+                "default": "entity_nocull",
+                "enchanted": "entity_alphatest_glint"
+            },
+            "textures": {
+                "default": "textures/entity/keen_katana",
+                "white": "textures/misc/white_overlay",
+                "orange": "textures/misc/orange_overlay",
+                "blue": "textures/misc/blue_overlay"
+            },
+            "geometry": {
+                "default": "geometry.crossover.keen_katana"
+            },
+            "animations": {
+                "fix": "animation.hold.keen_katana"
+            },
+            "scripts": {
+                "animate": [
+                    "fix"
+                ],
+                "initialize": [
+                    "v.item_status = 0;"
+                ]
+            },
+            "render_controllers": [
+                "controller.render.weapon"
+            ]
+        }
+    }
+}

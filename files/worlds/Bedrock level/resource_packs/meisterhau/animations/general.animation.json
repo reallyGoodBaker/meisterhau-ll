@@ -398,7 +398,7 @@
 				}
 			},
 			"timeline": {
-				"0.0": "v.overlay_color = v.transparent;"
+				"0.0": ["v.overlay_color = v.transparent;", "v.arm_status=0;"]
 			}
 		},
 		"animation.general.parried.right": {

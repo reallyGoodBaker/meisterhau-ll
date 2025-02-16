@@ -188,9 +188,13 @@ interface TransitionTypeOptionMap extends InputableTransitionMap {
     onEndOfLife: unknown
     onParry: unknown
     onParried: unknown
-    onHurt: unknown
+    onHurt: {
+        hegemony?: boolean
+    }
     onHit: unknown
-    onBlock: unknown
+    onBlock: {
+        direction: Comparable<AttackDirection>
+    }
     onBlocked: unknown
     onHurtByMob: unknown
     onLock: unknown
@@ -201,11 +205,17 @@ interface TransitionTypeOptionMap extends InputableTransitionMap {
     onInterrupted: unknown
     onMissAttack: unknown
     onDodge: unknown
-    onDeflection: unknown
+    onDeflection: {
+        direction: Comparable<AttackDirection>
+    }
     onNotHurt: unknown
 }
+
+type Comparable<T> = T | ((v: T) => boolean)
+
 type TransitionTypeOption = {
-    [p in keyof TransitionTypeOptionMap]?: null | (TransitionTypeOptionMap[p] & DefaultTransitionOption & TransitionOptMixins & { tag?: string })
+    [p in keyof TransitionTypeOptionMap]?: null
+        | (TransitionTypeOptionMap[p] & DefaultTransitionOption & TransitionOptMixins & { tag?: string })
 }
 
 type MovementCallback = (source: Player|Entity, context: MovementContext) => any | Promise<any>

@@ -40,6 +40,12 @@
         },
         "morphidae": {
             "textures": "textures/items/morphidae"
+        },
+        "keen_katana": {
+            "textures": "textures/items/keen_katana"
+        },
+        "hermit_katana": {
+            "textures": "textures/items/hermit_katana"
         }
     }
 }

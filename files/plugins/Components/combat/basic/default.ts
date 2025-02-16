@@ -2,7 +2,8 @@ import { playAnim, playSoundAll } from "./index"
 import { CameraFading } from "@components/camera-fading"
 import { CameraComponent } from "@components/camera"
 import { Stamina } from "@components/core/stamina"
-import { CustomComponent } from "@combat/basic/core/component"
+import { ComponentManager, CustomComponent } from "@combat/basic/core/component"
+import { input } from "scripts-rpc/func/input"
 
 export function getApproximatelyDir(direction: AttackDirection) {
     return direction === 'right' ? 'right'
@@ -28,11 +29,28 @@ function getAnim(animCategory: any, direction: string) {
 
 type StateKey<T> = ObjKeyType<T, Move>
 
-export class ParryDirection extends CustomComponent {
+export class IncomingAttack extends CustomComponent {
     constructor(
-        public direction: 'left' | 'right' = 'left'
+        public direction: AttackDirection = 'left',
+        public permeable: boolean = false,
+        public parryable: boolean = true,
+        public powerful: boolean = false,
+        public trace: boolean = false,
     ) {
         super()
+    }
+
+    approximateAttackDirection() {
+        return getApproximatelyDir(this.direction)
+    }
+}
+
+export function setVelocityByOrientation(pl: Player, ctx: MovementContext, max: number, offset?: number) {
+    const ori = input.approximateOrientation(pl)
+    if (ori === input.Orientation.Backward) {
+        ctx.setVelocity(pl, ori * 90, max, -2)
+    } else {
+        ctx.adsorbToTarget(pl, max, offset)
     }
 }
 
@@ -115,12 +133,12 @@ export class DefaultMoves {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 10
             playAnim(pl, getAnim(this.animations.blocked, direction))
             playSoundAll(this.sounds.blocked, pl.pos, 1)
-            ctx.movementInput(pl, false)
+            ctx.movement(pl, false)
             ctx.freeze(pl)
             ctx.setVelocity(pl, -100, 0.8, -2)
         },
         onLeave(pl, ctx) {
-            ctx.movementInput(pl, true)
+            ctx.movement(pl, true)
             ctx.unfreeze(pl)
         },
         timeline: {
@@ -139,11 +157,11 @@ export class DefaultMoves {
             ctx.status.isBlocking = true
             playAnim(pl, getAnim(this.animations.block, direction))
             playSoundAll(this.sounds.block, pl.pos, 1)
-            ctx.movementInput(pl, false)
+            ctx.movement(pl, false)
             ctx.freeze(pl)
         },
         onLeave(pl, ctx) {
-            ctx.movementInput(pl, true)
+            ctx.movement(pl, true)
             ctx.unfreeze(pl)
             ctx.status.isBlocking = false
         },
@@ -158,7 +176,7 @@ export class DefaultMoves {
         onEnter: (pl, ctx) => {
             const manager = ctx.status.componentManager
             manager.getComponent(Stamina).unwrap().setCooldown(5)
-            ctx.movementInput(pl, false)
+            ctx.movement(pl, false)
             ctx.freeze(pl)
             ctx.status.disableInputs([
                 'onAttack',
@@ -209,7 +227,7 @@ export class DefaultMoves {
     hitWall: Move = {
         cast: 25,
         onEnter: (pl, ctx) => {
-            ctx.movementInput(pl, false)
+            ctx.movement(pl, false)
             ctx.freeze(pl)
             ctx.status.disableInputs([
                 'onAttack',
@@ -230,7 +248,7 @@ export class DefaultMoves {
     parried: Move = {
         onEnter: (pl, ctx) => {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 15
-            ctx.movementInput(pl, false)
+            ctx.movement(pl, false)
             ctx.freeze(pl)
             ctx.status.disableInputs([
                 'onAttack',
@@ -295,9 +313,8 @@ export class DefaultMoves {
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2]
 
-            ctx.components.attachComponent(new ParryDirection(getApproximatelyDir(direction)))
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina += 10
-            ctx.movementInput(pl, false)
+            ctx.movement(pl, false)
             playSoundAll(this.sounds.parry, pl.pos, 1)
             ctx.status.isWaitingParry = true
             playAnim(pl, getAnim(this.animations.parry, direction))

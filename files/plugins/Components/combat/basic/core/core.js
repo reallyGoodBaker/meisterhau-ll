@@ -21,6 +21,7 @@ const { antiTreeshaking } = require('../components/anti-treeshaking')
 const { Stamina } = require('../components/core/stamina')
 const { eventCenter, input } = require('scripts-rpc/func/input')
 const { Team } = require('../components/team')
+const { IncomingAttack } = require('../default')
 
 const em = eventCenter({ enableWatcher: true })
 const es = EventInputStream.get(em)
@@ -106,7 +107,7 @@ function freeze(pl) {
 
 function unfreeze(pl) {
     movement(pl)
-    movementInput(pl, true)
+    // movementInput(pl, true)
     camera(pl)
 }
 
@@ -243,6 +244,21 @@ const dataPackers = {
         return {
             preInput: status.preInput,
             ...data
+        }
+    },
+    onDeflection([ _, __, { direction } ]) {
+        return {
+            direction: direction === 'middle' ? 'vertical' : direction
+        }
+    },
+    onBlock([ _, __, { direction } ]) {
+        return {
+            direction: direction === 'middle' ? 'vertical' : direction
+        }
+    },
+    onHurt([ pl ]) {
+        return {
+            hegemony: Status.get(pl.uniqueId).hegemony
         }
     }
 }
@@ -622,6 +638,7 @@ function listenAllCustomEvents(mods) {
             shock,
             powerful,
             trace,
+            direction,
         } = damageOpt
 
         const victimIsEntity = !victim.xuid
@@ -683,6 +700,14 @@ function listenAllCustomEvents(mods) {
         if (!victimStatus) {
             return doDamage()
         }
+
+        victimStatus.componentManager.attachComponent(new IncomingAttack(
+            direction,
+            permeable,
+            parryable,
+            powerful,
+            trace,
+        ))
 
         if (victimStatus.isInvulnerable) {
             transition(
@@ -1047,21 +1072,11 @@ function listenAllMcEvents(collection) {
 
         return !cancelEvent
     })
-
-    // mc.listen('onJump', pl => {
-    //     if (hasLock(pl)) {
-    //         if (toggleLock(pl.uniqueId) === null) {
-    //             em.emitNone('onReleaseLock', pl, pl.getHand().type, null)
-    //             pl.tell('不要在锁定后跳跃')
-    //             clearCamera(pl)
-    //             initCombatComponent(pl, getMod(getHandedItemType(pl)), Status.get(pl.uniqueId))
-    //         }
-    //     }
-    // })
     
     em.on('input.jump', (pl, press) => {
         if (press) {
-            em.emitNone(hasLock(pl) ? 'onDodge' : 'onJump', pl, pl.getHand().type, null);
+            es.put('onDodge', [ pl, Function.prototype, [ pl ] ])
+            em.emitNone(hasLock(pl) ? 'onDodge' : 'onJump', pl, Function.prototype, [ pl ]);
         }
     })
 

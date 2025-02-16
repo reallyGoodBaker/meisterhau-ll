@@ -221,7 +221,7 @@
             },
             {
                 "sprint@key_binding_info": {
-                    "$key_info": "取消锁定/跑步",
+                    "$key_info": "取消锁定/奔跑",
                     "$keyboard_key": "LCtrl",
                     "$controller_key": "",
                     "$touch_key": ""

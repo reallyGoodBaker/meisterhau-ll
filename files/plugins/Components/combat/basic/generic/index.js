@@ -3,7 +3,8 @@ const { hasLock } = require("./lock")
 
 function movement(pl, enabled=true) {
     if (!enabled) {
-        return pl.setMovementSpeed(0), undefined
+        pl.setMovementSpeed(0)
+        return
     }
 
     pl.setMovementSpeed(
@@ -12,7 +13,7 @@ function movement(pl, enabled=true) {
 }
 
 function movementInput(pl, enabled=true) {
-    mc.runcmdEx(`inputpermission set "${pl.name}" movement ${enabled ? 'enabled' : 'disabled'}`)
+    mc.runcmdEx(`inputpermission set "${pl.name}" lateral_movement ${enabled ? 'enabled' : 'disabled'}`)
 }
 
 function camera(pl, enabled=true) {

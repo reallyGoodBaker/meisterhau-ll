@@ -97,8 +97,8 @@ export namespace input {
         None = 0,
         Forward = 1,
         Backward = 3,
-        Left = 2,
-        Right = 4,
+        Left = 4,
+        Right = 2,
     }
 
     export function approximateOrientation(pl: Player) {
@@ -110,7 +110,7 @@ export namespace input {
         const preferHorizontal = Math.abs(x) > Math.abs(y)
 
         if (preferHorizontal) {
-            return x > 0 ? Orientation.Right : Orientation.Left
+            return x < 0 ? Orientation.Right : Orientation.Left
         }
 
         return y > 0 ? Orientation.Forward : Orientation.Backward

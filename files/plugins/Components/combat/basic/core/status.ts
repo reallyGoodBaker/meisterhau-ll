@@ -4,7 +4,7 @@ import { ComponentManager } from './component'
 
 export const defaultAcceptableInputs = [
     'onJump', 'onSneak', 'onAttack', 'onUseItem',
-    'onChangeSprinting', 'onFeint'
+    'onChangeSprinting', 'onFeint', 'onDodge',
 ]
 
 export class Status {

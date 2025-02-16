@@ -1,6 +1,7 @@
 import { playAnim, playSoundAll } from "../basic/index"
 import { DefaultMoves, DefaultTrickModule } from '../basic/default'
 import { randomRange } from '@utils/math'
+import { Stamina } from "@combat/basic/components/core/stamina"
 
 class ShieldSwordTricks extends DefaultTrickModule {
     constructor() {
@@ -21,6 +22,12 @@ class ShieldSwordMoves extends DefaultMoves {
         this.block =  {
             cast: 7,
             onEnter(pl, ctx) {
+                const stamina = ctx.components.getComponent(Stamina).unwrap()
+                stamina.stamina -= 15
+                if (stamina.stamina <= 0) {
+                    ctx.trap(pl)
+                    return
+                }
                 playSoundAll(`weapon.sheild.hit${randomRange(1, 3, true)}`, pl.pos, 1)
                 ctx.status.isBlocking = true
                 ctx.freeze(pl)
@@ -49,12 +56,14 @@ class ShieldSwordMoves extends DefaultMoves {
                 afterBlocking: {
                     onEndOfLife: {
                         isSneaking: false
-                    }
+                    },
+                    onTrap: null,
                 },
                 swordCounter: {
                     onTrap: {
                         preInput: 'onAttack',
                         hasTarget: true,
+                        stamina: 20
                     }
                 },
             },
@@ -64,6 +73,7 @@ class ShieldSwordMoves extends DefaultMoves {
     idle: Move = {
         cast: Infinity,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().setCooldown(0)
             ctx.unfreeze(pl)
             playAnim(pl, 'animation.weapon.shield_with_sword.idle', 'animation.weapon.shield_with_sword.idle')
         },
@@ -85,6 +95,7 @@ class ShieldSwordMoves extends DefaultMoves {
     hold: Move = {
         cast: Infinity,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().setCooldown(0)
             playAnim(pl, 'animation.weapon.shield_with_sword.hold', 'animation.weapon.shield_with_sword.hold')
         },
         transitions: {
@@ -99,11 +110,13 @@ class ShieldSwordMoves extends DefaultMoves {
             draw: {
                 onUseItem: {
                     hasTarget: true,
+                    stamina: 18,
                 }
             },
             punch: {
                 onAttack: {
-                    hasTarget: true
+                    hasTarget: true,
+                    stamina: 18,
                 }
             },
             hurt: {
@@ -151,6 +164,7 @@ class ShieldSwordMoves extends DefaultMoves {
         cast: 7,
         backswing: 13,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 18
             ctx.freeze(pl)
             playAnim(pl, 'animation.weapon.shield_with_sword.draw')
             ctx.adsorbOrSetVelocity(pl, 1, 90)
@@ -193,12 +207,14 @@ class ShieldSwordMoves extends DefaultMoves {
                 onTrap: {
                     tag: 'heavy',
                     preInput: 'onUseItem',
+                    stamina: 25,
                 }
             },
             punch: {
                 onTrap: {
                     tag: 'punch',
                     preInput: 'onAttack',
+                    stamina: 18,
                 }
             },
             blocked: {
@@ -211,6 +227,7 @@ class ShieldSwordMoves extends DefaultMoves {
         cast: 8,
         backswing: 15,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 15
             ctx.freeze(pl)
             ctx.adsorbOrSetVelocity(pl, 2, 90)
             playAnim(pl, 'animation.weapon.shield_with_sword.heavy_chop_act')
@@ -219,6 +236,7 @@ class ShieldSwordMoves extends DefaultMoves {
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 10
             playSoundAll(`weapon.woosh.${randomRange(3, 5, true)}`, pl.pos, 1)
             ctx.selectFromRange(pl, {
                 angle: 40,
@@ -258,6 +276,7 @@ class ShieldSwordMoves extends DefaultMoves {
         cast: 7,
         backswing: 13,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 18
             ctx.freeze(pl)
             playAnim(pl, 'animation.weapon.shield_with_sword.punch')
             ctx.adsorbOrSetVelocity(pl, 2, 90, 0.5)
@@ -306,6 +325,7 @@ class ShieldSwordMoves extends DefaultMoves {
             chopCombo: {
                 onTrap: {
                     preInput: 'onUseItem',
+                    stamina: 18,
                 }
             },
             resume: {
@@ -321,6 +341,7 @@ class ShieldSwordMoves extends DefaultMoves {
         cast: 7,
         backswing: 13,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 18
             ctx.freeze(pl)
             ctx.adsorbOrSetVelocity(pl, 2, 90)
             playAnim(pl, 'animation.weapon.shield_with_sword.chop_combo')
@@ -377,7 +398,8 @@ class ShieldSwordMoves extends DefaultMoves {
 
     beforeBlocking: Move = {
         cast: 2,
-        onEnter(pl) {
+        onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().setCooldown(Infinity)
             playAnim(pl, 'animation.weapon.shield_with_sword.idle_to_blocking')
         },
         transitions: {
@@ -391,15 +413,22 @@ class ShieldSwordMoves extends DefaultMoves {
             },
             afterBlocking: {
                 onEndOfLife: {
-                    isSneaking: false
+                    isSneaking: false,
+                    stamina: 10
                 }
             },
+            rockSolid: {
+                onUseItem: {
+                    stamina: 20,
+                },
+            }
         }
     }
 
     blocking: Move = {
         cast: Infinity,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().setCooldown(Infinity)
             ctx.status.isBlocking = true
             playAnim(pl, 'animation.weapon.shield_with_sword.blocking', 'animation.weapon.shield_with_sword.blocking')
         },
@@ -421,7 +450,8 @@ class ShieldSwordMoves extends DefaultMoves {
             },
             rockSolid: {
                 onUseItem: {
-                    hasTarget: true
+                    hasTarget: true,
+                    stamina: 20,
                 }
             },
         }
@@ -431,6 +461,7 @@ class ShieldSwordMoves extends DefaultMoves {
         cast: 3,
         backswing: 11,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 20
             ctx.freeze(pl)
             ctx.status.repulsible = false
             ctx.status.isInvulnerable = true
@@ -524,6 +555,9 @@ class ShieldSwordMoves extends DefaultMoves {
         onEnter(pl) {
             playAnim(pl, 'animation.weapon.shield_with_sword.blocking_to_idle')
         },
+        onLeave(_, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().setCooldown(0)
+        },
         transitions: {
             hurt: {
                 onHurt: null,
@@ -538,6 +572,7 @@ class ShieldSwordMoves extends DefaultMoves {
         cast: 7,
         backswing: 6,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 20
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
             playAnim(pl, 'animation.weapon.shield_with_sword.sword_counter')

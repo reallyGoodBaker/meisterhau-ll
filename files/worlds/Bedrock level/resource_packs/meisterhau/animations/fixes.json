@@ -94,6 +94,21 @@
 					"position": [0, 0, -4]
 				}
 			}
+		},
+		"animation.hold.keen_katana": {
+			"loop": "hold_on_last_frame",
+			"override_previous_animation": true,
+			"bones": {
+				"rightItem": {
+					"scale": [ 0.7, 0.7, 0.7 ]
+				},
+				"waistSaya": {
+					"scale": [ 0.7, 0.7, 0.7 ]
+				},
+				"waistSword": {
+					"scale": [ 0.7, 0.7, 0.7 ]
+				}
+			}
 		}
 	}
 }

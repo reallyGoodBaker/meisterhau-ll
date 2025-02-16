@@ -1,6 +1,7 @@
 import { playAnim, playSoundAll } from "../basic/index"
-import { DefaultMoves, DefaultTrickModule } from "../basic/default"
+import { DefaultMoves, DefaultTrickModule, setVelocityByOrientation } from "../basic/default"
 import { Stamina } from "@combat/basic/components/core/stamina"
+import { input } from "scripts-rpc/func/input"
 
 class DoubleBladeMoves extends DefaultMoves {
     constructor() {
@@ -139,7 +140,7 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
             playAnim(pl, 'animation.double_blade.start_left')
-            ctx.adsorbOrSetVelocity(pl, 0.5, 90, 1)
+            setVelocityByOrientation(pl as Player, ctx, 0.5, 1)
         },
         onLeave(pl, ctx) {
             ctx.status.isBlocking = false
@@ -150,8 +151,8 @@ class DoubleBladeMoves extends DefaultMoves {
         },
         timeline: {
             4: (_, ctx) => {
-                ctx.adsorbOrSetVelocity(_, 1.4, 90, 1)
                 ctx.status.isBlocking = false
+                
             },
             6: pl => playSoundAll('weapon.woosh.2', pl.pos),
             5: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
@@ -227,7 +228,7 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
             playAnim(pl, 'animation.double_blade.start_right')
-            ctx.adsorbOrSetVelocity(pl, 0.5, 90, 1)
+            setVelocityByOrientation(pl as Player, ctx, 0.5, 1)
         },
         onLeave(pl, ctx) {
             ctx.status.isWaitingParry = false
@@ -238,7 +239,7 @@ class DoubleBladeMoves extends DefaultMoves {
         },
         timeline: {
             3: (_, ctx) => ctx.status.isWaitingParry = false,
-            4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90, 1),
+            4: (pl, ctx) => setVelocityByOrientation(pl as Player, ctx, 1.4, 1),
             6: pl => playSoundAll('weapon.woosh.2', pl.pos),
             5: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             8: (pl, ctx) => ctx.selectFromRange(pl, {
@@ -712,7 +713,10 @@ class DoubleBladeMoves extends DefaultMoves {
                 onHurt: null
             },
             shieldSuccess: {
-                onBlock: null
+                onBlock: null,
+                onSneak: {
+                    allowedState: 'backswing'
+                }
             },
             shieldCounter: {
                 onTrap: {

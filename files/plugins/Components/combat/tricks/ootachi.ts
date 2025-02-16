@@ -1,6 +1,6 @@
 import { playAnim, playSoundAll } from "../basic/index"
 import { randomRange } from '../../utils/math'
-import { DefaultMoves, DefaultTrickModule, ParryDirection } from '../basic/default'
+import { setVelocityByOrientation, DefaultMoves, DefaultTrickModule, IncomingAttack } from '../basic/default'
 import { Stamina } from '@combat/basic/components/core/stamina'
 import { input } from "scripts-rpc/func/input"
 
@@ -57,11 +57,6 @@ class OotachiMoves extends DefaultMoves {
             },
             hurt: {
                 onHurt: null
-            },
-            combo1Attack: {
-                onAttack: {
-                    stamina: 16,
-                }
             },
         }
     }
@@ -167,7 +162,8 @@ class OotachiMoves extends DefaultMoves {
         cast: 8,
         backswing: 12,
         timeline: {
-            5: (_, ctx) => ctx.status.isBlocking = false,
+            2: (pl, ctx) => setVelocityByOrientation(pl as Player, ctx, 1.4, 1),
+            4: (_, ctx) => ctx.status.isBlocking = false,
             7: pl => playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1),
             14: (pl, ctx) => ctx.trap(pl, { tag: 'combo' })
         },
@@ -175,11 +171,7 @@ class OotachiMoves extends DefaultMoves {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 16
             ctx.status.isBlocking = true
             ctx.freeze(pl)
-            ctx.task.queueList([
-                { handler: () => ctx.adsorbOrSetVelocity(pl, 0.5, 90), timeout: 0 },
-                { handler: () => ctx.adsorbOrSetVelocity(pl, 1, 90), timeout: 100 },
-                { handler: () => ctx.adsorbOrSetVelocity(pl, 0.8, 90), timeout: 300 },
-            ]).run()
+            setVelocityByOrientation(pl as Player, ctx, 0.5, 1)
             playAnim(pl, 'animation.weapon.ootachi.combo1.attack')
         },
         onAct(pl, ctx) {
@@ -198,7 +190,6 @@ class OotachiMoves extends DefaultMoves {
         },
         onLeave(_, ctx) {
             ctx.status.isBlocking = false
-            ctx.task.cancel()
         },
         transitions: {
             resumeKamae: {
@@ -394,8 +385,8 @@ class OotachiMoves extends DefaultMoves {
 
 
     combo2Sweap: Move = {
-        cast: 14,
-        backswing: 12,
+        cast: 13,
+        backswing: 13,
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 28
             ctx.lookAtTarget(pl)
@@ -403,8 +394,8 @@ class OotachiMoves extends DefaultMoves {
             ctx.status.hegemony = true
             ctx.status.repulsible = false
             if (ctx.previousStatus === 'parry') {
-                const parryDir = ctx.components.getComponent(ParryDirection).unwrap()
-                if (parryDir.direction === 'left') {
+                const parryDir = ctx.components.getComponent(IncomingAttack).unwrap().approximateAttackDirection()
+                if (parryDir === 'left') {
                     playAnim(pl, 'animation.weapon.ootachi.combo2.sweap.r2')
                     ctx.adsorbOrSetVelocity(pl, 1, 180)
                 } else {
@@ -528,8 +519,8 @@ class OotachiMoves extends DefaultMoves {
     }
 
     combo3Sweap: Move = {
-        cast: 17,
-        backswing: 18,
+        cast: 18,
+        backswing: 17,
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 33
             ctx.lookAtTarget(pl)
