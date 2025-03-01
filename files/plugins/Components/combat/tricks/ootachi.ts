@@ -1,4 +1,4 @@
-import { playAnim, playSoundAll } from "../basic/index"
+import { playAnim, playSoundAll } from '../basic/index';
 import { randomRange } from '../../utils/math'
 import { setVelocityByOrientation, DefaultMoves, DefaultTrickModule, IncomingAttack } from '../basic/default'
 import { Stamina } from '@combat/basic/components/core/stamina'
@@ -12,12 +12,6 @@ class OotachiMoves extends DefaultMoves {
         this.parry.timeline = {
             14: (pl, ctx) => ctx.trap(pl)
         }
-
-        this.setTransition<OotachiMoves>('parry', 'combo2Cut', {
-            onTrap: {
-                preInput: 'onAttack',
-            }
-        })
 
         this.setTransition<OotachiMoves>('parry', 'combo2Sweap', {
             onTrap: {
@@ -233,13 +227,11 @@ class OotachiMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 22
-            ctx.status.isWaitingParry = true
             ctx.task.queueList([
                 { handler: () => ctx.adsorbOrSetVelocity(pl, 1, 90), timeout: 0 },
-                { handler: () => ctx.status.isWaitingParry = false, timeout: 150 },
                 { handler: () => {
                     ctx.adsorbOrSetVelocity(pl, 1.2, 90)
-                }, timeout: 50 },
+                }, timeout: 200 },
                 { handler: () => ctx.adsorbOrSetVelocity(pl, 0.5, 90), timeout: 400 },
             ]).run()
             playAnim(pl, 'animation.weapon.ootachi.combo1.chop')
@@ -265,6 +257,8 @@ class OotachiMoves extends DefaultMoves {
             ctx.status.isWaitingParry = false
         },
         timeline: {
+            1: (_, ctx) => ctx.status.isWaitingParry = true,
+            4: (_, ctx) => ctx.status.isWaitingParry = false,
             8: (pl, ctx) => {
                 ctx.trap(pl, { tag: 'feint' })
             },
@@ -476,7 +470,7 @@ class OotachiMoves extends DefaultMoves {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 17
             ctx.freeze(pl)
             playAnim(pl, `animation.weapon.ootachi.combo3.stab.${
-                ctx.previousStatus === 'combo2Cut' ? 'l' : 'r'
+                ctx.previousStatus === 'combo2Sweap' ? 'r' : 'l'
             }`)
             ctx.task
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 0.5, 90), 0)
@@ -527,7 +521,7 @@ class OotachiMoves extends DefaultMoves {
             ctx.freeze(pl)
             ctx.adsorbOrSetVelocity(pl, 1, 90)
             playAnim(pl, `animation.weapon.ootachi.combo3.sweap.${
-                ctx.previousStatus === 'combo2Cut' ? 'l' : 'r'
+                ctx.previousStatus === 'combo2Sweap' ? 'r' : 'l'
             }`)
             ctx.task
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 200)
@@ -663,6 +657,9 @@ class OotachiMoves extends DefaultMoves {
         onLeave(_, ctx) {
             ctx.status.isBlocking = false
         },
+        timeline: {
+            3: (pl, ctx) => ctx.trap(pl)
+        },
         transitions: {
             resumeKamae: {
                 onEndOfLife: null
@@ -672,7 +669,63 @@ class OotachiMoves extends DefaultMoves {
             },
             hurt: {
                 onHurt: null
+            },
+            dodgeChop: {
+                onTrap: {
+                    preInput: 'onUseItem',
+                }
             }
+        }
+    }
+
+    dodgeChop: Move = {
+        cast: 20,
+        transitions: {
+            parried: {
+                onParried: null
+            },
+            hurt: {
+                onHurt: null
+            },
+            resumeKamae: {
+                onEndOfLife: null
+            },
+            combo3Stab: {
+                onTrap: {
+                    preInput: 'onAttack',
+                }
+            },
+            combo3Sweap: {
+                onTrap: {
+                    preInput: 'onUseItem',
+                }
+            }
+        },
+        onEnter(pl, ctx) {
+            ctx.freeze(pl)
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 20
+            ctx.lookAtTarget(pl)
+            playAnim(pl, 'animation.weapon.ootachi.dodge.heavy', 'animation.weapon.ootachi.dodge.heavy')
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl)
+        },
+        timeline: {
+            14: (pl, ctx) => ctx.trap(pl),
+            8: pl => playSoundAll('weapon.woosh.3', pl.pos, 1),
+            10: (pl, ctx) => ctx.selectFromRange(pl, {
+                angle: 40,
+                radius: 3,
+                rotation: -20,
+            }).forEach(en => {
+                ctx.attack(pl, en, {
+                    damage: 18,
+                    direction: 'vertical'
+                })
+            }),
+            3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.8, 90),
+            5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
+            7: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.5, 90),
         }
     }
 
