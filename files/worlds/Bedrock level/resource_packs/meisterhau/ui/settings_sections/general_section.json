@@ -584,6 +584,12 @@
                 }
             },
             {
+                "@nouns_section": {
+                    "$noun": "雷霆一击",
+                    "$desc": "向前闪避, 重击"
+                }
+            },
+            {
                 "trait_superior_hlit_strike@advance_nouns_section": {
                     "$noun": "剑圣之姿",
                     "$desc": "通过 '封锁' 自动触发剑柄打击"
@@ -605,6 +611,12 @@
                 "@advance_nouns_section": {
                     "$noun": "冲锋陷阵",
                     "$desc": "第三段重击无法被格挡"
+                }
+            },
+            {
+                "@advance_nouns_section": {
+                    "$noun": "技巧纯熟",
+                    "$desc": "招架可以被视为第一段攻击, 借力打力、雷霆一击、剑柄打击可以被视为第二段攻击"
                 }
             }
         ]
@@ -694,7 +706,7 @@
             },
             {
                 "@nouns_section": {
-                    "$noun": "断头台",
+                    "$noun": "断头台 (霸体)",
                     "$desc": "剑刃封锁成功后, 重击"
                 }
             },
@@ -726,6 +738,266 @@
                 "@advance_nouns_section": {
                     "$noun": "单手持刀",
                     "$desc": "飓风招式会被封阻"
+                }
+            },
+            {
+                "@advance_nouns_section": {
+                    "$noun": "灵光一现",
+                    "$desc": "剑刃封锁只能短时间内维持格挡状态"
+                }
+            }
+        ]
+    },
+
+    //打刀
+    "meisterhau_move_list_uchigatana@settings_common.section_toggle_base": {
+        "$toggle_view_binding_name": "meisterhau_move_list_uchigatana_toggle",
+        "$glyph_texture": "textures/items/uchigatana",
+        "$glyph_color_texture": "textures/items/uchigatana",
+        "$glyph_size": [
+            21,
+            14
+        ],
+        "$button_text": "打刀",
+        "$toggle_property_bag": {
+            "#panel_title": "打刀招式表"
+        }
+    },
+
+    "meisterhau_uchigatana_section": {
+        "type": "stack_panel",
+        "size": [
+            "100%",
+            "100%c"
+        ],
+        "anchor_from": "top_left",
+        "anchor_to": "top_left",
+        "$spatialPatternsPadding": [
+            "100%",
+            8
+        ],
+        "$paddingLineDivider": [
+            "100%",
+            16
+        ],
+        "bindings": [
+            {
+                "binding_type": "view",
+                "source_control_name": "meisterhau_move_list_uchigatana_toggle",
+                "source_property_name": "#toggle_state",
+                "target_property_name": "#visible"
+            }
+        ],
+        "controls": [
+            {
+                "@nouns_section": {
+                    "$noun": "打刀",
+                    "$desc": "极强的防御力, 超高的灵活度, 进攻能力稍弱, 难以上手"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "基础连段",
+                    "$desc": "轻击/重击"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "基础连段",
+                    "$desc": "轻击/重击, 轻击/重击"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "灵活身法 (侧方向偏斜)",
+                    "$desc": "左/右, 闪避"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "冷静闪避 (前方向偏斜)",
+                    "$desc": "前, 闪避"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "受身反击",
+                    "$desc": "灵活身法, 轻击"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "乘胜追击 (不可阻挡)",
+                    "$desc": "受身反击, 重击"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "狂暴穿刺 (不可阻挡, 霸体, 打断)",
+                    "$desc": "灵活身法, 重击"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "手起刀落 (不可阻挡)",
+                    "$desc": "冷静闪避, 重击"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "居合 (架势)",
+                    "$desc": "蹲下(按住)"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "居合斩 (大师反击, 追踪攻击)",
+                    "$desc": "在居合姿态下, 重击"
+                }
+            },
+            {
+                "@advance_nouns_section": {
+                    "$noun": "剑术大师",
+                    "$desc": "第一段轻击具有对上段和突刺攻击的大师反击"
+                }
+            },
+            {
+                "@advance_nouns_section": {
+                    "$noun": "精确斩击",
+                    "$desc": "任意以重击结尾的连击最后一段重击都会变成不可阻挡的攻击"
+                }
+            },
+            {
+                "@advance_nouns_section": {
+                    "$noun": "轻装上阵",
+                    "$desc": "在任何攻击后都可以通过闪避取消后摇"
+                }
+            },
+            {
+                "@advance_nouns_section": {
+                    "$noun": "避险",
+                    "$desc": "进入居合姿态获得短时间的闪避"
+                }
+            },
+            {
+                "@advance_nouns_section": {
+                    "$noun": "宽恕",
+                    "$desc": "可以通过佯攻取消狂暴穿刺"
+                }
+            }
+        ]
+    },
+
+    //盾剑
+    "meisterhau_move_list_shield_with_sword@settings_common.section_toggle_base": {
+        "$toggle_view_binding_name": "meisterhau_move_list_shield_with_sword_toggle",
+        "$glyph_texture": "textures/items/shield_with_sword",
+        "$glyph_color_texture": "textures/items/shield_with_sword",
+        "$glyph_size": [
+            21,
+            14
+        ],
+        "$button_text": "盾剑",
+        "$toggle_property_bag": {
+            "#panel_title": "盾剑招式表"
+        }
+    },
+
+    "meisterhau_shield_with_sword_section": {
+        "type": "stack_panel",
+        "size": [
+            "100%",
+            "100%c"
+        ],
+        "anchor_from": "top_left",
+        "anchor_to": "top_left",
+        "$spatialPatternsPadding": [
+            "100%",
+            8
+        ],
+        "$paddingLineDivider": [
+            "100%",
+            16
+        ],
+        "bindings": [
+            {
+                "binding_type": "view",
+                "source_control_name": "meisterhau_move_list_shield_with_sword_toggle",
+                "source_property_name": "#toggle_state",
+                "target_property_name": "#visible"
+            }
+        ],
+        "controls": [
+            {
+                "@nouns_section": {
+                    "$noun": "盾剑",
+                    "$desc": "顶级的防御力, 较强的进攻手段, 反击能力强, 容易上手, 但灵活性较差"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "盾偏斩击 (大师反击)",
+                    "$desc": "重击"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "锁定重击 (追踪)",
+                    "$desc": "重击, 重击"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "盾撞 (不可阻挡)",
+                    "$desc": "轻击"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "失衡冲撞 (不可阻挡)",
+                    "$desc": "重击, 轻击"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "盾撞连击",
+                    "$desc": "盾撞或失衡冲撞成功后, 重击"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "举起护盾 (架势)",
+                    "$desc": "蹲下(按住)"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "格挡反击 (不可阻挡, 追踪)",
+                    "$desc": "举起护盾架势下, 成功格挡后, 轻击"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "固若金汤",
+                    "$desc": "举起护盾架势下, 重击"
+                }
+            },
+            {
+                "@advance_nouns_section": {
+                    "$noun": "坚盾反制",
+                    "$desc": "固若金汤格挡成功后, 自动触发反击"
+                }
+            },
+            {
+                "@advance_nouns_section": {
+                    "$noun": "超重",
+                    "$desc": "无法使用招架"
+                }
+            },
+            {
+                "@advance_nouns_section": {
+                    "$noun": "快速防御",
+                    "$desc": "任意攻击后均可快速进入举起护盾架势"
                 }
             }
         ]

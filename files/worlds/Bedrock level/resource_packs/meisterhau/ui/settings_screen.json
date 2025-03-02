@@ -131,22 +131,36 @@
                     },
                     {
                         "keys@general_section.meisterhau_keys_button": {
-                            "$toggle_group_forced_index": 1
+                            "$toggle_group_forced_index": 101
                         }
                     },
                     {
                         "moves@general_section.meisterhau_nouns_button": {
-                            "$toggle_group_forced_index": 2
+                            "$toggle_group_forced_index": 102
                         }
                     },
+                    // 大太刀
                     {
-                        "moves_ootachi@general_section.meisterhau_move_list_ootachi": {
-                            "$toggle_group_forced_index": 3
+                        "@general_section.meisterhau_move_list_ootachi": {
+                            "$toggle_group_forced_index": 103
                         }
                     },
+                    // 双刀
                     {
                         "@general_section.meisterhau_move_list_double_blade": {
-                            "$toggle_group_forced_index": 4
+                            "$toggle_group_forced_index": 104
+                        }
+                    },
+                    // 打刀
+                    {
+                        "@general_section.meisterhau_move_list_uchigatana": {
+                            "$toggle_group_forced_index": 105
+                        }
+                    },
+                    // 盾剑
+                    {
+                        "@general_section.meisterhau_move_list_shield_with_sword": {
+                            "$toggle_group_forced_index": 106
                         }
                     }
                 ]
@@ -391,6 +405,7 @@
                 ]
             }
         },
+        // 大太刀
         {
             "meisterhau_ootachi_section": {
                 "type": "stack_panel",
@@ -399,11 +414,30 @@
                 ]
             }
         },
+        // 双刀
         {
             "meisterhau_double_blade_section": {
                 "type": "stack_panel",
                 "controls": [
                     { "@general_section.meisterhau_double_blade_section": {} }
+                ]
+            }
+        },
+        // 打刀
+        {
+            "meisterhau_uchigatana_section": {
+                "type": "stack_panel",
+                "controls": [
+                    { "@general_section.meisterhau_uchigatana_section": {} }
+                ]
+            }
+        },
+        // 盾剑
+        {
+            "meisterhau_shield_with_sword_section": {
+                "type": "stack_panel",
+                "controls": [
+                    { "@general_section.meisterhau_shield_with_sword_section": {} }
                 ]
             }
         },
