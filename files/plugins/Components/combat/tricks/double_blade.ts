@@ -1,7 +1,6 @@
 import { playAnim, playSoundAll } from "../basic/index"
 import { DefaultMoves, DefaultTrickModule, setVelocityByOrientation } from "../basic/default"
 import { Stamina } from "@combat/basic/components/core/stamina"
-import { input } from "scripts-rpc/func/input"
 
 class DoubleBladeMoves extends DefaultMoves {
     constructor() {
@@ -139,7 +138,7 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 22
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
-            playAnim(pl, 'animation.double_blade.start_left')
+            playAnim(pl, ctx.previousStatus === 'shieldKick' ? 'animation.double_blade.skl' : 'animation.double_blade.start_left')
             setVelocityByOrientation(pl as Player, ctx, 0.5, 1)
         },
         onLeave(pl, ctx) {
@@ -519,9 +518,10 @@ class DoubleBladeMoves extends DefaultMoves {
             })
         },
         timeline: {
-            3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
+            1: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
+            3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
             11: (pl, ctx) => {
-                ctx.adsorbOrSetVelocity(pl, 2, 90, 1)
+                ctx.adsorbOrSetVelocity(pl, 2, 90)
                 playSoundAll('weapon.woosh.3', pl.pos)
             },
 
@@ -602,12 +602,12 @@ class DoubleBladeMoves extends DefaultMoves {
     }
 
     kickCombo: Move = {
-        cast: 8,
-        backswing: 15,
+        cast: 7,
+        backswing: 16,
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 25
             ctx.freeze(pl)
-            playAnim(pl, 'animation.double_blade.rrl')
+            playAnim(pl, ctx.previousStatus === 'shieldKick' ? 'animation.double_blade.skh' : 'animation.double_blade.rrl')
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1)
         },
         onLeave(pl, ctx) {
@@ -627,7 +627,7 @@ class DoubleBladeMoves extends DefaultMoves {
         },
         timeline: {
             5: (pl, ctx) => {
-                ctx.adsorbOrSetVelocity(pl, 1.4, 90, 1)
+                ctx.adsorbOrSetVelocity(pl, 1.4)
                 playSoundAll('weapon.woosh.2', pl.pos)
             },
         },
@@ -723,11 +723,143 @@ class DoubleBladeMoves extends DefaultMoves {
                     preInput: 'onUseItem'
                 }
             },
+            shieldKick: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            },
             shieldFromBackswing: {
                 onSneak: {
                     allowedState: 'backswing'
                 }
             }
+        }
+    }
+
+    shieldKick: Move = {
+        cast: 15,
+        onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 10
+            ctx.freeze(pl)
+            playAnim(pl, 'animation.double_blade.shield.kick')
+            ctx.lookAtTarget(pl)
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl)
+        },
+        timeline: {
+            1: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90, 1),
+            4: (pl, ctx) => ctx.selectFromRange(pl, {
+                angle: 120,
+                radius: 2.5,
+                rotation: -60
+            }).forEach(en => {
+                ctx.attack(pl, en, {
+                    damage: 2,
+                    direction: 'middle',
+                    parryable: false,
+                    permeable: true,
+                    powerful: true,
+                })
+            }),
+            8: (pl, ctx) => ctx.trap(pl),
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            resume: {
+                onEndOfLife: null
+            },
+            sheildAttack: {
+                onTrap: {
+                    preInput: 'onAttack',
+                    stamina: 15,
+                }
+            },
+            kickCombo: {
+                onTrap: {
+                    preInput: 'onUseItem',
+                    stamina: 25,
+                }
+            }
+        }
+    }
+
+    sheildAttack: Move = {
+        cast: 11,
+        backswing: 8,
+        onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 15
+            ctx.freeze(pl)
+            ctx.lookAtTarget(pl)
+            playAnim(pl, 'animation.double_blade.skl')
+            setVelocityByOrientation(pl as Player, ctx, 1, 1.5)
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl)
+        },
+        onAct(pl, ctx) {
+            ctx.trap(pl, { tag: 'after' })
+        },
+        timeline: {
+            6: pl => playSoundAll('weapon.woosh.2', pl.pos),
+            7: (pl, ctx) => {
+                ctx.selectFromRange(pl, {
+                    angle: 40,
+                    radius: 2.2,
+                    rotation: -20
+                }).forEach(en => {
+                    ctx.attack(pl, en, {
+                        damage: 18,
+                        knockback: 0.8,
+                        direction: 'left'
+                    })
+                })
+            }
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null,
+            },
+            hurt: {
+                onHurt: null
+            },
+            parried: {
+                onParried: null
+            },
+            blocked: {
+                onBlocked: null
+            },
+            alternationLR: {
+                onTrap: {
+                    tag: 'after',
+                    preInput: 'onUseItem',
+                    stamina: 22,
+                }
+            },
+            finishingL: {
+                onTrap: {
+                    tag: 'after',
+                    preInput: 'onAttack',
+                    stamina: 30,
+                }
+            },
+            shield: {
+                onTrap: {
+                    tag: 'after',
+                    preInput: 'onSneak',
+                    stamina: 10,
+                },
+            },
+            shieldFromBackswing: {
+                onSneak: {
+                    allowedState: 'backswing'
+                },
+            },
+            block: {
+                onBlock: null
+            },
         }
     }
 

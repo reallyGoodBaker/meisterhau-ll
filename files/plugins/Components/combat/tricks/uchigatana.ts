@@ -12,6 +12,14 @@ class UchigatanaMoves extends DefaultMoves {
         this.animations.block.right = 'animation.weapon.uchigatana.block.right'
         this.animations.parry.left = 'animation.weapon.uchigatana.parry.left'
         this.animations.parry.right = 'animation.weapon.uchigatana.parry.right'
+
+        this.setTransition<UchigatanaMoves>('parry', 'parryCounter', {
+            onTrap: {
+                tag: 'counter',
+                preInput: 'onUseItem',
+                stamina: 20
+            }
+        })
     }
 
     hold: Move = {
@@ -50,19 +58,23 @@ class UchigatanaMoves extends DefaultMoves {
             },
             attack1: {
                 onAttack: {
-                    hasTarget: true
+                    hasTarget: true,
+                    stamina: 15,
                 },
             },
             attack1Heavy: {
                 onUseItem: {
-                    hasTarget: true
+                    hasTarget: true,
+                    stamina: 20,
                 }
             },
             dodge: {
                 onDodge: null
             },
             raidoEnter: {
-                onSneak: null
+                onSneak: {
+                    stamina: 10,
+                }
             }
         }
     }
@@ -106,6 +118,7 @@ class UchigatanaMoves extends DefaultMoves {
         cast: 12,
         backswing: 9,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 15
             ctx.status.isBlocking = true
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
@@ -174,6 +187,7 @@ class UchigatanaMoves extends DefaultMoves {
         cast: 17,
         backswing: 9,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 10
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
             playAnim(pl, 'animation.weapon.uchigatana.attack1.heavy')
@@ -192,16 +206,19 @@ class UchigatanaMoves extends DefaultMoves {
             6: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             7: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
             9: pl => playSoundAll(`weapon.woosh.2`, pl.pos, 1),
-            11: (pl, ctx) => ctx.selectFromRange(pl, {
-                radius: 3,
-                angle: 180,
-                rotation: -90,
-            }).forEach(en => {
-                ctx.attack(pl, en, {
-                    damage: 24,
-                    direction: 'right',
+            11: (pl, ctx) => {
+                ctx.components.getComponent(Stamina).unwrap().stamina -= 10
+                ctx.selectFromRange(pl, {
+                    radius: 3,
+                    angle: 180,
+                    rotation: -90,
+                }).forEach(en => {
+                    ctx.attack(pl, en, {
+                        damage: 20,
+                        direction: 'right',
+                    })
                 })
-            }),
+            },
         },
         transitions: {
             parry: {
@@ -247,6 +264,7 @@ class UchigatanaMoves extends DefaultMoves {
         cast: 14,
         backswing: 6,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 18
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
             playAnim(
@@ -298,6 +316,7 @@ class UchigatanaMoves extends DefaultMoves {
         cast: 18,
         backswing: 7,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 10
             ctx.freeze(pl)
             const prev = ctx.previousStatus
         
@@ -324,17 +343,20 @@ class UchigatanaMoves extends DefaultMoves {
             10: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
             13: pl => playSoundAll('weapon.woosh.2', pl.pos),
             7: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
-            14: (pl, ctx) => ctx.selectFromRange(pl, {
-                radius: 2.6,
-                angle: 40,
-                rotation: 20,
-            }).forEach(en => {
-                ctx.attack(pl, en, {
-                    damage: 22,
-                    permeable: true,
-                    direction: 'vertical',
+            14: (pl, ctx) => {
+                ctx.components.getComponent(Stamina).unwrap().stamina -= 15
+                ctx.selectFromRange(pl, {
+                    radius: 2.6,
+                    angle: 40,
+                    rotation: 20,
+                }).forEach(en => {
+                    ctx.attack(pl, en, {
+                        damage: 22,
+                        permeable: true,
+                        direction: 'vertical',
+                    })
                 })
-            }),
+            },
         },
         transitions: {
             resume: {
@@ -362,6 +384,7 @@ class UchigatanaMoves extends DefaultMoves {
         cast: 4,
         backswing: 6,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().setCooldown(20)
             ctx.freeze(pl)
             const ori = input.approximateOrientation(pl as Player)
             switch (ori) {
@@ -573,6 +596,7 @@ class UchigatanaMoves extends DefaultMoves {
             }
         },
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 18
             ctx.lookAtTarget(pl)
             ctx.freeze(pl)
             playAnim(pl, 'animation.weapon.uchigatana.dc.fh')
@@ -623,6 +647,7 @@ class UchigatanaMoves extends DefaultMoves {
             }
         },
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 12
             ctx.freeze(pl)
             playAnim(pl, 'animation.weapon.uchigatana.dc.ll')
             ctx.adsorbToTarget(pl, 1.5)
@@ -672,6 +697,7 @@ class UchigatanaMoves extends DefaultMoves {
             }
         },
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 12
             ctx.freeze(pl)
             playAnim(pl, 'animation.weapon.uchigatana.dc.rl')
             ctx.adsorbToTarget(pl, 1.5)
@@ -721,6 +747,7 @@ class UchigatanaMoves extends DefaultMoves {
             },
         },
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 10
             ctx.freeze(pl)
             playAnim(pl, 'animation.weapon.uchigatana.dc.lh')
             ctx.adsorbToTarget(pl, 3, 1.5)
@@ -739,13 +766,14 @@ class UchigatanaMoves extends DefaultMoves {
                 ctx.adsorbToTarget(_, 3, 1.2)
             },
             13: (pl, ctx) => {
+                ctx.components.getComponent(Stamina).unwrap().stamina -= 15
                 ctx.selectFromRange(pl, {
                     radius: 2.4,
                     angle: 90,
                     rotation: -45,
                 }).forEach(en => {
                     ctx.attack(pl, en, {
-                        damage: 30,
+                        damage: 35,
                         direction: 'middle',
                         permeable: true,
                         parryable: false,
@@ -785,6 +813,7 @@ class UchigatanaMoves extends DefaultMoves {
             },
         },
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 10
             ctx.freeze(pl)
             playAnim(pl, 'animation.weapon.uchigatana.dc.rh')
             ctx.adsorbToTarget(pl, 3, 1.6)
@@ -803,6 +832,7 @@ class UchigatanaMoves extends DefaultMoves {
                 ctx.adsorbToTarget(_, 3, 1.2)
             },
             13: (pl, ctx) => {
+                ctx.components.getComponent(Stamina).unwrap().stamina -= 15
                 ctx.selectFromRange(pl, {
                     radius: 2.4,
                     angle: 90,
@@ -922,7 +952,7 @@ class UchigatanaMoves extends DefaultMoves {
         cast: 16,
         backswing: 4,
         onEnter(pl, ctx) {
-            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 20
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 18
             playAnim(pl, 'animation.weapon.uchigatana.raido.attack')
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
@@ -958,7 +988,7 @@ class UchigatanaMoves extends DefaultMoves {
             5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90),
             8: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
             9: pl => playSoundAll(`weapon.woosh.2`, pl.pos, 1),
-            11: (pl, ctx) => ctx.selectFromRange(pl, {
+            10: (pl, ctx) => ctx.selectFromRange(pl, {
                 radius: 2.5,
                 angle: 90,
                 rotation: -45,
@@ -973,9 +1003,10 @@ class UchigatanaMoves extends DefaultMoves {
     }
 
     parryCounter: Move = {
-        cast: 10,
-        backswing: 5,
+        cast: 12,
+        backswing: 7,
         onEnter(pl, ctx) {
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 10
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
             const parryDir = ctx.components.getComponent(IncomingAttack).unwrap().approximateAttackDirection()
@@ -999,15 +1030,40 @@ class UchigatanaMoves extends DefaultMoves {
             },
             attack2: {
                 onTrap: {
-                    preInput: 'onAttack'
+                    preInput: 'onAttack',
+                    stamina: 18,
                 }
             },
             attack2Heavy: {
                 onTrap: {
-                    preInput: 'onUseItem'
+                    preInput: 'onUseItem',
+                    stamina: 25
                 }
             },
+            dodge: {
+                onDodge: {
+                    allowedState: 'backswing'
+                }
+            }
         },
+        timeline: {
+            1: (pl, ctx) => ctx.setVelocity(pl, 90, 1),
+            3: (pl, ctx) => ctx.setVelocity(pl, 90, 1.5),
+            5: (pl, ctx) => ctx.setVelocity(pl, 90, 1),
+            6: pl => playSoundAll(`weapon.woosh.2`, pl.pos, 1),
+            7: (pl, ctx) => {
+                ctx.selectFromRange(pl, {
+                    radius: 2.5,
+                    angle: 120,
+                    rotation: -60,
+                }).forEach(en => {
+                    ctx.attack(pl, en, {
+                        damage: 16,
+                        direction: 'right',
+                    })
+                })
+            },
+        }
     }
 }
 

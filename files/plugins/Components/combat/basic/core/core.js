@@ -46,14 +46,12 @@ function damageWithCameraFading(victim, damage, cause, abuser, projectile, damag
         z: 0.7 * victimPos.z + 0.3 * abuserPos.z,
     }
 
-    setTimeout(() => {
-        playParticle(`weapon:hit_${damageOpt.direction || 'left'}`, {
-            x: dpos.x,
-            y: abuserPos.y + 1.2,
-            z: dpos.z,
-            dimid: victimPos.dimid
-        })
-    }, 100)
+    playParticle(`weapon:hit_${damageOpt.direction || 'left'}`, {
+        x: dpos.x,
+        y: abuserPos.y + 1.2,
+        z: dpos.z,
+        dimid: victimPos.dimid
+    })
 }
 
 function knockdown(abuser, victim, knockback=2) {
@@ -744,7 +742,6 @@ function listenAllCustomEvents(mods) {
             return em.emitNone('block', abuser, victimPlayer, damageOpt)
         }
 
-        
         doDamage()
     })
 
@@ -856,20 +853,23 @@ function listenAllCustomEvents(mods) {
             prevent = () => flag = false
 
         const victimStatus = Status.get(victim.uniqueId)
+        const victimMod = getMod(getHandedItemType(victim))
 
-        transition(
-            victim,
-            getMod(getHandedItemType(victim)),
-            victimStatus,
-            'onHurt',
-            prevent,
-            [victim, abuser, damageOpt]
-        )
-
-        if (victimStatus.hegemony && damageOpt.powerful) {
+        if (!victimStatus.hegemony) {
             transition(
                 victim,
-                getMod(getHandedItemType(victim)),
+                victimMod,
+                victimStatus,
+                'onHurt',
+                prevent,
+                [victim, abuser, damageOpt]
+            )
+        }
+
+        if (damageOpt.powerful) {
+            transition(
+                victim,
+                victimMod,
                 victimStatus,
                 'onInterrupted',
                 prevent,

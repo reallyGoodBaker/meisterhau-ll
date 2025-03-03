@@ -118,7 +118,21 @@
 				{
 					"name": "leftItem",
 					"parent": "leftForearm",
-					"pivot": [5.5, 12.5, 0]
+					"pivot": [5.5, 12.5, 0],
+					"cubes": [
+						{
+							"origin": [5, 12, -15.75],
+							"size": [0.75, 1, 19.75],
+							"uv": {
+								"north": {"uv": [0, 0], "uv_size": [0.75, 1]},
+								"east": {"uv": [0, 0], "uv_size": [19.75, 1]},
+								"south": {"uv": [0, 0], "uv_size": [0.75, 1]},
+								"west": {"uv": [0, 0], "uv_size": [19.75, 1]},
+								"up": {"uv": [0.75, 19.75], "uv_size": [-0.75, -19.75]},
+								"down": {"uv": [0.75, 19.75], "uv_size": [-0.75, -19.75]}
+							}
+						}
+					]
 				},
 				{
 					"name": "left_emitter",
@@ -127,6 +141,25 @@
 					"locators": {
 						"left_emitter": [0, 0, 0]
 					}
+				},
+				{
+					"name": "leftSlash",
+					"parent": "leftItem",
+					"pivot": [5.5, 12.5, 0],
+					"cubes": [
+						{
+							"origin": [5.6, 12.5, -1],
+							"size": [0.1, 2, 2],
+							"uv": {
+								"north": {"uv": [0, 0], "uv_size": [0.1, 2]},
+								"east": {"uv": [0, 0], "uv_size": [2, 2]},
+								"south": {"uv": [0, 0], "uv_size": [0.1, 2]},
+								"west": {"uv": [0, 0], "uv_size": [2, 2]},
+								"up": {"uv": [0.1, 2], "uv_size": [-0.1, -2]},
+								"down": {"uv": [0.1, 2], "uv_size": [-0.1, -2]}
+							}
+						}
+					]
 				},
 				{
 					"name": "leftShield",
@@ -198,6 +231,25 @@
 					"locators": {
 						"right_emitter": [-6, 13, -2]
 					}
+				},
+				{
+					"name": "rightSlash",
+					"parent": "rightItem",
+					"pivot": [-5.48104, 12.46229, -0.4299],
+					"cubes": [
+						{
+							"origin": [-5.35, 12.5, -1],
+							"size": [0.1, 2, 2],
+							"uv": {
+								"north": {"uv": [0, 0], "uv_size": [0.1, 2]},
+								"east": {"uv": [0, 0], "uv_size": [2, 2]},
+								"south": {"uv": [0, 0], "uv_size": [0.1, 2]},
+								"west": {"uv": [0, 0], "uv_size": [2, 2]},
+								"up": {"uv": [0.1, 2], "uv_size": [-0.1, -2]},
+								"down": {"uv": [0.1, 2], "uv_size": [-0.1, -2]}
+							}
+						}
+					]
 				},
 				{
 					"name": "waistSaya",

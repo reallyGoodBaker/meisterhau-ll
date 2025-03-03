@@ -77,9 +77,26 @@ const battleCamera = (pl, en) => {
     }
 
     const plPos = pl.pos
-    const enPos = en.pos
-    const initVec = vec2(plPos.x, plPos.z, enPos.x, enPos.z)
+    let enPos = en.pos
+    let initVec = vec2(plPos.x, plPos.z, enPos.x, enPos.z)
     const dist = initVec.m
+
+    if (dist < 3) {
+        const dxn = initVec.dx / dist
+        const dyn = initVec.dy / dist
+        initVec = {
+            dx: dxn * 3,
+            dy: dyn * 3,
+            m: 3,
+        }
+
+        enPos = {
+            x: plPos.x + dxn * 3,
+            y: enPos.y,
+            z: plPos.z + dyn * 3,
+        }
+    }
+
     const manager = Status.get(pl.uniqueId).componentManager
     const cameraComponentOpt = manager.getComponent(CameraComponent)
     if (cameraComponentOpt.isEmpty()) {

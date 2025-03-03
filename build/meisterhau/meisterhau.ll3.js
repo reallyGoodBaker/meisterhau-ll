@@ -1621,7 +1621,7 @@ let CameraFading$1 = CameraFading_1 = class CameraFading extends BaseComponent {
                 to = [...CameraComponent$1.defaultOffset, 15, 0];
                 break;
             case 'vertical':
-                to = [...CameraComponent$1.defaultOffset, 0, -15];
+                to = [...CameraComponent$1.defaultOffset, 0, -30];
                 break;
             default:
                 to = [1.5, 0, 0.5, 0, 0];
@@ -5798,6 +5798,13 @@ class UchigatanaMoves extends DefaultMoves$4 {
         this.animations.block.right = 'animation.weapon.uchigatana.block.right';
         this.animations.parry.left = 'animation.weapon.uchigatana.parry.left';
         this.animations.parry.right = 'animation.weapon.uchigatana.parry.right';
+        this.setTransition('parry', 'parryCounter', {
+            onTrap: {
+                tag: 'counter',
+                preInput: 'onUseItem',
+                stamina: 20
+            }
+        });
     }
     hold = {
         cast: Infinity,
@@ -5834,19 +5841,23 @@ class UchigatanaMoves extends DefaultMoves$4 {
             },
             attack1: {
                 onAttack: {
-                    hasTarget: true
+                    hasTarget: true,
+                    stamina: 15,
                 },
             },
             attack1Heavy: {
                 onUseItem: {
-                    hasTarget: true
+                    hasTarget: true,
+                    stamina: 20,
                 }
             },
             dodge: {
                 onDodge: null
             },
             raidoEnter: {
-                onSneak: null
+                onSneak: {
+                    stamina: 10,
+                }
             }
         }
     };
@@ -5887,6 +5898,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
         cast: 12,
         backswing: 9,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 15;
             ctx.status.isBlocking = true;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
@@ -5954,6 +5966,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
         cast: 17,
         backswing: 9,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
             playAnim$6(pl, 'animation.weapon.uchigatana.attack1.heavy');
@@ -5972,16 +5985,19 @@ class UchigatanaMoves extends DefaultMoves$4 {
             6: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             7: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
             9: pl => playSoundAll$5(`weapon.woosh.2`, pl.pos, 1),
-            11: (pl, ctx) => ctx.selectFromRange(pl, {
-                radius: 3,
-                angle: 180,
-                rotation: -90,
-            }).forEach(en => {
-                ctx.attack(pl, en, {
-                    damage: 24,
-                    direction: 'right',
+            11: (pl, ctx) => {
+                ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
+                ctx.selectFromRange(pl, {
+                    radius: 3,
+                    angle: 180,
+                    rotation: -90,
+                }).forEach(en => {
+                    ctx.attack(pl, en, {
+                        damage: 20,
+                        direction: 'right',
+                    });
                 });
-            }),
+            },
         },
         transitions: {
             parry: {
@@ -6026,6 +6042,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
         cast: 14,
         backswing: 6,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 18;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
             playAnim$6(pl, ctx.previousStatus === 'attack1'
@@ -6073,6 +6090,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
         cast: 18,
         backswing: 7,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
             ctx.freeze(pl);
             const prev = ctx.previousStatus;
             switch (prev) {
@@ -6097,17 +6115,20 @@ class UchigatanaMoves extends DefaultMoves$4 {
             10: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
             13: pl => playSoundAll$5('weapon.woosh.2', pl.pos),
             7: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
-            14: (pl, ctx) => ctx.selectFromRange(pl, {
-                radius: 2.6,
-                angle: 40,
-                rotation: 20,
-            }).forEach(en => {
-                ctx.attack(pl, en, {
-                    damage: 22,
-                    permeable: true,
-                    direction: 'vertical',
+            14: (pl, ctx) => {
+                ctx.components.getComponent(Stamina$1).unwrap().stamina -= 15;
+                ctx.selectFromRange(pl, {
+                    radius: 2.6,
+                    angle: 40,
+                    rotation: 20,
+                }).forEach(en => {
+                    ctx.attack(pl, en, {
+                        damage: 22,
+                        permeable: true,
+                        direction: 'vertical',
+                    });
                 });
-            }),
+            },
         },
         transitions: {
             resume: {
@@ -6134,6 +6155,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
         cast: 4,
         backswing: 6,
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().setCooldown(20);
             ctx.freeze(pl);
             const ori = input$1.approximateOrientation(pl);
             switch (ori) {
@@ -6336,6 +6358,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             }
         },
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 18;
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
             playAnim$6(pl, 'animation.weapon.uchigatana.dc.fh');
@@ -6385,6 +6408,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             }
         },
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 12;
             ctx.freeze(pl);
             playAnim$6(pl, 'animation.weapon.uchigatana.dc.ll');
             ctx.adsorbToTarget(pl, 1.5);
@@ -6433,6 +6457,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             }
         },
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 12;
             ctx.freeze(pl);
             playAnim$6(pl, 'animation.weapon.uchigatana.dc.rl');
             ctx.adsorbToTarget(pl, 1.5);
@@ -6481,6 +6506,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             },
         },
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
             ctx.freeze(pl);
             playAnim$6(pl, 'animation.weapon.uchigatana.dc.lh');
             ctx.adsorbToTarget(pl, 3, 1.5);
@@ -6499,13 +6525,14 @@ class UchigatanaMoves extends DefaultMoves$4 {
                 ctx.adsorbToTarget(_, 3, 1.2);
             },
             13: (pl, ctx) => {
+                ctx.components.getComponent(Stamina$1).unwrap().stamina -= 15;
                 ctx.selectFromRange(pl, {
                     radius: 2.4,
                     angle: 90,
                     rotation: -45,
                 }).forEach(en => {
                     ctx.attack(pl, en, {
-                        damage: 30,
+                        damage: 35,
                         direction: 'middle',
                         permeable: true,
                         parryable: false,
@@ -6544,6 +6571,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             },
         },
         onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
             ctx.freeze(pl);
             playAnim$6(pl, 'animation.weapon.uchigatana.dc.rh');
             ctx.adsorbToTarget(pl, 3, 1.6);
@@ -6562,6 +6590,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
                 ctx.adsorbToTarget(_, 3, 1.2);
             },
             13: (pl, ctx) => {
+                ctx.components.getComponent(Stamina$1).unwrap().stamina -= 15;
                 ctx.selectFromRange(pl, {
                     radius: 2.4,
                     angle: 90,
@@ -6677,7 +6706,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
         cast: 16,
         backswing: 4,
         onEnter(pl, ctx) {
-            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 20;
+            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 18;
             playAnim$6(pl, 'animation.weapon.uchigatana.raido.attack');
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
@@ -6713,7 +6742,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90),
             8: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
             9: pl => playSoundAll$5(`weapon.woosh.2`, pl.pos, 1),
-            11: (pl, ctx) => ctx.selectFromRange(pl, {
+            10: (pl, ctx) => ctx.selectFromRange(pl, {
                 radius: 2.5,
                 angle: 90,
                 rotation: -45,
@@ -6727,9 +6756,10 @@ class UchigatanaMoves extends DefaultMoves$4 {
         }
     };
     parryCounter = {
-        cast: 10,
-        backswing: 5,
+        cast: 12,
+        backswing: 7,
         onEnter(pl, ctx) {
+            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 10;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
             const parryDir = ctx.components.getComponent(IncomingAttack$1).unwrap().approximateAttackDirection();
@@ -6753,15 +6783,40 @@ class UchigatanaMoves extends DefaultMoves$4 {
             },
             attack2: {
                 onTrap: {
-                    preInput: 'onAttack'
+                    preInput: 'onAttack',
+                    stamina: 18,
                 }
             },
             attack2Heavy: {
                 onTrap: {
-                    preInput: 'onUseItem'
+                    preInput: 'onUseItem',
+                    stamina: 25
                 }
             },
+            dodge: {
+                onDodge: {
+                    allowedState: 'backswing'
+                }
+            }
         },
+        timeline: {
+            1: (pl, ctx) => ctx.setVelocity(pl, 90, 1),
+            3: (pl, ctx) => ctx.setVelocity(pl, 90, 1.5),
+            5: (pl, ctx) => ctx.setVelocity(pl, 90, 1),
+            6: pl => playSoundAll$5(`weapon.woosh.2`, pl.pos, 1),
+            7: (pl, ctx) => {
+                ctx.selectFromRange(pl, {
+                    radius: 2.5,
+                    angle: 120,
+                    rotation: -60,
+                }).forEach(en => {
+                    ctx.attack(pl, en, {
+                        damage: 16,
+                        direction: 'right',
+                    });
+                });
+            },
+        }
     };
 }
 class UchigatanaModule extends DefaultTrickModule$4 {
@@ -6911,7 +6966,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             ctx.components.getComponent(Stamina$1).unwrap().stamina -= 22;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$6(pl, 'animation.double_blade.start_left');
+            playAnim$6(pl, ctx.previousStatus === 'shieldKick' ? 'animation.double_blade.skl' : 'animation.double_blade.start_left');
             setVelocityByOrientation(pl, ctx, 0.5, 1);
         },
         onLeave(pl, ctx) {
@@ -7283,7 +7338,8 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             });
         },
         timeline: {
-            3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
+            1: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
+            3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90, 1),
             11: (pl, ctx) => {
                 ctx.adsorbOrSetVelocity(pl, 2, 90, 1);
                 playSoundAll$5('weapon.woosh.3', pl.pos);
@@ -7363,12 +7419,12 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         }
     };
     kickCombo = {
-        cast: 8,
-        backswing: 15,
+        cast: 7,
+        backswing: 16,
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina$1).unwrap().stamina -= 25;
             ctx.freeze(pl);
-            playAnim$6(pl, 'animation.double_blade.rrl');
+            playAnim$6(pl, ctx.previousStatus === 'shieldKick' ? 'animation.double_blade.skh' : 'animation.double_blade.rrl');
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1);
         },
         onLeave(pl, ctx) {
@@ -7388,7 +7444,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         },
         timeline: {
             5: (pl, ctx) => {
-                ctx.adsorbOrSetVelocity(pl, 1.4, 90, 1);
+                ctx.adsorbOrSetVelocity(pl, 1.4);
                 playSoundAll$5('weapon.woosh.2', pl.pos);
             },
         },
@@ -7484,11 +7540,141 @@ class DoubleBladeMoves extends DefaultMoves$4 {
                     preInput: 'onUseItem'
                 }
             },
+            shieldKick: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            },
             shieldFromBackswing: {
                 onSneak: {
                     allowedState: 'backswing'
                 }
             }
+        }
+    };
+    shieldKick = {
+        cast: 15,
+        onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
+            ctx.freeze(pl);
+            playAnim$6(pl, 'animation.double_blade.shield.kick');
+            ctx.lookAtTarget(pl);
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl);
+        },
+        timeline: {
+            1: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90, 1),
+            4: (pl, ctx) => ctx.selectFromRange(pl, {
+                angle: 120,
+                radius: 2.5,
+                rotation: -60
+            }).forEach(en => {
+                ctx.attack(pl, en, {
+                    damage: 2,
+                    direction: 'middle',
+                    parryable: false,
+                    permeable: true,
+                    powerful: true,
+                });
+            }),
+            8: (pl, ctx) => ctx.trap(pl),
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            resume: {
+                onEndOfLife: null
+            },
+            sheildAttack: {
+                onTrap: {
+                    preInput: 'onAttack',
+                    stamina: 15,
+                }
+            },
+            kickCombo: {
+                onTrap: {
+                    preInput: 'onUseItem',
+                    stamina: 25,
+                }
+            }
+        }
+    };
+    sheildAttack = {
+        cast: 11,
+        backswing: 8,
+        onEnter(pl, ctx) {
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 15;
+            ctx.freeze(pl);
+            ctx.lookAtTarget(pl);
+            playAnim$6(pl, 'animation.double_blade.skl');
+            setVelocityByOrientation(pl, ctx, 1, 1.5);
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl);
+        },
+        onAct(pl, ctx) {
+            ctx.trap(pl, { tag: 'after' });
+        },
+        timeline: {
+            6: pl => playSoundAll$5('weapon.woosh.2', pl.pos),
+            7: (pl, ctx) => {
+                ctx.selectFromRange(pl, {
+                    angle: 40,
+                    radius: 2.2,
+                    rotation: -20
+                }).forEach(en => {
+                    ctx.attack(pl, en, {
+                        damage: 18,
+                        knockback: 0.8,
+                        direction: 'left'
+                    });
+                });
+            }
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null,
+            },
+            hurt: {
+                onHurt: null
+            },
+            parried: {
+                onParried: null
+            },
+            blocked: {
+                onBlocked: null
+            },
+            alternationLR: {
+                onTrap: {
+                    tag: 'after',
+                    preInput: 'onUseItem',
+                    stamina: 22,
+                }
+            },
+            finishingL: {
+                onTrap: {
+                    tag: 'after',
+                    preInput: 'onAttack',
+                    stamina: 30,
+                }
+            },
+            shield: {
+                onTrap: {
+                    tag: 'after',
+                    preInput: 'onSneak',
+                    stamina: 10,
+                },
+            },
+            shieldFromBackswing: {
+                onSneak: {
+                    allowedState: 'backswing'
+                },
+            },
+            block: {
+                onBlock: null
+            },
         }
     };
     shieldCounter = {
@@ -7989,9 +8175,26 @@ const battleCamera$1 = (pl, en) => {
     }
 
     const plPos = pl.pos;
-    const enPos = en.pos;
-    const initVec = vec2(plPos.x, plPos.z, enPos.x, enPos.z);
+    let enPos = en.pos;
+    let initVec = vec2(plPos.x, plPos.z, enPos.x, enPos.z);
     const dist = initVec.m;
+
+    if (dist < 3) {
+        const dxn = initVec.dx / dist;
+        const dyn = initVec.dy / dist;
+        initVec = {
+            dx: dxn * 3,
+            dy: dyn * 3,
+            m: 3,
+        };
+
+        enPos = {
+            x: plPos.x + dxn * 3,
+            y: enPos.y,
+            z: plPos.z + dyn * 3,
+        };
+    }
+
     const manager = Status$2.get(pl.uniqueId).componentManager;
     const cameraComponentOpt = manager.getComponent(CameraComponent);
     if (cameraComponentOpt.isEmpty()) {
@@ -8206,7 +8409,7 @@ var damageModifier = /*#__PURE__*/Object.freeze({
 	get DamageModifier () { return DamageModifier$1; }
 });
 
-var HardmodeComponent_1;
+var HardmodeComponent_1, RaidomodComponent_1;
 let HardmodeComponent = class HardmodeComponent extends BaseComponent {
     static { HardmodeComponent_1 = this; }
     static damageModifier = 0.6;
@@ -8229,6 +8432,84 @@ let HardmodeComponent = class HardmodeComponent extends BaseComponent {
 HardmodeComponent = HardmodeComponent_1 = __decorate([
     PublicComponent('hardmode')
 ], HardmodeComponent);
+let RaidomodComponent = class RaidomodComponent extends BaseComponent {
+    static { RaidomodComponent_1 = this; }
+    static damageModifier = 2;
+    static create() {
+        return new RaidomodComponent_1();
+    }
+    shouldRemoveDamageModifier = false;
+    timer = Optional$1.none();
+    stage = 0;
+    async onAttach(manager) {
+        if (manager.getComponent(DamageModifier$1).isEmpty()) {
+            this.shouldRemoveDamageModifier = true;
+            manager.attachComponent(new DamageModifier$1(RaidomodComponent_1.damageModifier));
+        }
+        const [timer] = await manager.attachComponent(new Timer(100));
+        this.timer = timer;
+    }
+    // onTick(manager: ComponentManager, en: Optional<Player>): void {
+    //     const timer = this.timer.unwrap()
+    //     if (timer.rest % 19 !== 0) {
+    //         return
+    //     }
+    //     en.use(pl => {
+    //         const status = Status.get(pl.uniqueId)
+    //         if (timer.done) {
+    //             timer.reset()
+    //             this.stage++
+    //         }
+    //         const countdown = Math.floor(timer.rest / 20)
+    //         if (this.stage === 0) {
+    //             if (status.status === 'raido') {
+    //                 pl.setTitle('你输了! 不要提前按下!')
+    //                 manager.detachComponent(RaidomodComponent)
+    //                 return
+    //             }
+    //             pl.setTitle(countdown + '', 2, 1)
+    //             pl.setTitle(`准备进入居合模式 (倒计时结束按住蹲下)`, 3, 1)
+    //         }
+    //         if (this.stage === 1) {
+    //             if (countdown <= 4 && status.status !== 'raido') {
+    //                 pl.setTitle('你输了! 请及时按下居合模式按钮!')
+    //                 manager.detachComponent(RaidomodComponent)
+    //                 return
+    //             }
+    //             if (status.preInput === 'onUseItem') {
+    //                 pl.setTitle('你输了! 不要提前按下攻击按钮!')
+    //                 manager.detachComponent(RaidomodComponent)
+    //                 return
+    //             }
+    //             pl.setTitle(countdown + '', 2, 1)
+    //             pl.setTitle('准备决斗! (倒计时结束按下使用物品按键)', 3, 1)
+    //         }
+    //         if (this.stage === 3) {
+    //             manager.detachComponent(RaidomodComponent)
+    //         }
+    //     })
+    // }
+    onDetach(manager) {
+        if (this.shouldRemoveDamageModifier) {
+            manager.detachComponent(DamageModifier$1);
+        }
+    }
+};
+RaidomodComponent = RaidomodComponent_1 = __decorate([
+    PublicComponent('raidomode')
+], RaidomodComponent);
+cmd('raidomode', '居合模式', CommandPermission.Everyone).setup(register => {
+    register('<pl:player> enable', (cmd, ori, out, res) => {
+        res.pl.forEach(pl => {
+            Status$3.get(pl.uniqueId).componentManager.attachComponent(new RaidomodComponent());
+        });
+    });
+    register('<pl:player> disable', (cmd, ori, out, res) => {
+        res.pl.forEach(pl => {
+            Status$3.get(pl.uniqueId).componentManager.detachComponent(RaidomodComponent);
+        });
+    });
+});
 
 var StatusHud_1;
 let StatusHud$1 = StatusHud_1 = class StatusHud extends HudComponent {
@@ -9124,14 +9405,12 @@ function damageWithCameraFading(victim, damage, cause, abuser, projectile, damag
         z: 0.7 * victimPos.z + 0.3 * abuserPos.z,
     };
 
-    setTimeout(() => {
-        playParticle(`weapon:hit_${damageOpt.direction || 'left'}`, {
-            x: dpos.x,
-            y: abuserPos.y + 1.2,
-            z: dpos.z,
-            dimid: victimPos.dimid
-        });
-    }, 100);
+    playParticle(`weapon:hit_${damageOpt.direction || 'left'}`, {
+        x: dpos.x,
+        y: abuserPos.y + 1.2,
+        z: dpos.z,
+        dimid: victimPos.dimid
+    });
 }
 
 function knockdown(abuser, victim, knockback=2) {
@@ -9822,7 +10101,6 @@ function listenAllCustomEvents(mods) {
             return em.emitNone('block', abuser, victimPlayer, damageOpt)
         }
 
-        
         doDamage();
     });
 
@@ -9934,20 +10212,23 @@ function listenAllCustomEvents(mods) {
             prevent = () => flag = false;
 
         const victimStatus = Status.get(victim.uniqueId);
+        const victimMod = getMod(getHandedItemType(victim));
 
-        transition(
-            victim,
-            getMod(getHandedItemType(victim)),
-            victimStatus,
-            'onHurt',
-            prevent,
-            [victim, abuser, damageOpt]
-        );
-
-        if (victimStatus.hegemony && damageOpt.powerful) {
+        if (!victimStatus.hegemony) {
             transition(
                 victim,
-                getMod(getHandedItemType(victim)),
+                victimMod,
+                victimStatus,
+                'onHurt',
+                prevent,
+                [victim, abuser, damageOpt]
+            );
+        }
+
+        if (damageOpt.powerful) {
+            transition(
+                victim,
+                victimMod,
                 victimStatus,
                 'onInterrupted',
                 prevent,
