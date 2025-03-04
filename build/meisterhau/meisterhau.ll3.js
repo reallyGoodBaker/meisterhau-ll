@@ -5800,7 +5800,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
         this.animations.parry.right = 'animation.weapon.uchigatana.parry.right';
         this.setTransition('parry', 'parryCounter', {
             onTrap: {
-                tag: 'counter',
+                tag: 'parryCounter',
                 preInput: 'onUseItem',
                 stamina: 20
             }
@@ -6800,9 +6800,9 @@ class UchigatanaMoves extends DefaultMoves$4 {
             }
         },
         timeline: {
-            1: (pl, ctx) => ctx.setVelocity(pl, 90, 1),
-            3: (pl, ctx) => ctx.setVelocity(pl, 90, 1.5),
-            5: (pl, ctx) => ctx.setVelocity(pl, 90, 1),
+            1: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
+            3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
+            5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
             6: pl => playSoundAll$5(`weapon.woosh.2`, pl.pos, 1),
             7: (pl, ctx) => {
                 ctx.selectFromRange(pl, {
@@ -7338,10 +7338,10 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             });
         },
         timeline: {
-            1: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
-            3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90, 1),
+            1: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
+            3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
             11: (pl, ctx) => {
-                ctx.adsorbOrSetVelocity(pl, 2, 90, 1);
+                ctx.adsorbOrSetVelocity(pl, 2, 90);
                 playSoundAll$5('weapon.woosh.3', pl.pos);
             },
             10: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),

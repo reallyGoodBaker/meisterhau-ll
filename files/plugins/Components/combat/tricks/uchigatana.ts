@@ -15,7 +15,7 @@ class UchigatanaMoves extends DefaultMoves {
 
         this.setTransition<UchigatanaMoves>('parry', 'parryCounter', {
             onTrap: {
-                tag: 'counter',
+                tag: 'parryCounter',
                 preInput: 'onUseItem',
                 stamina: 20
             }
@@ -1047,9 +1047,9 @@ class UchigatanaMoves extends DefaultMoves {
             }
         },
         timeline: {
-            1: (pl, ctx) => ctx.setVelocity(pl, 90, 1),
-            3: (pl, ctx) => ctx.setVelocity(pl, 90, 1.5),
-            5: (pl, ctx) => ctx.setVelocity(pl, 90, 1),
+            1: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
+            3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
+            5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
             6: pl => playSoundAll(`weapon.woosh.2`, pl.pos, 1),
             7: (pl, ctx) => {
                 ctx.selectFromRange(pl, {
