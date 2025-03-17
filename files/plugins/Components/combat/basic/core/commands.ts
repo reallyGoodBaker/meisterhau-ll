@@ -1,4 +1,4 @@
-import { cmd } from "@utils/command"
+import { cmd, CommandPermission } from "@utils/command"
 import { getComponentId, getComponentCtor, getFieldEntries } from './config';
 import { Status } from "./status"
 
@@ -139,4 +139,18 @@ export function registerCommand() {
             }
         })
     })
+
+    cmd('tools', '实用工具', CommandPermission.Everyone)
+        .setup(register => {
+            register('weapons basic', (_, ori, out) => {
+                const pl = ori.player as Player
+                const ootachi = mc.newItem('weapon:ootachi', 1)
+                const shieldSword = mc.newItem('weapon:shield_with_sword', 1)
+
+                pl.giveItem(ootachi!)
+                pl.giveItem(shieldSword!)
+
+                out.success('已给予玩家大太刀, 盾剑')
+            })
+        })
 }
