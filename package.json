@@ -31,6 +31,7 @@
     "levilamina": "^2.14.1",
     "rollup-plugin-typescript-paths": "^1.5.0",
     "rollup-plugin-typescript2": "^0.36.0",
+    "shelljs": "^0.9.2",
     "tslib": "^2.6.3"
   }
 }
