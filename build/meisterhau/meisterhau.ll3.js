@@ -6647,11 +6647,10 @@ class UchigatanaMoves extends DefaultMoves$4 {
             },
         },
         timeline: {
-            1: (pl, ctx) => ctx.setVelocity(pl, -90, 0.5),
-            3: (pl, ctx) => ctx.setVelocity(pl, -90, 1),
+            1: (pl, ctx) => ctx.setVelocity(pl, -90, 1),
             4: (_, ctx) => ctx.status.isDodging = false,
             5: (pl, ctx) => ctx.setVelocity(pl, -90, 1),
-            7: (pl, ctx) => ctx.setVelocity(pl, -90, 0.5),
+            7: (pl, ctx) => ctx.setVelocity(pl, -90, 0.2),
         }
     };
     raido = {
@@ -6801,10 +6800,12 @@ class UchigatanaMoves extends DefaultMoves$4 {
         },
         timeline: {
             1: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
-            3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
-            5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
-            6: pl => playSoundAll$5(`weapon.woosh.2`, pl.pos, 1),
-            7: (pl, ctx) => {
+            7: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
+            8: (pl, ctx) => {
+                playSoundAll$5(`weapon.woosh.2`, pl.pos, 1);
+                ctx.adsorbOrSetVelocity(pl, 1, 90);
+            },
+            9: (pl, ctx) => {
                 ctx.selectFromRange(pl, {
                     radius: 2.5,
                     angle: 120,
