@@ -5,6 +5,7 @@ class Lip {
 
     #exec(command, silent=false) {
         const { stderr, stdout } = shell.exec(command, { cwd: this.cwd, silent })
+        
         if (stderr) {
             throw stderr
         }
@@ -65,6 +66,10 @@ class Lip {
             }
         }
         process.stdout.write(`Installed ${pkg}. \n`)
+    }
+
+    cleanCache() {
+        this.#exec(`lip cache clean`)
     }
 }
 

@@ -4,6 +4,8 @@ const fs = require('fs')
 
 const { setupServer } = require('./setup')
 const { copyFolder } = require('./sync')
+const { Lip } = require('./lip')
+const { lipDependencies } = require('./config')
 
 const cpFiles = () => new Promise(resolve => {
     fs.cp(
@@ -37,7 +39,17 @@ function startDevServer() {
     process.stdin.on('data', data => child.stdin.write(data))
 }
 
+function initDev() {
+    const lip = new Lip(path.join(__dirname, '../dev'))
+    lip.cleanCache()
+    console.log(lipDependencies)
+    lipDependencies.forEach(dep => lip.install(dep))
+}
+
 async function start() {
+    if (!fs.existsSync(path.resolve(__dirname, '../dev'))) {
+        initDev()
+    }
     // await setupServer()
     // await cpFiles()
     copyFolder(
@@ -47,6 +59,7 @@ async function start() {
     startDevServer()
 }
 
+
 module.exports = {
-    startDevServer, start,
+    startDevServer, start, initDev
 }
