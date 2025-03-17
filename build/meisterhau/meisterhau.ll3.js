@@ -6379,6 +6379,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
                     direction: 'vertical',
                     knockback: 1,
                     permeable: true,
+                    trace: true,
                 });
             }),
         }
@@ -6597,7 +6598,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
                     rotation: -45,
                 }).forEach(en => {
                     ctx.attack(pl, en, {
-                        damage: 30,
+                        damage: 35,
                         direction: 'middle',
                         permeable: true,
                         parryable: false,
@@ -7577,6 +7578,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
                     parryable: false,
                     permeable: true,
                     powerful: true,
+                    stiffness: 700,
                 });
             }),
             8: (pl, ctx) => ctx.trap(pl),
@@ -9086,6 +9088,17 @@ function registerCommand$1() {
                     }
                 });
             }
+        });
+    });
+    cmd('tools', '实用工具', CommandPermission.Everyone)
+        .setup(register => {
+        register('weapons basic', (_, ori, out) => {
+            const pl = ori.player;
+            const ootachi = mc.newItem('weapon:ootachi', 1);
+            const shieldSword = mc.newItem('weapon:shield_with_sword', 1);
+            pl.giveItem(ootachi);
+            pl.giveItem(shieldSword);
+            out.success('已给予玩家大太刀, 盾剑');
         });
     });
 }

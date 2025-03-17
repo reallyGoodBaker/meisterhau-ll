@@ -617,6 +617,7 @@ class UchigatanaMoves extends DefaultMoves {
                     direction: 'vertical',
                     knockback: 1,
                     permeable: true,
+                    trace: true,
                 })
             }),
         }
@@ -839,7 +840,7 @@ class UchigatanaMoves extends DefaultMoves {
                     rotation: -45,
                 }).forEach(en => {
                     ctx.attack(pl, en, {
-                        damage: 30,
+                        damage: 35,
                         direction: 'middle',
                         permeable: true,
                         parryable: false,

@@ -760,6 +760,7 @@ class DoubleBladeMoves extends DefaultMoves {
                     parryable: false,
                     permeable: true,
                     powerful: true,
+                    stiffness: 700,
                 })
             }),
             8: (pl, ctx) => ctx.trap(pl),
