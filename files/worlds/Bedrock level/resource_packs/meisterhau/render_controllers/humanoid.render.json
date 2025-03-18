@@ -91,6 +91,54 @@
                     "*Sleeve": true
                 }
             ]
+        },
+        "controller.render.guard.third_person": {
+            "arrays": {
+                "geometries": {
+                    "Array.geos": [
+                        "Geometry.steve",
+                        "Geometry.alex"
+                    ]
+                }
+            },
+            "geometry": "Array.geos[v.is_slim_arm]",
+            "materials": [
+                {
+                    "*": "material.default"
+                }
+            ],
+            "textures": [
+                "texture.default"
+            ],
+            "part_visibility": [
+                {
+                    "*": true,
+                    "weapon*": false
+                }
+            ],
+            "overlay_color": {
+                "r": "v.overlay_color.r",
+                "g": "v.overlay_color.g",
+                "b": "v.overlay_color.b",
+                "a": "v.overlay_color.a"
+            }
+        },
+        "controller.render.weapon.third_person": {
+            "geometry": "Geometry.steve",
+            "materials": [
+                {
+                    "*": "material.default"
+                }
+            ],
+            "textures": [
+                "texture.weapon"
+            ],
+            "part_visibility": [
+                {
+                    "*": false,
+                    "weapon*": true
+                }
+            ]
         }
     }
 }

@@ -166,7 +166,8 @@ class Registry {
         this._cmd.setCallback((cmd, origin, out, args) => {
             const argv = Object
                 .keys(args)
-                .filter(v => args[v]);
+                .filter(v => args[v])
+                .filter(v => !v.startsWith('enum'));
             const pairs = this._handlerCollection[argv.length];
             const [_, handler] = pairs.find(([ids]) => this.sameArr(argv, ids)) || [, Function.prototype];
             handler.call(undefined, cmd, origin, out, args);
@@ -203,7 +204,6 @@ class Registry {
             this._cmd.overload(ids);
         });
         this.setCallback();
-        this._cmd.setup();
         this._submitted = true;
     }
     isSubmitted() {
@@ -216,14 +216,29 @@ var CommandPermission;
     CommandPermission[CommandPermission["OP"] = 1] = "OP";
     CommandPermission[CommandPermission["Console"] = 2] = "Console";
 })(CommandPermission || (CommandPermission = {}));
+const serverStarted = (function () {
+    let serverRunning = false;
+    return (() => {
+        if (serverRunning) {
+            return Promise.resolve(null);
+        }
+        const { promise, resolve } = Promise.withResolvers();
+        mc.listen('onServerStarted', () => {
+            resolve(null);
+            serverRunning = true;
+        });
+        return promise;
+    });
+})();
 function cmd$6(head, desc, perm = CommandPermission.OP) {
     const command = mc.newCommand(head, desc, perm);
     const registry = new Registry(command);
     const register = (...args) => { registry.register.apply(registry, args); };
     return {
-        setup: (executor) => {
-            executor.call(undefined, register, registry);
+        setup: async (executor) => {
+            await executor.call(undefined, register, registry);
             if (!registry.isSubmitted()) {
+                await serverStarted();
                 registry.submit();
             }
         },
@@ -235,7 +250,8 @@ var command = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	get CommandPermission () { return CommandPermission; },
 	Registry: Registry,
-	cmd: cmd$6
+	cmd: cmd$6,
+	serverStarted: serverStarted
 });
 
 var require$$0 = /*@__PURE__*/getAugmentedNamespace(command);

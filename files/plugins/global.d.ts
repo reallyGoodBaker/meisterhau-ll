@@ -20,7 +20,7 @@ interface TrickModule {
     bind: string[] | string
 
     moves: {
-        [key: string]: Move
+        [key: string]: any
     }
 
     /**
@@ -487,9 +487,17 @@ interface TransitionOptMixins {
      */
     isCollide?: boolean
     /**
+     * `仅限玩家`
+     * 
      * 是否按下闪避
      */
     isDodging?: boolean
+    /**
+     * `仅限玩家`
+     * 
+     * 是否按下蹲下
+     */
+    isSneaking?: boolean
 }
 
 type ObjKeyType<Obj, Val> = { [K in keyof Obj]: Val extends Obj[K] ? K : never }[keyof Obj]

@@ -47,6 +47,7 @@ function selectFromRange(pl, range) {
         }
     })
 
+    // console.log(result)
     return result.filter(e => e.uniqueId !== pl.uniqueId)
 }
 

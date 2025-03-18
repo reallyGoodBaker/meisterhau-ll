@@ -17,7 +17,7 @@ export class Optional<T = any> {
             return this.value
         }
 
-        throw new Error('Optional is empty')
+        throw new Error(`Optional is empty\n${new Error().stack}`)
     }
 
     isEmpty(): boolean {

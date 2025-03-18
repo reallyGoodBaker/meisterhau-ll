@@ -1,8 +1,8 @@
-import { playAnim, playSoundAll } from "./index"
+import { playAnimCompatibility, playSoundAll } from "./index"
 import { CameraFading } from "@components/camera-fading"
 import { CameraComponent } from "@components/camera"
 import { Stamina } from "@components/core/stamina"
-import { ComponentManager, CustomComponent } from "@combat/basic/core/component"
+import { CustomComponent } from "@combat/basic/core/component"
 import { input } from "scripts-rpc/func/input"
 
 export function getApproximatelyDir(direction: AttackDirection) {
@@ -131,7 +131,7 @@ export class DefaultMoves {
             const { direction } = ctx.rawArgs[2]
 
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 10
-            playAnim(pl, getAnim(this.animations.blocked, direction))
+            playAnimCompatibility(pl, getAnim(this.animations.blocked, direction))
             playSoundAll(this.sounds.blocked, pl.pos, 1)
             ctx.movement(pl, false)
             ctx.freeze(pl)
@@ -155,7 +155,7 @@ export class DefaultMoves {
             stamina.setCooldown(5)
             stamina.stamina += 15
             ctx.status.isBlocking = true
-            playAnim(pl, getAnim(this.animations.block, direction))
+            playAnimCompatibility(pl, getAnim(this.animations.block, direction))
             playSoundAll(this.sounds.block, pl.pos, 1)
             ctx.movement(pl, false)
             ctx.freeze(pl)
@@ -190,7 +190,7 @@ export class DefaultMoves {
                 return
             }
 
-            playAnim(pl, hurtAnim)
+            playAnimCompatibility(pl, hurtAnim)
             ctx.task.queue(() => {
                 ctx.trap(pl, { tag: 'recover' })
             }, stiffness).run()
@@ -233,7 +233,7 @@ export class DefaultMoves {
                 'onAttack',
                 'onUseItem',
             ])
-            playAnim(pl, 'animation.general.hit_wall')
+            playAnimCompatibility(pl, 'animation.general.hit_wall')
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
@@ -255,7 +255,7 @@ export class DefaultMoves {
                 'onUseItem',
             ])
             const { direction } = ctx.rawArgs[2]
-            playAnim(pl, getAnim(this.animations.parried, direction))
+            playAnimCompatibility(pl, getAnim(this.animations.parried, direction))
             ctx.trap(pl, { tag: getApproximatelyDir(direction) })
         },
         transitions: {
@@ -317,7 +317,7 @@ export class DefaultMoves {
             ctx.movement(pl, false)
             playSoundAll(this.sounds.parry, pl.pos, 1)
             ctx.status.isWaitingParry = true
-            playAnim(pl, getAnim(this.animations.parry, direction))
+            playAnimCompatibility(pl, getAnim(this.animations.parry, direction))
             ctx.lookAtTarget(pl)
 
             ctx.status.componentManager.attachComponent(new CameraFading([
@@ -351,11 +351,11 @@ export class DefaultMoves {
                 'onAttack',
                 'onUseItem'
             ])
-            playAnim(pl, this.animations.knockdown)
+            playAnimCompatibility(pl, this.animations.knockdown)
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
-            playAnim(pl, 'animation.general.stand')
+            playAnimCompatibility(pl, 'animation.general.stand')
             ctx.status.enableInputs([
                 'onAttack',
                 'onUseItem'
@@ -466,10 +466,7 @@ export class DefaultMoves {
     }
 }
 
-/**
- * @implements {TrickModule}
- */
-export class DefaultTrickModule {
+export class DefaultTrickModule implements TrickModule {
     constructor(
         public sid: string,
         public entry: string,

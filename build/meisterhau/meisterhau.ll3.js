@@ -667,7 +667,8 @@ class Registry {
         this._cmd.setCallback((cmd, origin, out, args) => {
             const argv = Object
                 .keys(args)
-                .filter(v => args[v]);
+                .filter(v => args[v])
+                .filter(v => !v.startsWith('enum'));
             const pairs = this._handlerCollection[argv.length];
             const [_, handler] = pairs.find(([ids]) => this.sameArr(argv, ids)) || [, Function.prototype];
             handler.call(undefined, cmd, origin, out, args);
@@ -704,7 +705,6 @@ class Registry {
             this._cmd.overload(ids);
         });
         this.setCallback();
-        this._cmd.setup();
         this._submitted = true;
     }
     isSubmitted() {
@@ -717,14 +717,29 @@ var CommandPermission;
     CommandPermission[CommandPermission["OP"] = 1] = "OP";
     CommandPermission[CommandPermission["Console"] = 2] = "Console";
 })(CommandPermission || (CommandPermission = {}));
+const serverStarted = (function () {
+    let serverRunning = false;
+    return (() => {
+        if (serverRunning) {
+            return Promise.resolve(null);
+        }
+        const { promise, resolve } = Promise.withResolvers();
+        mc.listen('onServerStarted', () => {
+            resolve(null);
+            serverRunning = true;
+        });
+        return promise;
+    });
+})();
 function cmd(head, desc, perm = CommandPermission.OP) {
     const command = mc.newCommand(head, desc, perm);
     const registry = new Registry(command);
     const register = (...args) => { registry.register.apply(registry, args); };
     return {
-        setup: (executor) => {
-            executor.call(undefined, register, registry);
+        setup: async (executor) => {
+            await executor.call(undefined, register, registry);
             if (!registry.isSubmitted()) {
+                await serverStarted();
                 registry.submit();
             }
         },
@@ -736,7 +751,8 @@ var command = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	get CommandPermission () { return CommandPermission; },
 	Registry: Registry,
-	cmd: cmd
+	cmd: cmd,
+	serverStarted: serverStarted
 });
 
 var require$$1 = /*@__PURE__*/getAugmentedNamespace(command);
@@ -941,6 +957,20 @@ var double_dagger = {};
 function playAnim$6(pl, anim, nextAnim, time, stopExp, controller) {
     mc.runcmdEx(`/playanimation "${pl.name}" ` + [anim, nextAnim, time, stopExp, controller].filter(x => x).join(' '));
 }
+function playAnimCompatibility(actor, anim, nextAnim, time, stopExp, controller) {
+    if ('xuid' in actor) {
+        playAnim$6(actor, anim, nextAnim, time, stopExp, controller);
+        return;
+    }
+    playAnimEntity(actor, anim, nextAnim, time, stopExp, controller);
+}
+function entitySelector(en) {
+    const pos = en.pos;
+    return `@e[c=1,type=${en.type},x=${pos.x},y=${pos.y},z=${pos.z},r=1]`;
+}
+function playAnimEntity(en, anim, nextAnim, time, stopExp, controller) {
+    mc.runcmdEx(`/playanimation ${entitySelector(en)} ` + [anim, nextAnim, time, stopExp, controller].filter(x => x).join(' '));
+}
 function playSound(pl, sound, pos, volume, pitch, minVolume) {
     mc.runcmdEx(`/playsound ${sound} ${pl.name} ` + [
         pos.x, pos.y, pos.z, volume, pitch, minVolume
@@ -965,8 +995,11 @@ var basic = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	DEFAULT_POSTURE_SPEED: DEFAULT_POSTURE_SPEED$3,
 	DEFAULT_SPEED: DEFAULT_SPEED$2,
+	entitySelector: entitySelector,
 	movable: movable,
 	playAnim: playAnim$6,
+	playAnimCompatibility: playAnimCompatibility,
+	playAnimEntity: playAnimEntity,
 	playParticle: playParticle$1,
 	playSound: playSound,
 	playSoundAll: playSoundAll$5
@@ -1018,7 +1051,7 @@ let Optional$1 = class Optional {
         if (!this.isEmpty()) {
             return this.value;
         }
-        throw new Error('Optional is empty');
+        throw new Error(`Optional is empty\n${new Error().stack}`);
     }
     isEmpty() {
         return this.value === undefined || this.value === null;
@@ -1664,7 +1697,7 @@ var ButtonState;
     ButtonState["Pressed"] = "Pressed";
     ButtonState["Released"] = "Released";
 })(ButtonState || (ButtonState = {}));
-function eventCenter$1(opt) {
+function eventCenter(opt) {
     const em = new eventsExports.EventEmitter(opt);
     setupExports.remote.expose('input.press.jump', (name) => {
         const player = mc.getPlayer(name);
@@ -1698,6 +1731,27 @@ var input$1;
         return serverExports.inputStates.get(pl.name)?.[button] ?? false;
     }
     input.isPressing = isPressing;
+    function getOrCreate(id) {
+        let inputInfo = serverExports.inputStates.get(id);
+        if (!inputInfo) {
+            inputInfo = {
+                jump: false,
+                sneak: false,
+                x: 0,
+                y: 0,
+            };
+            serverExports.inputStates.set(id, inputInfo);
+        }
+        return inputInfo;
+    }
+    function performPress(id, button) {
+        getOrCreate(id)[button] = true;
+    }
+    input.performPress = performPress;
+    function performRelease(id, button) {
+        getOrCreate(id)[button] = false;
+    }
+    input.performRelease = performRelease;
     function movementVector(pl) {
         const inputInfo = serverExports.inputStates.get(pl.name);
         if (!inputInfo) {
@@ -1706,6 +1760,12 @@ var input$1;
         return { x: inputInfo.x, y: inputInfo.y };
     }
     input.movementVector = movementVector;
+    function performMove(id, x, y) {
+        const state = getOrCreate(id);
+        state.x = x;
+        state.y = y;
+    }
+    input.performMove = performMove;
     let Direction;
     (function (Direction) {
         Direction[Direction["Forward"] = 1] = "Forward";
@@ -1756,7 +1816,7 @@ var input$1;
 var input$2 = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	get ButtonState () { return ButtonState; },
-	eventCenter: eventCenter$1,
+	eventCenter: eventCenter,
 	get input () { return input$1; }
 });
 
@@ -1878,7 +1938,7 @@ let DefaultMoves$4 = class DefaultMoves {
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2];
             ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 10;
-            playAnim$6(pl, getAnim(this.animations.blocked, direction));
+            playAnimCompatibility(pl, getAnim(this.animations.blocked, direction));
             playSoundAll$5(this.sounds.blocked, pl.pos, 1);
             ctx.movement(pl, false);
             ctx.freeze(pl);
@@ -1901,7 +1961,7 @@ let DefaultMoves$4 = class DefaultMoves {
             stamina.setCooldown(5);
             stamina.stamina += 15;
             ctx.status.isBlocking = true;
-            playAnim$6(pl, getAnim(this.animations.block, direction));
+            playAnimCompatibility(pl, getAnim(this.animations.block, direction));
             playSoundAll$5(this.sounds.block, pl.pos, 1);
             ctx.movement(pl, false);
             ctx.freeze(pl);
@@ -1933,7 +1993,7 @@ let DefaultMoves$4 = class DefaultMoves {
                 ctx.trap(pl, { tag: 'execution', execution });
                 return;
             }
-            playAnim$6(pl, hurtAnim);
+            playAnimCompatibility(pl, hurtAnim);
             ctx.task.queue(() => {
                 ctx.trap(pl, { tag: 'recover' });
             }, stiffness).run();
@@ -1972,7 +2032,7 @@ let DefaultMoves$4 = class DefaultMoves {
                 'onAttack',
                 'onUseItem',
             ]);
-            playAnim$6(pl, 'animation.general.hit_wall');
+            playAnimCompatibility(pl, 'animation.general.hit_wall');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -1993,7 +2053,7 @@ let DefaultMoves$4 = class DefaultMoves {
                 'onUseItem',
             ]);
             const { direction } = ctx.rawArgs[2];
-            playAnim$6(pl, getAnim(this.animations.parried, direction));
+            playAnimCompatibility(pl, getAnim(this.animations.parried, direction));
             ctx.trap(pl, { tag: getApproximatelyDir(direction) });
         },
         transitions: {
@@ -2051,7 +2111,7 @@ let DefaultMoves$4 = class DefaultMoves {
             ctx.movement(pl, false);
             playSoundAll$5(this.sounds.parry, pl.pos, 1);
             ctx.status.isWaitingParry = true;
-            playAnim$6(pl, getAnim(this.animations.parry, direction));
+            playAnimCompatibility(pl, getAnim(this.animations.parry, direction));
             ctx.lookAtTarget(pl);
             ctx.status.componentManager.attachComponent(new CameraFading$1([
                 {
@@ -2083,11 +2143,11 @@ let DefaultMoves$4 = class DefaultMoves {
                 'onAttack',
                 'onUseItem'
             ]);
-            playAnim$6(pl, this.animations.knockdown);
+            playAnimCompatibility(pl, this.animations.knockdown);
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
-            playAnim$6(pl, 'animation.general.stand');
+            playAnimCompatibility(pl, 'animation.general.stand');
             ctx.status.enableInputs([
                 'onAttack',
                 'onUseItem'
@@ -2186,9 +2246,6 @@ let DefaultMoves$4 = class DefaultMoves {
         _state.transitions[transitionName] = transition;
     }
 };
-/**
- * @implements {TrickModule}
- */
 let DefaultTrickModule$4 = class DefaultTrickModule {
     sid;
     entry;
@@ -2211,10 +2268,10 @@ var _default = /*#__PURE__*/Object.freeze({
 	setVelocityByOrientation: setVelocityByOrientation
 });
 
-var require$$20 = /*@__PURE__*/getAugmentedNamespace(_default);
+var require$$19 = /*@__PURE__*/getAugmentedNamespace(_default);
 
 const { playAnim: playAnim$5, playSoundAll: playSoundAll$4 } = require$$2$2;
-const { DefaultMoves: DefaultMoves$3, DefaultTrickModule: DefaultTrickModule$3 } = require$$20;
+const { DefaultMoves: DefaultMoves$3, DefaultTrickModule: DefaultTrickModule$3 } = require$$19;
 
 class DoubleDaggerMoves extends DefaultMoves$3 {
     constructor() {
@@ -2886,7 +2943,7 @@ double_dagger.tricks = new DoubleDaggerTricks();
 var emptyHand = {};
 
 const { playAnim: playAnim$4, playSoundAll: playSoundAll$3 } = require$$2$2;
-const { DefaultMoves: DefaultMoves$2, DefaultTrickModule: DefaultTrickModule$2 } = require$$20;
+const { DefaultMoves: DefaultMoves$2, DefaultTrickModule: DefaultTrickModule$2 } = require$$19;
 
 class EmptyHandMoves extends DefaultMoves$2 {
     /**
@@ -2944,7 +3001,7 @@ var hud$2 = /*#__PURE__*/Object.freeze({
 var require$$3 = /*@__PURE__*/getAugmentedNamespace(hud$2);
 
 const { playAnim: playAnim$3, playSoundAll: playSoundAll$2 } = require$$2$2;
-const { DefaultMoves: DefaultMoves$1, DefaultTrickModule: DefaultTrickModule$1 } = require$$20;
+const { DefaultMoves: DefaultMoves$1, DefaultTrickModule: DefaultTrickModule$1 } = require$$19;
 const { constrictCalc, randomRange } = require$$2$1;
 const { hud } = require$$3;
 
@@ -3537,7 +3594,7 @@ lightSaber.tricks = new LightSaberTrick();
 var moon_glaive = {};
 
 const { playAnim: playAnim$2, playSoundAll: playSoundAll$1, DEFAULT_POSTURE_SPEED: DEFAULT_POSTURE_SPEED$2 } = require$$2$2;
-const { DefaultMoves, DefaultTrickModule } = require$$20;
+const { DefaultMoves, DefaultTrickModule } = require$$19;
 
 class MoonGlaiveTricks extends DefaultTrickModule {
     constructor() {
@@ -5120,11 +5177,11 @@ class OotachiTricks extends DefaultTrickModule$4 {
         super('rgb39.weapon.ootachi', 'idle', ['weapon:ootachi', 'weapon:ootachi_akaoni', 'weapon:ootachi_dragon'], new OotachiMoves());
     }
 }
-const tricks$4 = new OotachiTricks();
+const tricks$5 = new OotachiTricks();
 
 var ootachi = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$4
+	tricks: tricks$5
 });
 
 var require$$4 = /*@__PURE__*/getAugmentedNamespace(ootachi);
@@ -5791,11 +5848,11 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         }
     };
 }
-const tricks$3 = new ShieldSwordTricks();
+const tricks$4 = new ShieldSwordTricks();
 
 var shield_with_sword = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$3
+	tricks: tricks$4
 });
 
 var require$$6$1 = /*@__PURE__*/getAugmentedNamespace(shield_with_sword);
@@ -6844,11 +6901,11 @@ class UchigatanaModule extends DefaultTrickModule$4 {
         ], new UchigatanaMoves());
     }
 }
-const tricks$2 = new UchigatanaModule();
+const tricks$3 = new UchigatanaModule();
 
 var uchigatana = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$2
+	tricks: tricks$3
 });
 
 var require$$7$1 = /*@__PURE__*/getAugmentedNamespace(uchigatana);
@@ -7789,11 +7846,11 @@ class DoubleBlade extends DefaultTrickModule$4 {
         ], new DoubleBladeMoves());
     }
 }
-const tricks$1 = new DoubleBlade();
+const tricks$2 = new DoubleBlade();
 
 var double_blade = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$1
+	tricks: tricks$2
 });
 
 var require$$8$1 = /*@__PURE__*/getAugmentedNamespace(double_blade);
@@ -7910,11 +7967,11 @@ class StaffModule extends DefaultTrickModule$4 {
         super('rgb:staff', 'idle', ['weapon:staff'], new StaffMoves());
     }
 }
-const tricks = new StaffModule();
+const tricks$1 = new StaffModule();
 
 var staff = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks
+	tricks: tricks$1
 });
 
 var require$$9 = /*@__PURE__*/getAugmentedNamespace(staff);
@@ -8105,6 +8162,7 @@ function selectFromRange$2(pl, range) {
         }
     });
 
+    // console.log(result)
     return result.filter(e => e.uniqueId !== pl.uniqueId)
 }
 
@@ -8915,82 +8973,11 @@ var task = {
     Task: Task$1
 };
 
-requireEvents();
+var require$$11 = /*@__PURE__*/getAugmentedNamespace(tick);
 
-let EventInputStream$1 = class EventInputStream {
-    static #ends = new Map()
-    /**@type {(em: EventEmitter) => EventInputStream}*/
-    static get(end) {
-        return this.#ends.get(end) || new EventInputStream(end)
-    }
+var require$$12 = /*@__PURE__*/getAugmentedNamespace(cameraFading);
 
-    #filters = new Set()
-    /**@type {EventEmitter}*/
-    #end = null
-
-    constructor(end) {
-        this.setEnd(end);
-    }
-
-    /**
-     * @param {(val: {type: string; args: any[]}) => boolean} filter 
-     */
-    addFilter(filter) {
-        this.#filters.add(filter);
-    }
-
-    /**
-     * @param {(val: {type: string; args: any[]}) => boolean} filter 
-     */
-    removeFilter(filter) {
-        this.#filters.delete(filter);
-    }
-
-    /**
-     * @param {{type: string; args: any[]}} input 
-     */
-    #filter(input) {
-        let nextVal = input;
-        for (const filter of this.#filters) {
-            try {
-                if ((nextVal = filter.call(null, nextVal)) === false) {
-                    return false
-                }
-            } catch (_) {
-                return false
-            }
-        }
-
-        return true
-    }
-
-    setEnd(end) {
-        this.#end = end;
-        EventInputStream.#ends.set(end, this);
-    }
-
-    put(type, args) {
-        if (!this.#filter({ type, args })) {
-            return
-        }
-
-        if (!this.#end) {
-            return
-        }
-
-        this.#end.emitNone(type, ...args);
-    }
-};
-
-var eventStream = {
-    EventInputStream: EventInputStream$1
-};
-
-var require$$12 = /*@__PURE__*/getAugmentedNamespace(tick);
-
-var require$$13 = /*@__PURE__*/getAugmentedNamespace(cameraFading);
-
-var require$$14 = /*@__PURE__*/getAugmentedNamespace(damageModifier);
+var require$$13 = /*@__PURE__*/getAugmentedNamespace(damageModifier);
 
 function registerCommand$1() {
     cmd('components', '管理组件', 1).setup(register => {
@@ -9125,7 +9112,7 @@ var commands = /*#__PURE__*/Object.freeze({
 	registerCommand: registerCommand$1
 });
 
-var require$$15 = /*@__PURE__*/getAugmentedNamespace(commands);
+var require$$14 = /*@__PURE__*/getAugmentedNamespace(commands);
 
 class Scheduler extends BaseComponent {
     period;
@@ -9381,13 +9368,468 @@ var antiTreeshaking$2 = /*#__PURE__*/Object.freeze({
 	antiTreeshaking: antiTreeshaking$1
 });
 
-var require$$16 = /*@__PURE__*/getAugmentedNamespace(antiTreeshaking$2);
+var require$$15 = /*@__PURE__*/getAugmentedNamespace(antiTreeshaking$2);
 
-var require$$17 = /*@__PURE__*/getAugmentedNamespace(stamina);
+var require$$16 = /*@__PURE__*/getAugmentedNamespace(stamina);
 
-var require$$18 = /*@__PURE__*/getAugmentedNamespace(input$2);
+var require$$17 = /*@__PURE__*/getAugmentedNamespace(input$2);
 
-var require$$19 = /*@__PURE__*/getAugmentedNamespace(team);
+var require$$18 = /*@__PURE__*/getAugmentedNamespace(team);
+
+requireEvents();
+
+class EventInputStream {
+    static #ends = new Map()
+    /**@type {(em: EventEmitter) => EventInputStream}*/
+    static get(end) {
+        return this.#ends.get(end) || new EventInputStream(end)
+    }
+
+    #filters = new Set()
+    /**@type {EventEmitter}*/
+    #end = null
+
+    constructor(end) {
+        this.setEnd(end);
+    }
+
+    /**
+     * @param {(val: {type: string; args: any[]}) => boolean} filter 
+     */
+    addFilter(filter) {
+        this.#filters.add(filter);
+    }
+
+    /**
+     * @param {(val: {type: string; args: any[]}) => boolean} filter 
+     */
+    removeFilter(filter) {
+        this.#filters.delete(filter);
+    }
+
+    /**
+     * @param {{type: string; args: any[]}} input 
+     */
+    #filter(input) {
+        let nextVal = input;
+        for (const filter of this.#filters) {
+            try {
+                if ((nextVal = filter.call(null, nextVal)) === false) {
+                    return false
+                }
+            } catch (_) {
+                return false
+            }
+        }
+
+        return true
+    }
+
+    setEnd(end) {
+        this.#end = end;
+        EventInputStream.#ends.set(end, this);
+    }
+
+    put(type, args) {
+        if (!this.#filter({ type, args })) {
+            return
+        }
+
+        if (!this.#end) {
+            return
+        }
+
+        this.#end.emitNone(type, ...args);
+    }
+}
+
+var eventStream = {
+    EventInputStream
+};
+
+const em$1 = eventCenter({ enableWatcher: true });
+const es$1 = eventStream.EventInputStream.get(em$1);
+
+var event = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	em: em$1,
+	es: es$1
+});
+
+var require$$20 = /*@__PURE__*/getAugmentedNamespace(event);
+
+class InputSimulator {
+    simulate(input, actor, ...extraArgs) {
+        extraArgs.unshift(actor);
+        es$1.put(input, [actor, Function.prototype, extraArgs]);
+    }
+    jump(actor) {
+        this.simulate('onJump', actor);
+    }
+    sneak(actor, isSneaking = true) {
+        this.simulate('onSneak', actor, isSneaking);
+    }
+    releaseSneak(actor, isSneaking = false) {
+        this.simulate('onReleaseSneak', actor, isSneaking);
+    }
+    useItem(actor, item) {
+        this.simulate('onUseItem', actor, item);
+    }
+    changeSprinting(actor, isSprinting = true) {
+        this.simulate('onChangeSprinting', actor, isSprinting);
+    }
+    attack(actor) {
+        this.simulate('onAttack', actor);
+    }
+    feint(actor) {
+        this.simulate('onFeint', actor);
+    }
+    dodge(actor) {
+        this.simulate('onDodge', actor);
+    }
+}
+
+var MeisterhauFSMState;
+(function (MeisterhauFSMState) {
+    MeisterhauFSMState[MeisterhauFSMState["UNINIT"] = 0] = "UNINIT";
+    MeisterhauFSMState[MeisterhauFSMState["RUNNING"] = 1] = "RUNNING";
+    MeisterhauFSMState[MeisterhauFSMState["PAUSED"] = 2] = "PAUSED";
+    MeisterhauFSMState[MeisterhauFSMState["STOPPED"] = 3] = "STOPPED";
+})(MeisterhauFSMState || (MeisterhauFSMState = {}));
+class MeisterhauAI {
+    actor;
+    inputSimulator = new InputSimulator();
+    status;
+    uniqueId;
+    constructor(actor) {
+        this.actor = actor;
+        this.status = Status$3.get(this.actor.uniqueId);
+        this.uniqueId = this.actor.uniqueId;
+    }
+    define = Function.prototype;
+    _fsm;
+    async initialize() {
+        this._fsm = this.define?.();
+    }
+    async wait(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    async tick() {
+        if (this._fsm) {
+            const { value } = await this._fsm.next();
+            if (value) {
+                await value(this);
+            }
+        }
+    }
+    async jump(timeout = 300) {
+        input$1.performPress(this.uniqueId, 'jump');
+        this.inputSimulator.jump(this.actor);
+        await this.wait(timeout);
+        input$1.performRelease(this.uniqueId, 'jump');
+    }
+    sneak() {
+        input$1.performPress(this.uniqueId, 'sneak');
+        this.inputSimulator.sneak(this.actor);
+    }
+    releaseSneak() {
+        input$1.performRelease(this.uniqueId, 'sneak');
+        this.inputSimulator.releaseSneak(this.actor);
+    }
+    useItem(item) {
+        this.inputSimulator.useItem(this.actor, item);
+    }
+    changeSprinting(isSprinting = true) {
+        this.inputSimulator.changeSprinting(this.actor, isSprinting);
+    }
+    attack() {
+        this.inputSimulator.attack(this.actor);
+    }
+    feint() {
+        this.inputSimulator.feint(this.actor);
+    }
+    dodge() {
+        this.inputSimulator.dodge(this.actor);
+    }
+}
+const ais = {};
+const aiRunning = new Map();
+var ai$2;
+(function (ai_1) {
+    function register(type, ai, tricks) {
+        ais[type] = [ai, tricks];
+    }
+    ai_1.register = register;
+    function getRegistration(type) {
+        return ais[type];
+    }
+    ai_1.getRegistration = getRegistration;
+    function getAI(en) {
+        return aiRunning.get(en.uniqueId);
+    }
+    ai_1.getAI = getAI;
+    function isRegistered(en) {
+        return en.type in ais;
+    }
+    ai_1.isRegistered = isRegistered;
+})(ai$2 || (ai$2 = {}));
+function setupAIEntity(en) {
+    if (!en || !ais[en.type] || aiRunning.has(en.uniqueId)) {
+        return;
+    }
+    const [ctor] = ais[en.type];
+    if (ctor) {
+        const ai = Reflect.construct(ctor, [en]);
+        ai.initialize();
+        ai.run();
+        aiRunning.set(en.uniqueId, ai);
+    }
+}
+async function listenEntitiyWithAi$1() {
+    await serverStarted();
+    setInterval(() => {
+        mc.getAllEntities().forEach(setupAIEntity);
+    }, 10000);
+}
+
+var core$1 = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	MeisterhauAI: MeisterhauAI,
+	get MeisterhauFSMState () { return MeisterhauFSMState; },
+	get ai () { return ai$2; },
+	listenEntitiyWithAi: listenEntitiyWithAi$1
+});
+
+var require$$21 = /*@__PURE__*/getAugmentedNamespace(core$1);
+
+class OrnateTwoHanderMoves extends DefaultMoves$4 {
+    constructor() {
+        super();
+        this.setup('idle');
+    }
+    idle = {
+        cast: Infinity,
+        onTick(pl, ctx) {
+            mc.runcmdEx(`execute as ${entitySelector(pl)} at @s run tp ~~~ facing @p`);
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            left: {
+                onAttack: null
+            },
+            top: {
+                onSneak: null
+            },
+            right: {
+                onUseItem: null
+            }
+        }
+    };
+    left = {
+        cast: 27,
+        onEnter(pl, ctx) {
+            playAnimEntity(pl, 'animation.weapon.ai.guard.attack.left');
+        },
+        timeline: {
+            2: (pl, ctx) => {
+                ctx.setVelocity(pl, 90, 0.5, 0);
+            },
+            5: (pl, ctx) => {
+                ctx.setVelocity(pl, 90, 1, 0);
+            },
+            10: (pl, ctx) => {
+                ctx.setVelocity(pl, 90, 1, 0);
+            },
+            14: (pl, ctx) => {
+                ctx.selectFromRange(pl, {
+                    angle: 120,
+                    radius: 3,
+                    rotation: -60
+                }).forEach(e => {
+                    ctx.attack(pl, e, {
+                        damage: 20,
+                        direction: 'left',
+                    });
+                });
+            }
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            idle: {
+                onEndOfLife: null
+            },
+            parried: {
+                onParried: null
+            }
+        }
+    };
+    top = {
+        cast: 27,
+        onEnter(pl, ctx) {
+            playAnimEntity(pl, 'animation.weapon.ai.guard.attack.top');
+        },
+        timeline: {
+            2: (pl, ctx) => {
+                ctx.setVelocity(pl, 90, 0.5, 0);
+            },
+            5: (pl, ctx) => {
+                ctx.setVelocity(pl, 90, 1, 0);
+            },
+            10: (pl, ctx) => {
+                ctx.setVelocity(pl, 90, 1, 0);
+            },
+            14: (pl, ctx) => {
+                ctx.selectFromRange(pl, {
+                    angle: 60,
+                    radius: 3.3,
+                    rotation: -30
+                }).forEach(e => {
+                    ctx.attack(pl, e, {
+                        damage: 20,
+                        direction: 'vertical',
+                    });
+                });
+            }
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            idle: {
+                onEndOfLife: null
+            },
+            parried: {
+                onParried: null
+            }
+        }
+    };
+    right = {
+        cast: 27,
+        onEnter(pl, ctx) {
+            playAnimEntity(pl, 'animation.weapon.ai.guard.attack.right');
+        },
+        timeline: {
+            2: (pl, ctx) => {
+                ctx.setVelocity(pl, 90, 0.5, 0);
+            },
+            5: (pl, ctx) => {
+                ctx.setVelocity(pl, 90, 1, 0);
+            },
+            10: (pl, ctx) => {
+                ctx.setVelocity(pl, 90, 1, 0);
+            },
+            14: (pl, ctx) => {
+                ctx.selectFromRange(pl, {
+                    angle: 120,
+                    radius: 3,
+                    rotation: -60
+                }).forEach(e => {
+                    ctx.attack(pl, e, {
+                        damage: 20,
+                        direction: 'right',
+                    });
+                });
+            }
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            idle: {
+                onEndOfLife: null
+            },
+            parried: {
+                onParried: null
+            }
+        }
+    };
+}
+class OrnateTwoHander extends DefaultTrickModule$4 {
+    constructor() {
+        super('rgb:ai/ornate_two_hander', 'idle', ['crossover:ornate_two_hander'], new OrnateTwoHanderMoves());
+    }
+}
+const tricks = new OrnateTwoHander();
+
+class Guard extends MeisterhauAI {
+    define = () => {
+        const self = this;
+        async function* moves() {
+            while (true) {
+                yield () => self.attack();
+                await self.wait(1000);
+                yield () => self.useItem();
+                await self.wait(1000);
+                yield () => self.sneak();
+                await self.wait(1000);
+            }
+        }
+        return moves();
+    };
+    async run() {
+        core.initCombatComponent(this.actor, tricks, this.status);
+        while (true) {
+            await this.tick();
+        }
+    }
+}
+ai$2.register('meisterhau:guard', Guard, tricks);
+
+function setupAiCommands$1() {
+    cmd('ai', '控制ai行为', CommandPermission.OP)
+        .setup(register => {
+        register('<en:entity> transition <event_name:string>', (_, ori, out, args) => {
+            const { en, event_name } = args;
+            for (const e of en) {
+                const registration = ai$2.getRegistration(e.type);
+                if (!registration)
+                    continue;
+                core.transition(e, registration[1], Status$3.get(e.uniqueId), event_name, Function.prototype, [e]);
+            }
+        });
+        register('<en:entity> perform attack', (_, ori, out, args) => {
+            const { en } = args;
+            for (const e of en) {
+                ai$2.getAI(e)?.attack();
+            }
+        });
+        register('<en:entity> perform useItem', (_, ori, out, args) => {
+            const { en } = args;
+            for (const e of en) {
+                ai$2.getAI(e)?.useItem();
+            }
+        });
+        register('<en:entity> perform sneak', (_, ori, out, args) => {
+            const { en } = args;
+            for (const e of en) {
+                ai$2.getAI(e)?.sneak();
+            }
+        });
+        register('<en:entity> perform release_sneak', (_, ori, out, args) => {
+            const { en } = args;
+            for (const e of en) {
+                ai$2.getAI(e)?.releaseSneak();
+            }
+        });
+        register('<en:entity> perform dodge', (_, ori, out, args) => {
+            const { en } = args;
+            for (const e of en) {
+                ai$2.getAI(e)?.dodge();
+            }
+        });
+    });
+}
+
+var ai$1 = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	setupAiCommands: setupAiCommands$1
+});
+
+var require$$22 = /*@__PURE__*/getAugmentedNamespace(ai$1);
 
 const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = kinematics$1;
 const { combat: { damage: _damage, _damageLL } } = func;
@@ -9396,25 +9838,24 @@ const { movement, camera, movementInput } = generic;
 const { selectFromRange } = range;
 const { Status, defaultAcceptableInputs } = require$$5;
 const { Task } = task;
-const { EventInputStream } = eventStream;
 const {
     lookAt, lookAtTarget, distanceToTarget, adsorbToTarget, adsorbTo,
     onTick, toggleLock, hasLock, releaseTarget, adsorbOrSetVelocity
 } = lock;
 const { setVelocity, isCollide } = kinematic;
 const { clearCamera } = camera_1;
-const { Tick } = require$$12;
-const { CameraFading } = require$$13;
-const { DamageModifier } = require$$14;
-const { registerCommand } = require$$15;
-const { antiTreeshaking } = require$$16;
-const { Stamina } = require$$17;
-const { eventCenter, input } = require$$18;
-const { Team } = require$$19;
-const { IncomingAttack } = require$$20;
-
-const em = eventCenter({ enableWatcher: true });
-const es = EventInputStream.get(em);
+const { Tick } = require$$11;
+const { CameraFading } = require$$12;
+const { DamageModifier } = require$$13;
+const { registerCommand } = require$$14;
+const { antiTreeshaking } = require$$15;
+const { Stamina } = require$$16;
+const { input } = require$$17;
+const { Team } = require$$18;
+const { IncomingAttack } = require$$19;
+const { em, es } = require$$20;
+const { listenEntitiyWithAi, ai } = require$$21;
+const { setupAiCommands } = require$$22;
 
 const yawToVec2 = yaw => {
     const rad = yaw * Math.PI / 180.0;
@@ -9424,8 +9865,14 @@ const yawToVec2 = yaw => {
     }
 };
 
+function isEntity(actor) {
+    return Boolean(actor?.type)
+}
+
 function damageWithCameraFading(victim, damage, cause, abuser, projectile, damageOpt) {
-    CameraFading.fadeFromAttackDirection(abuser, damageOpt);
+    if (!isEntity(abuser)) {
+        CameraFading.fadeFromAttackDirection(abuser, damageOpt);
+    }
     // _damage(victim, damage, cause, abuser, projectile)
     _damageLL(victim, damage);
 
@@ -9708,7 +10155,7 @@ function initCombatComponent(pl, bind, status) {
     status.duration = 0;
 
     if (move.onEnter) {
-        move.onEnter(pl, _ctx(pl));
+        move?.onEnter?.(pl, _ctx(pl));
     }
 }
 
@@ -9896,6 +10343,14 @@ function listenAllCustomEvents(mods) {
         return mods.get(hand) ?? mods.get('*')
     }
 
+    function getModCompatibility(actor) {
+        if (!isEntity(actor)) {
+            return getMod(getHandedItemType(actor))
+        }
+
+        return ai.getRegistration(actor.type)[1]
+    }
+
     em.on('onTick', onTick(em));
     em.on('onTick', () => {
         for (const [uniqueId, status] of Status.status.entries()) {
@@ -9950,8 +10405,12 @@ function listenAllCustomEvents(mods) {
                 continue
             }
 
-            const pl = mc.getPlayer(uniqueId);
-            const bind = getMod(status.hand);
+            let pl = mc.getPlayer(uniqueId);
+            let bind = getMod(status.hand);
+            if (!pl) {
+                pl = mc.getEntity(+uniqueId);
+                bind = ai.getRegistration(pl.type)[1];
+            }
 
             if (!pl ||!bind) {
                 return
@@ -9967,19 +10426,19 @@ function listenAllCustomEvents(mods) {
 
             const _context = _ctx(pl);
 
+            if (currentMove.timeline) {
+                const handler = currentMove.timeline[duration];
+                if (handler?.call) {
+                    handler.call(null, pl, _context);
+                }
+            }
+
             if (currentMove.onTick) {
                 currentMove.onTick(
                     pl,
                     _context,
                     duration/((currentMove.cast || 0) + (currentMove.backswing || 0))
                 );
-            }
-
-            if (currentMove.timeline) {
-                const handler = currentMove.timeline[duration];
-                if (handler?.call) {
-                    handler.call(null, pl, _context);
-                }
             }
 
             status.componentManager.handleTicks(pl);
@@ -10032,10 +10491,10 @@ function listenAllCustomEvents(mods) {
         const victimIsEntity = !victim.xuid;
         const abuserStatus = Status.get(abuser.uniqueId);
 
-        if (victimIsEntity) {
+        if (victimIsEntity && !ai.isRegistered(victim)) {
             transition(
                 abuser,
-                getMod(getHandedItemType(abuser)),
+                getModCompatibility(abuser),
                 abuserStatus,
                 'onHit',
                 Function.prototype,
@@ -10052,8 +10511,7 @@ function listenAllCustomEvents(mods) {
             )
         }
 
-        const victimPlayer = victimIsEntity ? victim.toPlayer() : victim;
-        const victimStatus = Status.get(victimPlayer.uniqueId);
+        const victimStatus = Status.get(victim.uniqueId);
 
         const _knockback = (h, repulsible) => {
             if (powerful || repulsible) {
@@ -10063,7 +10521,7 @@ function listenAllCustomEvents(mods) {
                 return
             }
 
-            if (victimPlayer.gameMode === 1) {
+            if (!victimIsEntity && victim?.toPlayer?.()?.gameMode === 1) {
                 return
             }
 
@@ -10078,7 +10536,7 @@ function listenAllCustomEvents(mods) {
                 .orElse(DamageModifier.defaultModifierOpt).modifier;
             const actualDamage = damage * modifier;
 
-            em.emitNone('hurt', abuser, victimPlayer, {
+            em.emitNone('hurt', abuser, victim, {
                 ...damageOpt,
                 damage: actualDamage, 
                 damageType: 'override',
@@ -10100,7 +10558,7 @@ function listenAllCustomEvents(mods) {
         if (victimStatus.isInvulnerable) {
             transition(
                 victim,
-                getMod(getHandedItemType(victim)),
+                getModCompatibility(victim),
                 victimStatus,
                 'onNotHurt',
                 Function.prototype,
@@ -10116,20 +10574,20 @@ function listenAllCustomEvents(mods) {
         }
 
         if (victimStatus.isWaitingDeflection && !permeable && !powerful) {
-            return em.emitNone('deflect', abuser, victimPlayer, damageOpt)
+            return em.emitNone('deflect', abuser, victim, damageOpt)
         }
 
         if (victimStatus.isDodging && !trace) {
-            return em.emitNone('dodge', abuser, victimPlayer, damageOpt)
+            return em.emitNone('dodge', abuser, victim, damageOpt)
         }
 
         if (victimStatus.isWaitingParry && parryable) {
-            return em.emitNone('parried', abuser, victimPlayer, damageOpt)
+            return em.emitNone('parried', abuser, victim, damageOpt)
         }
 
         if (victimStatus.isBlocking && !permeable) {
             _knockback(_k * 0.4, victimStatus.repulsible);
-            return em.emitNone('block', abuser, victimPlayer, damageOpt)
+            return em.emitNone('block', abuser, victim, damageOpt)
         }
 
         doDamage();
@@ -10139,7 +10597,7 @@ function listenAllCustomEvents(mods) {
         const aStatus = Status.get(abuser.uniqueId);
         transition(
             abuser,
-            getMod(aStatus.hand),
+            getModCompatibility(abuser),
             aStatus,
             'onMissAttack',
             Function.prototype,
@@ -10149,7 +10607,7 @@ function listenAllCustomEvents(mods) {
         const vStatus = Status.get(victim.uniqueId);
         transition(
             victim,
-            getMod(vStatus.hand),
+            getModCompatibility(victim),
             vStatus,
             'onDeflection',
             Function.prototype,
@@ -10161,7 +10619,7 @@ function listenAllCustomEvents(mods) {
         const aStatus = Status.get(abuser.uniqueId);
         transition(
             abuser,
-            getMod(aStatus.hand),
+            getModCompatibility(abuser),
             aStatus,
             'onMissAttack',
             Function.prototype,
@@ -10171,7 +10629,7 @@ function listenAllCustomEvents(mods) {
         const vStatus = Status.get(victim.uniqueId);
         transition(
             victim,
-            getMod(vStatus.hand),
+            getModCompatibility(victim),
             vStatus,
             'onDodge',
             Function.prototype,
@@ -10183,7 +10641,7 @@ function listenAllCustomEvents(mods) {
         const aStatus = Status.get(abuser.uniqueId);
         transition(
             abuser,
-            getMod(aStatus.hand),
+            getModCompatibility(abuser),
             aStatus,
             'onParried',
             Function.prototype,
@@ -10193,7 +10651,7 @@ function listenAllCustomEvents(mods) {
         const vStatus = Status.get(victim.uniqueId);
         transition(
             victim,
-            getMod(vStatus.hand),
+            getModCompatibility(victim),
             vStatus,
             'onParry',
             Function.prototype,
@@ -10204,7 +10662,7 @@ function listenAllCustomEvents(mods) {
     em.on('block', (abuser, victim, damageOpt) => {
         transition(
             abuser,
-            getMod(getHandedItemType(abuser)),
+            getModCompatibility(abuser),
             Status.get(abuser.uniqueId),
             'onBlocked',
             Function.prototype,
@@ -10213,7 +10671,7 @@ function listenAllCustomEvents(mods) {
 
         transition(
             victim,
-            getMod(getHandedItemType(victim)),
+            getModCompatibility(victim),
             Status.get(victim.uniqueId),
             'onBlock',
             Function.prototype,
@@ -10232,7 +10690,7 @@ function listenAllCustomEvents(mods) {
 
         transition(
             abuser,
-            getMod(getHandedItemType(abuser)),
+            getModCompatibility(abuser),
             Status.get(abuser.uniqueId),
             'onHit',
             Function.prototype,
@@ -10243,7 +10701,7 @@ function listenAllCustomEvents(mods) {
             prevent = () => flag = false;
 
         const victimStatus = Status.get(victim.uniqueId);
-        const victimMod = getMod(getHandedItemType(victim));
+        const victimMod = getModCompatibility(victim);
 
         if (!victimStatus.hegemony) {
             transition(
@@ -10275,7 +10733,7 @@ function listenAllCustomEvents(mods) {
     em.on('onHurtByEntity', (victim, abuser, damageOpt, prevent) => {
         transition(
             victim,
-            getMod(getHandedItemType(victim)),
+            getModCompatibility(victim),
             Status.get(victim.uniqueId),
             'onHurtByMob',
             prevent,
@@ -10307,8 +10765,9 @@ function listenAllCustomEvents(mods) {
         }
     });
 
+    // TODO
     em.on('onReleaseLock', (pl, hand) => {
-        const bind = getMod(hand);
+        const bind = getModCompatibility(pl);
         const status = Status.get(pl.uniqueId);
 
         if (!bind || !status) {
@@ -10319,7 +10778,7 @@ function listenAllCustomEvents(mods) {
     });
 
     em.on('onLock', (pl, hand, target) => {
-        const bind = getMod(hand);
+        const bind = getModCompatibility(pl);
         const status = Status.get(pl.uniqueId);
 
         if (!bind || !status) {
@@ -10330,7 +10789,7 @@ function listenAllCustomEvents(mods) {
     });
 
     em.on('onFeint', (pl, hand, prevent) => {
-        const bind = getMod(hand);
+        const bind = getModCompatibility(pl);
         const status = Status.get(pl.uniqueId);
 
         if (!bind || !status) {
@@ -10342,7 +10801,7 @@ function listenAllCustomEvents(mods) {
 
     em.on('trap', (pl, data) => {
         const status = Status.get(pl.uniqueId);
-        const bind = getMod(status.hand);
+        const bind = getModCompatibility(pl);
 
         if (!bind || !status) {
             return
@@ -10357,6 +10816,14 @@ function listenAllMcEvents(collection) {
 
     function getMod(hand) {
         return mods.get(hand) ?? mods.get('*')
+    }
+
+    function getModCompatibility(actor) {
+        if (!isEntity(actor)) {
+            return getMod(getHandedItemType(actor))
+        }
+
+        return ai.getRegistration(actor.type)[1]
     }
 
     collection.forEach(mod => {
@@ -10389,28 +10856,27 @@ function listenAllMcEvents(collection) {
 
     const acceptableStreamHandler = n =>
         (pl, prevent, args) => {
-            const status = watchMainhandChange(pl);
+            if (!isEntity(pl)) {
+                const status = watchMainhandChange(pl);
         
-            if (!mods.has(status.hand)) {
+                if (!mods.has(status.hand)) {
+                    return
+                }
+
+                transition(pl, getMod(status.hand), status, n, prevent, args);
                 return
             }
 
-            transition(pl, getMod(status.hand), status, n, prevent, args);
+            const status = Status.get(pl.uniqueId);
+            const mod = ai.getRegistration(pl.type)[1];
+
+            if (!mod) {
+                return
+            }
+
+            transition(pl, mod, status, n, prevent, args);
         };
 
-    // playerEvents.forEach(n => {
-    //     mc.listen(n, (...args) => {
-    //         let cancelEvent = false,
-    //         prevent = () => cancelEvent = true
-            
-    //         let pl = args[0]
-    //         es.put(n, [pl, prevent, args])
-
-    //         return !cancelEvent
-    //     })
-
-    //     em.on(n, acceptableStreamHandler(n))
-    // })
     em.on('input.sneak', (pl, isSneaking) => {
         es.put(isSneaking ? 'onSneak' : 'onReleaseSneak', [pl, Function.prototype, [ pl, isSneaking ]]);
     });
@@ -10445,7 +10911,7 @@ function listenAllMcEvents(collection) {
         const pl = args[0];
         if (hasLock(pl)) {
             if (toggleLock(pl.uniqueId) === null) {
-                const mod = getMod(getHandedItemType(pl));
+                const mod = getModCompatibility(pl);
                 const status = Status.get(pl.uniqueId);
 
                 clearCamera(pl);
@@ -10589,7 +11055,7 @@ function listenAllMcEvents(collection) {
         setTimeout(() => {
             unfreeze(pl);
             clearCamera(pl);
-            initCombatComponent(pl, getMod(getHandedItemType(pl)), Status.get(pl.uniqueId));
+            initCombatComponent(pl, getModCompatibility(pl), Status.get(pl.uniqueId));
         }, 300);
     });
 
@@ -10599,12 +11065,14 @@ function listenAllMcEvents(collection) {
 
     mc.listen('onPlayerDie', pl => {
         releaseTarget(pl.uniqueId);
-        mc.runcmdEx(`/inputpermission set ${pl.name} jump enabled`);
-        mc.runcmdEx(`/inputpermission set ${pl.name} sneak enabled`);
+        mc.runcmdEx(`/inputpermission set "${pl.name}" jump enabled`);
+        mc.runcmdEx(`/inputpermission set "${pl.name}" sneak enabled`);
     });
 
     listenAllCustomEvents(mods);
     registerCommand();
+    listenEntitiyWithAi();
+    setupAiCommands();
 }
 
 function getHandedItemType(pl) {
@@ -10614,7 +11082,8 @@ function getHandedItemType(pl) {
 antiTreeshaking();
 
 var core = {
-    emitter: em, listenAllMcEvents, 
+    emitter: em, listenAllMcEvents,
+    initCombatComponent, transition,
 };
 
 async function loadAll() {

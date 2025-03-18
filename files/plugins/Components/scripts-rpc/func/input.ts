@@ -54,6 +54,28 @@ export namespace input {
         return inputStates.get(pl.name)?.[button] ?? false
     }
 
+    function getOrCreate(id: string) {
+        let inputInfo = inputStates.get(id)
+        if (!inputInfo) {
+            inputInfo = {
+                jump: false,
+                sneak: false,
+                x: 0,
+                y: 0,
+            }
+            inputStates.set(id, inputInfo)
+        }
+        return inputInfo
+    }
+
+    export function performPress(id: string, button: 'jump' |'sneak') {
+        getOrCreate(id)[button] = true
+    }
+
+    export function performRelease(id: string, button: 'jump' |'sneak') {
+        getOrCreate(id)[button] = false
+    }
+
     export function movementVector(pl: Player) {
         const inputInfo = inputStates.get(pl.name)
         if (!inputInfo) {
@@ -61,6 +83,12 @@ export namespace input {
         }
 
         return { x: inputInfo.x, y: inputInfo.y }
+    }
+
+    export function performMove(id: string, x: number, y: number) {
+        const state = getOrCreate(id)
+        state.x = x
+        state.y = y
     }
 
     export enum Direction {

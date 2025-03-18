@@ -147,6 +147,7 @@ export class Registry {
             const argv = Object
                 .keys(args)
                 .filter(v => args[v])
+                .filter(v => !v.startsWith('enum'))
 
             const pairs = this._handlerCollection[argv.length]
             const [_, handler] = pairs.find(([ids]) => this.sameArr(argv, ids)) || [, Function.prototype]
@@ -199,7 +200,6 @@ export class Registry {
         })
 
         this.setCallback()
-        this._cmd.setup()
         this._submitted = true
     }
 
@@ -214,18 +214,34 @@ export enum CommandPermission {
     Console,
 }
 
+export const serverStarted = (function() {
+    let serverRunning = false
+    return (() => {
+        if (serverRunning) {
+            return Promise.resolve(null)
+        }
+        const { promise, resolve } = Promise.withResolvers()
+        mc.listen('onServerStarted', () => {
+            resolve(null)
+            serverRunning = true
+        })
+        return promise
+    }) as (() => Promise<void>)
+})()
+
 export function cmd(head: string, desc: string, perm: 0|1|2 = CommandPermission.OP) {
     const command = mc.newCommand(head, desc, perm)
     const registry = new Registry(command)
     const register = (...args: any) => { registry.register.apply(registry, args) }
 
     return {
-        setup: (executor: (register: (cmd: CommandExpr, handler: Handler) => void, registry: Registry) => void | Promise<void>) => {
-            executor.call(
+        setup: async (executor: (register: (cmd: CommandExpr, handler: Handler) => void, registry: Registry) => void | Promise<void>) => {
+            await executor.call(
                 undefined, register, registry
             )
 
             if (!registry.isSubmitted()) {
+                await serverStarted()
                 registry.submit()
             }
         },
