@@ -53,6 +53,7 @@ class OrnateTwoHanderMoves extends DefaultMoves {
                     ctx.attack(pl, e, {
                         damage: 20,
                         direction: 'left',
+                        trace: true,
                     })
                 })
             }
@@ -94,6 +95,7 @@ class OrnateTwoHanderMoves extends DefaultMoves {
                     ctx.attack(pl, e, {
                         damage: 20,
                         direction: 'vertical',
+                        permeable: true,
                     })
                 })
             }
@@ -116,6 +118,9 @@ class OrnateTwoHanderMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             playAnimEntity(pl as Entity, 'animation.weapon.ai.guard.attack.right')
         },
+        onLeave(pl, ctx) {
+            ctx.status.hegemony = false
+        },
         timeline: {
             2: (pl, ctx) => {
                 ctx.setVelocity(pl, 90, 0.5, 0)
@@ -137,7 +142,9 @@ class OrnateTwoHanderMoves extends DefaultMoves {
                         direction: 'right',
                     })
                 })
-            }
+            },
+            7: (_, ctx) => ctx.status.hegemony = true,
+            15: (_, ctx) => ctx.status.hegemony = false,
         },
         transitions: {
             hurt: {

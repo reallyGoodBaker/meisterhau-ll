@@ -33,6 +33,7 @@
                 "controller.move": "controller.animation.player.move"
             },
             "scripts": {
+                "scale": "0.95",
                 "animate": [
                     "idle"
                 ],

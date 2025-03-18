@@ -440,7 +440,7 @@
 							"lerp_mode": "catmullrom"
 						},
 						"1.0417": {
-							"post": [-8.43644, -53.64181, -260.49598],
+							"post": [24.06356, -53.64181, -260.49598],
 							"lerp_mode": "catmullrom"
 						},
 						"1.1667": {
@@ -590,6 +590,10 @@
 						"1.3333": [15, 0, 0]
 					}
 				}
+			},
+			"timeline": {
+				"0.4167": "v.arm_status=2;",
+				"0.875": "v.arm_status=0;"
 			}
 		},
 		"animation.weapon.ai.guard.attack.right": {
@@ -1153,6 +1157,10 @@
 						"1.3333": [15, 0, 0]
 					}
 				}
+			},
+			"timeline": {
+				"0.375": "v.overlay_color=v.white;",
+				"0.75": "v.overlay_color=v.transparent;"
 			}
 		},
 		"animation.weapon.ai.guard.attack.top": {
@@ -1602,6 +1610,10 @@
 						"1.3333": [15, 0, 0]
 					}
 				}
+			},
+			"timeline": {
+				"0.2917": "v.arm_status=1;",
+				"0.875": "v.arm_status=0;"
 			}
 		}
 	}
