@@ -4953,6 +4953,7 @@ class OotachiMoves extends DefaultMoves$4 {
         cast: 4,
         backswing: 4,
         onEnter(_, ctx) {
+            ctx.status.repulsible = false;
             const manager = ctx.status.componentManager;
             manager.getComponent(Stamina$1).unwrap().setCooldown(10);
             ctx.status.isBlocking = true;
@@ -4961,6 +4962,7 @@ class OotachiMoves extends DefaultMoves$4 {
             ctx.status.isBlocking = false;
         },
         onLeave(_, ctx) {
+            ctx.status.repulsible = true;
             ctx.status.isBlocking = false;
         },
         timeline: {
@@ -5035,10 +5037,14 @@ class OotachiMoves extends DefaultMoves$4 {
     };
     dodgeBlocking = {
         onEnter(pl, ctx) {
+            ctx.status.repulsible = false;
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^^1^0.5`);
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^-0.1^1^0.5`);
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^0.1^1^0.5`);
             playSoundAll$5('weapon.heavy', pl.pos, 1);
+        },
+        onLeave(pl, ctx) {
+            ctx.status.repulsible = true;
         },
         transitions: {
             hlitStrike: {
@@ -5056,6 +5062,7 @@ class OotachiMoves extends DefaultMoves$4 {
         cast: 7,
         backswing: 3,
         onEnter(pl, ctx) {
+            ctx.status.repulsible = false;
             ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 12;
             playAnim$6(pl, 'animation.weapon.ootachi.hlit');
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.5);
@@ -5077,6 +5084,9 @@ class OotachiMoves extends DefaultMoves$4 {
                     direction: 'middle',
                 });
             });
+        },
+        onLeave(_, ctx) {
+            ctx.status.repulsible = false;
         },
         timeline: {
             9: (pl, ctx) => ctx.trap(pl)
@@ -5898,6 +5908,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
         cast: 12,
         backswing: 9,
         onEnter(pl, ctx) {
+            ctx.status.repulsible = false;
             ctx.components.getComponent(Stamina$1).unwrap().stamina -= 15;
             ctx.status.isBlocking = true;
             ctx.freeze(pl);
@@ -5908,6 +5919,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             ctx.trap(pl);
         },
         onLeave(pl, ctx) {
+            ctx.status.repulsible = true;
             ctx.unfreeze(pl);
             ctx.status.isBlocking = false;
         },
@@ -6129,6 +6141,9 @@ class UchigatanaMoves extends DefaultMoves$4 {
                     });
                 });
             },
+            12: (pl, ctx) => {
+                ctx.lookAtTarget(pl);
+            }
         },
         transitions: {
             resume: {
@@ -6230,9 +6245,6 @@ class UchigatanaMoves extends DefaultMoves$4 {
             deflectionFront: {
                 onDeflection: null
             },
-            dodge: {
-                onDodge: null
-            },
             dcFront: {
                 onTrap: {
                     preInput: 'onUseItem'
@@ -6266,9 +6278,6 @@ class UchigatanaMoves extends DefaultMoves$4 {
             },
             deflectionLeft: {
                 onDeflection: null
-            },
-            dodge: {
-                onDodge: null
             },
             dcLeftL: {
                 onTrap: {
@@ -6308,9 +6317,6 @@ class UchigatanaMoves extends DefaultMoves$4 {
             },
             deflectionRight: {
                 onDeflection: null
-            },
-            dodge: {
-                onDodge: null
             },
             dcRightL: {
                 onTrap: {
@@ -6358,24 +6364,26 @@ class UchigatanaMoves extends DefaultMoves$4 {
             }
         },
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 18;
+            ctx.status.repulsible = false;
+            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 20;
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
             playAnim$6(pl, 'animation.weapon.uchigatana.dc.fh');
         },
         onLeave(pl, ctx) {
+            ctx.status.repulsible = true;
             ctx.unfreeze(pl);
         },
         timeline: {
             1: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
-            6: pl => playSoundAll$5(`weapon.woosh.3`, pl.pos, 1),
-            8: (pl, ctx) => ctx.selectFromRange(pl, {
+            5: pl => playSoundAll$5(`weapon.woosh.3`, pl.pos, 1),
+            6: (pl, ctx) => ctx.selectFromRange(pl, {
                 radius: 2.4,
                 angle: 40,
                 rotation: -20,
             }).forEach(en => {
                 ctx.attack(pl, en, {
-                    damage: 18,
+                    damage: 24,
                     direction: 'vertical',
                     knockback: 1,
                     permeable: true,
@@ -6409,12 +6417,14 @@ class UchigatanaMoves extends DefaultMoves$4 {
             }
         },
         onEnter(pl, ctx) {
+            ctx.status.repulsible = false;
             ctx.components.getComponent(Stamina$1).unwrap().stamina -= 12;
             ctx.freeze(pl);
             playAnim$6(pl, 'animation.weapon.uchigatana.dc.ll');
             ctx.adsorbToTarget(pl, 1.5);
         },
         onLeave(pl, ctx) {
+            ctx.status.repulsible = true;
             ctx.unfreeze(pl);
         },
         timeline: {
@@ -6458,12 +6468,14 @@ class UchigatanaMoves extends DefaultMoves$4 {
             }
         },
         onEnter(pl, ctx) {
+            ctx.status.repulsible = false;
             ctx.components.getComponent(Stamina$1).unwrap().stamina -= 12;
             ctx.freeze(pl);
             playAnim$6(pl, 'animation.weapon.uchigatana.dc.rl');
             ctx.adsorbToTarget(pl, 1.5);
         },
         onLeave(pl, ctx) {
+            ctx.status.repulsible = true;
             ctx.unfreeze(pl);
         },
         timeline: {
@@ -6507,6 +6519,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             },
         },
         onEnter(pl, ctx) {
+            ctx.status.repulsible = false;
             ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
             ctx.freeze(pl);
             playAnim$6(pl, 'animation.weapon.uchigatana.dc.lh');
@@ -6522,7 +6535,6 @@ class UchigatanaMoves extends DefaultMoves$4 {
             9: (pl, ctx) => ctx.lookAtTarget(pl),
             10: (_, ctx) => {
                 ctx.status.hegemony = true;
-                ctx.status.repulsible = false;
                 ctx.adsorbToTarget(_, 3, 1.2);
             },
             13: (pl, ctx) => {
@@ -6572,6 +6584,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             },
         },
         onEnter(pl, ctx) {
+            ctx.status.repulsible = false;
             ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
             ctx.freeze(pl);
             playAnim$6(pl, 'animation.weapon.uchigatana.dc.rh');
@@ -6587,7 +6600,6 @@ class UchigatanaMoves extends DefaultMoves$4 {
             9: (pl, ctx) => ctx.lookAtTarget(pl),
             10: (_, ctx) => {
                 ctx.status.hegemony = true;
-                ctx.status.repulsible = false;
                 ctx.adsorbToTarget(_, 3, 1.2);
             },
             13: (pl, ctx) => {
@@ -6649,6 +6661,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
         },
         timeline: {
             1: (pl, ctx) => ctx.setVelocity(pl, -90, 1),
+            3: pl => playSoundAll$5(`weapon.raido.1`, pl.pos),
             4: (_, ctx) => ctx.status.isDodging = false,
             5: (pl, ctx) => ctx.setVelocity(pl, -90, 1),
             7: (pl, ctx) => ctx.setVelocity(pl, -90, 0.2),
@@ -7557,12 +7570,14 @@ class DoubleBladeMoves extends DefaultMoves$4 {
     shieldKick = {
         cast: 15,
         onEnter(pl, ctx) {
+            ctx.status.repulsible = false;
             ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
             ctx.freeze(pl);
             playAnim$6(pl, 'animation.double_blade.shield.kick');
             ctx.lookAtTarget(pl);
         },
         onLeave(pl, ctx) {
+            ctx.status.repulsible = true;
             ctx.unfreeze(pl);
         },
         timeline: {
@@ -7608,6 +7623,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         cast: 11,
         backswing: 8,
         onEnter(pl, ctx) {
+            ctx.status.repulsible = false;
             ctx.components.getComponent(Stamina$1).unwrap().stamina -= 15;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
@@ -7615,6 +7631,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             setVelocityByOrientation(pl, ctx, 1, 1.5);
         },
         onLeave(pl, ctx) {
+            ctx.status.repulsible = true;
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
@@ -8075,7 +8092,7 @@ function selectFromRange$2(pl, range) {
             return
         }
 
-        if (dist <= 1) {
+        if (dist <= 1.5) {
             result.push(e);
             return
         }

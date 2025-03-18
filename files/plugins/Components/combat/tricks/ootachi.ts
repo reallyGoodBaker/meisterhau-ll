@@ -647,6 +647,7 @@ class OotachiMoves extends DefaultMoves {
         cast: 4,
         backswing: 4,
         onEnter(_, ctx) {
+            ctx.status.repulsible = false
             const manager = ctx.status.componentManager
             manager.getComponent(Stamina).unwrap().setCooldown(10)
             ctx.status.isBlocking = true
@@ -655,6 +656,7 @@ class OotachiMoves extends DefaultMoves {
             ctx.status.isBlocking = false
         },
         onLeave(_, ctx) {
+            ctx.status.repulsible = true
             ctx.status.isBlocking = false
         },
         timeline: {
@@ -731,10 +733,14 @@ class OotachiMoves extends DefaultMoves {
 
     dodgeBlocking: Move = {
         onEnter(pl, ctx) {
+            ctx.status.repulsible = false
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^^1^0.5`)
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^-0.1^1^0.5`)
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^0.1^1^0.5`)
             playSoundAll('weapon.heavy', pl.pos, 1)
+        },
+        onLeave(pl, ctx) {
+            ctx.status.repulsible = true
         },
         transitions: {
             hlitStrike: {
@@ -753,6 +759,7 @@ class OotachiMoves extends DefaultMoves {
         cast: 7,
         backswing: 3,
         onEnter(pl, ctx) {
+            ctx.status.repulsible = false
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 12
             playAnim(pl, 'animation.weapon.ootachi.hlit')
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.5)
@@ -774,6 +781,9 @@ class OotachiMoves extends DefaultMoves {
                     direction: 'middle',
                 })
             })
+        },
+        onLeave(_, ctx) {
+            ctx.status.repulsible = false
         },
         timeline: {
             9: (pl, ctx) => ctx.trap(pl)

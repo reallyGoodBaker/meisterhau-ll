@@ -102,6 +102,12 @@
             "sounds": [
                 "sounds/woosh5"
             ]
+        },
+        "weapon.raido.1": {
+            "category": "player",
+            "sounds": [
+                "sounds/raido"
+            ]
         }
     }
 }

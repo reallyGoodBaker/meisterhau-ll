@@ -739,12 +739,14 @@ class DoubleBladeMoves extends DefaultMoves {
     shieldKick: Move = {
         cast: 15,
         onEnter(pl, ctx) {
+            ctx.status.repulsible = false
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10
             ctx.freeze(pl)
             playAnim(pl, 'animation.double_blade.shield.kick')
             ctx.lookAtTarget(pl)
         },
         onLeave(pl, ctx) {
+            ctx.status.repulsible = true
             ctx.unfreeze(pl)
         },
         timeline: {
@@ -791,6 +793,7 @@ class DoubleBladeMoves extends DefaultMoves {
         cast: 11,
         backswing: 8,
         onEnter(pl, ctx) {
+            ctx.status.repulsible = false
             ctx.components.getComponent(Stamina).unwrap().stamina -= 15
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
@@ -798,6 +801,7 @@ class DoubleBladeMoves extends DefaultMoves {
             setVelocityByOrientation(pl as Player, ctx, 1, 1.5)
         },
         onLeave(pl, ctx) {
+            ctx.status.repulsible = true
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
