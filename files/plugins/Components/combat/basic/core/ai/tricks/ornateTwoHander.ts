@@ -89,7 +89,7 @@ class OrnateTwoHanderMoves extends DefaultMoves {
             14: (pl, ctx) => {
                 ctx.selectFromRange(pl, {
                     angle: 60,
-                    radius: 3.3,
+                    radius: 4,
                     rotation: -30
                 }).forEach(e => {
                     ctx.attack(pl, e, {
