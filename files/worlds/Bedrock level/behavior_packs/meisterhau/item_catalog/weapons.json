@@ -1,0 +1,32 @@
+{
+    "format_version": "1.21.60",
+    "minecraft:crafting_items_catalog": {
+        "categories": [
+            {
+                "category_name": "equipment",
+                "groups": [
+                    {
+                        "group_identifier": {
+                            "icon": "db_morphidae",
+                            "name": "meisterhau:weapons"
+                        },
+                        "items": [
+                            "weapon:db_morphidae",
+                            "weapon:double_blade",
+                            "weapon:double_dagger",
+                            "crossover:hermit_katana",
+                            "crossover:keen_katana",
+                            "weapon:moon_glaive",
+                            "weapon:morphidae",
+                            "weapon:ootachi_akaoni",
+                            "weapon:ootachi_dragon",
+                            "weapon:ootachi",
+                            "weapon:shield_with_sword",
+                            "weapon:uchigatana"
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}

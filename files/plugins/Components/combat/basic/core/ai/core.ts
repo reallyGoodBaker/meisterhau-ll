@@ -26,13 +26,9 @@ export abstract class MeisterhauAI {
         this.uniqueId = this.actor.uniqueId
     }
 
-    define: () => AsyncGenerator<MeisterhauAIState, void, unknown> = Function.prototype as any
+    getStrategy: () => AsyncGenerator<MeisterhauAIState, void, unknown> = Function.prototype as any
 
     private _fsm?: AsyncGenerator<MeisterhauAIState, void, unknown>
-
-    async initialize() {
-        this._fsm = this.define?.()
-    }
 
     async wait(ms: number) {
         return new Promise(resolve => setTimeout(resolve, ms))
@@ -116,7 +112,6 @@ function setupAIEntity(en?: Entity | null) {
     const [ ctor ] = ais[en.type]
     if (ctor) {
         const ai = Reflect.construct(ctor, [ en ])
-        ai.initialize()
         ai.run()
         aiRunning.set(en.uniqueId, ai)
     }

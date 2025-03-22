@@ -9506,11 +9506,8 @@ class MeisterhauAI {
         this.status = Status$3.get(this.actor.uniqueId);
         this.uniqueId = this.actor.uniqueId;
     }
-    define = Function.prototype;
+    getStrategy = Function.prototype;
     _fsm;
-    async initialize() {
-        this._fsm = this.define?.();
-    }
     async wait(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
@@ -9580,7 +9577,6 @@ function setupAIEntity(en) {
     const [ctor] = ais[en.type];
     if (ctor) {
         const ai = Reflect.construct(ctor, [en]);
-        ai.initialize();
         ai.run();
         aiRunning.set(en.uniqueId, ai);
     }
@@ -9651,6 +9647,7 @@ class OrnateTwoHanderMoves extends DefaultMoves$4 {
                     ctx.attack(pl, e, {
                         damage: 20,
                         direction: 'left',
+                        trace: true,
                     });
                 });
             }
@@ -9685,12 +9682,13 @@ class OrnateTwoHanderMoves extends DefaultMoves$4 {
             14: (pl, ctx) => {
                 ctx.selectFromRange(pl, {
                     angle: 60,
-                    radius: 3.3,
+                    radius: 4,
                     rotation: -30
                 }).forEach(e => {
                     ctx.attack(pl, e, {
                         damage: 20,
                         direction: 'vertical',
+                        permeable: true,
                     });
                 });
             }
@@ -9711,6 +9709,9 @@ class OrnateTwoHanderMoves extends DefaultMoves$4 {
         cast: 27,
         onEnter(pl, ctx) {
             playAnimEntity(pl, 'animation.weapon.ai.guard.attack.right');
+        },
+        onLeave(pl, ctx) {
+            ctx.status.hegemony = false;
         },
         timeline: {
             2: (pl, ctx) => {
@@ -9733,7 +9734,9 @@ class OrnateTwoHanderMoves extends DefaultMoves$4 {
                         direction: 'right',
                     });
                 });
-            }
+            },
+            7: (_, ctx) => ctx.status.hegemony = true,
+            15: (_, ctx) => ctx.status.hegemony = false,
         },
         transitions: {
             hurt: {
