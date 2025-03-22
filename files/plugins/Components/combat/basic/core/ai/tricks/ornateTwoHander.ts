@@ -1,20 +1,29 @@
 import { entitySelector, playAnimEntity } from "@combat/basic"
 import { DefaultMoves, DefaultTrickModule } from "@combat/basic/default"
 
+// 不继承自DefaultMoves也可以，但是会少很多预设的状态
 class OrnateTwoHanderMoves extends DefaultMoves {
     constructor() {
         super()
-
+        //设置一个状态机的恢复点（所有预设的状态结束时都会切换到这个状态
+        // 这个状态不是默认起始状态，注意
         this.setup<OrnateTwoHanderMoves>('idle')
     }
 
+    // 定义idle状态
     idle: Move = {
+        // 前摇，无限刻
         cast: Infinity,
+        // 在这个状态时每一刻执行的代码
         onTick(pl, ctx) {
+            // 让npc面向玩家
             mc.runcmdEx(`execute as ${entitySelector(pl as Entity)} at @s run tp ~~~ facing @p`)
         },
+        // 状态转换
         transitions: {
+            // 转换到hurt状态
             hurt: {
+                // 转换条件是 onHurt ，没有多余参数
                 onHurt: null
             },
             left: {
@@ -163,7 +172,9 @@ class OrnateTwoHanderMoves extends DefaultMoves {
 class OrnateTwoHander extends DefaultTrickModule {
     constructor() {
         super(
+            // 只要不重复可以随便写
             'rgb:ai/ornate_two_hander',
+            // 动作模组的默认起始状态
             'idle',
             [ 'crossover:ornate_two_hander' ],
             new OrnateTwoHanderMoves()
