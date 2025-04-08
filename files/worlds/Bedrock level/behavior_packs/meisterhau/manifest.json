@@ -5,7 +5,7 @@
         "name": "Meisterhau Behavior Pack",
         "uuid": "573e33d6-ad9c-4993-aaca-e25434facc20",
         "version": [1, 1, 0],
-        "min_engine_version": [1, 21, 60]
+        "min_engine_version": [1, 21, 50]
     },
     "modules": [
         {
