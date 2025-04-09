@@ -53,7 +53,7 @@ class OrnateTwoHanderMoves extends DefaultMoves {
             10: (pl, ctx) => {
                 ctx.setVelocity(pl, 90, 1, 0)
             },
-            14: (pl, ctx) => {
+            12: (pl, ctx) => {
                 ctx.selectFromRange(pl, {
                     angle: 120,
                     radius: 3,

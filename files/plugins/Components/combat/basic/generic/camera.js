@@ -111,7 +111,7 @@ const battleCamera = (pl, en) => {
         rotate2(
             initVec,
             Math.acos(
-                Math.max(0, Math.min(offsetZ / dist, 1))
+                Math.max(0, Math.min(offsetZ / dist, 0.5))
             ) - ROT
         ),
         moduloScale
@@ -123,8 +123,7 @@ const battleCamera = (pl, en) => {
     }
 
     const cameraTargetVec = vec2(
-        crossPos.x,
-        crossPos.z,
+        crossPos.x, crossPos.z,
         enPos.x, enPos.z
     )
 
@@ -136,7 +135,7 @@ const battleCamera = (pl, en) => {
     const cameraPos = {
         x: crossPos.x + cameraPosVec.dx,
         z: crossPos.z + cameraPosVec.dy,
-        y: plPos.y - .2 + offsetY,
+        y: plPos.y - .3 + offsetY,
     }
 
     // camera(pl, 0.1, 'linear', cameraPos, {

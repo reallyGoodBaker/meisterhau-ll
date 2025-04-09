@@ -1244,7 +1244,7 @@ function listenAllMcEvents(collection) {
 }
 
 function getHandedItemType(pl) {
-    return pl.getHand().type
+    return pl.getHand()?.type
 }
 
 antiTreeshaking()

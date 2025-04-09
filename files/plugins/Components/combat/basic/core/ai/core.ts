@@ -2,9 +2,13 @@ import { Actor, InputSimulator } from '@core/inputSimulator'
 import { Status } from '@core/status'
 import { serverStarted } from '@utils/command'
 import { input } from 'scripts-rpc/func/input'
+import { CustomComponent } from '../component'
 
 export interface MeisterhauAIState {
     (ai: MeisterhauAI): Promise<void>
+    (ai: MeisterhauAI): void
+    (): Promise<void>
+    (): void
 }
 
 export enum MeisterhauFSMState {
@@ -14,19 +18,110 @@ export enum MeisterhauFSMState {
     STOPPED,
 }
 
-export abstract class MeisterhauAI {
+export interface EventTrigger<Ctx = any, V = any> {
+    (value: V, context: Ctx): boolean
+}
+
+export interface AIEventTriggerContext {
+    en: Entity | Player
+    status: Status
+}
+
+interface LoopContext {
+    breakValue: any
+    stopFlag: boolean
+}
+
+class MeisterhauAITicker extends CustomComponent {
+    constructor(
+        readonly ctx: LoopContext,
+        readonly loopExpr: (breakLoop: (val: any) => void) => any | Promise<any>,
+        readonly resolvers: { resolve: (val: any) => void, reject: (err: any) => void },
+        readonly breakLoop: (val: any) => void,
+    ) {
+        super()
+    }
+
+    onTick() {
+        if (this.ctx.stopFlag) {
+            return this.resolvers.resolve(this.ctx.breakValue)
+        }
+
+        ;(this.loopExpr.call(undefined, this.breakLoop) as Promise<any>)
+            ?.catch?.(this.reject)
+    }
+
+    reject(err: any) {
+        this.ctx.stopFlag = true
+        this.resolvers.reject(err)
+    }
+}
+
+export type EventSignalReader<T = any> = (value?: T) => boolean
+export type EventRemoveListener = () => void
+
+export abstract class EventChannel<Ctx> {
+    private _signals: Record<string, EventTrigger<Ctx>> = {}
+    //@ts-ignore
+    readonly signals: Record<string, boolean> = new Proxy(this._signals, {
+        get: (target, prop) => {
+            if (prop in target) {
+                return this.trigger(prop as string)
+            }
+            return false
+        },
+
+        set() {
+            return false
+        }
+    })
+
+    abstract getContext(): Ctx
+
+    addTrigger<C extends Ctx, V>(event: string, trigger: EventTrigger<C, V>) {
+        this._signals[event] = trigger as EventTrigger<Ctx>
+    }
+
+    removeTrigger(event: string) {
+        delete this._signals[event]
+    }
+
+    trigger(event: string, value?: any) {
+        const trigger = this._signals[event]
+        if (trigger) {
+            return trigger(value, this.getContext())
+        }
+        return false
+    }
+
+    event<T=any>(ev: string, trigger: EventTrigger<Ctx, T>): [
+        EventSignalReader<T>, EventRemoveListener
+    ] {
+        this.addTrigger(ev, trigger)
+        return [
+            (v?: T) => this.trigger(ev, v),
+            () => this.removeTrigger(ev),
+        ]
+    }
+}
+
+export abstract class MeisterhauAI extends EventChannel<AIEventTriggerContext> {
     readonly inputSimulator = new InputSimulator()
     readonly status: Status
     readonly uniqueId: string
-
+    
     constructor(
         readonly actor: Actor,
+        public strategy: string = 'default',
     ) {
+        super()
         this.status = Status.get(this.actor.uniqueId)
         this.uniqueId = this.actor.uniqueId
+
+        this.setStrategy(strategy)
     }
 
-    getStrategy: () => AsyncGenerator<MeisterhauAIState, void, unknown> = Function.prototype as any
+    abstract getStrategy(strategy: string): AsyncGenerator<MeisterhauAIState, void, unknown>
 
     private _fsm?: AsyncGenerator<MeisterhauAIState, void, unknown>
 
@@ -81,6 +176,58 @@ export abstract class MeisterhauAI {
     }
 
     abstract run(): void
+    abstract stop(): void
+    
+    loop<T=any>(expr: (value: (val?: T) => void) => T | Promise<T>): T | Promise<T> {
+        const context: LoopContext = {
+            breakValue: undefined,
+            stopFlag: false,
+        }
+        const value = (val: T) => {
+            context.stopFlag = true
+            context.breakValue = val
+        }
+
+        const resolvers = Promise.withResolvers()
+        const aiTicker = new MeisterhauAITicker(
+            context,
+            expr,
+            resolvers,
+            value
+        )
+
+        this.status.componentManager.attachComponent(aiTicker)
+
+        return resolvers.promise as Promise<T>
+    }
+
+    setStrategy(strategy: string) {
+        this.strategy = strategy
+        this._fsm = this.getStrategy(strategy)
+    }
+
+    start() {
+        this.run()
+    }
+
+    waitTick(ticks: number=1) {
+        return new Promise<void>(resolve => {
+            let count = 0
+            const onTick = () => {
+                count++
+                if (count >= ticks) {
+                    resolve()
+                }
+            }
+            this.status.componentManager.beforeTick(onTick)
+        })
+    }
+
+    restart(strategy: string = 'default') {
+        this.stop()
+        this.setStrategy(strategy)
+        this.start()
+    }
 }
 
 const ais: Record<string, [ ConstructorOf<MeisterhauAI>, TrickModule ]> = {}
@@ -112,8 +259,8 @@ function setupAIEntity(en?: Entity | null) {
     const [ ctor ] = ais[en.type]
     if (ctor) {
         const ai = Reflect.construct(ctor, [ en ])
-        ai.run()
         aiRunning.set(en.uniqueId, ai)
+        ai.start()
     }
 }
 
@@ -121,5 +268,5 @@ export async function listenEntitiyWithAi() {
     await serverStarted()
     setInterval(() => {
         mc.getAllEntities().forEach(setupAIEntity)
-    }, 10000)
+    }, 5000)
 }

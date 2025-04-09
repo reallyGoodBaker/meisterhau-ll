@@ -60,11 +60,11 @@ export class ComponentManager {
         return ctor.map(c => this.#components.get(c))
     }
 
-    async #attachComponent<T>(ctor: ComponentCtor, component: Component | BasicComponent, shouldRebuild=true): Promise<Optional<T>> {
+    #attachComponent<T>(ctor: ComponentCtor, component: Component | BasicComponent, shouldRebuild=true): Optional<T> {
         let init = !this.#components.get(ctor)
 
         if (!init && shouldRebuild) {
-            await this.detachComponent(ctor) 
+            this.detachComponent(ctor) 
             init = true
         }
 
@@ -76,17 +76,17 @@ export class ComponentManager {
         }
 
         if (init && 'onAttach' in component) {
-            await component.onAttach(this)   
+            component.onAttach(this)   
         }
 
         this.#components.set(ctor, component)
         return Optional.some(component) as Optional<T>
     }
 
-    async attachComponent(...component: Component[]) {
+    attachComponent(...component: Component[]) {
         const components: Optional<Component>[] = []
         for (const obj of component) {
-            components.push(await this.#attachComponent(
+            components.push(this.#attachComponent(
                 Object.getPrototypeOf(obj).constructor,
                 obj
             ))
@@ -95,7 +95,7 @@ export class ComponentManager {
         return components
     }
 
-    async getOrCreate<T extends Component>(ctor: ComponentCtor<T>, ...args: any[]): Promise<Optional<T>> {
+    getOrCreate<T extends Component>(ctor: ComponentCtor<T>, ...args: any[]): Optional<T> {
         let component = this.#components.get(ctor) as T
 
         if (component) {
@@ -105,10 +105,10 @@ export class ComponentManager {
         return this.#attachComponent(ctor, new ctor(...args))
     }
 
-    async detachComponent(ctor: ComponentCtor) {
+    detachComponent(ctor: ComponentCtor) {
         const component = this.#components.get(ctor) as BasicComponent
         if (component && 'onDetach' in component) {
-            await component.onDetach(this)
+            component.onDetach(this)
         }
 
         return this.#components.delete(ctor)

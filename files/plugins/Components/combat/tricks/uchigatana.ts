@@ -386,8 +386,8 @@ class UchigatanaMoves extends DefaultMoves {
     }
 
     dodge: Move = {
-        cast: 4,
-        backswing: 6,
+        cast: 5,
+        backswing: 7,
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().setCooldown(20)
             ctx.freeze(pl)
@@ -726,8 +726,8 @@ class UchigatanaMoves extends DefaultMoves {
     }
 
     dcLeftH: Move = {
-        cast: 16,
-        backswing: 9,
+        cast: 19,
+        backswing: 6,
         transitions: {
             hurt: {
                 onHurt: {
@@ -744,9 +744,12 @@ class UchigatanaMoves extends DefaultMoves {
             },
             dodge: {
                 onTrap: {
-                    tag: 'dodge',
+                    tag: 'feint',
                     preInput: 'onDodge'
-                }
+                },
+                onDodge: {
+                    allowedState: 'backswing'
+                },
             },
         },
         onEnter(pl, ctx) {
@@ -787,13 +790,12 @@ class UchigatanaMoves extends DefaultMoves {
                 ctx.status.hegemony = false
                 ctx.status.repulsible = true
             },
-            18: (pl, ctx) => ctx.trap(pl, { tag: 'dodge' }),
         }
     }
 
     dcRightH: Move = {
-        cast: 16,
-        backswing: 9,
+        cast: 19,
+        backswing: 6,
         transitions: {
             hurt: {
                 onHurt: {
@@ -810,9 +812,12 @@ class UchigatanaMoves extends DefaultMoves {
             },
             dodge: {
                 onTrap: {
-                    tag: 'dodge',
+                    tag: 'feint',
                     preInput: 'onDodge'
-                }
+                },
+                onDodge: {
+                    allowedState: 'backswing'
+                },
             },
         },
         onEnter(pl, ctx) {
@@ -852,8 +857,7 @@ class UchigatanaMoves extends DefaultMoves {
                 })
                 ctx.status.hegemony = false
                 ctx.status.repulsible = true
-            },
-            18: (pl, ctx) => ctx.trap(pl, { tag: 'dodge' }),
+            }
         }
     }
 

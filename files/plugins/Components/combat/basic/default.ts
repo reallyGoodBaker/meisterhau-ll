@@ -182,6 +182,9 @@ export class DefaultMoves {
                 'onAttack',
                 'onUseItem',
             ])
+
+            const abuser = ctx.rawArgs[1]
+            ctx.lookAt(pl, abuser)
             const { stiffness, customHurtAnimation, direction, execution } = ctx.rawArgs[2] as DamageOption
             const hurtAnim = customHurtAnimation ?? this.animations.hit[direction || 'left']
 
@@ -207,6 +210,23 @@ export class DefaultMoves {
         onTick(pl, ctx) {
             if (ctx.status.shocked) {
                 // ctx.trap(pl, { tag: 'hitWall' })
+            }
+        },
+        timeline: {
+            0: (pl, ctx) => {
+                const { direction } = ctx.components.getComponent(IncomingAttack).unwrap()
+                switch (direction) {
+                    case 'left':
+                        ctx.setVelocity(pl, -150, 1.5, -2)
+                        break;
+                    case 'right':
+                        ctx.setVelocity(pl, -30, 1.5, -2)
+                        break;
+                    case 'middle':
+                    case 'vertical':
+                        ctx.setVelocity(pl, -90, 1.5, -2)
+                        break;
+                }
             }
         },
         transitions: {}
@@ -311,6 +331,7 @@ export class DefaultMoves {
         cast: 10,
         backswing: 11,
         onEnter: (pl, ctx) => {
+            const target = ctx.rawArgs[1]
             const { direction } = ctx.rawArgs[2]
 
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina += 10
@@ -318,7 +339,7 @@ export class DefaultMoves {
             playSoundAll(this.sounds.parry, pl.pos, 1)
             ctx.status.isWaitingParry = true
             playAnimCompatibility(pl, getAnim(this.animations.parry, direction))
-            ctx.lookAtTarget(pl)
+            ctx.lookAt(pl, target)
 
             ctx.status.componentManager.attachComponent(new CameraFading([
                 {

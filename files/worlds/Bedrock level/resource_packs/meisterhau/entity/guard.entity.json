@@ -1,5 +1,5 @@
 {
-    "format_version": "1.21.50",
+    "format_version": "1.21.0",
     "minecraft:client_entity": {
         "description": {
             "identifier": "meisterhau:guard",

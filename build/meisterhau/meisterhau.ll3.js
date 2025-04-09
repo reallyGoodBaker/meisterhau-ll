@@ -1106,10 +1106,10 @@ class ComponentManager {
     getComponents(...ctor) {
         return ctor.map(c => this.#components.get(c));
     }
-    async #attachComponent(ctor, component, shouldRebuild = true) {
+    #attachComponent(ctor, component, shouldRebuild = true) {
         let init = !this.#components.get(ctor);
         if (!init && shouldRebuild) {
-            await this.detachComponent(ctor);
+            this.detachComponent(ctor);
             init = true;
         }
         if (REQUIRED_COMPONENTS in component) {
@@ -1119,29 +1119,29 @@ class ComponentManager {
             }
         }
         if (init && 'onAttach' in component) {
-            await component.onAttach(this);
+            component.onAttach(this);
         }
         this.#components.set(ctor, component);
         return Optional$1.some(component);
     }
-    async attachComponent(...component) {
+    attachComponent(...component) {
         const components = [];
         for (const obj of component) {
-            components.push(await this.#attachComponent(Object.getPrototypeOf(obj).constructor, obj));
+            components.push(this.#attachComponent(Object.getPrototypeOf(obj).constructor, obj));
         }
         return components;
     }
-    async getOrCreate(ctor, ...args) {
+    getOrCreate(ctor, ...args) {
         let component = this.#components.get(ctor);
         if (component) {
             return Optional$1.some(component);
         }
         return this.#attachComponent(ctor, new ctor(...args));
     }
-    async detachComponent(ctor) {
+    detachComponent(ctor) {
         const component = this.#components.get(ctor);
         if (component && 'onDetach' in component) {
-            await component.onDetach(this);
+            component.onDetach(this);
         }
         return this.#components.delete(ctor);
     }
@@ -1256,7 +1256,7 @@ let CameraComponent$1 = class CameraComponent extends BaseComponent {
     /**
      * [ x, y, z ]
      */
-    static defaultOffset = [2.5, 0, 0.8];
+    static defaultOffset = [2.5, 0, 1];
     /**
      * [ yaw, pitch ]
      */
@@ -1987,6 +1987,8 @@ let DefaultMoves$4 = class DefaultMoves {
                 'onAttack',
                 'onUseItem',
             ]);
+            const abuser = ctx.rawArgs[1];
+            ctx.lookAt(pl, abuser);
             const { stiffness, customHurtAnimation, direction, execution } = ctx.rawArgs[2];
             const hurtAnim = customHurtAnimation ?? this.animations.hit[direction || 'left'];
             if (execution) {
@@ -2009,6 +2011,23 @@ let DefaultMoves$4 = class DefaultMoves {
         },
         onTick(pl, ctx) {
             if (ctx.status.shocked) ;
+        },
+        timeline: {
+            0: (pl, ctx) => {
+                const { direction } = ctx.components.getComponent(IncomingAttack$1).unwrap();
+                switch (direction) {
+                    case 'left':
+                        ctx.setVelocity(pl, -150, 1.5, -2);
+                        break;
+                    case 'right':
+                        ctx.setVelocity(pl, -30, 1.5, -2);
+                        break;
+                    case 'middle':
+                    case 'vertical':
+                        ctx.setVelocity(pl, -90, 1.5, -2);
+                        break;
+                }
+            }
         },
         transitions: {}
     };
@@ -2106,13 +2125,14 @@ let DefaultMoves$4 = class DefaultMoves {
         cast: 10,
         backswing: 11,
         onEnter: (pl, ctx) => {
+            const target = ctx.rawArgs[1];
             const { direction } = ctx.rawArgs[2];
             ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina += 10;
             ctx.movement(pl, false);
             playSoundAll$5(this.sounds.parry, pl.pos, 1);
             ctx.status.isWaitingParry = true;
             playAnimCompatibility(pl, getAnim(this.animations.parry, direction));
-            ctx.lookAtTarget(pl);
+            ctx.lookAt(pl, target);
             ctx.status.componentManager.attachComponent(new CameraFading$1([
                 {
                     from: CameraComponent$1.defaultOffset,
@@ -6224,8 +6244,8 @@ class UchigatanaMoves extends DefaultMoves$4 {
         }
     };
     dodge = {
-        cast: 4,
-        backswing: 6,
+        cast: 5,
+        backswing: 7,
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina$1).unwrap().setCooldown(20);
             ctx.freeze(pl);
@@ -6552,8 +6572,8 @@ class UchigatanaMoves extends DefaultMoves$4 {
         }
     };
     dcLeftH = {
-        cast: 16,
-        backswing: 9,
+        cast: 19,
+        backswing: 6,
         transitions: {
             hurt: {
                 onHurt: {
@@ -6570,9 +6590,12 @@ class UchigatanaMoves extends DefaultMoves$4 {
             },
             dodge: {
                 onTrap: {
-                    tag: 'dodge',
+                    tag: 'feint',
                     preInput: 'onDodge'
-                }
+                },
+                onDodge: {
+                    allowedState: 'backswing'
+                },
             },
         },
         onEnter(pl, ctx) {
@@ -6613,12 +6636,11 @@ class UchigatanaMoves extends DefaultMoves$4 {
                 ctx.status.hegemony = false;
                 ctx.status.repulsible = true;
             },
-            18: (pl, ctx) => ctx.trap(pl, { tag: 'dodge' }),
         }
     };
     dcRightH = {
-        cast: 16,
-        backswing: 9,
+        cast: 19,
+        backswing: 6,
         transitions: {
             hurt: {
                 onHurt: {
@@ -6635,9 +6657,12 @@ class UchigatanaMoves extends DefaultMoves$4 {
             },
             dodge: {
                 onTrap: {
-                    tag: 'dodge',
+                    tag: 'feint',
                     preInput: 'onDodge'
-                }
+                },
+                onDodge: {
+                    allowedState: 'backswing'
+                },
             },
         },
         onEnter(pl, ctx) {
@@ -6677,8 +6702,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
                 });
                 ctx.status.hegemony = false;
                 ctx.status.repulsible = true;
-            },
-            18: (pl, ctx) => ctx.trap(pl, { tag: 'dodge' }),
+            }
         }
     };
     raidoEnter = {
@@ -8287,7 +8311,7 @@ const battleCamera$1 = (pl, en) => {
         rotate2(
             initVec,
             Math.acos(
-                Math.max(0, Math.min(offsetZ / dist, 1))
+                Math.max(0, Math.min(offsetZ / dist, 0.5))
             ) - ROT
         ),
         moduloScale
@@ -8299,8 +8323,7 @@ const battleCamera$1 = (pl, en) => {
     };
 
     const cameraTargetVec = vec2(
-        crossPos.x,
-        crossPos.z,
+        crossPos.x, crossPos.z,
         enPos.x, enPos.z
     );
 
@@ -8312,7 +8335,7 @@ const battleCamera$1 = (pl, en) => {
     const cameraPos = {
         x: crossPos.x + cameraPosVec.dx,
         z: crossPos.z + cameraPosVec.dy,
-        y: plPos.y - .2 + offsetY,
+        y: plPos.y - .3 + offsetY,
     };
 
     // camera(pl, 0.1, 'linear', cameraPos, {
@@ -9496,17 +9519,79 @@ var MeisterhauFSMState;
     MeisterhauFSMState[MeisterhauFSMState["PAUSED"] = 2] = "PAUSED";
     MeisterhauFSMState[MeisterhauFSMState["STOPPED"] = 3] = "STOPPED";
 })(MeisterhauFSMState || (MeisterhauFSMState = {}));
-class MeisterhauAI {
+class MeisterhauAITicker extends CustomComponent {
+    ctx;
+    loopExpr;
+    resolvers;
+    breakLoop;
+    constructor(ctx, loopExpr, resolvers, breakLoop) {
+        super();
+        this.ctx = ctx;
+        this.loopExpr = loopExpr;
+        this.resolvers = resolvers;
+        this.breakLoop = breakLoop;
+    }
+    onTick() {
+        if (this.ctx.stopFlag) {
+            return this.resolvers.resolve(this.ctx.breakValue);
+        }
+        this.loopExpr.call(undefined, this.breakLoop)
+            ?.catch?.(this.reject);
+    }
+    reject(err) {
+        this.ctx.stopFlag = true;
+        this.resolvers.reject(err);
+    }
+}
+class EventChannel {
+    _signals = {};
+    //@ts-ignore
+    signals = new Proxy(this._signals, {
+        get: (target, prop) => {
+            if (prop in target) {
+                return this.trigger(prop);
+            }
+            return false;
+        },
+        set() {
+            return false;
+        }
+    });
+    addTrigger(event, trigger) {
+        this._signals[event] = trigger;
+    }
+    removeTrigger(event) {
+        delete this._signals[event];
+    }
+    trigger(event, value) {
+        const trigger = this._signals[event];
+        if (trigger) {
+            return trigger(value, this.getContext());
+        }
+        return false;
+    }
+    event(ev, trigger) {
+        this.addTrigger(ev, trigger);
+        return [
+            (v) => this.trigger(ev, v),
+            () => this.removeTrigger(ev),
+        ];
+    }
+}
+class MeisterhauAI extends EventChannel {
     actor;
+    strategy;
     inputSimulator = new InputSimulator();
     status;
     uniqueId;
-    constructor(actor) {
+    constructor(actor, strategy = 'default') {
+        super();
         this.actor = actor;
+        this.strategy = strategy;
         this.status = Status$3.get(this.actor.uniqueId);
         this.uniqueId = this.actor.uniqueId;
+        this.setStrategy(strategy);
     }
-    getStrategy = Function.prototype;
     _fsm;
     async wait(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
@@ -9548,6 +9633,44 @@ class MeisterhauAI {
     dodge() {
         this.inputSimulator.dodge(this.actor);
     }
+    loop(expr) {
+        const context = {
+            breakValue: undefined,
+            stopFlag: false,
+        };
+        const value = (val) => {
+            context.stopFlag = true;
+            context.breakValue = val;
+        };
+        const resolvers = Promise.withResolvers();
+        const aiTicker = new MeisterhauAITicker(context, expr, resolvers, value);
+        this.status.componentManager.attachComponent(aiTicker);
+        return resolvers.promise;
+    }
+    setStrategy(strategy) {
+        this.strategy = strategy;
+        this._fsm = this.getStrategy(strategy);
+    }
+    start() {
+        this.run();
+    }
+    waitTick(ticks = 1) {
+        return new Promise(resolve => {
+            let count = 0;
+            const onTick = () => {
+                count++;
+                if (count >= ticks) {
+                    resolve();
+                }
+            };
+            this.status.componentManager.beforeTick(onTick);
+        });
+    }
+    restart(strategy = 'default') {
+        this.stop();
+        this.setStrategy(strategy);
+        this.start();
+    }
 }
 const ais = {};
 const aiRunning = new Map();
@@ -9577,19 +9700,20 @@ function setupAIEntity(en) {
     const [ctor] = ais[en.type];
     if (ctor) {
         const ai = Reflect.construct(ctor, [en]);
-        ai.run();
         aiRunning.set(en.uniqueId, ai);
+        ai.start();
     }
 }
 async function listenEntitiyWithAi$1() {
     await serverStarted();
     setInterval(() => {
         mc.getAllEntities().forEach(setupAIEntity);
-    }, 10000);
+    }, 5000);
 }
 
 var core$1 = /*#__PURE__*/Object.freeze({
 	__proto__: null,
+	EventChannel: EventChannel,
 	MeisterhauAI: MeisterhauAI,
 	get MeisterhauFSMState () { return MeisterhauFSMState; },
 	get ai () { return ai$2; },
@@ -9598,18 +9722,28 @@ var core$1 = /*#__PURE__*/Object.freeze({
 
 var require$$21 = /*@__PURE__*/getAugmentedNamespace(core$1);
 
+// 不继承自DefaultMoves也可以，但是会少很多预设的状态
 class OrnateTwoHanderMoves extends DefaultMoves$4 {
     constructor() {
         super();
+        //设置一个状态机的恢复点（所有预设的状态结束时都会切换到这个状态
+        // 这个状态不是默认起始状态，注意
         this.setup('idle');
     }
+    // 定义idle状态
     idle = {
+        // 前摇，无限刻
         cast: Infinity,
+        // 在这个状态时每一刻执行的代码
         onTick(pl, ctx) {
+            // 让npc面向玩家
             mc.runcmdEx(`execute as ${entitySelector(pl)} at @s run tp ~~~ facing @p`);
         },
+        // 状态转换
         transitions: {
+            // 转换到hurt状态
             hurt: {
+                // 转换条件是 onHurt ，没有多余参数
                 onHurt: null
             },
             left: {
@@ -9638,7 +9772,7 @@ class OrnateTwoHanderMoves extends DefaultMoves$4 {
             10: (pl, ctx) => {
                 ctx.setVelocity(pl, 90, 1, 0);
             },
-            14: (pl, ctx) => {
+            12: (pl, ctx) => {
                 ctx.selectFromRange(pl, {
                     angle: 120,
                     radius: 3,
@@ -9753,31 +9887,148 @@ class OrnateTwoHanderMoves extends DefaultMoves$4 {
 }
 class OrnateTwoHander extends DefaultTrickModule$4 {
     constructor() {
-        super('rgb:ai/ornate_two_hander', 'idle', ['crossover:ornate_two_hander'], new OrnateTwoHanderMoves());
+        super(
+        // 只要不重复可以随便写
+        'rgb:ai/ornate_two_hander', 
+        // 动作模组的默认起始状态
+        'idle', ['crossover:ornate_two_hander'], new OrnateTwoHanderMoves());
     }
 }
 const tricks = new OrnateTwoHander();
 
 class Guard extends MeisterhauAI {
-    define = () => {
+    target = null;
+    allowLooping = true;
+    getStrategy(strategy) {
+        switch (strategy) {
+            case 'cheater':
+                return this.getDefaultStrategy();
+            case 'crazy':
+                return this.getCrazyStrategy();
+            default:
+                return this.getDefaultStrategy();
+        }
+    }
+    getContext() {
+        return {
+            en: this.actor,
+            status: this.status,
+        };
+    }
+    getCrazyStrategy() {
         const self = this;
+        const [inRangeSignal] = this.event('inRange', (_, ctx) => {
+            this.target = ctx.en.getEntityFromViewVector(5);
+            if (this.target) {
+                return true;
+            }
+            return false;
+        });
         async function* moves() {
-            while (true) {
-                yield () => self.attack();
-                await self.wait(1000);
-                yield () => self.useItem();
-                await self.wait(1000);
-                yield () => self.sneak();
-                await self.wait(1000);
+            while (self.allowLooping) {
+                await self.waitTick();
+                if (!inRangeSignal()) {
+                    continue;
+                }
+                const randomAct = Math.floor(Math.random() * 3);
+                switch (randomAct) {
+                    case 1:
+                        yield () => self.attack();
+                        await self.wait(800);
+                        break;
+                    case 2:
+                        yield () => self.useItem();
+                        await self.wait(800);
+                        break;
+                    case 3:
+                        yield () => self.sneak();
+                        await self.wait(800);
+                        break;
+                }
             }
         }
         return moves();
-    };
+    }
+    getDefaultStrategy() {
+        const self = this;
+        const [inRangeSignal] = this.event('inRange', (_, ctx) => {
+            this.target = ctx.en.getEntityFromViewVector(5);
+            if (this.target) {
+                return true;
+            }
+            return false;
+        });
+        const [isBlockingSignal] = this.event('isBlocking', () => {
+            if (!this.target) {
+                return false;
+            }
+            return Status$3.get(this.target.uniqueId).isBlocking;
+        });
+        const [isPlayerInputSignal] = this.event('isPlayerInput', input => {
+            if (!this.target) {
+                return false;
+            }
+            return Status$3.get(this.target.uniqueId)?.preInput === input;
+        });
+        // 60 ticks 后进入要是玩家还不操作就自动攻击
+        // 这里先获得一个计时器
+        const attackIntent = self.status.componentManager.getOrCreate(Timer, 60).unwrap();
+        async function* moves() {
+            // 使动作反复循环
+            while (self.allowLooping) {
+                // 等待下一个游戏刻防止卡死
+                await self.waitTick();
+                // 等待目标进入射程
+                if (!inRangeSignal()) {
+                    // 重置时间防止攻击意图消失
+                    attackIntent.reset();
+                    continue;
+                }
+                // 玩家输入闪避
+                if (isPlayerInputSignal('onDodge')) {
+                    // 追踪攻击
+                    // 使用 yield 返回一个函数，而不是直接调用，这样可以让这个函数的执行时机被合理安排
+                    yield () => self.attack();
+                    await self.wait(1000);
+                    continue;
+                }
+                // 玩家输入攻击
+                if (isPlayerInputSignal('onUseItem')) {
+                    // 霸体换血
+                    yield () => self.useItem();
+                    await self.wait(1000);
+                    continue;
+                }
+                // 玩家在格挡
+                if (isBlockingSignal()) {
+                    // 火刀破防
+                    yield () => self.sneak();
+                    await self.wait(1000);
+                    continue;
+                }
+                if (attackIntent.done) {
+                    // 立刻释放, 防止卡死
+                    attackIntent.reset();
+                    // 60 ticks 后进入要是玩家还不操作就自动攻击
+                    yield () => self.sneak();
+                    await self.wait(1000);
+                }
+            }
+        }
+        return moves();
+    }
     async run() {
         core.initCombatComponent(this.actor, tricks, this.status);
-        while (true) {
-            await this.tick();
-        }
+        console.log(await this.loop(stop => {
+            if (!this.allowLooping) {
+                stop('done.');
+                return;
+            }
+            this.tick();
+        }));
+    }
+    stop() {
+        this.allowLooping = false;
     }
 }
 ai$2.register('meisterhau:guard', Guard, tricks);
@@ -9822,6 +10073,17 @@ function setupAiCommands$1() {
             const { en } = args;
             for (const e of en) {
                 ai$2.getAI(e)?.dodge();
+            }
+        });
+        register('<en:entity> strategy <name:string>', (_, ori, out, args) => {
+            const { en, name } = args;
+            for (const e of en) {
+                const entityAI = ai$2.getAI(e);
+                if (!entityAI) {
+                    continue;
+                }
+                entityAI.restart(name);
+                out.success(`成功切换到 ${name} 策略`);
             }
         });
     });
@@ -11079,7 +11341,7 @@ function listenAllMcEvents(collection) {
 }
 
 function getHandedItemType(pl) {
-    return pl.getHand().type
+    return pl.getHand()?.type
 }
 
 antiTreeshaking();

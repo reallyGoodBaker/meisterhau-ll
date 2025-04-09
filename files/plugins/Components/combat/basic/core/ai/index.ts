@@ -52,5 +52,18 @@ export function setupAiCommands() {
                     ai.getAI(e)?.dodge()
                 }
             })
+
+            register('<en:entity> strategy <name:string>', (_, ori, out, args) => {
+                const { en, name } = args as { en: Entity[], name: string }
+                for (const e of en) {
+                    const entityAI = ai.getAI(e)
+                    if (!entityAI) {
+                        continue
+                    }
+
+                    entityAI.restart(name)
+                    out.success(`成功切换到 ${name} 策略`)
+                }
+            })
         })
 }
