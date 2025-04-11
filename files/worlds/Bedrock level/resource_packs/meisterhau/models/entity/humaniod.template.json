@@ -262,6 +262,16 @@
 					"pivot": [4.3, 15, 0]
 				},
 				{
+					"name": "waistSaya2",
+					"parent": "waist",
+					"pivot": [4.3, 15, 0]
+				},
+				{
+					"name": "waistSword2",
+					"parent": "waistSaya2",
+					"pivot": [4.3, 15, 0]
+				},
+				{
 					"name": "rightLeg",
 					"parent": "root",
 					"pivot": [-1.9, 12, 0],

@@ -9,4 +9,5 @@ module.exports = [
     require('./tricks/uchigatana'),
     require('./tricks/double_blade'),
     require('./tricks/staff'),
+    require('./tricks/fantasy_double_tachi'),
 ]

@@ -5197,11 +5197,11 @@ class OotachiTricks extends DefaultTrickModule$4 {
         super('rgb39.weapon.ootachi', 'idle', ['weapon:ootachi', 'weapon:ootachi_akaoni', 'weapon:ootachi_dragon'], new OotachiMoves());
     }
 }
-const tricks$5 = new OotachiTricks();
+const tricks$6 = new OotachiTricks();
 
 var ootachi = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$5
+	tricks: tricks$6
 });
 
 var require$$4 = /*@__PURE__*/getAugmentedNamespace(ootachi);
@@ -5868,11 +5868,11 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         }
     };
 }
-const tricks$4 = new ShieldSwordTricks();
+const tricks$5 = new ShieldSwordTricks();
 
 var shield_with_sword = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$4
+	tricks: tricks$5
 });
 
 var require$$6$1 = /*@__PURE__*/getAugmentedNamespace(shield_with_sword);
@@ -6925,11 +6925,11 @@ class UchigatanaModule extends DefaultTrickModule$4 {
         ], new UchigatanaMoves());
     }
 }
-const tricks$3 = new UchigatanaModule();
+const tricks$4 = new UchigatanaModule();
 
 var uchigatana = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$3
+	tricks: tricks$4
 });
 
 var require$$7$1 = /*@__PURE__*/getAugmentedNamespace(uchigatana);
@@ -7870,11 +7870,11 @@ class DoubleBlade extends DefaultTrickModule$4 {
         ], new DoubleBladeMoves());
     }
 }
-const tricks$2 = new DoubleBlade();
+const tricks$3 = new DoubleBlade();
 
 var double_blade = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$2
+	tricks: tricks$3
 });
 
 var require$$8$1 = /*@__PURE__*/getAugmentedNamespace(double_blade);
@@ -7991,14 +7991,57 @@ class StaffModule extends DefaultTrickModule$4 {
         super('rgb:staff', 'idle', ['weapon:staff'], new StaffMoves());
     }
 }
-const tricks$1 = new StaffModule();
+const tricks$2 = new StaffModule();
 
 var staff = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	tricks: tricks$2
+});
+
+var require$$9 = /*@__PURE__*/getAugmentedNamespace(staff);
+
+class FantasyDoubleTachi extends DefaultMoves$4 {
+    constructor() {
+        super();
+        this.setup('resume');
+    }
+    hold = {
+        cast: Infinity,
+        onEnter(pl, ctx) {
+            playAnimCompatibility(pl, 'animation.fantasy.double_tachi.init', 'animation.fantasy.double_tachi.init');
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+        }
+    };
+    resume = {
+        transitions: {
+            hold: {
+                onEndOfLife: {
+                    hasTarget: false,
+                }
+            },
+            hurt: {
+                onHurt: null
+            },
+        }
+    };
+}
+class FantasyDoubleTachiTricks extends DefaultTrickModule$4 {
+    constructor() {
+        super('rgb39:fantasy_double_tachi', 'hold', ['weapon:fantasy_double_tachi'], new FantasyDoubleTachi());
+    }
+}
+const tricks$1 = new FantasyDoubleTachiTricks();
+
+var fantasy_double_tachi = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	tricks: tricks$1
 });
 
-var require$$9 = /*@__PURE__*/getAugmentedNamespace(staff);
+var require$$10 = /*@__PURE__*/getAugmentedNamespace(fantasy_double_tachi);
 
 var collection = [
     double_dagger,
@@ -8011,6 +8054,7 @@ var collection = [
     require$$7$1,
     require$$8$1,
     require$$9,
+    require$$10,
 ];
 
 var collection$1 = /*@__PURE__*/getDefaultExportFromCjs(collection);

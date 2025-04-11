@@ -111,6 +111,30 @@
                     "position": [ 0, -1, 0 ]
 				}
 			}
+		},
+		"animation.hold.fantasy_double_tachi": {
+			"loop": "hold_on_last_frame",
+			"override_previous_animation": true,
+			"bones": {
+				"rightItem": {
+					"position": [ -19, 0, 0 ]
+				},
+				"leftItem": {
+				    "position": [ 7, 0, 0 ]
+				},
+				"waistSaya": {
+                    "position": [ -7, 0, 0 ]
+				},
+				"waistSword": {
+                    "position": [ -7, 0, 0 ]
+				},
+				"waistSaya2": {
+                    "position": [ 20, 0, 0 ]
+				},
+				"waistSword2": {
+                    "position": [ 20, 0, 0 ]
+				}
+			}
 		}
 	}
 }

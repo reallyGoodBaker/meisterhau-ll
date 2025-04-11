@@ -46,6 +46,9 @@
         },
         "hermit_katana": {
             "textures": "textures/items/hermit_katana"
+        },
+        "fantasy_double_tachi": {
+            "textures": "textures/items/fantasy_double_tachi"
         }
     }
 }

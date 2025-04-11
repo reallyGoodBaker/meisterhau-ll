@@ -1,0 +1,37 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.fantasy.double_tachi.init": {
+			"loop": true,
+			"override_previous_animation": true,
+			"bones": {
+				"leftArm": {
+					"rotation": [23.00002, 19.81946, -11.34191],
+					"position": [0, -0.3, 0]
+				},
+				"leftForearm": {
+					"rotation": [-72.0697, 2.78689, -20.74324]
+				},
+				"leftItem": {
+					"scale": 0
+				},
+				"rightItem": {
+					"scale": 0
+				},
+				"waistSaya": {
+					"rotation": [-25, 0, 0],
+					"position": [0, 0.8, -2],
+					"scale": 1
+				},
+				"waistSaya2": {
+					"rotation": [-4.93135, -4.8141, 2.91176],
+					"position": [0.7, 0, -1],
+					"scale": 1
+				}
+			},
+			"timeline": {
+				"0.0": ["v.item_scale = 0;", "v.waist_item_scale = 1;"]
+			}
+		}
+	}
+}
