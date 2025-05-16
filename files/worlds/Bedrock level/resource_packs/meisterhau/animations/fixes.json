@@ -64,10 +64,16 @@
 				},
 				"waistSword": {
 					"scale": "v.waist_item_scale"
+				},
+				"leftItem": {
+					"scale": "v.item_scale_offhand"
+				},
+				"waistSword2": {
+					"scale": "v.waist_item_scale_1"
 				}
 			},
 			"timeline": {
-				"0.0": "v.item_scale = 1;v.waist_item_scale = 1;"
+				"0.0": "v.item_scale = 1;v.waist_item_scale = 1;v.item_scale_offhand = 1;v.waist_item_scale_1 = 1;"
 			}
 		},
 		"animation.hold.db_morphidae": {
@@ -100,15 +106,15 @@
 			"override_previous_animation": true,
 			"bones": {
 				"rightItem": {
-					"scale": [ 0.7, 0.7, 0.7 ]
+					"scale": [0.7, 0.7, 0.7]
 				},
 				"waistSaya": {
-					"scale": [ 0.7, 0.7, 0.7 ],
-                    "position": [ 0, -1, 0 ]
+					"scale": [0.7, 0.7, 0.7],
+					"position": [0, -1, 0]
 				},
 				"waistSword": {
-					"scale": [ 0.7, 0.7, 0.7 ],
-                    "position": [ 0, -1, 0 ]
+					"scale": [0.7, 0.7, 0.7],
+					"position": [0, -1, 0]
 				}
 			}
 		},
@@ -117,22 +123,22 @@
 			"override_previous_animation": true,
 			"bones": {
 				"rightItem": {
-					"position": [ -19, 0, 0 ]
+					"position": [ -13, 0, 0 ]
 				},
 				"leftItem": {
-				    "position": [ 7, 0, 0 ]
+				    "position": [ 3, 0, 0 ]
 				},
 				"waistSaya": {
-                    "position": [ -7, 0, 0 ]
+                    "position": [ 4.5, 0, 0 ]
 				},
 				"waistSword": {
                     "position": [ -7, 0, 0 ]
 				},
 				"waistSaya2": {
-                    "position": [ 20, 0, 0 ]
+                    "position": [ 9, 0, 2 ]
 				},
 				"waistSword2": {
-                    "position": [ 20, 0, 0 ]
+                    "position": [ 9, 0, 0 ]
 				}
 			}
 		}

@@ -489,7 +489,7 @@
 				"waist": {
 					"rotation": {
 						"0.0": {
-							"post": [0, 7.5, 0],
+							"post": [0.32902, 7.49282, 2.52154],
 							"lerp_mode": "catmullrom"
 						},
 						"0.2": {
@@ -497,7 +497,7 @@
 							"lerp_mode": "catmullrom"
 						},
 						"0.41": {
-							"post": [0, -7.5, 0],
+							"post": [0.32902, -7.49282, -2.52154],
 							"lerp_mode": "catmullrom"
 						},
 						"0.62": {
@@ -505,7 +505,7 @@
 							"lerp_mode": "catmullrom"
 						},
 						"0.83": {
-							"post": [0, 7.5, 0],
+							"post": [0.32902, 7.49282, 2.52154],
 							"lerp_mode": "catmullrom"
 						}
 					}

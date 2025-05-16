@@ -8008,11 +8008,38 @@ class FantasyDoubleTachi extends DefaultMoves$4 {
     hold = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.fantasy.double_tachi.init', 'animation.fantasy.double_tachi.init');
+            playAnimCompatibility(pl, 'animation.fantasy.double_tachi.hold', 'animation.fantasy.double_tachi.hold');
         },
         transitions: {
             hurt: {
                 onHurt: null
+            },
+            kamae: {
+                onLock: null
+            },
+            running: {
+                onChangeSprinting: {
+                    sprinting: true,
+                }
+            },
+        }
+    };
+    running = {
+        cast: Infinity,
+        onEnter(pl, ctx) {
+            playAnimCompatibility(pl, 'animation.fantasy.double_tachi.running', 'animation.fantasy.double_tachi.running');
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            kamae: {
+                onLock: null
+            },
+            hold: {
+                onChangeSprinting: {
+                    sprinting: false,
+                }
             },
         }
     };
@@ -8023,8 +8050,32 @@ class FantasyDoubleTachi extends DefaultMoves$4 {
                     hasTarget: false,
                 }
             },
+            kamae: {
+                onEndOfLife: {
+                    hasTarget: true,
+                }
+            },
             hurt: {
                 onHurt: null
+            },
+            running: {
+                onChangeSprinting: {
+                    sprinting: true,
+                }
+            },
+        }
+    };
+    kamae = {
+        cast: Infinity,
+        onEnter(pl, ctx) {
+            playAnimCompatibility(pl, 'animation.fantasy.double_tachi.kamae', 'animation.fantasy.double_tachi.kamae');
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            hold: {
+                onReleaseLock: null
             },
         }
     };
@@ -8379,7 +8430,7 @@ const battleCamera$1 = (pl, en) => {
     const cameraPos = {
         x: crossPos.x + cameraPosVec.dx,
         z: crossPos.z + cameraPosVec.dy,
-        y: plPos.y - .3 + offsetY,
+        y: plPos.y - .2 + offsetY,
     };
 
     // camera(pl, 0.1, 'linear', cameraPos, {

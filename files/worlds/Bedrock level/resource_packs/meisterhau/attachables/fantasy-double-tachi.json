@@ -14,17 +14,17 @@
                 "blue": "textures/misc/blue_overlay"
             },
             "geometry": {
-                "default": "geometry.fantasy.double_tachi"
+                "default": "geometry.fantasy_db_tachi"
             },
             "animations": {
-                "init": "animation.hold.fantasy_double_tachi"
+                "fix": "animation.hold.fantasy_double_tachi"
             },
             "scripts": {
                 "initialize": [
                     "v.item_status = 0;"
                 ],
                 "animate": [
-                    "init"
+                    "fix"
                 ]
             },
             "render_controllers": [

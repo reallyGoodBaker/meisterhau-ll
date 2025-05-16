@@ -10,11 +10,39 @@ class FantasyDoubleTachi extends DefaultMoves {
     hold: Move = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.fantasy.double_tachi.init', 'animation.fantasy.double_tachi.init')
+            playAnimCompatibility(pl, 'animation.fantasy.double_tachi.hold', 'animation.fantasy.double_tachi.hold')
         },
         transitions: {
             hurt: {
                 onHurt: null
+            },
+            kamae: {
+                onLock: null
+            },
+            running: {
+                onChangeSprinting: {
+                    sprinting: true,
+                }
+            },
+        }
+    }
+
+    running: Move = {
+        cast: Infinity,
+        onEnter(pl, ctx) {
+            playAnimCompatibility(pl, 'animation.fantasy.double_tachi.running', 'animation.fantasy.double_tachi.running')
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            kamae: {
+                onLock: null
+            },
+            hold: {
+                onChangeSprinting: {
+                    sprinting: false,
+                }
             },
         }
     }
@@ -26,8 +54,33 @@ class FantasyDoubleTachi extends DefaultMoves {
                     hasTarget: false,
                 }
             },
+            kamae: {
+                onEndOfLife: {
+                    hasTarget: true,
+                }
+            },
             hurt: {
                 onHurt: null
+            },
+            running: {
+                onChangeSprinting: {
+                    sprinting: true,
+                }
+            },
+        }
+    }
+
+    kamae: Move = {
+        cast: Infinity,
+        onEnter(pl, ctx) {
+            playAnimCompatibility(pl, 'animation.fantasy.double_tachi.kamae', 'animation.fantasy.double_tachi.kamae')
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            hold: {
+                onReleaseLock: null
             },
         }
     }
