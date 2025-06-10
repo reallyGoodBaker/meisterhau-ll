@@ -8,17 +8,18 @@ export interface Tab {
     name: string
     path: string
     persist?: boolean
+    icon: string
 }
 
 const Tab = ({ tab }: { tab: Tab }) => {
-    const [ currentTab, setTab ] = useTab() as any[]
+    const [ currentTab, setTab ] = useTab()
     const nav = useNavigate()
 
     return (
         <div class={styles['tab-container']}>
             <div
                 class={`i ${styles.tab} ${currentTab() === tab ? styles.selected : ''}`}
-                on:click={() => {
+                onClick={() => {
                     if (currentTab() !== tab) {
                         setTab(tab)
                         to(tab.path, nav)

@@ -169,7 +169,8 @@
                 "draw_trace": "weapon:draw_trace",
                 "draw_unstoppable": "weapon:draw_unstoppable",
                 "spark": "weapon:spark",
-                "spark_deflection": "weapon:spark_deflection"
+                "spark_deflection": "weapon:spark_deflection",
+                "hit_weapon": "weapon:hit"
             },
             "render_controllers": [
                 {

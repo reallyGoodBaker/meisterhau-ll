@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <button id="b1">File1</button>
+    <button id="b2">File2</button>
+    <button id="b3">Is Equal</button>
+    <button id="b4">Write Something</button>
+
+    <script>
+        const b1 = document.getElementById('b1')
+        const b2 = document.getElementById('b2')
+        const equal = document.getElementById('b3')
+        let f1, f2
+        b1.onclick = async () => {
+            f1 = await showOpenFilePicker({
+                multiple: true
+            })
+            console.log(f1)
+        }
+        b2.onclick = async () => {
+            f2 = await showDirectoryPicker()
+        }
+        equal.onclick = async () => {
+            console.log(f1)
+            console.log(await f1.isSameEntry(f2))
+        }
+
+        const b4 = document.getElementById('b4')
+        b4.onclick = async () => {
+            const file = await f1.getFileHandle('test.txt', { create: true })
+            console.log(file)
+        }
+    </script>
+</body>
+</html>

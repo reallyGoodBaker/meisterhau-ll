@@ -42,7 +42,7 @@ class ContextMenu {
         }>,
     ) {}
 
-    private _beforeClose = Function.prototype as any
+    private _beforeClose: Function[] = []
 
     open() {
         this.setContextMenu(menu => {
@@ -65,12 +65,15 @@ class ContextMenu {
             return menu
         })
     }
+
+    findCategory(name: string) {
+        return this.contextMenuRef().categories.find(c => c.name === name)
+    }
     
     addCategory(name: string, category: ContextMenuCategory) {
         this.setContextMenu(menu => {
-            const index = menu.categories.findIndex(c => c.name === name)
-            if (index !== -1) {
-                menu.categories[index].category = category
+            const candidate = this.findCategory(name)?.category
+            if (candidate) {
                 return menu
             }
 
@@ -79,6 +82,13 @@ class ContextMenu {
         })
 
         return this
+    }
+
+    addCategoryOnce(name: string, category: ContextMenuCategory) {
+        this.addCategory(name, category)
+        this.beforeClose(() => this.removeCategory(name))
+        
+        return this   
     }
     
     removeCategory(name: string) {
@@ -94,8 +104,8 @@ class ContextMenu {
         return this.contextMenuRef()
     }
 
-    beforeClose(fn: () => void) {
-        this._beforeClose = fn
+    beforeClose(cb: () => void) {
+        this._beforeClose.push(cb)
         return this
     }
 }
@@ -110,7 +120,7 @@ export function ContextMenuProvider(props: any) {
     
     const contextMenu = new ContextMenu(setContextMenu, contextMenuRef)
 
-    document.addEventListener('contextmenu', ev => {
+    window.addEventListener('contextmenu', ev => {
         ev.preventDefault()
         const { x, y } = calcInRect(
             offsetRect(container!.getBoundingClientRect()!, ev.clientX, ev.clientY),
@@ -125,12 +135,10 @@ export function ContextMenuProvider(props: any) {
 
     let container: HTMLDivElement | null = null
 
-    document.addEventListener('mousedown', ev => {
+    window.addEventListener('mousedown', ev => {
         if (container && !ev.composedPath().includes(container)) {
             //@ts-ignore
-            contextMenu._beforeClose()
-            //@ts-ignore
-            contextMenu._beforeClose = Function.prototype as any
+            contextMenu._beforeClose.splice(0, contextMenu._beforeClose.length).forEach(fn => fn())
             setContextMenu(menu => {
                 menu.open = false
                 return menu

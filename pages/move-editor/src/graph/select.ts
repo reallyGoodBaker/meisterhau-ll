@@ -1,17 +1,56 @@
-import { createSignal } from "solid-js"
+import { useTab } from "../workbench/main/pager"
 
-const [ selected, select ] = createSignal<string|null>(null)
+export class GraphSelection {
+    readonly _selected = new Set<string>()
+    static readonly mapping = new Map<string, GraphSelection>()
 
-export function useSelect() {
-    let onselect = Function.prototype
-    const _select = (id: string) => {
-        select(id)
-        onselect(id)
+    constructor(readonly id: string) {
+        GraphSelection.mapping.set(id, this)
     }
 
-    return [
-        selected,
-        _select,
-        (fn: (id: string) => void) => { onselect = fn },
-    ] as const
+    private _onChangeCb: ((removes: string[], adds: string[]) => void)[] = []
+
+    has(id: string) {
+        return this._selected.has(id)
+    }
+
+    select(...id: string[]) {
+        for (const _id of id) {
+            this._selected.add(_id)
+        }
+        this._onChangeCb.forEach(cb => cb([], id))
+    }
+
+    drop(...id: string[]) {
+        for (const _id of id) {
+            this._selected.delete(_id)
+        }
+        this._onChangeCb.forEach(cb => cb(id, []))
+    }
+
+    clear() {
+        const selected = [...this._selected]
+        this._selected.clear()
+        this._onChangeCb.forEach(cb => cb(selected, []))
+    }
+
+    selected() {
+        return [...this._selected]
+    }
+
+    onChange(cb: (removes: string[], adds: string[]) => void) {
+        this._onChangeCb.push(cb)
+    }
+
+    offChange(cb: () => void) {
+        this._onChangeCb = this._onChangeCb.filter(_cb => _cb !== cb)
+    }
+}
+
+const [ tab ] = useTab()
+
+export function useSelection() {
+    const id = tab().name
+    const candidate = GraphSelection.mapping.get(id)
+    return candidate ?? new GraphSelection(id)
 }

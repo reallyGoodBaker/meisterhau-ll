@@ -2,7 +2,7 @@ import { createSignal } from 'solid-js'
 import { Tab } from '../tab/tab'
 import { createStore } from 'solid-js/store'
 
-export const defaultTab: Tab = { name: '主页', path: '/', persist: true }
+export const defaultTab: Tab = { name: '主页', path: '/', persist: true, icon: 'e88a' }
 const [ tab, selectTab ] = createSignal<Tab>(defaultTab)
 
 export const [ tabs, setTabs ] = createStore([ defaultTab ])
@@ -18,10 +18,16 @@ export function to(path: string, navigate: Function) {
     navigate(path)
 }
 
-export const addGraphPage = (name: string, path: string) => {
+export interface TabConf {
+    name: string
+    path: string
+    icon?: string
+}
+
+export const addPage = ({name, path, icon}: TabConf) => {
     let tab = tabs.find(t => t.name === name)
     if (!tab) {
-        tab = { name, path }
+        tab = { name, path, icon: icon ?? 'e88a' }
         setTabs(
             [...tabs, tab]
         )
@@ -30,7 +36,7 @@ export const addGraphPage = (name: string, path: string) => {
     selectTab(tabs.find(t => t.name === name) as any)
 }
 
-export const clearGraphPage = () => {
+export const clearPage = () => {
     setTabs(
         [ defaultTab ]
     )
@@ -56,8 +62,8 @@ function closePage(n: string, navigate: Function) {
 
 export function usePager() {
     return {
-        open: addGraphPage,
+        open: addPage,
         close: closePage,
-        clear: clearGraphPage,
+        clear: clearPage,
     }
 }

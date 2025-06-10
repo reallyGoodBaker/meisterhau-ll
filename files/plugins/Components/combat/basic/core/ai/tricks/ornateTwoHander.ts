@@ -1,4 +1,4 @@
-import { entitySelector, playAnimEntity } from "@combat/basic"
+import { entitySelector, playAnimCompatibility, playAnimEntity } from "@combat/basic"
 import { DefaultMoves, DefaultTrickModule } from "@combat/basic/default"
 
 // 不继承自DefaultMoves也可以，但是会少很多预设的状态
@@ -41,7 +41,12 @@ class OrnateTwoHanderMoves extends DefaultMoves {
     left: Move = {
         cast: 27,
         onEnter(pl, ctx) {
+            mc.runcmdEx(`execute as ${entitySelector(pl as Entity)} at @s run tp ~~~ facing @p`)
             playAnimEntity(pl as Entity, 'animation.weapon.ai.guard.attack.left')
+            ctx.status.hegemony = true
+        },
+        onLeave(pl, ctx) {
+            ctx.status.hegemony = false
         },
         timeline: {
             2: (pl, ctx) => {
@@ -62,10 +67,10 @@ class OrnateTwoHanderMoves extends DefaultMoves {
                     ctx.attack(pl, e, {
                         damage: 20,
                         direction: 'left',
-                        trace: true,
                     })
                 })
-            }
+            },
+            20: (_, ctx) => ctx.trap(_),
         },
         transitions: {
             hurt: {
@@ -76,6 +81,11 @@ class OrnateTwoHanderMoves extends DefaultMoves {
             },
             parried: {
                 onParried: null
+            },
+            left2: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
             }
         }
     }
@@ -83,6 +93,7 @@ class OrnateTwoHanderMoves extends DefaultMoves {
     top: Move = {
         cast: 27,
         onEnter(pl, ctx) {
+            mc.runcmdEx(`execute as ${entitySelector(pl as Entity)} at @s run tp ~~~ facing @p`)
             playAnimEntity(pl as Entity, 'animation.weapon.ai.guard.attack.top')
         },
         timeline: {
@@ -91,6 +102,9 @@ class OrnateTwoHanderMoves extends DefaultMoves {
             },
             5: (pl, ctx) => {
                 ctx.setVelocity(pl, 90, 1, 0)
+            },
+            9: (pl, ctx) => {
+              ctx.trap(pl)  
             },
             10: (pl, ctx) => {
                 ctx.setVelocity(pl, 90, 1, 0)
@@ -114,7 +128,10 @@ class OrnateTwoHanderMoves extends DefaultMoves {
                 onHurt: null
             },
             idle: {
-                onEndOfLife: null
+                onEndOfLife: null,
+                onTrap: {
+                    preInput: 'onFeint'
+                }
             },
             parried: {
                 onParried: null
@@ -125,6 +142,7 @@ class OrnateTwoHanderMoves extends DefaultMoves {
     right: Move = {
         cast: 27,
         onEnter(pl, ctx) {
+            mc.runcmdEx(`execute as ${entitySelector(pl as Entity)} at @s run tp ~~~ facing @p`)
             playAnimEntity(pl as Entity, 'animation.weapon.ai.guard.attack.right')
         },
         onLeave(pl, ctx) {
@@ -154,10 +172,102 @@ class OrnateTwoHanderMoves extends DefaultMoves {
             },
             7: (_, ctx) => ctx.status.hegemony = true,
             15: (_, ctx) => ctx.status.hegemony = false,
+            20: (_, ctx) => ctx.trap(_),
         },
         transitions: {
             hurt: {
                 onHurt: null
+            },
+            idle: {
+                onEndOfLife: null
+            },
+            parried: {
+                onParried: null
+            },
+            right2: {
+                onTrap: {
+                    preInput: 'onUseItem'
+                }
+            }
+        }
+    }
+
+    left2: Move = {
+        cast: 30,
+        onEnter(pl, ctx) {
+            mc.runcmdEx(`execute as ${entitySelector(pl as Entity)} at @s run tp ~~~ facing @p`)
+            playAnimCompatibility(pl, 'animation.weapon.ai.guard.attack.left2', 'left2')
+            ctx.status.hegemony = true
+        },
+        onLeave(pl, ctx) {
+            ctx.status.hegemony = false
+        },
+        timeline: {
+            12: (pl, ctx) => {
+                ctx.selectFromRange(pl, {
+                    angle: 180,
+                    radius: 3,
+                    rotation: -90
+                }).forEach(e => {
+                    ctx.attack(pl, e, {
+                        damage: 28,
+                        direction: 'left',
+                    })
+                })
+            },
+            4: (pl, ctx) => {
+                ctx.setVelocity(pl, 90, 0.5, 0)
+            },
+            11: (pl, ctx) => {
+                ctx.setVelocity(pl, 90, 1, 0)
+            }
+        },
+        transitions: {
+            hurt: {
+                onInterrupted: null
+            },
+            idle: {
+                onEndOfLife: null
+            },
+            parried: {
+                onParried: null
+            }
+        }
+    }
+
+    right2: Move = {
+        cast: 28,
+        onEnter(pl, ctx) {
+            mc.runcmdEx(`execute as ${entitySelector(pl as Entity)} at @s run tp ~~~ facing @p`)
+            playAnimCompatibility(pl, 'animation.weapon.ai.guard.attack.right2', 'left2')
+            ctx.status.hegemony = true
+        },
+        onLeave(pl, ctx) {
+            ctx.status.hegemony = false
+        },
+        timeline: {
+            9: (pl, ctx) => {
+                ctx.selectFromRange(pl, {
+                    angle: 180,
+                    radius: 3,
+                    rotation: -90
+                }).forEach(e => {
+                    ctx.attack(pl, e, {
+                        damage: 20,
+                        direction: 'right',
+                    })
+                })
+            },
+            4: (pl, ctx) => {
+                ctx.setVelocity(pl, 90, 0.5, 0)
+            },
+            7: (pl, ctx) => {
+                ctx.setVelocity(pl, 90, 0.5, 0)
+            }
+        },
+        transitions: {
+            hurt: {
+                onInterrupted: null
             },
             idle: {
                 onEndOfLife: null

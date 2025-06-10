@@ -1,9 +1,9 @@
 .line {
-    position: relative;
     display: flex;
     align-items: center;
+    justify-content: center;
     height: 6px;
-    position: absolute;
+    position: fixed;
     border: solid 1px transparent;
     border-radius: 4px;
     cursor: pointer;

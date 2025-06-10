@@ -228,6 +228,24 @@ export abstract class MeisterhauAI extends EventChannel<AIEventTriggerContext> {
         this.setStrategy(strategy)
         this.start()
     }
+
+    randomActions(conf: Record<number, MeisterhauAIState>) {
+        const keys = Object.keys(conf)
+        const sum = keys.reduce((a, b) => a + Number(b), 0)
+        const rands = keys.map(v => Number(v) / sum)
+
+        let rand = Math.random()
+
+        for (const reduce of rands) {
+            rand -= reduce
+            if (rand < 0) {
+                const index = keys[rands.indexOf(reduce)]
+                return conf[index as any]
+            }
+        }
+
+        return conf[0]
+    }
 }
 
 const ais: Record<string, [ ConstructorOf<MeisterhauAI>, TrickModule ]> = {}

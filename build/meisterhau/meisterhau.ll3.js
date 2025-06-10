@@ -1654,7 +1654,7 @@ let CameraFading$1 = CameraFading_1 = class CameraFading extends BaseComponent {
                 to = [...CameraComponent$1.defaultOffset, 15, 0];
                 break;
             case 'vertical':
-                to = [...CameraComponent$1.defaultOffset, 0, -30];
+                to = [...CameraComponent$1.defaultOffset, 0, -5];
                 break;
             default:
                 to = [1.5, 0, 0.5, 0, 0];
@@ -5197,11 +5197,11 @@ class OotachiTricks extends DefaultTrickModule$4 {
         super('rgb39.weapon.ootachi', 'idle', ['weapon:ootachi', 'weapon:ootachi_akaoni', 'weapon:ootachi_dragon'], new OotachiMoves());
     }
 }
-const tricks$6 = new OotachiTricks();
+const tricks$7 = new OotachiTricks();
 
 var ootachi = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$6
+	tricks: tricks$7
 });
 
 var require$$4 = /*@__PURE__*/getAugmentedNamespace(ootachi);
@@ -5868,11 +5868,11 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         }
     };
 }
-const tricks$5 = new ShieldSwordTricks();
+const tricks$6 = new ShieldSwordTricks();
 
 var shield_with_sword = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$5
+	tricks: tricks$6
 });
 
 var require$$6$1 = /*@__PURE__*/getAugmentedNamespace(shield_with_sword);
@@ -6925,11 +6925,11 @@ class UchigatanaModule extends DefaultTrickModule$4 {
         ], new UchigatanaMoves());
     }
 }
-const tricks$4 = new UchigatanaModule();
+const tricks$5 = new UchigatanaModule();
 
 var uchigatana = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$4
+	tricks: tricks$5
 });
 
 var require$$7$1 = /*@__PURE__*/getAugmentedNamespace(uchigatana);
@@ -7870,11 +7870,11 @@ class DoubleBlade extends DefaultTrickModule$4 {
         ], new DoubleBladeMoves());
     }
 }
-const tricks$3 = new DoubleBlade();
+const tricks$4 = new DoubleBlade();
 
 var double_blade = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$3
+	tricks: tricks$4
 });
 
 var require$$8$1 = /*@__PURE__*/getAugmentedNamespace(double_blade);
@@ -7991,11 +7991,11 @@ class StaffModule extends DefaultTrickModule$4 {
         super('rgb:staff', 'idle', ['weapon:staff'], new StaffMoves());
     }
 }
-const tricks$2 = new StaffModule();
+const tricks$3 = new StaffModule();
 
 var staff = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$2
+	tricks: tricks$3
 });
 
 var require$$9 = /*@__PURE__*/getAugmentedNamespace(staff);
@@ -8085,14 +8085,214 @@ class FantasyDoubleTachiTricks extends DefaultTrickModule$4 {
         super('rgb39:fantasy_double_tachi', 'hold', ['weapon:fantasy_double_tachi'], new FantasyDoubleTachi());
     }
 }
-const tricks$1 = new FantasyDoubleTachiTricks();
+const tricks$2 = new FantasyDoubleTachiTricks();
 
 var fantasy_double_tachi = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	tricks: tricks$2
+});
+
+var require$$10 = /*@__PURE__*/getAugmentedNamespace(fantasy_double_tachi);
+
+class DoubleAxeMoves extends DefaultMoves$4 {
+    constructor() {
+        super();
+        this.setup('resume');
+    }
+    resume = {
+        transitions: {
+            idle: {
+                onEndOfLife: {
+                    hasTarget: false
+                }
+            },
+            hold: {
+                onEndOfLife: {
+                    hasTarget: true
+                }
+            }
+        }
+    };
+    idle = {
+        cast: Infinity,
+        onEnter(pl, ctx) {
+            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.idle', 'animation.meisterhau.double_axe.idle');
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            hold: {
+                onLock: null
+            },
+        }
+    };
+    hold = {
+        cast: Infinity,
+        onEnter(pl, ctx) {
+            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.hold', 'animation.meisterhau.double_axe.hold');
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            idle: {
+                onReleaseLock: null
+            },
+            attackStart: {
+                onAttack: null
+            }
+        }
+    };
+    attackStart = {
+        cast: 24,
+        onEnter(pl, ctx) {
+            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.light.start', 'animation.meisterhau.double_axe.light.start');
+            ctx.lookAtTarget(pl);
+            ctx.freeze(pl);
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl);
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null
+            },
+            hurt: {
+                onHurt: null
+            },
+            parried: {
+                onParried: null
+            },
+            blocked: {
+                onBlocked: null
+            },
+            attack1: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            }
+        },
+        timeline: {
+            2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
+            8: (pl, ctx) => ctx.selectFromRange(pl, {
+                angle: 90,
+                radius: 2.5,
+                rotation: 45
+            }).forEach(en => ctx.attack(pl, en, {
+                damage: 16,
+                knockback: 0.2,
+                direction: 'vertical',
+            })),
+            17: (pl, ctx) => ctx.trap(pl)
+        }
+    };
+    attack1 = {
+        cast: 24,
+        onEnter(pl, ctx) {
+            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.light.1', 'animation.meisterhau.double_axe.light.1');
+            ctx.lookAtTarget(pl);
+            ctx.freeze(pl);
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl);
+            ctx.status.hegemony = false;
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null
+            },
+            hurt: {
+                onInterrupted: null
+            },
+            parried: {
+                onParried: null
+            },
+            blocked: {
+                onBlocked: null
+            },
+            attack2: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            }
+        },
+        timeline: {
+            2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
+            5: (_, ctx) => ctx.status.hegemony = true,
+            15: (_, ctx) => ctx.status.hegemony = false,
+            8: (pl, ctx) => ctx.selectFromRange(pl, {
+                angle: 90,
+                radius: 2.5,
+                rotation: 45
+            }).forEach(en => ctx.attack(pl, en, {
+                damage: 16,
+                knockback: 0.2,
+                direction: 'vertical',
+            })),
+            17: (pl, ctx) => ctx.trap(pl)
+        }
+    };
+    attack2 = {
+        cast: 24,
+        onEnter(pl, ctx) {
+            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.light.2', 'animation.meisterhau.double_axe.light.2');
+            ctx.lookAtTarget(pl);
+            ctx.freeze(pl);
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl);
+            ctx.status.hegemony = false;
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null
+            },
+            hurt: {
+                onInterrupted: null
+            },
+            parried: {
+                onParried: null
+            },
+            blocked: {
+                onBlocked: null
+            },
+            attack1: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            }
+        },
+        timeline: {
+            2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
+            5: (_, ctx) => ctx.status.hegemony = true,
+            15: (_, ctx) => ctx.status.hegemony = false,
+            8: (pl, ctx) => ctx.selectFromRange(pl, {
+                angle: 90,
+                radius: 2.5,
+                rotation: 45
+            }).forEach(en => ctx.attack(pl, en, {
+                damage: 16,
+                knockback: 0.2,
+                direction: 'vertical',
+            })),
+            17: (pl, ctx) => ctx.trap(pl)
+        }
+    };
+}
+class DoubleAxeTrick extends DefaultTrickModule$4 {
+    constructor() {
+        super('rgb39:double_axe', 'idle', ['weapon:double_diamond_axe'], new DoubleAxeMoves());
+    }
+}
+const tricks$1 = new DoubleAxeTrick();
+
+var double_axe = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	tricks: tricks$1
 });
 
-var require$$10 = /*@__PURE__*/getAugmentedNamespace(fantasy_double_tachi);
+var require$$11$1 = /*@__PURE__*/getAugmentedNamespace(double_axe);
 
 var collection = [
     double_dagger,
@@ -8106,6 +8306,7 @@ var collection = [
     require$$8$1,
     require$$9,
     require$$10,
+    require$$11$1,
 ];
 
 var collection$1 = /*@__PURE__*/getDefaultExportFromCjs(collection);
@@ -8306,7 +8507,7 @@ const camera$2 = (pl, easeTime, easeType, pos, lookAt) => {
 };
 
 const cameraRot = (pl, easeTime, easeType, pos, rotX, rotY) => {
-    mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} rot ${0} ${rotY}`); 
+    mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} rot ${rotX} ${rotY}`); 
 };
 
 function clearCamera$2(pl) {
@@ -8445,9 +8646,8 @@ const battleCamera$1 = (pl, en) => {
     };
 
     const yaw = Math.atan2(cameraEntityVec.z, cameraEntityVec.x) * ANGLE - 90;
-    const pitch = (Math.atan2(Math.sqrt(cameraEntityVec.x * cameraEntityVec.x + cameraEntityVec.z * cameraEntityVec.z), cameraEntityVec.y)) * ANGLE;
     const [ dYaw, dPitch ] = cameraComponent.rot;
-    cameraRot(pl, 0.1, 'linear', cameraPos, pitch + dPitch, yaw + dYaw);
+    cameraRot(pl, 0.1, 'linear', cameraPos, dPitch, yaw + dYaw);
 };
 
 var camera_1 = {
@@ -9766,6 +9966,20 @@ class MeisterhauAI extends EventChannel {
         this.setStrategy(strategy);
         this.start();
     }
+    randomActions(conf) {
+        const keys = Object.keys(conf);
+        const sum = keys.reduce((a, b) => a + Number(b), 0);
+        const rands = keys.map(v => Number(v) / sum);
+        let rand = Math.random();
+        for (const reduce of rands) {
+            rand -= reduce;
+            if (rand < 0) {
+                const index = keys[rands.indexOf(reduce)];
+                return conf[index];
+            }
+        }
+        return conf[0];
+    }
 }
 const ais = {};
 const aiRunning = new Map();
@@ -9855,7 +10069,12 @@ class OrnateTwoHanderMoves extends DefaultMoves$4 {
     left = {
         cast: 27,
         onEnter(pl, ctx) {
+            mc.runcmdEx(`execute as ${entitySelector(pl)} at @s run tp ~~~ facing @p`);
             playAnimEntity(pl, 'animation.weapon.ai.guard.attack.left');
+            ctx.status.hegemony = true;
+        },
+        onLeave(pl, ctx) {
+            ctx.status.hegemony = false;
         },
         timeline: {
             2: (pl, ctx) => {
@@ -9876,10 +10095,10 @@ class OrnateTwoHanderMoves extends DefaultMoves$4 {
                     ctx.attack(pl, e, {
                         damage: 20,
                         direction: 'left',
-                        trace: true,
                     });
                 });
-            }
+            },
+            20: (_, ctx) => ctx.trap(_),
         },
         transitions: {
             hurt: {
@@ -9890,12 +10109,18 @@ class OrnateTwoHanderMoves extends DefaultMoves$4 {
             },
             parried: {
                 onParried: null
+            },
+            left2: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
             }
         }
     };
     top = {
         cast: 27,
         onEnter(pl, ctx) {
+            mc.runcmdEx(`execute as ${entitySelector(pl)} at @s run tp ~~~ facing @p`);
             playAnimEntity(pl, 'animation.weapon.ai.guard.attack.top');
         },
         timeline: {
@@ -9904,6 +10129,9 @@ class OrnateTwoHanderMoves extends DefaultMoves$4 {
             },
             5: (pl, ctx) => {
                 ctx.setVelocity(pl, 90, 1, 0);
+            },
+            9: (pl, ctx) => {
+                ctx.trap(pl);
             },
             10: (pl, ctx) => {
                 ctx.setVelocity(pl, 90, 1, 0);
@@ -9927,7 +10155,10 @@ class OrnateTwoHanderMoves extends DefaultMoves$4 {
                 onHurt: null
             },
             idle: {
-                onEndOfLife: null
+                onEndOfLife: null,
+                onTrap: {
+                    preInput: 'onFeint'
+                }
             },
             parried: {
                 onParried: null
@@ -9937,6 +10168,7 @@ class OrnateTwoHanderMoves extends DefaultMoves$4 {
     right = {
         cast: 27,
         onEnter(pl, ctx) {
+            mc.runcmdEx(`execute as ${entitySelector(pl)} at @s run tp ~~~ facing @p`);
             playAnimEntity(pl, 'animation.weapon.ai.guard.attack.right');
         },
         onLeave(pl, ctx) {
@@ -9966,10 +10198,100 @@ class OrnateTwoHanderMoves extends DefaultMoves$4 {
             },
             7: (_, ctx) => ctx.status.hegemony = true,
             15: (_, ctx) => ctx.status.hegemony = false,
+            20: (_, ctx) => ctx.trap(_),
         },
         transitions: {
             hurt: {
                 onHurt: null
+            },
+            idle: {
+                onEndOfLife: null
+            },
+            parried: {
+                onParried: null
+            },
+            right2: {
+                onTrap: {
+                    preInput: 'onUseItem'
+                }
+            }
+        }
+    };
+    left2 = {
+        cast: 30,
+        onEnter(pl, ctx) {
+            mc.runcmdEx(`execute as ${entitySelector(pl)} at @s run tp ~~~ facing @p`);
+            playAnimCompatibility(pl, 'animation.weapon.ai.guard.attack.left2', 'left2');
+            ctx.status.hegemony = true;
+        },
+        onLeave(pl, ctx) {
+            ctx.status.hegemony = false;
+        },
+        timeline: {
+            12: (pl, ctx) => {
+                ctx.selectFromRange(pl, {
+                    angle: 180,
+                    radius: 3,
+                    rotation: -90
+                }).forEach(e => {
+                    ctx.attack(pl, e, {
+                        damage: 28,
+                        direction: 'left',
+                    });
+                });
+            },
+            4: (pl, ctx) => {
+                ctx.setVelocity(pl, 90, 0.5, 0);
+            },
+            11: (pl, ctx) => {
+                ctx.setVelocity(pl, 90, 1, 0);
+            }
+        },
+        transitions: {
+            hurt: {
+                onInterrupted: null
+            },
+            idle: {
+                onEndOfLife: null
+            },
+            parried: {
+                onParried: null
+            }
+        }
+    };
+    right2 = {
+        cast: 28,
+        onEnter(pl, ctx) {
+            mc.runcmdEx(`execute as ${entitySelector(pl)} at @s run tp ~~~ facing @p`);
+            playAnimCompatibility(pl, 'animation.weapon.ai.guard.attack.right2', 'left2');
+            ctx.status.hegemony = true;
+        },
+        onLeave(pl, ctx) {
+            ctx.status.hegemony = false;
+        },
+        timeline: {
+            9: (pl, ctx) => {
+                ctx.selectFromRange(pl, {
+                    angle: 180,
+                    radius: 3,
+                    rotation: -90
+                }).forEach(e => {
+                    ctx.attack(pl, e, {
+                        damage: 20,
+                        direction: 'right',
+                    });
+                });
+            },
+            4: (pl, ctx) => {
+                ctx.setVelocity(pl, 90, 0.5, 0);
+            },
+            7: (pl, ctx) => {
+                ctx.setVelocity(pl, 90, 0.5, 0);
+            }
+        },
+        transitions: {
+            hurt: {
+                onInterrupted: null
             },
             idle: {
                 onEndOfLife: null
@@ -10059,11 +10381,15 @@ class Guard extends MeisterhauAI {
             }
             return Status$3.get(this.target.uniqueId).isBlocking;
         });
-        const [isPlayerInputSignal] = this.event('isPlayerInput', input => {
+        const [isPlayerInputSignal] = this.event('isPlayerInput', (input) => {
             if (!this.target) {
                 return false;
             }
-            return Status$3.get(this.target.uniqueId)?.preInput === input;
+            const preinput = Status$3.get(this.target.uniqueId)?.preInput;
+            if (!preinput) {
+                return false;
+            }
+            return input.includes(preinput);
         });
         // 60 ticks 后进入要是玩家还不操作就自动攻击
         // 这里先获得一个计时器
@@ -10080,25 +10406,47 @@ class Guard extends MeisterhauAI {
                     continue;
                 }
                 // 玩家输入闪避
-                if (isPlayerInputSignal('onDodge')) {
-                    // 追踪攻击
+                if (isPlayerInputSignal(['onDodge'])) {
                     // 使用 yield 返回一个函数，而不是直接调用，这样可以让这个函数的执行时机被合理安排
                     yield () => self.attack();
-                    await self.wait(1000);
+                    await self.wait(800);
+                    // 玩家匆忙操作时通过连段进行惩罚
+                    if (isPlayerInputSignal(['onAttack', 'onUseItem', 'onDodge'])) {
+                        yield () => self.attack();
+                        await self.wait(1400);
+                    }
                     continue;
                 }
                 // 玩家输入攻击
-                if (isPlayerInputSignal('onUseItem')) {
+                if (isPlayerInputSignal(['onUseItem'])) {
                     // 霸体换血
                     yield () => self.useItem();
-                    await self.wait(1000);
+                    await self.wait(800);
+                    // 玩家匆忙操作时通过连段进行惩罚
+                    if (isPlayerInputSignal(['onAttack', 'onUseItem', 'onDodge'])) {
+                        yield () => self.useItem();
+                        await self.wait(1400);
+                    }
                     continue;
                 }
                 // 玩家在格挡
                 if (isBlockingSignal()) {
                     // 火刀破防
                     yield () => self.sneak();
-                    await self.wait(1000);
+                    await self.wait(400);
+                    // 玩家尝试闪避、攻击打断、招架时取消出招
+                    if (isPlayerInputSignal(['onDodge', 'onAttack', 'onUseItem'])) {
+                        yield () => self.feint();
+                        await self.wait(100);
+                        // 霸体换血
+                        yield () => self.useItem();
+                        await self.wait(950);
+                        // 连段，惩罚心慌的玩家
+                        yield () => self.useItem();
+                        await self.wait(1800);
+                        continue;
+                    }
+                    await self.wait(600);
                     continue;
                 }
                 if (attackIntent.done) {
@@ -10106,7 +10454,20 @@ class Guard extends MeisterhauAI {
                     attackIntent.reset();
                     // 60 ticks 后进入要是玩家还不操作就自动攻击
                     yield () => self.sneak();
-                    await self.wait(1000);
+                    await self.wait(400);
+                    // 玩家尝试闪避、攻击打断、招架时取消出招
+                    if (isPlayerInputSignal(['onDodge', 'onAttack', 'onUseItem'])) {
+                        yield () => self.feint();
+                        await self.wait(100);
+                        // 霸体换血
+                        yield () => self.attack();
+                        await self.wait(950);
+                        // 连段，惩罚心慌的玩家
+                        yield () => self.attack();
+                        await self.wait(1400);
+                        continue;
+                    }
+                    await self.wait(600);
                 }
             }
         }

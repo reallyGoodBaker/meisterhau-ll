@@ -1,53 +1,56 @@
 import { createEdge, edges, setEdges, useLine } from "../line/line"
-import { getPinPosition } from "./node"
+import { EndpointTypes, getPinPosition } from "./node"
 
-export function usePin(id: string, pin: 'input' | 'output', container: HTMLElement, transform: number[]) {
+export function usePin(id: string, pin: EndpointTypes, container: HTMLElement, transform: number[], origin: number[]) {
     let source = { x: 0, y: 0 }
     let delta = { x: 0, y: 0 }
     let target = { x: 0, y: 0 }
     const [ closeLine, setAttachable ] = useLine(source, target, container)
+    const offset: number[] = []
 
     let candidateEdge: string[] = []
     let onMouseUp = Function.prototype as any
+    let isDragging = false
+
+    const mousedown = (e: MouseEvent) => {
+        isDragging = true
+        offset[0] = e.offsetX - (e.target as HTMLElement).getBoundingClientRect().width / (2 * transform[2])
+        offset[1] = e.offsetY + 19 / transform[2]
+    }
 
     const mousemove = (e: MouseEvent) => {
+        if (!isDragging) {
+            return
+        }
+
         e.stopPropagation()
         e.preventDefault()
         const { movementX, movementY } = e
-        const { x, y } = getPinPosition(id, pin)
+        const { x, y } = getPinPosition(id)
 
         source.x = x
         source.y = y
         delta.x += movementX / transform[2]
         delta.y += movementY / transform[2]
-        target.x = x + delta.x
-        target.y = y + delta.y
+        target.x = x + delta.x + offset[0]
+        target.y = y + delta.y + offset[1]
 
         const el = e.target as HTMLElement
         if (el.hasAttribute('data-pin')) {
-            if (el.getAttribute('data-pin') === pin) {
-                return
-            }
-
-            const targetNodeId = (el.parentNode?.parentNode as HTMLElement)?.getAttribute('data-id')
+            const targetNodeId = (el.parentNode as HTMLElement)?.getAttribute('data-id')
             if (targetNodeId === id || targetNodeId === null) {
                 return
             }
 
-            for (const { ids } of edges) {
-                if (ids.includes(id) && ids.includes(targetNodeId || '')) {
+            for (const { ids } of edges()) {
+                if (ids[0] === id && ids[1] === targetNodeId) {
                     return
                 }
             }
 
             setAttachable(true)
-            if (pin === 'output') {
-                candidateEdge[0] = id
-                candidateEdge[1] = targetNodeId
-            } else {
-                candidateEdge[0] = targetNodeId
-                candidateEdge[1] = id
-            }
+            candidateEdge[0] = id
+            candidateEdge[1] = targetNodeId
         } else {
             setAttachable(false)
             candidateEdge.length = 0
@@ -55,11 +58,16 @@ export function usePin(id: string, pin: 'input' | 'output', container: HTMLEleme
     }
 
     const mouseup = (e: MouseEvent) => {
+        if (!isDragging) {
+            return
+        }
+
         closeLine()
         e.stopPropagation()
         e.preventDefault()
         document.removeEventListener('mouseup', mouseup)
         document.removeEventListener('mousemove', mousemove)
+        document.removeEventListener('mousedown', mousedown)
         if (candidateEdge.length) {
             setEdges(edges => edges.concat(
                 createEdge(...(candidateEdge as [ string, string ]))
@@ -70,6 +78,7 @@ export function usePin(id: string, pin: 'input' | 'output', container: HTMLEleme
 
     document.addEventListener('mouseup', mouseup)
     document.addEventListener('mousemove', mousemove)
+    document.addEventListener('mousedown', mousedown)
 
     return (handler: any) => onMouseUp = handler
 }

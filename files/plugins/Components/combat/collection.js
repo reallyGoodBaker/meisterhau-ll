@@ -10,4 +10,5 @@ module.exports = [
     require('./tricks/double_blade'),
     require('./tricks/staff'),
     require('./tricks/fantasy_double_tachi'),
+    require('./tricks/double_axe'),
 ]

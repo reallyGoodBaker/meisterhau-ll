@@ -1,16 +1,14 @@
-import { createStore } from 'solid-js/store'
 import { IEdge } from '../types'
 import styles from './line.module.css'
 import { getPinPosition } from '../node/node'
-import { createSignal, onCleanup, useContext } from 'solid-js'
-import { useSelect } from '../select'
+import { Accessor, createSignal, onCleanup, Setter, useContext } from 'solid-js'
 import { ContextMenuContext } from '../../workbench/contextmenu/cmProvider'
 import { StatusContext } from '../graph'
 
 export const [ edges, setEdges ] = createSignal<IEdge[]>([])
 
 export function createEdge(nid1: string, nid2: string): IEdge {
-    const maxId = edges().map(({ id }) => parseInt(id.slice(1))).sort((a, b) => b - a)[0]
+    const maxId = edges().map(({ id }) => parseInt(id.slice(1)) || 0).sort((a, b) => b - a)[0]
     const id = 'e' + (maxId + 1)
     return {
         ids: [nid1, nid2],
@@ -19,10 +17,9 @@ export function createEdge(nid1: string, nid2: string): IEdge {
     }
 }
 
-export function Line({ edge }: { edge: IEdge }) {
+export function Line({ edge, selected, select }: { edge: IEdge, selected: Accessor<string[]>, select: Setter<string[]> }) {
     const contextMenu = useContext(ContextMenuContext)!
     const [ _, setStatus ] = useContext(StatusContext)!
-    const [ selected, select ] = useSelect()
 
     let el: HTMLDivElement | undefined
     let stop = false
@@ -47,8 +44,8 @@ export function Line({ edge }: { edge: IEdge }) {
 
     function update() {
         if (!stop && el) {
-            const { x, y } = getPinPosition(edge.ids[0], 'output')
-            const { x: x1, y: y1 } = getPinPosition(edge.ids[1], 'input')
+            const { x, y } = getPinPosition(edge.ids[0])
+            const { x: x1, y: y1 } = getPinPosition(edge.ids[1])
             const dy = y1 - y
             const dx = x1 - x
             const angle = Math.atan2(dy, dx) * 180 / Math.PI
@@ -66,8 +63,8 @@ export function Line({ edge }: { edge: IEdge }) {
     onCleanup(() => stop = true)
 
     return (
-        <div onContextMenu={popup} onMouseDown={() => select(edge.id)} ref={el} class={`${styles.line} ${
-            selected() as string === edge.id
+        <div onContextMenu={popup} onMouseDown={() => select([ edge.id ])} ref={el} class={`${styles.line} ${
+            selected().includes(edge.id)
                 ? styles.selected
                 : ''
         }`}/>
@@ -105,5 +102,5 @@ export function useLine(p1: { x: number, y: number }, p2: { x: number, y: number
         (bool: boolean) => {
             el.classList.toggle(styles.canAttach, bool)
         }
-    ] as [() => void, (bool: boolean) => void]
+    ] as const
 }

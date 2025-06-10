@@ -1,0 +1,32 @@
+.button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 6px;
+    background-color: #444;
+    border-radius: 4px;
+    color: #bbb;
+    cursor: pointer;
+    width: 100%;
+}
+
+.button.accent {
+    color: #fff;
+    background-color: #0066d4;
+}
+
+.button:hover {
+    background-color: #555;
+}
+
+.button.accent:hover {
+    background-color: #0056b3;
+}
+
+.button:active {
+    background-color: #4a4a4a;
+}
+
+.button.accent:active {
+    background-color: #004494;
+}

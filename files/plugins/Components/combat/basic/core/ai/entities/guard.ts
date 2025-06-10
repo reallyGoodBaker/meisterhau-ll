@@ -89,11 +89,18 @@ export class Guard extends MeisterhauAI {
             return Status.get(this.target.uniqueId).isBlocking
         })
 
-        const [ isPlayerInputSignal ] = this.event<keyof InputableTransitionMap>('isPlayerInput', input => {
+        const [ isPlayerInputSignal ] = this.event<(keyof InputableTransitionMap)[]>('isPlayerInput', (input: (keyof InputableTransitionMap)[]) => {
             if (!this.target) {
                 return false
             }
-            return Status.get(this.target.uniqueId)?.preInput === input
+
+            const preinput = Status.get(this.target.uniqueId)?.preInput
+            if (!preinput) {
+                return false
+            }
+
+
+            return input.includes(preinput as keyof InputableTransitionMap) 
         })
 
         // 60 ticks 后进入要是玩家还不操作就自动攻击
@@ -114,19 +121,28 @@ export class Guard extends MeisterhauAI {
                 }
 
                 // 玩家输入闪避
-                if (isPlayerInputSignal('onDodge')) {
-                    // 追踪攻击
+                if (isPlayerInputSignal([ 'onDodge' ])) {
                     // 使用 yield 返回一个函数，而不是直接调用，这样可以让这个函数的执行时机被合理安排
                     yield () => self.attack() as any
-                    await self.wait(1000)
+                    await self.wait(800)
+                    // 玩家匆忙操作时通过连段进行惩罚
+                    if (isPlayerInputSignal([ 'onAttack', 'onUseItem', 'onDodge' ])) {
+                        yield () => self.attack()
+                        await self.wait(1400)
+                    }
                     continue
                 }
 
                 // 玩家输入攻击
-                if (isPlayerInputSignal('onUseItem')) {
+                if (isPlayerInputSignal([ 'onUseItem' ])) {
                     // 霸体换血
                     yield () => self.useItem()
-                    await self.wait(1000)
+                    await self.wait(800)
+                    // 玩家匆忙操作时通过连段进行惩罚
+                    if (isPlayerInputSignal([ 'onAttack', 'onUseItem', 'onDodge' ])) {
+                        yield () => self.useItem()
+                        await self.wait(1400)
+                    }
                     continue
                 }
 
@@ -134,7 +150,20 @@ export class Guard extends MeisterhauAI {
                 if (isBlockingSignal()) {
                     // 火刀破防
                     yield () => self.sneak()
-                    await self.wait(1000)
+                    await self.wait(400)
+                    // 玩家尝试闪避、攻击打断、招架时取消出招
+                    if (isPlayerInputSignal([ 'onDodge', 'onAttack', 'onUseItem' ])) {
+                        yield () => self.feint()
+                        await self.wait(100)
+                        // 霸体换血
+                        yield () => self.useItem()
+                        await self.wait(950)
+                        // 连段，惩罚心慌的玩家
+                        yield () => self.useItem()
+                        await self.wait(1800)
+                        continue
+                    }
+                    await self.wait(600)
                     continue
                 }
 
@@ -143,7 +172,20 @@ export class Guard extends MeisterhauAI {
                     attackIntent.reset()
                     // 60 ticks 后进入要是玩家还不操作就自动攻击
                     yield () => self.sneak()
-                    await self.wait(1000)
+                    await self.wait(400)
+                    // 玩家尝试闪避、攻击打断、招架时取消出招
+                    if (isPlayerInputSignal([ 'onDodge', 'onAttack', 'onUseItem' ])) {
+                        yield () => self.feint()
+                        await self.wait(100)
+                        // 霸体换血
+                        yield () => self.attack()
+                        await self.wait(950)
+                        // 连段，惩罚心慌的玩家
+                        yield () => self.attack()
+                        await self.wait(1400)
+                        continue
+                    }
+                    await self.wait(600)
                 }
             }
         }

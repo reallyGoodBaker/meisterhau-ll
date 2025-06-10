@@ -11,7 +11,7 @@ const camera = (pl, easeTime, easeType, pos, lookAt) => {
 }
 
 const cameraRot = (pl, easeTime, easeType, pos, rotX, rotY) => {
-    mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} rot ${0} ${rotY}`) 
+    mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} rot ${rotX} ${rotY}`) 
 }
 
 function clearCamera(pl) {
@@ -152,7 +152,7 @@ const battleCamera = (pl, en) => {
     const yaw = Math.atan2(cameraEntityVec.z, cameraEntityVec.x) * ANGLE - 90
     const pitch = (Math.atan2(Math.sqrt(cameraEntityVec.x * cameraEntityVec.x + cameraEntityVec.z * cameraEntityVec.z), cameraEntityVec.y)) * ANGLE
     const [ dYaw, dPitch ] = cameraComponent.rot
-    cameraRot(pl, 0.1, 'linear', cameraPos, pitch + dPitch, yaw + dYaw)
+    cameraRot(pl, 0.1, 'linear', cameraPos, dPitch, yaw + dYaw)
 }
 
 module.exports = {
