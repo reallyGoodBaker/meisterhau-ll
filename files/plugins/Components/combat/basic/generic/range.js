@@ -34,7 +34,7 @@ function selectFromRange(pl, range) {
             return
         }
 
-        if (dist <= 1.5) {
+        if (dist <= 2) {
             result.push(e)
             return
         }

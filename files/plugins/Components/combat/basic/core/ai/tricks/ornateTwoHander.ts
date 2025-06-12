@@ -74,7 +74,8 @@ class OrnateTwoHanderMoves extends DefaultMoves {
         },
         transitions: {
             hurt: {
-                onHurt: null
+                onHurt: null,
+                onInterrupted: null,
             },
             idle: {
                 onEndOfLife: null
@@ -125,7 +126,8 @@ class OrnateTwoHanderMoves extends DefaultMoves {
         },
         transitions: {
             hurt: {
-                onHurt: null
+                onHurt: null,
+                onInterrupted: null,
             },
             idle: {
                 onEndOfLife: null,
@@ -176,7 +178,8 @@ class OrnateTwoHanderMoves extends DefaultMoves {
         },
         transitions: {
             hurt: {
-                onHurt: null
+                onHurt: null,
+                onInterrupted: null,
             },
             idle: {
                 onEndOfLife: null
@@ -224,6 +227,7 @@ class OrnateTwoHanderMoves extends DefaultMoves {
         },
         transitions: {
             hurt: {
+                onHurt: null,
                 onInterrupted: null
             },
             idle: {
@@ -267,6 +271,7 @@ class OrnateTwoHanderMoves extends DefaultMoves {
         },
         transitions: {
             hurt: {
+                onHurt: null,
                 onInterrupted: null
             },
             idle: {

@@ -379,7 +379,7 @@ interface MovementContext<RawArgs = Array> {
     readonly task: Task
     lookAt(pl: any, en: any): void
     lookAtTarget(pl: any): void
-    distanceToTarget(pl: any): void
+    distanceToTarget(pl: any): number
     adsorbToTarget(pl: any, max: number, offset?: number): void
     adsorbTo(pl: any, en: any, max: number, offset?: number): void
     knockdown(abuser: any, victim: any, knockback?: number): void
