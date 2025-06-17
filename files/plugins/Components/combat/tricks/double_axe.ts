@@ -648,6 +648,8 @@ class DoubleAxeMoves extends DefaultMoves {
             ctx.unfreeze(pl)
         },
         timeline: {
+            2: (pl, ctx) => ctx.adsorbToTarget(pl, 3, 1),
+            3: pl => playSoundAll('weapon.whoosh.break_defense', pl.pos),
             4: (pl, ctx) => ctx.selectFromRange(pl, {
                 angle: 180,
                 radius: 2.8,
@@ -721,10 +723,7 @@ class DoubleAxeMoves extends DefaultMoves {
             }
         },
         timeline: {
-            4: (pl, ctx) => {
-                ctx.adsorbToTarget(pl, 3, 1)
-                playSoundAll('weapon.whoosh.break_defense', pl.pos)
-            },
+            4: (pl, ctx) => ctx.adsorbToTarget(pl, 3, 1),
             5: (_, ctx) => ctx.status.hegemony = true,
             3: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             15: (_, ctx) => ctx.status.hegemony = false,
