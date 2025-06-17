@@ -108,6 +108,36 @@
             "sounds": [
                 "sounds/raido"
             ]
+        },
+        "weapon.whoosh.thick.1": {
+            "category": "player",
+            "sounds": [
+                "sounds/whoosh_thick1"
+            ]
+        },
+        "weapon.whoosh.thick.2": {
+            "category": "player",
+            "sounds": [
+                "sounds/whoosh_thick2"
+            ]
+        },
+        "weapon.whoosh.thick.3": {
+            "category": "player",
+            "sounds": [
+                "sounds/whoosh_thick3"
+            ]
+        },
+        "weapon.whoosh.thick.4": {
+            "category": "player",
+            "sounds": [
+                "sounds/whoosh_thick4"
+            ]
+        },
+        "weapon.whoosh.break_defense": {
+            "category": "player",
+            "sounds": [
+                "sounds/break_defense"
+            ]
         }
     }
 }
