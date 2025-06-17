@@ -300,6 +300,10 @@ class DoubleAxeMoves extends DefaultMoves {
             dodge: {
                 onDodge: {
                     allowedState: 'backswing'
+                },
+                onTrap: {
+                    tag: 'feint',
+                    preInput: 'onDodge'
                 }
             }
         },

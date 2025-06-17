@@ -162,6 +162,12 @@
                         "@general_section.meisterhau_move_list_shield_with_sword": {
                             "$toggle_group_forced_index": 106
                         }
+                    },
+                    // 双斧
+                    {
+                        "@general_section.meisterhau_move_list_double_axe": {
+                            "$toggle_group_forced_index": 107
+                        }
                     }
                 ]
             }
@@ -438,6 +444,15 @@
                 "type": "stack_panel",
                 "controls": [
                     { "@general_section.meisterhau_shield_with_sword_section": {} }
+                ]
+            }
+        },
+        // 双斧
+        {
+            "meisterhau_move_list_double_axe_section": {
+                "type": "stack_panel",
+                "controls": [
+                    { "@general_section.meisterhau_move_list_double_axe_section": {} }
                 ]
             }
         },

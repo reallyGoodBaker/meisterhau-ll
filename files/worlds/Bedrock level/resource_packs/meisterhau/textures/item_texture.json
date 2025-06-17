@@ -49,6 +49,9 @@
         },
         "fantasy_double_tachi": {
             "textures": "textures/items/fantasy_double_tachi"
+        },
+        "double_diamond_axe": {
+            "textures": "textures/items/double_diamond_axe"
         }
     }
 }

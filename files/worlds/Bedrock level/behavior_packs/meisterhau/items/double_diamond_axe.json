@@ -13,7 +13,7 @@
             "minecraft:max_stack_size": {
                 "value": 1
             },
-            "minecraft:icon": "double_blade",
+            "minecraft:icon": "double_diamond_axe",
             "minecraft:display_name": {
 				"value": "钻石双斧"
 			},

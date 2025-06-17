@@ -1013,5 +1013,108 @@
                 }
             }
         ]
+    },
+
+    //双斧
+    "meisterhau_move_list_double_axe@settings_common.section_toggle_base": {
+        "$toggle_view_binding_name": "meisterhau_move_list_double_axe_toggle",
+        "$glyph_texture": "textures/items/double_diamond_axe",
+        "$glyph_color_texture": "textures/items/double_diamond_axe",
+        "$glyph_size": [
+            21,
+            14
+        ],
+        "$button_text": "双斧",
+        "$toggle_property_bag": {
+            "#panel_title": "双斧招式表"
+        }
+    },
+
+    "meisterhau_move_list_double_axe_section": {
+        "type": "stack_panel",
+        "size": [
+            "100%",
+            "100%c"
+        ],
+        "anchor_from": "top_left",
+        "anchor_to": "top_left",
+        "$spatialPatternsPadding": [
+            "100%",
+            8
+        ],
+        "$paddingLineDivider": [
+            "100%",
+            16
+        ],
+        "bindings": [
+            {
+                "binding_type": "view",
+                "source_control_name": "meisterhau_move_list_double_axe_toggle",
+                "source_property_name": "#toggle_state",
+                "target_property_name": "#visible"
+            }
+        ],
+        "controls": [
+            {
+                "@nouns_section": {
+                    "$noun": "双斧",
+                    "$desc": "在迟钝和灵活中取得平衡, 不再拘泥于闪避或者格挡"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "竖劈 (在连段中霸体)",
+                    "$desc": "轻击 或 反竖劈， 轻击"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "反竖劈 (霸体)",
+                    "$desc": "竖劈, 轻击"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "横劈 (霸体)",
+                    "$desc": "重击 或 反横劈， 重击"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "反横劈  (霸体)",
+                    "$desc": "横劈， 重击"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "取下头颅 (不可阻挡， 霸体)",
+                    "$desc": "在任意横劈后， 重击"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "快速冲撞 (不可阻挡)",
+                    "$desc": "偏斜， 重击"
+                }
+            },
+            {
+                "@nouns_section": {
+                    "$noun": "剧痛还击 (霸体)",
+                    "$desc": "快速冲撞后， 重击"
+                }
+            },
+            {
+                "@advance_nouns_section": {
+                    "$noun": "轻装上阵",
+                    "$desc": "在任何攻击后都可以通过闪避取消后摇"
+                }
+            },
+            {
+                "@advance_nouns_section": {
+                    "$noun": "虚晃一枪",
+                    "$desc": "在横劈起手式发动时按下闪避可取消攻击并进行闪避"
+                }
+            }
+        ]
     }
 }
