@@ -727,6 +727,7 @@ class DoubleAxeMoves extends DefaultMoves {
             5: (_, ctx) => ctx.status.hegemony = true,
             3: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             15: (_, ctx) => ctx.status.hegemony = false,
+            6: pl => playSoundAll('weapon.whoosh.thick.' + randomRange(1, 4, true), pl.pos),
             8: (pl, ctx) => ctx.selectFromRange(pl, {
                 angle: 120,
                 radius: 2.8,
