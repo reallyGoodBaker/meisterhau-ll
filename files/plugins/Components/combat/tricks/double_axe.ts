@@ -680,7 +680,49 @@ class DoubleAxeMoves extends DefaultMoves {
                     tag: 'counter',
                     preInput: 'onUseItem'
                 }
+            },
+            breakKick: {
+                onTrap: {
+                    tag: 'counter',
+                    preInput: 'onAttack'
+                }
             }
+        }
+    }
+
+    breakKick: Move = {
+        cast: 14,
+        onEnter(pl, ctx) {
+            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.kick', 'animation.meisterhau.double_axe.kick')
+            ctx.lookAtTarget(pl)
+            ctx.freeze(pl)
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl)
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null,
+            },
+            hurt: {
+                onHurt: null,
+                onInterrupted: null
+            },
+        },
+        timeline: {
+            2: (pl, ctx) => ctx.adsorbToTarget(pl, 3, 1),
+            5: (pl, ctx) => ctx.selectFromRange(pl, {
+                angle: 120,
+                radius: 2.8,
+                rotation: 60
+            }).forEach(en => ctx.attack(pl, en, {
+                damage: 2,
+                direction: 'middle',
+                shock: true,
+                permeable: true,
+                parryable: false,
+                knockback: 3,
+            })),
         }
     }
 
