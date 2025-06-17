@@ -72,7 +72,8 @@ class DoubleAxeMoves extends DefaultMoves {
     }
 
     attackStart: Move = {
-        cast: 24,
+        cast: 17,
+        backswing: 7,
         onEnter(pl, ctx) {
             playAnimCompatibility(pl, 'animation.meisterhau.double_axe.light.start', 'animation.meisterhau.double_axe.light.start')
             ctx.lookAtTarget(pl)
@@ -108,6 +109,11 @@ class DoubleAxeMoves extends DefaultMoves {
             },
             block: {
                 onBlock: null
+            },
+            dodge: {
+                onSneak: {
+                    allowedState: 'backswing'
+                }
             }
         },
         timeline: {
@@ -127,7 +133,8 @@ class DoubleAxeMoves extends DefaultMoves {
     }
 
     attack1: Move = {
-        cast: 24,
+        cast: 17,
+        backswing: 7,
         onEnter(pl, ctx) {
             playAnimCompatibility(pl, 'animation.meisterhau.double_axe.light.1', 'animation.meisterhau.double_axe.light.1')
             ctx.lookAtTarget(pl)
@@ -160,6 +167,11 @@ class DoubleAxeMoves extends DefaultMoves {
                 onTrap: {
                     preInput: 'onUseItem'
                 }
+            },
+            dodge: {
+                onSneak: {
+                    allowedState: 'backswing'
+                }
             }
         },
         timeline: {
@@ -180,7 +192,8 @@ class DoubleAxeMoves extends DefaultMoves {
     }
 
     attack2: Move = {
-        cast: 24,
+        cast: 17,
+        backswing: 7,
         onEnter(pl, ctx) {
             playAnimCompatibility(pl, 'animation.meisterhau.double_axe.light.2', 'animation.meisterhau.double_axe.light.2')
             ctx.lookAtTarget(pl)
@@ -213,6 +226,11 @@ class DoubleAxeMoves extends DefaultMoves {
                 onTrap: {
                     preInput: 'onUseItem'
                 }
+            },
+            dodge: {
+                onSneak: {
+                    allowedState: 'backswing'
+                }
             }
         },
         timeline: {
@@ -233,7 +251,8 @@ class DoubleAxeMoves extends DefaultMoves {
     }
 
     heavyStart: Move = {
-        cast: 30,
+        cast: 20,
+        backswing: 10,
         onEnter(pl, ctx) {
             playAnimCompatibility(pl, 'animation.meisterhau.double_axe.heavy_start', 'animation.meisterhau.double_axe.heavy_start')
             ctx.lookAtTarget(pl)
@@ -273,6 +292,11 @@ class DoubleAxeMoves extends DefaultMoves {
                     tag: 'counter',
                     preInput: 'onUseItem'
                 }
+            },
+            dodge: {
+                onSneak: {
+                    allowedState: 'backswing'
+                }
             }
         },
         timeline: {
@@ -295,7 +319,8 @@ class DoubleAxeMoves extends DefaultMoves {
     }
 
     heavy1: Move = {
-        cast: 29,
+        cast: 19,
+        backswing: 10,
         onEnter(pl, ctx) {
             playAnimCompatibility(pl, 'animation.meisterhau.double_axe.heavy_left', 'animation.meisterhau.double_axe.heavy_left')
             ctx.lookAtTarget(pl)
@@ -330,6 +355,11 @@ class DoubleAxeMoves extends DefaultMoves {
                 onTrap: {
                     tag: 'counter',
                     preInput: 'onUseItem'
+                }
+            },
+            dodge: {
+                onSneak: {
+                    allowedState: 'backswing'
                 }
             }
         },
@@ -396,7 +426,8 @@ class DoubleAxeMoves extends DefaultMoves {
     }
 
     heavy2: Move = {
-        cast: 29,
+        cast: 19,
+        backswing: 10,
         onEnter(pl, ctx) {
             playAnimCompatibility(pl, 'animation.meisterhau.double_axe.heavy_right', 'animation.meisterhau.double_axe.heavy_right')
             ctx.lookAtTarget(pl)
@@ -431,6 +462,11 @@ class DoubleAxeMoves extends DefaultMoves {
                 onTrap: {
                     tag: 'counter',
                     preInput: 'onUseItem'
+                }
+            },
+            dodge: {
+                onSneak: {
+                    allowedState: 'backswing'
                 }
             }
         },
