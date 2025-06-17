@@ -111,7 +111,7 @@ class DoubleAxeMoves extends DefaultMoves {
                 onBlock: null
             },
             dodge: {
-                onSneak: {
+                onDodge: {
                     allowedState: 'backswing'
                 }
             }
@@ -169,7 +169,7 @@ class DoubleAxeMoves extends DefaultMoves {
                 }
             },
             dodge: {
-                onSneak: {
+                onDodge: {
                     allowedState: 'backswing'
                 }
             }
@@ -228,7 +228,7 @@ class DoubleAxeMoves extends DefaultMoves {
                 }
             },
             dodge: {
-                onSneak: {
+                onDodge: {
                     allowedState: 'backswing'
                 }
             }
@@ -294,7 +294,7 @@ class DoubleAxeMoves extends DefaultMoves {
                 }
             },
             dodge: {
-                onSneak: {
+                onDodge: {
                     allowedState: 'backswing'
                 }
             }
@@ -358,7 +358,7 @@ class DoubleAxeMoves extends DefaultMoves {
                 }
             },
             dodge: {
-                onSneak: {
+                onDodge: {
                     allowedState: 'backswing'
                 }
             }
@@ -465,7 +465,7 @@ class DoubleAxeMoves extends DefaultMoves {
                 }
             },
             dodge: {
-                onSneak: {
+                onDodge: {
                     allowedState: 'backswing'
                 }
             }
