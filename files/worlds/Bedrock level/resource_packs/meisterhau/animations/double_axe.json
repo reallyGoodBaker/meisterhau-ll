@@ -5959,7 +5959,7 @@
 			},
 			"particle_effects": {
 				"0.25": {
-					"effect": "sprk",
+					"effect": "spark",
 					"locator": "left_emitter"
 				}
 			}
