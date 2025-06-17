@@ -556,8 +556,8 @@ class DoubleAxeMoves extends DefaultMoves {
     }
 
     deflection: Move = {
-        cast: 4,
-        backswing: 5,
+        cast: 5,
+        backswing: 4,
         onEnter(pl, ctx) {
             playSoundAll('weapon.deflection', pl.pos, 1)
             playAnimCompatibility(pl, 'animation.meisterhau.double_axe.deflect', 'animation.meisterhau.double_axe.deflect')
@@ -581,7 +581,7 @@ class DoubleAxeMoves extends DefaultMoves {
                 onDeflection: null
             },
             break: {
-                onSneak: {
+                onUseItem: {
                     allowedState: 'cast'
                 }
             }
