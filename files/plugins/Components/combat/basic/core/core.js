@@ -538,23 +538,6 @@ function listenAllCustomEvents(mods) {
             }
 
             const attackTime = pl.quickEvalMolangScript('v.attack_time')
-            // pl.quickEvalMolangScript(`v.mov_mag = math.sqrt( math.pow( query.movement_direction(0), 2 ) + math.pow( query.movement_direction(2), 2));
-            // v.nmov_x = query.movement_direction(0) / v.mov_mag;
-            // v.nmov_z = query.movement_direction(2) / v.mov_mag;
-            // v.dr = v.nmov_x > 0 ? -math.acos(v.nmov_z) : math.acos(v.nmov_z);
-            // v.head_y_rot = query.head_y_rotation(this);
-            // t.rot = v.dr - v.head_y_rot;
-            // v.rot_to_facing = t.rot < 0 ? t.rot + 360 : t.rot;
-            // v.dir_to_facing = 1 <= 0 ? 0
-            //     : v.rot_to_facing < 45 ? 1
-            //     : v.rot_to_facing < 135 ? 2
-            //     : v.rot_to_facing < 225 ? 3
-            //     : v.rot_to_facing < 315 ? 4
-            //     : 1;
-            // `)
-            // console.log(pl.quickEvalMolangScript('math.mod(q.modified_distance_moved, 12) * 0.125'))
-
-            // console.log(pl.name, attackTime)
             if (attackTime > 0 && attackTime < 0.3) {
                 es.put('onAttack', [pl, Function.prototype, [ pl ]])
             }
@@ -577,11 +560,14 @@ function listenAllCustomEvents(mods) {
             let bind = getMod(status.hand)
             if (!pl) {
                 pl = mc.getEntity(+uniqueId)
+                if (!pl) {
+                    continue
+                }
                 bind = ai.getRegistration(pl.type)[1]
             }
 
             if (!pl ||!bind) {
-                return
+                continue
             }
 
             const currentMove = bind.moves[status.status]
@@ -1235,6 +1221,10 @@ function listenAllMcEvents(collection) {
         releaseTarget(pl.uniqueId)
         mc.runcmdEx(`/inputpermission set "${pl.name}" jump enabled`)
         mc.runcmdEx(`/inputpermission set "${pl.name}" sneak enabled`)
+    })
+
+    mc.listen('onMobDie', en => {
+        Status.status.delete(en.uniqueId)
     })
 
     listenAllCustomEvents(mods)

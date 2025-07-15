@@ -30,6 +30,7 @@ class Notification {
     title = ''
     preview = ''
     sound = 'random.orb'
+    /**@type {string}*/
     content = null
     /**@private*/viewed = false
     /**@private*/notified = false
@@ -139,8 +140,10 @@ class Notification {
         this.importance === NotificationImportances.NORMAL ? this._notifyNormalMsg(pl)
             : this._notifyImportantMsg(pl)
     
-        mc.runcmd(`playsound ${this.sound} ${pl.realName}`)
-        pl.tell('§a/inbox 查看详细内容')
+        if (!pl.agent) {
+            mc.runcmd(`playsound ${this.sound} ${pl.name}`)
+            pl.tell('§a/inbox 查看详细内容')
+        }
 
         if (!playerNotifs.has(pl.xuid)) {
             playerNotifs.set(pl.xuid, [])

@@ -58,7 +58,7 @@ function alert(title, content, button1, buton2, onEnsure = Function.prototype, o
 /**
  * @param {string} title 
  * @param {string} content 
- * @param {Array<{text: string; icon: string; onClick: (err: any, pl: any)=>void}>} buttonGroup 
+ * @param {Array<{text: string; icon?: string; onClick: (err: any, pl: any)=>void}>} buttonGroup 
  * @param {Function} onerror 
  * @returns 
  */

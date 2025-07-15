@@ -1,5 +1,6 @@
-const { action, alert, widget, Dropdown, Input } = require('../ui')
 const { Notification, NotificationImportances } = require('../notification')
+const { action, alert, widget, Dropdown, Input } = require('../ui')
+const { pay3rdAmount, getFamiliesNullable, selectFamiliyMember } = require('marriage/core')
 
 function queryPlayer(realName) {
     for (const pl of mc.getOnlinePlayers()) {
@@ -30,7 +31,7 @@ function showBalance(pl) {
     pl.tell(`你的余额: §6${money.get(pl.xuid)}`)
 }
 
-function recevConfirm(pl2, amount) {
+function recevConfirm(pl2, amount, onEnsure=Function.prototype, onReject=Function.prototype) {
     const notif = new Notification()
     notif.title = '收账确认'
     notif.preview = `来自 §b${pl2.realName}§r 的转账 §6${amount}§r, 确认收账？`
@@ -39,17 +40,13 @@ function recevConfirm(pl2, amount) {
         btn1: '确认', btn2: '取消',
         onEnsure(pl) {
             notif.expire()
-            money.trans(pl2.xuid, pl.xuid, amount)
-            const suc = alert('结果', '操作成功', '确认', '取消')
-            suc.send(pl)
-            suc.send(pl2)
+            onEnsure(pl)
         },
 
         onReject(pl) {
             notif.expire()
-            const fail = alert('结果', '操作失败', '确认', '取消')
-            fail.send(pl)
-            fail.send(pl2)
+            onReject(pl)
+            // const fail = alert('结果', '操作失败', '确认', '取消')
         }
     }
 
@@ -62,7 +59,16 @@ function transferConfirm(name, amount) {
         if (!checkIfCreditEnough(pl, amount)) {
             return alert('失败', `余额不足: ${money.get(pl.xuid)}, 需要: ${amount}`, '确认', '取消').send(pl)
         }
-        recevConfirm(pl, amount).notify(pl2)
+        recevConfirm(pl, amount, () => {
+            money.trans(pl.xuid, pl2.xuid, amount)
+            const suc = alert('结果', '操作成功', '确认', '取消')
+            suc.send(pl)
+            suc.send(pl2)
+        }, () => {
+            const fail = alert('结果', '操作失败', '确认', '取消')
+            fail.send(pl)
+            fail.send(pl2)
+        }).notify(pl2)
     })
 }
 
@@ -127,17 +133,61 @@ function requestFromUi(pl) {
     ]).send(pl)
 }
 
+function familyTransfer(pl) {
+    const pls = mc.getOnlinePlayers()
+    const names = pls.map(p => p.name)
+
+    let pl2 = null
+
+    widget('家庭转账', [
+        Dropdown('选择转账目标', names, (_, i) => {
+            pl2 = pls[i]
+        }),
+        Input('金额', '', '0', async (_, v) => {
+            v = +v
+
+            const member = await selectFamiliyMember(pl)
+
+            if (!member) {
+                return alert('失败', '转账失败', '确认', '取消').send(pl)
+            }
+
+            const strategy = pay3rdAmount(v, pl.xuid, member.xuid)
+            if (!strategy) {
+                return alert('失败', '转账失败', '确认', '取消').send(pl)
+            }
+
+            const [ ,b ] = strategy
+            recevConfirm(pl2, v, () => {
+                money.trans(member.xuid, pl.xuid, b)
+                money.trans(pl.xuid, pl2.xuid, v)
+
+                alert('成功', '转账成功', '确认', '取消').send(pl)
+                const notification = new Notification()
+                notification.title = '家庭转账'
+                notification.preview = notification.content = `${pl.name} 使用了你 ${b} 的余额, 转账 ${v} 给 ${pl2.name}`
+                const memberPlayer = mc.getPlayer(member.xuid)
+                notification.notify(memberPlayer ?? member)
+            }, () => {
+                alert('失败', '转账失败', '确认', '取消').send(pl)
+            }).notify(pl2)
+
+        }),
+
+    ]).send(pl)
+}
+
 function creditUi(pl) {
     const ui = action('账户', `我的余额: ${money.get(pl.xuid)}`, [
         {
-            text: '进行转账', onClick() {
-                transferCreditUi(ui).send(pl)
+            text: '转账', onClick() {
+                transferUi(pl)
             }
         },
 
         {
             text: '收款', onClick() {
-                requestFromUi(pl)
+                requestUi(pl)
             }
         }
     ], (err, pl) => {
@@ -237,6 +287,115 @@ function requestCredit(
     }, cancel).send(fromPlayer)
 }
 
+function familyRequest(
+    fromFamily,
+    serviceName,
+    amount,
+    onsuccess = Function.prototype,
+    onfail = Function.prototype,
+) {
+    if (!getFamiliesNullable(fromFamily.xuid)) {
+        return onfail(fromFamily)
+    }
+
+    const family = selectFamiliyMember(fromFamily.xuid)
+    if (!family) {
+        return onfail(fromFamily)
+    }
+
+    const strategy = pay3rdAmount(amount, fromFamily.xuid, family.xuid)
+    if (!strategy) {
+        return onfail(fromFamily)
+    }
+
+    const [ a, b ] = strategy
+
+    alert('账户', `为 §b${serviceName}§r 支付 §6${a}§r ?\n(家庭代付 ${b})`, '确认', '取消', () => {
+        try {
+            onsuccess(fromFamily)
+            money.reduce(fromFamily.xuid, a)
+            money.reduce(family.xuid, b)
+        } catch {
+            onfail(fromFamily)
+        }
+    }, onfail).send(fromFamily)
+}
+
+function transferUi(pl) {
+    if (!getFamiliesNullable(pl.xuid)) {
+        return transferCreditUi().send(pl)
+    }
+
+    return action('账户', '选择支付方式', [
+        {
+            text: '个人账户',
+            onClick() {
+                transferCreditUi().send(pl)
+            }
+        },
+        {
+            text: '家庭账户',
+            onClick() {
+                familyTransfer(pl)
+            }
+        }
+    ]).send(pl)
+}
+
+function requestFamilyUi(pl) {
+    const pls = mc.getOnlinePlayers()
+
+    let data = {
+        who: -1,
+        amount: 0
+    }
+
+    widget('收款', [
+        Dropdown('向他人收款', pls.map(p => p.name), 0, (_, i) => {
+            data.who = pls[i]
+        }),
+        
+        Input('金额', '', '', (_, val) => {
+            data.amount = isNaN(+val)? 0 : +val
+
+            if (data.amount <= 0 || !data.who) {
+                return
+            }
+
+            const target = data.who
+            familyRequest(target, `付款给 ${pl.realName}`, data.amount, () => {
+                target.tell('付款成功')
+                pl.tell('收款成功')
+            }, defaultRequestCreditFailed, () => {
+                target.tell('付款失败')
+                pl.tell('收款失败')
+            })
+        }),
+    ]).send(pl)
+}
+
+function requestUi(pl) {
+    if (!getFamiliesNullable(pl.xuid)) {
+        return requestFromUi(pl)
+    }
+
+    return action('账户', '选择收款方式', [
+        {
+            text: '个人账户',
+            onClick() {
+                requestFromUi(pl)
+            }
+        },
+        {
+            text: '家庭账户',
+            onClick() {
+                requestFamilyUi(pl)
+            }
+        }
+    ])
+}
+
 module.exports = {
-    doRegisterCredit, transferCredit, requestCredit, defaultRequestCreditFailed
+    doRegisterCredit, transferCredit, requestCredit, defaultRequestCreditFailed,
+    familyTransfer, familyRequest, transferUi, requestUi,
 }

@@ -178,7 +178,20 @@ export class FileSystem {
             throw new Error('No root directory')
         }
 
+        FileSystem._requireReadWrite(root)
         FileSystem._fileSystems.set(root, this)
+    }
+
+    static async _requireReadWrite(handle: FileSystemFileHandle | FileSystemDirectoryHandle) {
+        if (await handle.queryPermission({ mode: 'readwrite' }) !== 'granted') {
+            try {
+                if (await handle.requestPermission({ mode: 'readwrite' }) === 'granted') {
+                    return
+                }
+            } finally {
+                alert('Permission denied')
+            }
+        }
     }
 
     private _cachedHandles = new Map<string, FileSystemFileHandle>()

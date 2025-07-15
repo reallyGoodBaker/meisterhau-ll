@@ -1,5 +1,14 @@
 'use strict';
 
+var events$1 = require('events');
+var fs = require('fs');
+var http = require('http');
+var qs = require('querystring');
+
+function getDefaultExportFromCjs (x) {
+	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+}
+
 function getAugmentedNamespace(n) {
   if (n.__esModule) return n;
   var f = n.default;
@@ -316,7 +325,7 @@ function alert$6(title, content, button1, buton2, onEnsure = Function.prototype,
 /**
  * @param {string} title 
  * @param {string} content 
- * @param {Array<{text: string; icon: string; onClick: (err: any, pl: any)=>void}>} buttonGroup 
+ * @param {Array<{text: string; icon?: string; onClick: (err: any, pl: any)=>void}>} buttonGroup 
  * @param {Function} onerror 
  * @returns 
  */
@@ -462,7 +471,7 @@ function distStr(entity, dest, showDiff=true) {
     return distance + (showDiff ? diff : '')
 }
 
-function setup$8() {
+function setup$b() {
     cmd$5('whoami', '我是谁？', 0)
     .setup(register => {
         register('name', (cmd, ori, out) => {
@@ -505,7 +514,7 @@ function setup$8() {
 }
 
 var whoami = {
-    setup: setup$8
+    setup: setup$b
 };
 
 var events = {};
@@ -1150,7 +1159,7 @@ function buildCallListener(type) {
 function listenMobEvent(type) {
     mc.listen(type, buildCallListener(type));
 }
-function setup$7() {
+function setup$a() {
     cmd$6('simplayer', '假人', 1)
         .setup(register => {
         register('<pos:pos> <name:string>', (_, ori, out, { pos, name }) => {
@@ -1170,7 +1179,7 @@ var simulatePlayer = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	despawn: despawn,
 	listener: listener,
-	setup: setup$7,
+	setup: setup$a,
 	spawn: spawn
 });
 
@@ -1195,7 +1204,7 @@ function setOnShoulderCamera(uniqueId, left=false) {
     trackingPlayers.set(uniqueId, left);
 }
 
-function setup$6() {
+function setup$9() {
     mc.listen('onTick', () => {
         trackingPlayers.forEach((left, uniqueId) => {
             const pl = mc.getPlayer(uniqueId);
@@ -1228,7 +1237,7 @@ function setup$6() {
 }
 
 var overShoulder = {
-    setup: setup$6,
+    setup: setup$9,
     camera, clearCamera, setOnShoulderCamera
 };
 
@@ -1264,6 +1273,7 @@ let Notification$1 = class Notification {
     title = ''
     preview = ''
     sound = 'random.orb'
+    /**@type {string}*/
     content = null
     /**@private*/viewed = false
     /**@private*/notified = false
@@ -1373,8 +1383,10 @@ let Notification$1 = class Notification {
         this.importance === NotificationImportances$1.NORMAL ? this._notifyNormalMsg(pl)
             : this._notifyImportantMsg(pl);
     
-        mc.runcmd(`playsound ${this.sound} ${pl.realName}`);
-        pl.tell('§a/inbox 查看详细内容');
+        if (!pl.agent) {
+            mc.runcmd(`playsound ${this.sound} ${pl.name}`);
+            pl.tell('§a/inbox 查看详细内容');
+        }
 
         if (!playerNotifs.has(pl.xuid)) {
             playerNotifs.set(pl.xuid, []);
@@ -1501,10 +1513,10 @@ var baseConfig = {
     }
 };
 
-const config = baseConfig;
+const config$1 = baseConfig;
 
 var motd = function() {
-    const { motds } = config;
+    const { motds } = config$1;
     let index = 0;
 
     setInterval(() => {
@@ -1518,8 +1530,192 @@ var motd = function() {
     }, 5000);
 };
 
-const { action: action$4, alert: alert$3, widget: widget$4, Dropdown: Dropdown$3, Input: Input$5 } = ui;
+var db_lib = path => {
+    const _db = new KVDatabase(path);
+
+    const db = {
+        get(k) {
+            return _db.get(String(k))
+        },
+
+        set(k, v) {
+            return _db.set(String(k), v)
+        },
+
+        delete(k) {
+            return _db.delete(String(k))
+        },
+
+        listKey() {
+            return _db.listKey()
+        },
+
+        init(k, defaultVal) {
+            let candidate = _db.get(k);
+            if (!candidate) {
+                _db.set(k, defaultVal);
+                return defaultVal
+            } else {
+                return candidate
+            }
+        }
+    };
+
+    return db
+};
+
+var db$3 = /*@__PURE__*/getDefaultExportFromCjs(db_lib);
+
+const married = db$3('marriage');
+const names = new JsonConfigFile('./ServerConfig/names.json');
+function getNameByXuid(xuid) {
+    return names.get(xuid, '未知');
+}
+function useMarries(xuid, critical) {
+    const candidate = married.get(xuid);
+    if (!candidate) {
+        const newSet = [];
+        critical(newSet);
+        married.set(xuid, newSet);
+        return;
+    }
+    critical(candidate);
+    married.set(xuid, candidate);
+}
+function propose(xuid, xuid2) {
+    const pl = mc.getPlayer(xuid);
+    const pl2 = mc.getPlayer(xuid2);
+    if (pl === null || pl2 === null || pl === pl2) {
+        return ui.alert('求婚失败', '发生了一些错误').send(pl);
+    }
+    ui.alert('求婚', `${pl.name} 向你求婚了, 是否接受?`, '接受', '拒绝', () => {
+        useMarries(xuid, marries => marries.push(xuid2));
+        useMarries(xuid2, marries => marries.push(xuid));
+        names.set(xuid, pl.name);
+        names.set(xuid2, pl2.name);
+        ui.alert('求婚成功', `你和 ${pl2.name} 结婚啦！`).send(pl);
+        ui.alert('求婚成功', `你和 ${pl.name} 结婚啦！`).send(pl2);
+        function notify(pl) {
+            const notif = new notification.Notification();
+            notif.title = '结婚';
+            notif.content = `${pl.name} 和 ${pl2.name} 结婚啦！`;
+            notif.importance = notification.NotificationImportances.NORMAL;
+            notif.notify(pl);
+        }
+        mc.getOnlinePlayers().forEach(notify);
+    }, () => {
+        ui.alert('求婚失败', `${pl2.name} 拒绝了你的求婚！`).send(pl);
+    }).send(pl2);
+}
+function divorce(xuid, xuid2) {
+    const pl = mc.getPlayer(xuid);
+    const pl2 = mc.getPlayer(xuid2);
+    if (pl === null || pl2 === null || pl === pl2) {
+        return ui.alert('离婚失败', '发生了一些错误').send(pl);
+    }
+    useMarries(xuid, marries => marries.splice(marries.indexOf(xuid2), 1));
+    useMarries(xuid2, marries => marries.splice(marries.indexOf(xuid), 1));
+    ui.alert('离婚成功', `你和 ${pl2.name} 离婚啦！`).send(pl);
+    ui.alert('离婚成功', `你和 ${pl.name} 离婚啦！`).send(pl2);
+    //平分财产
+    const totalMoney = money.get(pl.xuid) + money.get(pl2.xuid);
+    money.set(pl.xuid, totalMoney / 2);
+    money.set(pl2.xuid, totalMoney / 2);
+}
+function queryFamilies(xuid, { filter, sort, name } = {}) {
+    let marriedPlayers = [];
+    useMarries(xuid, marries => {
+        marriedPlayers = marries.map(xuid => ({
+            xuid,
+            name: mc.getPlayer(xuid)?.name ?? getNameByXuid(xuid),
+            agent: true,
+        }));
+        if (filter) {
+            marriedPlayers = marriedPlayers.filter(filter);
+        }
+        if (sort) {
+            marriedPlayers.sort(sort);
+        }
+        if (name) {
+            marriedPlayers = marriedPlayers.filter(pl => pl.name.includes(name));
+        }
+    });
+    return marriedPlayers;
+}
+function pay3rdAmount$1(amount, xuid, xuid2) {
+    const moneyA = money.get(xuid);
+    const moneyB = money.get(xuid2);
+    const total = moneyA + moneyB;
+    if (total < amount) {
+        return null;
+    }
+    const partialA = Math.floor(amount * moneyA / total);
+    return [
+        partialA,
+        amount - partialA
+    ];
+}
+function getFamiliesNullable$1(xuid) {
+    return married.get(xuid);
+}
+function selectFamiliyMember$1(pl) {
+    const families = getFamiliesNullable$1(pl.xuid);
+    if (!families) {
+        ui.alert('失败', '你还没有加入任何家庭').send(pl);
+        return Promise.reject(null);
+    }
+    // const plNames = mc.getOnlinePlayers()
+    //     .filter(p => families.includes(p.xuid))
+    //     .map(p => p.name)
+    const plNames = families.map(xuid => mc.getPlayer(xuid)?.name ?? getNameByXuid(xuid));
+    plNames.unshift('选择成员');
+    const opt = {};
+    const sortByTypes = ['名称', '存款'];
+    const { promise, resolve, reject } = Promise.withResolvers();
+    ui.widget('家庭支付', [
+        ui.Dropdown('选择成员', plNames, 0, (_, v) => {
+            if (v) {
+                opt.name = plNames[v];
+            }
+        }),
+        ui.Slider('存款大于', 0, 1000000, 1, 0, (_, v) => {
+            if (v > 0) {
+                opt.filter = pl => money.get(pl.xuid) > v;
+            }
+        }),
+        ui.Dropdown('排序方式', sortByTypes, 0, (_, v) => {
+            opt.sort = v == 0
+                ? (a, b) => a.name.localeCompare(b.name)
+                : (a, b) => money.get(b.xuid) - money.get(a.xuid);
+            const families = queryFamilies(pl.xuid, opt);
+            const familiesButtons = families.map(family => ({
+                text: `${family.name}`,
+                onClick() {
+                    resolve(family);
+                }
+            }));
+            ui.action('匹配的成员', `已找到${families.length}个成员`, familiesButtons, reject).send(pl);
+        })
+    ]).send(pl);
+    return promise;
+}
+
+var core$2 = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	divorce: divorce,
+	getFamiliesNullable: getFamiliesNullable$1,
+	getNameByXuid: getNameByXuid,
+	pay3rdAmount: pay3rdAmount$1,
+	propose: propose,
+	queryFamilies: queryFamilies,
+	selectFamiliyMember: selectFamiliyMember$1
+});
+
+var require$$2 = /*@__PURE__*/getAugmentedNamespace(core$2);
+
 const { Notification, NotificationImportances } = notification;
+const { action: action$4, alert: alert$3, widget: widget$4, Dropdown: Dropdown$3, Input: Input$5 } = ui;
+const { pay3rdAmount, getFamiliesNullable, selectFamiliyMember } = require$$2;
 
 function queryPlayer(realName) {
     for (const pl of mc.getOnlinePlayers()) {
@@ -1550,7 +1746,7 @@ function showBalance(pl) {
     pl.tell(`你的余额: §6${money.get(pl.xuid)}`);
 }
 
-function recevConfirm(pl2, amount) {
+function recevConfirm(pl2, amount, onEnsure=Function.prototype, onReject=Function.prototype) {
     const notif = new Notification();
     notif.title = '收账确认';
     notif.preview = `来自 §b${pl2.realName}§r 的转账 §6${amount}§r, 确认收账？`;
@@ -1559,17 +1755,13 @@ function recevConfirm(pl2, amount) {
         btn1: '确认', btn2: '取消',
         onEnsure(pl) {
             notif.expire();
-            money.trans(pl2.xuid, pl.xuid, amount);
-            const suc = alert$3('结果', '操作成功', '确认', '取消');
-            suc.send(pl);
-            suc.send(pl2);
+            onEnsure(pl);
         },
 
         onReject(pl) {
             notif.expire();
-            const fail = alert$3('结果', '操作失败', '确认', '取消');
-            fail.send(pl);
-            fail.send(pl2);
+            onReject(pl);
+            // const fail = alert('结果', '操作失败', '确认', '取消')
         }
     };
 
@@ -1582,7 +1774,16 @@ function transferConfirm(name, amount) {
         if (!checkIfCreditEnough(pl, amount)) {
             return alert$3('失败', `余额不足: ${money.get(pl.xuid)}, 需要: ${amount}`, '确认', '取消').send(pl)
         }
-        recevConfirm(pl, amount).notify(pl2);
+        recevConfirm(pl, amount, () => {
+            money.trans(pl.xuid, pl2.xuid, amount);
+            const suc = alert$3('结果', '操作成功', '确认', '取消');
+            suc.send(pl);
+            suc.send(pl2);
+        }, () => {
+            const fail = alert$3('结果', '操作失败', '确认', '取消');
+            fail.send(pl);
+            fail.send(pl2);
+        }).notify(pl2);
     })
 }
 
@@ -1647,17 +1848,61 @@ function requestFromUi(pl) {
     ]).send(pl);
 }
 
+function familyTransfer(pl) {
+    const pls = mc.getOnlinePlayers();
+    const names = pls.map(p => p.name);
+
+    let pl2 = null;
+
+    widget$4('家庭转账', [
+        Dropdown$3('选择转账目标', names, (_, i) => {
+            pl2 = pls[i];
+        }),
+        Input$5('金额', '', '0', async (_, v) => {
+            v = +v;
+
+            const member = await selectFamiliyMember(pl);
+
+            if (!member) {
+                return alert$3('失败', '转账失败', '确认', '取消').send(pl)
+            }
+
+            const strategy = pay3rdAmount(v, pl.xuid, member.xuid);
+            if (!strategy) {
+                return alert$3('失败', '转账失败', '确认', '取消').send(pl)
+            }
+
+            const [ ,b ] = strategy;
+            recevConfirm(pl2, v, () => {
+                money.trans(member.xuid, pl.xuid, b);
+                money.trans(pl.xuid, pl2.xuid, v);
+
+                alert$3('成功', '转账成功', '确认', '取消').send(pl);
+                const notification = new Notification();
+                notification.title = '家庭转账';
+                notification.preview = notification.content = `${pl.name} 使用了你 ${b} 的余额, 转账 ${v} 给 ${pl2.name}`;
+                const memberPlayer = mc.getPlayer(member.xuid);
+                notification.notify(memberPlayer ?? member);
+            }, () => {
+                alert$3('失败', '转账失败', '确认', '取消').send(pl);
+            }).notify(pl2);
+
+        }),
+
+    ]).send(pl);
+}
+
 function creditUi(pl) {
     const ui = action$4('账户', `我的余额: ${money.get(pl.xuid)}`, [
         {
-            text: '进行转账', onClick() {
-                transferCreditUi(ui).send(pl);
+            text: '转账', onClick() {
+                transferUi(pl);
             }
         },
 
         {
             text: '收款', onClick() {
-                requestFromUi(pl);
+                requestUi(pl);
             }
         }
     ], (err, pl) => {
@@ -1680,10 +1925,6 @@ function transferCreditUi(parent) {
         }),
     ], (err, pl) => {
         pl.tell('设置失败');
-
-        if (parent) {
-            parent.send(pl);
-        }
     })
 }
 
@@ -1757,8 +1998,114 @@ function requestCredit$2(
     }, cancel).send(fromPlayer);
 }
 
+function familyRequest(
+    fromFamily,
+    serviceName,
+    amount,
+    onsuccess = Function.prototype,
+    onfail = Function.prototype,
+) {
+    if (!getFamiliesNullable(fromFamily.xuid)) {
+        return onfail(fromFamily)
+    }
+
+    const family = selectFamiliyMember(fromFamily.xuid);
+    if (!family) {
+        return onfail(fromFamily)
+    }
+
+    const strategy = pay3rdAmount(amount, fromFamily.xuid, family.xuid);
+    if (!strategy) {
+        return onfail(fromFamily)
+    }
+
+    const [ a, b ] = strategy;
+
+    alert$3('账户', `为 §b${serviceName}§r 支付 §6${a}§r ?\n(家庭代付 ${b})`, '确认', '取消', () => {
+        try {
+            onsuccess(fromFamily);
+            money.reduce(fromFamily.xuid, a);
+            money.reduce(family.xuid, b);
+        } catch {
+            onfail(fromFamily);
+        }
+    }, onfail).send(fromFamily);
+}
+
+function transferUi(pl) {
+    if (!getFamiliesNullable(pl.xuid)) {
+        return transferCreditUi().send(pl)
+    }
+
+    return action$4('账户', '选择支付方式', [
+        {
+            text: '个人账户',
+            onClick() {
+                transferCreditUi().send(pl);
+            }
+        },
+        {
+            text: '家庭账户',
+            onClick() {
+                familyTransfer(pl);
+            }
+        }
+    ]).send(pl)
+}
+
+function requestFamilyUi(pl) {
+    const pls = mc.getOnlinePlayers();
+
+    let data = {
+        who: -1,
+        amount: 0
+    };
+
+    widget$4('收款', [
+        Dropdown$3('向他人收款', pls.map(p => p.name), 0, (_, i) => {
+            data.who = pls[i];
+        }),
+        
+        Input$5('金额', '', '', (_, val) => {
+            data.amount = isNaN(+val)? 0 : +val;
+
+            if (data.amount <= 0 || !data.who) {
+                return
+            }
+
+            const target = data.who;
+            familyRequest(target, `付款给 ${pl.realName}`, data.amount, () => {
+                target.tell('付款成功');
+                pl.tell('收款成功');
+            }, defaultRequestCreditFailed);
+        }),
+    ]).send(pl);
+}
+
+function requestUi(pl) {
+    if (!getFamiliesNullable(pl.xuid)) {
+        return requestFromUi(pl)
+    }
+
+    return action$4('账户', '选择收款方式', [
+        {
+            text: '个人账户',
+            onClick() {
+                requestFromUi(pl);
+            }
+        },
+        {
+            text: '家庭账户',
+            onClick() {
+                requestFamilyUi(pl);
+            }
+        }
+    ])
+}
+
 var core$1 = {
-    doRegisterCredit: doRegisterCredit$1, transferCredit, requestCredit: requestCredit$2, defaultRequestCreditFailed
+    doRegisterCredit: doRegisterCredit$1, transferCredit, requestCredit: requestCredit$2, defaultRequestCreditFailed,
+    familyTransfer, familyRequest, transferUi, requestUi,
 };
 
 var price = {
@@ -2278,32 +2625,8 @@ function regTelCmds() {
     cmd.setup();
 }
 
-var setup$5 = {
+var setup$8 = {
     setup: regTelCmds, getDeadPos, getRespawnPos
-};
-
-var db_lib = path => {
-    const _db = new KVDatabase(path);
-
-    const db = {
-        get(k) {
-            return _db.get(String(k))
-        },
-
-        set(k, v) {
-            return _db.set(String(k), v)
-        },
-
-        delete(k) {
-            return _db.delete(String(k))
-        },
-
-        listKey() {
-            return _db.listKey()
-        }
-    };
-
-    return db
 };
 
 const dbLib = db_lib;
@@ -2569,7 +2892,7 @@ function deleteEntity(entity) {
     db.delete('v:' + entity);
 }
 
-function setup$4() {
+function setup$7() {
     const done = (pl, handler) => {
         try {
             handler.call(null);
@@ -2622,7 +2945,7 @@ var virt = {
     getControlledEntites: getControlledEntites$1,
     addVirtEntites,
     deleteEntity,
-    setup: setup$4,
+    setup: setup$7,
     n: n$3, ref: ref$2
 };
 
@@ -3046,14 +3369,14 @@ const setupOrderOp = admin;
 const setupOrderUser = user;
 const { setup: setupVirt } = virt;
 
-function setup$3() {
+function setup$6() {
     setupVirt();
     setupOrderOp();
     setupOrderUser();
 }
 
 var setup_1$1 = {
-    setup: setup$3
+    setup: setup$6
 };
 
 const mobs = new Map();
@@ -3135,7 +3458,7 @@ function getScoreUid$1(uid) {
     return !~suid ? 0 : suid
 }
 
-function setup$2() {
+function setup$5() {
     mc.runcmdEx('scoreboard players set @e suid 0');
     mc.listen('onMobDie', mob => {
         if (!mob.isPlayer()) {
@@ -3147,7 +3470,7 @@ function setup$2() {
 }
 
 var mobs_1 = {
-    get, getScoreUid: getScoreUid$1, setup: setup$2, add: add$1, rm: rm$1
+    get, getScoreUid: getScoreUid$1, setup: setup$5, add: add$1, rm: rm$1
 };
 
 const { cmd } = require$$0;
@@ -3248,7 +3571,7 @@ function rmWatchable(entity) {
     return true
 }
 
-function setup$1() {
+function setup$4() {
     setupMobs();
     mc.listen('onTick', freshStatus);
 
@@ -3285,17 +3608,17 @@ function setup$1() {
 }
 
 var kinematics = {
-    setup: setup$1, setAccelerate, setVelocity
+    setup: setup$4, setAccelerate, setVelocity
 };
 
 const { doRegisterCredit } = core$1;
 
-function setup() {
+function setup$3() {
     doRegisterCredit();
 }
 
 var setup_1 = {
-    setup
+    setup: setup$3
 };
 
 const { EventEmitter } = events;
@@ -3600,6 +3923,527 @@ var testui = /*#__PURE__*/Object.freeze({
 
 var require$$13 = /*@__PURE__*/getAugmentedNamespace(testui);
 
+function setup$1() {
+    cmd$6('marriage', '结婚', PermType.Any).setup(register => {
+        register('marry <pl:player>', (cmd, ori, out, { pl }) => {
+            const player = pl[0];
+            if (!player) {
+                return out.error('找不到玩家');
+            }
+            propose(ori.player?.xuid, player.xuid);
+        });
+        register('divorce <pl:player>', (cmd, ori, out, { pl }) => {
+            const player = pl[0];
+            if (!player) {
+                return out.error('找不到玩家');
+            }
+            divorce(ori.player?.xuid, player.xuid);
+        });
+    });
+}
+
+var setup$2 = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	setup: setup$1
+});
+
+var require$$14 = /*@__PURE__*/getAugmentedNamespace(setup$2);
+
+class JsonConf {
+    filePath;
+    constructor(filePath, defaultVal) {
+        this.filePath = filePath;
+        try {
+            this._cache = this.read();
+        }
+        catch {
+            this._cache = defaultVal;
+            this.write(defaultVal);
+        }
+    }
+    _cache;
+    read() {
+        const data = fs.readFileSync(this.filePath, 'utf8');
+        return JSON.parse(data);
+    }
+    write(data) {
+        fs.writeFile(this.filePath, JSON.stringify(data, null, 4), () => { });
+    }
+    update() {
+        this.write(this._cache);
+    }
+    reload() {
+        this._cache = this.read();
+    }
+    delete(key) {
+        delete this._cache[key];
+        this.update();
+    }
+    get(key) {
+        return this._cache[key];
+    }
+    set(key, value) {
+        this._cache[key] = value;
+        this.update();
+    }
+    has(key) {
+        return this._cache.hasOwnProperty(key);
+    }
+    clear() {
+        this.write({});
+        this._cache = {};
+    }
+    remove() {
+        fs.unlinkSync(this.filePath);
+    }
+    exists() {
+        return fs.existsSync(this.filePath);
+    }
+    init(name, defaultVal) {
+        if (!this.exists()) {
+            this.set(name, defaultVal);
+        }
+        return this.get(name);
+    }
+}
+
+const accessibility = db$3('data/accessibility');
+const config = new JsonConf('ServerConfig/accountConf.json', {
+    register: {
+        title: '注册',
+        hint: '注册你的云梦之城账号，请记住你的密码，这里没有机会修改密码',
+        error: '你已经注册过了',
+        success: '欢迎来到云梦之城',
+        timeout: {
+            time: 30,
+            message: '你注册超时了'
+        }
+    },
+    login: {
+        title: '登录',
+        hint: '登录你的云梦之城账号，请输入你的密码',
+        error: '密码错误',
+        success: '欢迎回来',
+        timeout: {
+            time: 30,
+            message: '你登录超时了'
+        },
+        banned: '你已被封禁，剩余：',
+        denied: '你并未受邀在服务器进行游戏',
+    },
+    ban: {
+        title: '封禁',
+        hint: '封禁一个玩家',
+    },
+    persistent: {
+        title: '保持登录',
+        hint: '设置保持登录时长，在此时长内不更改 IP 即可自动保持登录'
+    },
+    remove: {
+        title: '移除',
+        hint: '移除一个玩家'
+    },
+    server: {
+        port: 13487
+    }
+});
+const HOUR = 60 * 60 * 1000;
+const DAY = 24 * HOUR;
+const online = new Set();
+const listeners = new events$1.EventEmitter();
+function kick(pl, reason) {
+    pl.kick(reason);
+    listeners.emit('kick', pl, reason);
+}
+function verifyPassword(passwd) {
+    if (passwd.length < 6 ||
+        passwd.length > 16 ||
+        passwd.match(/^[a-z]{6,16}$/) ||
+        passwd.match(/^[A-Z]{6,16}$/) ||
+        passwd.match(/^[0-9]{6,16}$/)) {
+        return false;
+    }
+    return true;
+}
+function createAccount(pl, passwd, allow = true) {
+    const registerConf = config.get('register');
+    const kickTimer = setTimeout(() => {
+        kick(pl, registerConf.timeout.message);
+        listeners.emit('timeout', pl);
+    }, registerConf.timeout.time * 1000);
+    if (accessibility.get(pl.xuid)) {
+        pl.sendToast(registerConf.title + '错误', registerConf.error);
+        return;
+    }
+    if (!verifyPassword(passwd)) {
+        pl.sendToast(registerConf.title + '错误', '密码过于简单');
+        return registerUi(pl);
+    }
+    clearTimeout(kickTimer);
+    const info = {
+        name: pl.name,
+        allow,
+        passwd,
+    };
+    accessibility.set(pl.xuid, info);
+    listeners.emit('create', pl, info);
+    pl.sendToast(registerConf.title + '成功', registerConf.success);
+    online.add(pl.xuid);
+}
+function activateAccount(pl) {
+    const info = accessibility.get(pl.xuid);
+    if (info) {
+        info.allow = true;
+        accessibility.set(pl.xuid, info);
+        listeners.emit('activate', pl, info);
+    }
+}
+function deactivateAccount(pl) {
+    const info = accessibility.get(pl.xuid);
+    if (info) {
+        info.allow = false;
+        accessibility.set(pl.xuid, info);
+        listeners.emit('deactivate', pl, info);
+    }
+}
+function verifyBanned(pl) {
+    const info = accessibility.get(pl.xuid);
+    if (info && info.ban) {
+        const { ban } = info;
+        if (ban.time + ban.duration > Date.now()) {
+            kick(pl, `由于${ban.reason}\n` + config.get('login').banned + `${Math.ceil((ban.time + ban.duration - Date.now()) / 1000 / 60 / 60)}小时`);
+            return true;
+        }
+    }
+    return false;
+}
+function verifyAccount(pl, passwd) {
+    if (online.has(pl.xuid)) {
+        return pl.sendText('你已经登录了');
+    }
+    const info = accessibility.get(pl.xuid);
+    const loginConf = config.get('login');
+    if (!info) {
+        return registerUi(pl);
+    }
+    if (!info.allow) {
+        pl.sendToast(loginConf.title + '错误', loginConf.denied);
+    }
+    if (info.passwd === passwd) {
+        pl.sendToast(loginConf.title + '成功', loginConf.success);
+        online.add(pl.xuid);
+        listeners.emit('login', pl, info);
+    }
+    else {
+        pl.sendToast(loginConf.title + '错误', loginConf.error);
+        loginUi(pl);
+    }
+}
+function updatePersistentLogin(pl, duration, ip) {
+    if (!online.has(pl.xuid)) {
+        return loginUi(pl);
+    }
+    const info = accessibility.get(pl.xuid);
+    if (!info) {
+        return;
+    }
+    info.persistent = {
+        time: Date.now(),
+        duration,
+        ip,
+    };
+    accessibility.set(pl.xuid, info);
+    listeners.emit('updatePersistentLogin', pl, info);
+}
+function dropPersistentLogin(pl) {
+    const info = accessibility.get(pl.xuid);
+    if (!info) {
+        return;
+    }
+    delete info.persistent;
+    accessibility.set(pl.xuid, info);
+}
+function verifyPersistentLogin(pl) {
+    const info = accessibility.get(pl.xuid);
+    if (!info) {
+        return false;
+    }
+    const { persistent } = info;
+    if (!persistent) {
+        return false;
+    }
+    const { time, duration, ip } = persistent;
+    if (time + duration < Date.now()) {
+        return false;
+    }
+    if (ip !== pl.getDevice().ip) {
+        return false;
+    }
+    listeners.emit('login', pl, info);
+    return true;
+}
+function banAccount(pl, reason, duration = 4 * HOUR) {
+    const info = accessibility.get(pl.xuid);
+    const banConf = config.get('ban');
+    if (!info) {
+        return pl.sendText(banConf.title + '错误');
+    }
+    info.ban = {
+        time: Date.now(),
+        duration,
+        reason,
+    };
+    accessibility.set(pl.xuid, info);
+    kick(pl, reason);
+}
+function banXuid(xuid) {
+    const info = accessibility.get(xuid);
+    const pl = mc.getPlayer(xuid);
+    info.ban = {
+        time: Date.now(),
+        duration: Number.MAX_SAFE_INTEGER,
+        reason: 'Ban from console',
+    };
+    accessibility.set(xuid, info);
+    if (pl) {
+        kick(pl, 'Ban from console');
+    }
+}
+function unbanXuid(xuid) {
+    const info = accessibility.get(xuid);
+    if (info) {
+        delete info.ban;
+        accessibility.set(xuid, info);
+    }
+}
+function removeAccount(pl) {
+    accessibility.delete(pl.xuid);
+    kick(pl, '你的账号已被移除');
+}
+function timeoutWarning(pl, action, duration) {
+    pl.sendToast('警告', `你有${Math.ceil(duration / 1000)}秒的时间完成${action}，否则你将会被踢出服务器`);
+}
+function registerUi(pl) {
+    const registerConf = config.get('register');
+    const { time, message } = registerConf.timeout;
+    const kickTimer = setTimeout(() => {
+        kick(pl, message);
+    }, time * 1000);
+    ui.widget(registerConf.title, [
+        ui.Label(registerConf.hint),
+        ui.Input('请输入你的密码', '', '', (pl, val) => {
+            clearTimeout(kickTimer);
+            createAccount(pl, val);
+        })
+    ], () => timeoutWarning(pl, '注册', time * 1000)).send(pl);
+}
+function loginUi(pl) {
+    const loginConf = config.get('login');
+    const { time } = loginConf.timeout;
+    const kickTimer = setTimeout(() => {
+        kick(pl, loginConf.timeout.message);
+        listeners.emit('timeout', pl);
+    }, loginConf.timeout.time * 1000);
+    ui.widget(loginConf.title, [
+        ui.Label(loginConf.hint),
+        ui.Input('请输入你的密码', '', '', (pl, val) => {
+            clearTimeout(kickTimer);
+            verifyAccount(pl, val);
+        })
+    ], () => timeoutWarning(pl, loginConf.title, time * 1000)).send(pl);
+}
+function banUi(player) {
+    if (!accessibility.get(player.xuid)) {
+        return player.sendText(`${player.name} 没有注册`);
+    }
+    const banConf = config.get('ban');
+    const players = mc.getOnlinePlayers();
+    let banArgs = {};
+    ui.widget(banConf.title, [
+        ui.Label(banConf.hint),
+        ui.Dropdown('选择玩家', players.map(pl => pl.name), 0, (_, val) => {
+            banArgs.player = players[val];
+        }),
+        ui.Switch('永久封禁', false, (_, val) => banArgs.permanent = val),
+        ui.Slider('封禁时长 (小时)', 1, 168, 1, 1, (_, val) => {
+            banArgs.duration = val * HOUR;
+        }),
+        ui.Input('理由', '', '', (pl, val) => {
+            banArgs.reason = val;
+            if (banArgs.permanent) {
+                banArgs.duration = Infinity;
+            }
+            banAccount(banArgs.player, banArgs.reason, banArgs.duration);
+        })
+    ]).send(player);
+}
+function persistentUi(player) {
+    const persistConf = config.get('persistent');
+    const persistentPrev = accessibility.get(player.xuid)?.persistent;
+    const persistent = {
+        enable: Boolean(persistentPrev),
+        time: persistentPrev?.time ?? Date.now(),
+        duration: persistentPrev?.duration ?? 0,
+        ip: persistentPrev?.ip ?? player.getDevice().ip,
+    };
+    ui.widget(persistConf.title, [
+        ui.Label(persistConf.hint),
+        ui.Switch('启用保持登录', persistent.enable, (_, val) => {
+            persistent.enable = val;
+        }),
+        ui.Slider('保持时长(天) ', 1, 30, 1, persistent.duration / DAY, (_, val) => {
+            persistent.duration = val * DAY;
+            if (persistent.enable) {
+                updatePersistentLogin(player, persistent.duration, persistent.ip);
+                player.sendText(`保持登录已开启，有效时长为${persistent.duration / DAY}天`);
+            }
+            else {
+                dropPersistentLogin(player);
+                player.sendText('保持登录已关闭');
+            }
+        })
+    ]).send(player);
+}
+function removeUi(pl) {
+    const removeConf = config.get('remove');
+    ui.action(removeConf.title, removeConf.hint, mc.getOnlinePlayers().map(pl => ({
+        text: pl.name,
+        onClick() {
+            ui.alert(removeConf.title, `移除玩家: ${pl.name}`, '确定', '取消', removeAccount).send(pl);
+        }
+    }))).send(pl);
+}
+function AccountServerEmitter() {
+    return `
+    <script>
+        window.open('/ui', 'AccountServiceUi', 'popup=true,width=400,height=500')
+        window.close()
+    </script>
+    `;
+}
+function AccountServerUI() {
+    return `
+    <head>
+        <title>Account Service</title>
+    </head>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
+        .item {
+            padding: 10px;
+        }
+        .item:hover {
+            background-color: #eee;
+            padding: 10px;
+        }
+    </style>
+    <script>
+        function onClick(xuid, ev) {
+            console.log(xuid, ev.target.checked)
+            fetch('/ban?xuid=' + xuid + '&ban=' + ev.target.checked)
+        }
+    </script>
+    <div id='app'>
+        <div class="item" style="display: flex; justify-content: space-between; align-items: center; background-color: #ddd; font-weight: bold;">
+            <label>PLAYER</label>
+            <label>BANNED</label>
+        </div>
+        ${accessibility.listKey().map(xuid => {
+        const { name, ban } = accessibility.get(xuid);
+        const banned = !!ban;
+        return `
+            <div class="item" style="display: flex; justify-content: space-between; align-items: center;">
+                ${name}
+                <lable>
+                    <input type="checkbox" ${banned ? 'checked' : ''}" onclick="onClick('${xuid}', event)" />
+                </label>
+            </div>
+            `;
+    }).join('')}
+    </div>
+    `;
+}
+function makeServer() {
+    http.createServer((req, res) => {
+        if (req.url === '/') {
+            return res.end(AccountServerEmitter());
+        }
+        if (req.url === '/ui') {
+            return res.end(AccountServerUI());
+        }
+        if (req.url?.startsWith('/ban')) {
+            const { xuid, ban } = qs.parse(req.url.split('?')[1]);
+            if (ban === 'true') {
+                banXuid(xuid);
+            }
+            else {
+                unbanXuid(xuid);
+            }
+            res.end();
+        }
+    })
+        .listen(config.get('server').port, () => {
+        console.log(`Account service is running on http://localhost:${config.get('server').port}`);
+    });
+}
+function setup() {
+    cmd$6('account', '账户操作', PermType.Any).setup(register => {
+        register('register', (cmd, { player }) => registerUi(player));
+        register('login', (cmd, { player }) => loginUi(player));
+        register('persistent', (cmd, { player }) => persistentUi(player));
+    });
+    cmd$6('account_op', '管理员账户操作', PermType.Admin).setup(register => {
+        register('ban', (cmd, { player }) => banUi(player));
+        register('remove', (cmd, { player }) => removeUi(player));
+    });
+    mc.listen('onJoin', pl => {
+        if (!accessibility.get(pl.xuid)) {
+            return registerUi(pl);
+        }
+        if (verifyPersistentLogin(pl)) {
+            pl.sendToast('提示', '你已保持登录');
+            return online.add(pl.xuid);
+        }
+        loginUi(pl);
+    });
+    mc.listen('onPreJoin', pl => {
+        verifyBanned(pl);
+    });
+    mc.listen('onLeft', pl => {
+        online.delete(pl.xuid);
+    });
+    makeServer();
+}
+
+var account = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	activateAccount: activateAccount,
+	banAccount: banAccount,
+	banXuid: banXuid,
+	createAccount: createAccount,
+	deactivateAccount: deactivateAccount,
+	dropPersistentLogin: dropPersistentLogin,
+	listeners: listeners,
+	removeAccount: removeAccount,
+	setup: setup,
+	unbanXuid: unbanXuid,
+	updatePersistentLogin: updatePersistentLogin,
+	verifyAccount: verifyAccount,
+	verifyBanned: verifyBanned,
+	verifyPersistentLogin: verifyPersistentLogin
+});
+
+var require$$15 = /*@__PURE__*/getAugmentedNamespace(account);
+
 const { load } = loadModule;
 
 const modules = [
@@ -3609,13 +4453,15 @@ const modules = [
     overShoulder,
     notification,
     motd,
-    setup$5,
+    setup$8,
     shell,
     setup_1$1,
     kinematics,
     setup_1,
     affair,
     require$$13,
+    require$$14,
+    require$$15,
 ];
 
 mc.listen('onServerStarted',() => modules.forEach(m => load(m)));

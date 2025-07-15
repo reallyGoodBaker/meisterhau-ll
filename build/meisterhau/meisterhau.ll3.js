@@ -1,6 +1,9 @@
 'use strict';
 
 var require$$0$1 = require('http');
+var events$1 = require('events');
+var fs = require('fs');
+var qs = require('querystring');
 
 function getDefaultExportFromCjs (x) {
 	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
@@ -3018,12 +3021,12 @@ var hud$2 = /*#__PURE__*/Object.freeze({
 	hud: hud$1
 });
 
-var require$$3 = /*@__PURE__*/getAugmentedNamespace(hud$2);
+var require$$3$1 = /*@__PURE__*/getAugmentedNamespace(hud$2);
 
 const { playAnim: playAnim$3, playSoundAll: playSoundAll$2 } = require$$2$2;
 const { DefaultMoves: DefaultMoves$1, DefaultTrickModule: DefaultTrickModule$1 } = require$$19;
 const { constrictCalc, randomRange } = require$$2$1;
-const { hud } = require$$3;
+const { hud } = require$$3$1;
 
 class LightSaberMoves extends DefaultMoves$1 {
     /**
@@ -8158,7 +8161,8 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         }
     };
     attackStart = {
-        cast: 24,
+        cast: 17,
+        backswing: 7,
         onEnter(pl, ctx) {
             playAnimCompatibility(pl, 'animation.meisterhau.double_axe.light.start', 'animation.meisterhau.double_axe.light.start');
             ctx.lookAtTarget(pl);
@@ -8194,17 +8198,23 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             },
             block: {
                 onBlock: null
+            },
+            dodge: {
+                onDodge: {
+                    allowedState: 'backswing'
+                }
             }
         },
         timeline: {
             2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
             4: (_, ctx) => ctx.status.isBlocking = false,
+            6: (pl, ctx) => playSoundAll$5('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             8: (pl, ctx) => ctx.selectFromRange(pl, {
                 angle: 90,
                 radius: 2.5,
                 rotation: 45
             }).forEach(en => ctx.attack(pl, en, {
-                damage: 16,
+                damage: 17,
                 knockback: 0.2,
                 direction: 'vertical',
             })),
@@ -8212,7 +8222,8 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         }
     };
     attack1 = {
-        cast: 24,
+        cast: 17,
+        backswing: 7,
         onEnter(pl, ctx) {
             playAnimCompatibility(pl, 'animation.meisterhau.double_axe.light.1', 'animation.meisterhau.double_axe.light.1');
             ctx.lookAtTarget(pl);
@@ -8245,18 +8256,24 @@ class DoubleAxeMoves extends DefaultMoves$4 {
                 onTrap: {
                     preInput: 'onUseItem'
                 }
+            },
+            dodge: {
+                onDodge: {
+                    allowedState: 'backswing'
+                }
             }
         },
         timeline: {
             2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
             5: (_, ctx) => ctx.status.hegemony = true,
             15: (_, ctx) => ctx.status.hegemony = false,
+            6: pl => playSoundAll$5('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             8: (pl, ctx) => ctx.selectFromRange(pl, {
                 angle: 90,
                 radius: 2.5,
                 rotation: 45
             }).forEach(en => ctx.attack(pl, en, {
-                damage: 16,
+                damage: 17,
                 knockback: 0.2,
                 direction: 'vertical',
             })),
@@ -8264,7 +8281,8 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         }
     };
     attack2 = {
-        cast: 24,
+        cast: 17,
+        backswing: 7,
         onEnter(pl, ctx) {
             playAnimCompatibility(pl, 'animation.meisterhau.double_axe.light.2', 'animation.meisterhau.double_axe.light.2');
             ctx.lookAtTarget(pl);
@@ -8297,18 +8315,24 @@ class DoubleAxeMoves extends DefaultMoves$4 {
                 onTrap: {
                     preInput: 'onUseItem'
                 }
+            },
+            dodge: {
+                onDodge: {
+                    allowedState: 'backswing'
+                }
             }
         },
         timeline: {
             2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
             5: (_, ctx) => ctx.status.hegemony = true,
             15: (_, ctx) => ctx.status.hegemony = false,
+            6: pl => playSoundAll$5('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             8: (pl, ctx) => ctx.selectFromRange(pl, {
                 angle: 90,
                 radius: 2.5,
                 rotation: 45
             }).forEach(en => ctx.attack(pl, en, {
-                damage: 16,
+                damage: 17,
                 knockback: 0.2,
                 direction: 'vertical',
             })),
@@ -8316,7 +8340,8 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         }
     };
     heavyStart = {
-        cast: 30,
+        cast: 20,
+        backswing: 10,
         onEnter(pl, ctx) {
             playAnimCompatibility(pl, 'animation.meisterhau.double_axe.heavy_start', 'animation.meisterhau.double_axe.heavy_start');
             ctx.lookAtTarget(pl);
@@ -8356,6 +8381,15 @@ class DoubleAxeMoves extends DefaultMoves$4 {
                     tag: 'counter',
                     preInput: 'onUseItem'
                 }
+            },
+            dodge: {
+                onDodge: {
+                    allowedState: 'backswing'
+                },
+                onTrap: {
+                    tag: 'feint',
+                    preInput: 'onDodge'
+                }
             }
         },
         timeline: {
@@ -8365,6 +8399,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             9: (_, ctx) => ctx.status.hegemony = true,
             7: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             19: (_, ctx) => ctx.status.hegemony = false,
+            10: pl => playSoundAll$5('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             12: (pl, ctx) => ctx.selectFromRange(pl, {
                 angle: 120,
                 radius: 2.8,
@@ -8377,7 +8412,8 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         }
     };
     heavy1 = {
-        cast: 29,
+        cast: 19,
+        backswing: 10,
         onEnter(pl, ctx) {
             playAnimCompatibility(pl, 'animation.meisterhau.double_axe.heavy_left', 'animation.meisterhau.double_axe.heavy_left');
             ctx.lookAtTarget(pl);
@@ -8413,6 +8449,11 @@ class DoubleAxeMoves extends DefaultMoves$4 {
                     tag: 'counter',
                     preInput: 'onUseItem'
                 }
+            },
+            dodge: {
+                onDodge: {
+                    allowedState: 'backswing'
+                }
             }
         },
         timeline: {
@@ -8420,6 +8461,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             7: (_, ctx) => ctx.status.hegemony = true,
             6: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             19: (_, ctx) => ctx.status.hegemony = false,
+            10: pl => playSoundAll$5('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             12: (pl, ctx) => ctx.selectFromRange(pl, {
                 angle: 120,
                 radius: 2.8,
@@ -8461,7 +8503,10 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         timeline: {
             2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
             11: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
-            10: (_, ctx) => ctx.status.hegemony = true,
+            10: (_, ctx) => {
+                ctx.status.hegemony = true;
+                playSoundAll$5('weapon.whoosh.thick.' + randomRange$1(1, 4, true), _.pos);
+            },
             8: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             20: (_, ctx) => ctx.status.hegemony = false,
             12: (pl, ctx) => ctx.selectFromRange(pl, {
@@ -8476,7 +8521,8 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         }
     };
     heavy2 = {
-        cast: 29,
+        cast: 19,
+        backswing: 10,
         onEnter(pl, ctx) {
             playAnimCompatibility(pl, 'animation.meisterhau.double_axe.heavy_right', 'animation.meisterhau.double_axe.heavy_right');
             ctx.lookAtTarget(pl);
@@ -8512,6 +8558,11 @@ class DoubleAxeMoves extends DefaultMoves$4 {
                     tag: 'counter',
                     preInput: 'onUseItem'
                 }
+            },
+            dodge: {
+                onDodge: {
+                    allowedState: 'backswing'
+                }
             }
         },
         timeline: {
@@ -8519,6 +8570,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             7: (_, ctx) => ctx.status.hegemony = true,
             6: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             19: (_, ctx) => ctx.status.hegemony = false,
+            10: pl => playSoundAll$5('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             12: (pl, ctx) => ctx.selectFromRange(pl, {
                 angle: 120,
                 radius: 2.8,
@@ -8560,7 +8612,10 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         timeline: {
             2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
             11: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
-            10: (_, ctx) => ctx.status.hegemony = true,
+            10: (_, ctx) => {
+                ctx.status.hegemony = true;
+                playSoundAll$5('weapon.whoosh.thick.' + randomRange$1(1, 4, true), _.pos);
+            },
             8: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             20: (_, ctx) => ctx.status.hegemony = false,
             12: (pl, ctx) => ctx.selectFromRange(pl, {
@@ -8628,8 +8683,8 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         }
     };
     deflection = {
-        cast: 4,
-        backswing: 5,
+        cast: 5,
+        backswing: 4,
         onEnter(pl, ctx) {
             playSoundAll$5('weapon.deflection', pl.pos, 1);
             playAnimCompatibility(pl, 'animation.meisterhau.double_axe.deflect', 'animation.meisterhau.double_axe.deflect');
@@ -8653,7 +8708,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
                 onDeflection: null
             },
             break: {
-                onSneak: {
+                onUseItem: {
                     allowedState: 'cast'
                 }
             }
@@ -8670,6 +8725,8 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             ctx.unfreeze(pl);
         },
         timeline: {
+            2: (pl, ctx) => ctx.adsorbToTarget(pl, 3, 1),
+            3: pl => playSoundAll$5('weapon.whoosh.break_defense', pl.pos),
             4: (pl, ctx) => ctx.selectFromRange(pl, {
                 angle: 180,
                 radius: 2.8,
@@ -8696,7 +8753,48 @@ class DoubleAxeMoves extends DefaultMoves$4 {
                     tag: 'counter',
                     preInput: 'onUseItem'
                 }
+            },
+            breakKick: {
+                onTrap: {
+                    tag: 'counter',
+                    preInput: 'onAttack'
+                }
             }
+        }
+    };
+    breakKick = {
+        cast: 14,
+        onEnter(pl, ctx) {
+            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.kick', 'animation.meisterhau.double_axe.kick');
+            ctx.lookAtTarget(pl);
+            ctx.freeze(pl);
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl);
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null,
+            },
+            hurt: {
+                onHurt: null,
+                onInterrupted: null
+            },
+        },
+        timeline: {
+            2: (pl, ctx) => ctx.adsorbToTarget(pl, 3, 1),
+            5: (pl, ctx) => ctx.selectFromRange(pl, {
+                angle: 120,
+                radius: 2.8,
+                rotation: 60
+            }).forEach(en => ctx.attack(pl, en, {
+                damage: 2,
+                direction: 'middle',
+                shock: true,
+                permeable: true,
+                parryable: false,
+                knockback: 3,
+            })),
         }
     };
     breakCounter = {
@@ -8742,10 +8840,11 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             }
         },
         timeline: {
-            4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
+            4: (pl, ctx) => ctx.adsorbToTarget(pl, 3, 1),
             5: (_, ctx) => ctx.status.hegemony = true,
             3: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             15: (_, ctx) => ctx.status.hegemony = false,
+            6: pl => playSoundAll$5('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             8: (pl, ctx) => ctx.selectFromRange(pl, {
                 angle: 120,
                 radius: 2.8,
@@ -11574,23 +11673,6 @@ function listenAllCustomEvents(mods) {
             }
 
             const attackTime = pl.quickEvalMolangScript('v.attack_time');
-            // pl.quickEvalMolangScript(`v.mov_mag = math.sqrt( math.pow( query.movement_direction(0), 2 ) + math.pow( query.movement_direction(2), 2));
-            // v.nmov_x = query.movement_direction(0) / v.mov_mag;
-            // v.nmov_z = query.movement_direction(2) / v.mov_mag;
-            // v.dr = v.nmov_x > 0 ? -math.acos(v.nmov_z) : math.acos(v.nmov_z);
-            // v.head_y_rot = query.head_y_rotation(this);
-            // t.rot = v.dr - v.head_y_rot;
-            // v.rot_to_facing = t.rot < 0 ? t.rot + 360 : t.rot;
-            // v.dir_to_facing = 1 <= 0 ? 0
-            //     : v.rot_to_facing < 45 ? 1
-            //     : v.rot_to_facing < 135 ? 2
-            //     : v.rot_to_facing < 225 ? 3
-            //     : v.rot_to_facing < 315 ? 4
-            //     : 1;
-            // `)
-            // console.log(pl.quickEvalMolangScript('math.mod(q.modified_distance_moved, 12) * 0.125'))
-
-            // console.log(pl.name, attackTime)
             if (attackTime > 0 && attackTime < 0.3) {
                 es.put('onAttack', [pl, Function.prototype, [ pl ]]);
             }
@@ -11613,11 +11695,14 @@ function listenAllCustomEvents(mods) {
             let bind = getMod(status.hand);
             if (!pl) {
                 pl = mc.getEntity(+uniqueId);
+                if (!pl) {
+                    continue
+                }
                 bind = ai.getRegistration(pl.type)[1];
             }
 
             if (!pl ||!bind) {
-                return
+                continue
             }
 
             const currentMove = bind.moves[status.status];
@@ -12273,6 +12358,10 @@ function listenAllMcEvents(collection) {
         mc.runcmdEx(`/inputpermission set "${pl.name}" sneak enabled`);
     });
 
+    mc.listen('onMobDie', en => {
+        Status.status.delete(en.uniqueId);
+    });
+
     listenAllCustomEvents(mods);
     registerCommand();
     listenEntitiyWithAi();
@@ -12308,7 +12397,7 @@ function loadModule(mod, flags) {
     flags[1]++;
 }
 
-function setup() {
+function setup$1() {
     try {
         loadAll();
     }
@@ -12319,16 +12408,742 @@ function setup() {
 
 var init = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	setup: setup
+	setup: setup$1
 });
 
 var require$$2 = /*@__PURE__*/getAugmentedNamespace(init);
+
+function buildContextOpener(builder, contextSender, onCancelHandlerArgIndex) {
+    return (...args) => {
+        const onCancelHandler = args[onCancelHandlerArgIndex] || (() => { });
+        args[onCancelHandlerArgIndex] = (...args) => {
+            const val = onCancelHandler.apply(null, args);
+            contextSender(args[0]);
+            return val
+        };
+
+        return builder.apply(null, args)
+    }
+}
+
+function openAlert(sender) {
+    return buildContextOpener(alert, sender, 5)
+}
+
+function openAction(sender) {
+    return buildContextOpener(action, sender, 3)
+}
+
+function openWidget(sender) {
+    return buildContextOpener(widget, sender, 2)
+}
+
+function uiReturnValBuilder(sender) {
+    return {
+        send: sender,
+        open: buildContextOpener,
+        openAlert: openAlert(sender),
+        openAction: openAction(sender),
+        openWidget: openWidget(sender),
+    }
+}
+
+function alert(title, content, button1, buton2, onEnsure = Function.prototype, onReject = Function.prototype, onCancel = Function.prototype) {
+    let ret = null;
+    const sender = pl => {
+        let isUserAction = false;
+        setTimeout(() => {
+            isUserAction = true;
+        }, 300);
+        pl.sendModalForm(title, content, button1, buton2, (_, confirmed) => {
+            if (!isUserAction) {
+                return onCancel.call(ret, pl)
+            }
+            
+            if (confirmed) {
+                return onEnsure.call(ret, pl), undefined
+            }
+    
+            return onReject.call(ret, pl), undefined
+        });
+    };
+    return ret = uiReturnValBuilder(sender)
+}
+
+/**
+ * @param {string} title 
+ * @param {string} content 
+ * @param {Array<{text: string; icon?: string; onClick: (err: any, pl: any)=>void}>} buttonGroup 
+ * @param {Function} onerror 
+ * @returns 
+ */
+function action(title, content, buttonGroup = [], onerror = Function.prototype) {
+    const buttons = [],
+        images = [],
+        handlers = [];
+
+    buttonGroup.forEach(conf => {
+        const { text, icon, onClick } = conf;
+        buttons.push(text);
+        images.push(icon || '');
+        handlers.push(onClick);
+    });
+
+    let ret = null;
+    const sender = pl => {
+        pl.sendSimpleForm(
+            title, content,
+            buttons, images,
+            (pl, i) => {
+                if (i === null) {
+                    return onerror.call(ret, -1, pl)
+                }
+
+                try {
+                    handlers[i].call(ret, 0, pl);
+                } catch (err) {
+                    try {
+                        onerror.call(ret, err, pl);
+                    } catch (er) {
+                        throw er
+                    }
+                }
+            }
+        );
+    };
+
+    return ret = uiReturnValBuilder(sender)
+}
+
+function widget(title, elements = [], onerror = Function.prototype) {
+    const fm = mc.newCustomForm();
+    const handlers = [];
+
+    elements.forEach(el => {
+        const { type, args, handler } = el;
+
+        handlers.push(handler);
+        fm[`add${type}`](...args);
+    });
+
+    fm.setTitle(title);
+
+    let ret = null;
+    const sender = pl => {
+        pl.sendForm(fm, (_, data) => {
+            if (data === null) {
+                return onerror.call(ret, pl, -1)
+            }
+
+            if (!data) {
+                try {
+                    return onerror.call(ret, pl)
+                } catch (err) {
+                    throw err
+                }
+            }
+    
+            data.forEach((val, i) => {
+                try {
+                    handlers[i].call(ret, pl, val);
+                } catch (err) {
+                    try {
+                        onerror.call(ret, pl, err);
+                    } catch (err) {
+                        throw err
+                    }
+                }
+            });
+        });
+    };
+
+    return ret = uiReturnValBuilder(sender)
+}
+
+/**
+ * @param {string} type 
+ * @param {Function} [handler] 
+ * @returns 
+ */
+function basicBuilder(type, resolver = (pl, val, args) => [pl, val], useHandler = true) {
+    return (...args) => {
+        let handler = useHandler
+            ? null
+            : Function.prototype;
+
+        if (typeof args[args.length-1] === 'function') {
+            const _handler = args.pop();
+            handler = (pl, val) => {
+                const _args = resolver.call(null, pl, val, args);
+                _handler.apply(null, _args);
+            };
+        }
+
+        return {
+            type, args, handler
+        }
+    }
+}
+
+var ui = {
+    alert, action, widget,
+
+    /**@type {(text: string) => any} */
+    Label: basicBuilder('Label', undefined, false),
+
+    /**@type {(title: string, placeholder?: string, defaultVal?: string, handler?: (pl: any, value: string) => void) => any} */
+    Input: basicBuilder('Input'),
+
+    /**@type {(title: string, defaultVal?: boolean, handler?: (pl: any, value: boolean) => void) => any} */
+    Switch: basicBuilder('Switch'),
+
+    /**@type {(title: string, items: string[], defaultVal?: number, handler?: (pl: any, value: number) => void) => any} */
+    Dropdown: basicBuilder('Dropdown'),
+
+    /**@type {(title: string, min: number, max: number, step?: number, defaultVal?: number, handler?: (pl: any, value: number) => void) => any} */
+    Slider: basicBuilder('Slider'),
+
+    /**@type {(title: string, items: string[], defaultVal?: number, handler?: (pl: any, value: string) => void) => any} */
+    StepSlider: basicBuilder('StepSlider'),
+};
+
+class JsonConf {
+    filePath;
+    constructor(filePath, defaultVal) {
+        this.filePath = filePath;
+        try {
+            this._cache = this.read();
+        }
+        catch {
+            this._cache = defaultVal;
+            this.write(defaultVal);
+        }
+    }
+    _cache;
+    read() {
+        const data = fs.readFileSync(this.filePath, 'utf8');
+        return JSON.parse(data);
+    }
+    write(data) {
+        fs.writeFile(this.filePath, JSON.stringify(data, null, 4), () => { });
+    }
+    update() {
+        this.write(this._cache);
+    }
+    reload() {
+        this._cache = this.read();
+    }
+    delete(key) {
+        delete this._cache[key];
+        this.update();
+    }
+    get(key) {
+        return this._cache[key];
+    }
+    set(key, value) {
+        this._cache[key] = value;
+        this.update();
+    }
+    has(key) {
+        return this._cache.hasOwnProperty(key);
+    }
+    clear() {
+        this.write({});
+        this._cache = {};
+    }
+    remove() {
+        fs.unlinkSync(this.filePath);
+    }
+    exists() {
+        return fs.existsSync(this.filePath);
+    }
+    init(name, defaultVal) {
+        if (!this.exists()) {
+            this.set(name, defaultVal);
+        }
+        return this.get(name);
+    }
+}
+
+var db_lib = path => {
+    const _db = new KVDatabase(path);
+
+    const db = {
+        get(k) {
+            return _db.get(String(k))
+        },
+
+        set(k, v) {
+            return _db.set(String(k), v)
+        },
+
+        delete(k) {
+            return _db.delete(String(k))
+        },
+
+        listKey() {
+            return _db.listKey()
+        },
+
+        init(k, defaultVal) {
+            let candidate = _db.get(k);
+            if (!candidate) {
+                _db.set(k, defaultVal);
+                return defaultVal
+            } else {
+                return candidate
+            }
+        }
+    };
+
+    return db
+};
+
+var db = /*@__PURE__*/getDefaultExportFromCjs(db_lib);
+
+const accessibility = db('data/accessibility');
+const config = new JsonConf('ServerConfig/accountConf.json', {
+    register: {
+        title: '注册',
+        hint: '注册你的云梦之城账号，请记住你的密码，这里没有机会修改密码',
+        error: '你已经注册过了',
+        success: '欢迎来到云梦之城',
+        timeout: {
+            time: 30,
+            message: '你注册超时了'
+        }
+    },
+    login: {
+        title: '登录',
+        hint: '登录你的云梦之城账号，请输入你的密码',
+        error: '密码错误',
+        success: '欢迎回来',
+        timeout: {
+            time: 30,
+            message: '你登录超时了'
+        },
+        banned: '你已被封禁，剩余：',
+        denied: '你并未受邀在服务器进行游戏',
+    },
+    ban: {
+        title: '封禁',
+        hint: '封禁一个玩家',
+    },
+    persistent: {
+        title: '保持登录',
+        hint: '设置保持登录时长，在此时长内不更改 IP 即可自动保持登录'
+    },
+    remove: {
+        title: '移除',
+        hint: '移除一个玩家'
+    },
+    server: {
+        port: 13487
+    }
+});
+const HOUR = 60 * 60 * 1000;
+const DAY = 24 * HOUR;
+const online = new Set();
+const listeners = new events$1.EventEmitter();
+function kick(pl, reason) {
+    pl.kick(reason);
+    listeners.emit('kick', pl, reason);
+}
+function verifyPassword(passwd) {
+    if (passwd.length < 6 ||
+        passwd.length > 16 ||
+        passwd.match(/^[a-z]{6,16}$/) ||
+        passwd.match(/^[A-Z]{6,16}$/) ||
+        passwd.match(/^[0-9]{6,16}$/)) {
+        return false;
+    }
+    return true;
+}
+function createAccount(pl, passwd, allow = true) {
+    const registerConf = config.get('register');
+    const kickTimer = setTimeout(() => {
+        kick(pl, registerConf.timeout.message);
+        listeners.emit('timeout', pl);
+    }, registerConf.timeout.time * 1000);
+    if (accessibility.get(pl.xuid)) {
+        pl.sendToast(registerConf.title + '错误', registerConf.error);
+        return;
+    }
+    if (!verifyPassword(passwd)) {
+        pl.sendToast(registerConf.title + '错误', '密码过于简单');
+        return registerUi(pl);
+    }
+    clearTimeout(kickTimer);
+    const info = {
+        name: pl.name,
+        allow,
+        passwd,
+    };
+    accessibility.set(pl.xuid, info);
+    listeners.emit('create', pl, info);
+    pl.sendToast(registerConf.title + '成功', registerConf.success);
+    online.add(pl.xuid);
+}
+function activateAccount(pl) {
+    const info = accessibility.get(pl.xuid);
+    if (info) {
+        info.allow = true;
+        accessibility.set(pl.xuid, info);
+        listeners.emit('activate', pl, info);
+    }
+}
+function deactivateAccount(pl) {
+    const info = accessibility.get(pl.xuid);
+    if (info) {
+        info.allow = false;
+        accessibility.set(pl.xuid, info);
+        listeners.emit('deactivate', pl, info);
+    }
+}
+function verifyBanned(pl) {
+    const info = accessibility.get(pl.xuid);
+    if (info && info.ban) {
+        const { ban } = info;
+        if (ban.time + ban.duration > Date.now()) {
+            kick(pl, `由于${ban.reason}\n` + config.get('login').banned + `${Math.ceil((ban.time + ban.duration - Date.now()) / 1000 / 60 / 60)}小时`);
+            return true;
+        }
+    }
+    return false;
+}
+function verifyAccount(pl, passwd) {
+    if (online.has(pl.xuid)) {
+        return pl.sendText('你已经登录了');
+    }
+    const info = accessibility.get(pl.xuid);
+    const loginConf = config.get('login');
+    if (!info) {
+        return registerUi(pl);
+    }
+    if (!info.allow) {
+        pl.sendToast(loginConf.title + '错误', loginConf.denied);
+    }
+    if (info.passwd === passwd) {
+        pl.sendToast(loginConf.title + '成功', loginConf.success);
+        online.add(pl.xuid);
+        listeners.emit('login', pl, info);
+    }
+    else {
+        pl.sendToast(loginConf.title + '错误', loginConf.error);
+        loginUi(pl);
+    }
+}
+function updatePersistentLogin(pl, duration, ip) {
+    if (!online.has(pl.xuid)) {
+        return loginUi(pl);
+    }
+    const info = accessibility.get(pl.xuid);
+    if (!info) {
+        return;
+    }
+    info.persistent = {
+        time: Date.now(),
+        duration,
+        ip,
+    };
+    accessibility.set(pl.xuid, info);
+    listeners.emit('updatePersistentLogin', pl, info);
+}
+function dropPersistentLogin(pl) {
+    const info = accessibility.get(pl.xuid);
+    if (!info) {
+        return;
+    }
+    delete info.persistent;
+    accessibility.set(pl.xuid, info);
+}
+function verifyPersistentLogin(pl) {
+    const info = accessibility.get(pl.xuid);
+    if (!info) {
+        return false;
+    }
+    const { persistent } = info;
+    if (!persistent) {
+        return false;
+    }
+    const { time, duration, ip } = persistent;
+    if (time + duration < Date.now()) {
+        return false;
+    }
+    if (ip !== pl.getDevice().ip) {
+        return false;
+    }
+    listeners.emit('login', pl, info);
+    return true;
+}
+function banAccount(pl, reason, duration = 4 * HOUR) {
+    const info = accessibility.get(pl.xuid);
+    const banConf = config.get('ban');
+    if (!info) {
+        return pl.sendText(banConf.title + '错误');
+    }
+    info.ban = {
+        time: Date.now(),
+        duration,
+        reason,
+    };
+    accessibility.set(pl.xuid, info);
+    kick(pl, reason);
+}
+function banXuid(xuid) {
+    const info = accessibility.get(xuid);
+    const pl = mc.getPlayer(xuid);
+    info.ban = {
+        time: Date.now(),
+        duration: Number.MAX_SAFE_INTEGER,
+        reason: 'Ban from console',
+    };
+    accessibility.set(xuid, info);
+    if (pl) {
+        kick(pl, 'Ban from console');
+    }
+}
+function unbanXuid(xuid) {
+    const info = accessibility.get(xuid);
+    if (info) {
+        delete info.ban;
+        accessibility.set(xuid, info);
+    }
+}
+function removeAccount(pl) {
+    accessibility.delete(pl.xuid);
+    kick(pl, '你的账号已被移除');
+}
+function timeoutWarning(pl, action, duration) {
+    pl.sendToast('警告', `你有${Math.ceil(duration / 1000)}秒的时间完成${action}，否则你将会被踢出服务器`);
+}
+function registerUi(pl) {
+    const registerConf = config.get('register');
+    const { time, message } = registerConf.timeout;
+    const kickTimer = setTimeout(() => {
+        kick(pl, message);
+    }, time * 1000);
+    ui.widget(registerConf.title, [
+        ui.Label(registerConf.hint),
+        ui.Input('请输入你的密码', '', '', (pl, val) => {
+            clearTimeout(kickTimer);
+            createAccount(pl, val);
+        })
+    ], () => timeoutWarning(pl, '注册', time * 1000)).send(pl);
+}
+function loginUi(pl) {
+    const loginConf = config.get('login');
+    const { time } = loginConf.timeout;
+    const kickTimer = setTimeout(() => {
+        kick(pl, loginConf.timeout.message);
+        listeners.emit('timeout', pl);
+    }, loginConf.timeout.time * 1000);
+    ui.widget(loginConf.title, [
+        ui.Label(loginConf.hint),
+        ui.Input('请输入你的密码', '', '', (pl, val) => {
+            clearTimeout(kickTimer);
+            verifyAccount(pl, val);
+        })
+    ], () => timeoutWarning(pl, loginConf.title, time * 1000)).send(pl);
+}
+function banUi(player) {
+    if (!accessibility.get(player.xuid)) {
+        return player.sendText(`${player.name} 没有注册`);
+    }
+    const banConf = config.get('ban');
+    const players = mc.getOnlinePlayers();
+    let banArgs = {};
+    ui.widget(banConf.title, [
+        ui.Label(banConf.hint),
+        ui.Dropdown('选择玩家', players.map(pl => pl.name), 0, (_, val) => {
+            banArgs.player = players[val];
+        }),
+        ui.Switch('永久封禁', false, (_, val) => banArgs.permanent = val),
+        ui.Slider('封禁时长 (小时)', 1, 168, 1, 1, (_, val) => {
+            banArgs.duration = val * HOUR;
+        }),
+        ui.Input('理由', '', '', (pl, val) => {
+            banArgs.reason = val;
+            if (banArgs.permanent) {
+                banArgs.duration = Infinity;
+            }
+            banAccount(banArgs.player, banArgs.reason, banArgs.duration);
+        })
+    ]).send(player);
+}
+function persistentUi(player) {
+    const persistConf = config.get('persistent');
+    const persistentPrev = accessibility.get(player.xuid)?.persistent;
+    const persistent = {
+        enable: Boolean(persistentPrev),
+        time: persistentPrev?.time ?? Date.now(),
+        duration: persistentPrev?.duration ?? 0,
+        ip: persistentPrev?.ip ?? player.getDevice().ip,
+    };
+    ui.widget(persistConf.title, [
+        ui.Label(persistConf.hint),
+        ui.Switch('启用保持登录', persistent.enable, (_, val) => {
+            persistent.enable = val;
+        }),
+        ui.Slider('保持时长(天) ', 1, 30, 1, persistent.duration / DAY, (_, val) => {
+            persistent.duration = val * DAY;
+            if (persistent.enable) {
+                updatePersistentLogin(player, persistent.duration, persistent.ip);
+                player.sendText(`保持登录已开启，有效时长为${persistent.duration / DAY}天`);
+            }
+            else {
+                dropPersistentLogin(player);
+                player.sendText('保持登录已关闭');
+            }
+        })
+    ]).send(player);
+}
+function removeUi(pl) {
+    const removeConf = config.get('remove');
+    ui.action(removeConf.title, removeConf.hint, mc.getOnlinePlayers().map(pl => ({
+        text: pl.name,
+        onClick() {
+            ui.alert(removeConf.title, `移除玩家: ${pl.name}`, '确定', '取消', removeAccount).send(pl);
+        }
+    }))).send(pl);
+}
+function AccountServerEmitter() {
+    return `
+    <script>
+        window.open('/ui', 'AccountServiceUi', 'popup=true,width=400,height=500')
+        window.close()
+    </script>
+    `;
+}
+function AccountServerUI() {
+    return `
+    <head>
+        <title>Account Service</title>
+    </head>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
+        .item {
+            padding: 10px;
+        }
+        .item:hover {
+            background-color: #eee;
+            padding: 10px;
+        }
+    </style>
+    <script>
+        function onClick(xuid, ev) {
+            console.log(xuid, ev.target.checked)
+            fetch('/ban?xuid=' + xuid + '&ban=' + ev.target.checked)
+        }
+    </script>
+    <div id='app'>
+        <div class="item" style="display: flex; justify-content: space-between; align-items: center; background-color: #ddd; font-weight: bold;">
+            <label>PLAYER</label>
+            <label>BANNED</label>
+        </div>
+        ${accessibility.listKey().map(xuid => {
+        const { name, ban } = accessibility.get(xuid);
+        const banned = !!ban;
+        return `
+            <div class="item" style="display: flex; justify-content: space-between; align-items: center;">
+                ${name}
+                <lable>
+                    <input type="checkbox" ${banned ? 'checked' : ''}" onclick="onClick('${xuid}', event)" />
+                </label>
+            </div>
+            `;
+    }).join('')}
+    </div>
+    `;
+}
+function makeServer() {
+    require$$0$1.createServer((req, res) => {
+        if (req.url === '/') {
+            return res.end(AccountServerEmitter());
+        }
+        if (req.url === '/ui') {
+            return res.end(AccountServerUI());
+        }
+        if (req.url?.startsWith('/ban')) {
+            const { xuid, ban } = qs.parse(req.url.split('?')[1]);
+            if (ban === 'true') {
+                banXuid(xuid);
+            }
+            else {
+                unbanXuid(xuid);
+            }
+            res.end();
+        }
+    })
+        .listen(config.get('server').port, () => {
+        console.log(`Account service is running on http://localhost:${config.get('server').port}`);
+    });
+}
+function setup() {
+    cmd('account', '账户操作', PermType.Any).setup(register => {
+        register('register', (cmd, { player }) => registerUi(player));
+        register('login', (cmd, { player }) => loginUi(player));
+        register('persistent', (cmd, { player }) => persistentUi(player));
+    });
+    cmd('account_op', '管理员账户操作', PermType.Admin).setup(register => {
+        register('ban', (cmd, { player }) => banUi(player));
+        register('remove', (cmd, { player }) => removeUi(player));
+    });
+    mc.listen('onJoin', pl => {
+        if (!accessibility.get(pl.xuid)) {
+            return registerUi(pl);
+        }
+        if (verifyPersistentLogin(pl)) {
+            pl.sendToast('提示', '你已保持登录');
+            return online.add(pl.xuid);
+        }
+        loginUi(pl);
+    });
+    mc.listen('onPreJoin', pl => {
+        verifyBanned(pl);
+    });
+    mc.listen('onLeft', pl => {
+        online.delete(pl.xuid);
+    });
+    makeServer();
+}
+
+var account = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	activateAccount: activateAccount,
+	banAccount: banAccount,
+	banXuid: banXuid,
+	createAccount: createAccount,
+	deactivateAccount: deactivateAccount,
+	dropPersistentLogin: dropPersistentLogin,
+	listeners: listeners,
+	removeAccount: removeAccount,
+	setup: setup,
+	unbanXuid: unbanXuid,
+	updatePersistentLogin: updatePersistentLogin,
+	verifyAccount: verifyAccount,
+	verifyBanned: verifyBanned,
+	verifyPersistentLogin: verifyPersistentLogin
+});
+
+var require$$3 = /*@__PURE__*/getAugmentedNamespace(account);
 
 const { load } = loadModule$1;
 
 mc.listen('onServerStarted',() => [
     requireSetup(),
     require$$2,
+    require$$3,
 ].forEach(m => load(m)));
 
 module.exports = meisterhau;

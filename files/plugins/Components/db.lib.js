@@ -16,6 +16,16 @@ module.exports = path => {
 
         listKey() {
             return _db.listKey()
+        },
+
+        init(k, defaultVal) {
+            let candidate = _db.get(k)
+            if (!candidate) {
+                _db.set(k, defaultVal)
+                return defaultVal
+            } else {
+                return candidate
+            }
         }
     }
 

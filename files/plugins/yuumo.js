@@ -14,6 +14,8 @@ const modules = [
     require('./Components/credit/setup.js'),
     require('./Components/affair/index.js'),
     require('./Components/testui.js'),
+    require('./Components/marriage/setup.js'),
+    require('./Components/account'),
 ]
 
 mc.listen('onServerStarted',() => modules.forEach(m => load(m)))
