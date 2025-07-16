@@ -23,6 +23,10 @@ const stringParamTypeMap = {
     selector: ParamType.WildcardSelector,
 }
 
+type TypeStr = keyof typeof stringParamTypeMap
+type CommandTypeStr = `?${TypeStr}` | TypeStr
+type CommandArr = { [key: string]: CommandTypeStr }[]
+
 const matchers = {
     required: /^<([\w:]+)>$/,
     optional: /^\[([\w:]+)\]$/,
@@ -30,12 +34,12 @@ const matchers = {
 
 interface IToken {
     index: number
-    type: keyof typeof stringParamTypeMap
+    type: TypeStr
     id: string
     isOptional: boolean
 }
 
-function tk(index: number, type: keyof typeof stringParamTypeMap, id: string, isOptional=true) {
+function tk(index: number, type: string, id: string, isOptional=true) {
     return {
         index, type, id, isOptional
     }
@@ -70,7 +74,7 @@ function parseCmdStr(str: string) {
     return tokens
 }
 
-function parseCmdArr(arr: ParamType[]) {
+function parseCmdArr(arr: CommandArr) {
     const tokens: IToken[] = []
 
     arr.forEach((el, i) => {
@@ -80,7 +84,7 @@ function parseCmdArr(arr: ParamType[]) {
 
         if (typeDesc.startsWith('?')) {
             isOptional = true
-            type = typeDesc.slice(1)
+            type = typeDesc.slice(1) as any
         }
 
         tokens.push(tk(
@@ -92,7 +96,6 @@ function parseCmdArr(arr: ParamType[]) {
 }
 
 type Handler<T=any> = (cmd: Command, origin: CommandOrigin, output: CommandOutput, result: T) => void
-type CommandExpr = string | keyof typeof stringParamTypeMap | `${keyof typeof stringParamTypeMap}?`
 
 export class Registry {
     private _cmd: Command
@@ -107,7 +110,7 @@ export class Registry {
         return this._handlerCollection[len] ?? (this._handlerCollection[len] = [])
     }
 
-    register(cmd: CommandExpr, handler: Handler) {
+    register(cmd: string, handler: Handler) {
         if (!cmd || !handler) {
             return this
         }
@@ -160,7 +163,7 @@ export class Registry {
 
     static enumIndex = 0
 
-    private createArg(name: string, type: keyof typeof stringParamTypeMap, isOptional: boolean) {
+    private createArg(name: string, type: TypeStr, isOptional: boolean) {
         let argId = name
 
         if (this.registeredArgs.has(name)) {
@@ -235,7 +238,7 @@ export function cmd(head: string, desc: string, perm: 0|1|2 = CommandPermission.
     const register = (...args: any) => { registry.register.apply(registry, args) }
 
     return {
-        setup: async (executor: (register: (cmd: CommandExpr, handler: Handler) => void, registry: Registry) => void | Promise<void>) => {
+        setup: async (executor: (register: <T = any>(cmd: string | CommandArr, handler: Handler<T>) => void, registry: Registry) => void | Promise<void>) => {
             await executor.call(
                 undefined, register, registry
             )
