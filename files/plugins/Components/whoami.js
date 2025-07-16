@@ -49,23 +49,6 @@ function setup() {
                 }).send(target.toPlayer())
             }
         })
-
-        // register([
-        //     { tell: 'enum' },
-        //     { pl: 'player' },
-        //     { str: 'text' },
-        //     { str2: 'text' },
-        // ], (cmd, ori, out, args) => {
-        //     args.pl.forEach(pl => {
-        //         pl.tell(args.str + args.str2)
-        //     })
-        // })
-
-        register('tell <pl:player> <str:string> <str2:string>', (cmd, ori, out, args) => {
-            args.pl.forEach(pl => {
-                pl.tell(args.str + args.str2)
-            })
-        })
     })
 }
 

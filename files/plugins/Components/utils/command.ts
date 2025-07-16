@@ -232,10 +232,31 @@ export const serverStarted = (function() {
     }) as (() => Promise<void>)
 })()
 
+export type ConfigHandler<T> = (args: T, origin: Player | Entity) => string | string[]
+
 export function cmd(head: string, desc: string, perm: 0|1|2 = CommandPermission.OP) {
     const command = mc.newCommand(head, desc, perm)
     const registry = new Registry(command)
     const register = (...args: any) => { registry.register.apply(registry, args) }
+    const configRegister = (cmd: string, handler: ConfigHandler<unknown>) => {
+        registry.register.call(registry, cmd, (_, ori, out, args) => {
+            try {
+                const result = handler(
+                    args,
+                    (ori.entity?.type === 'player' ? ori.player : ori.entity) as any,
+                )
+
+                if (Array.isArray(result)) {
+                    result.forEach(r => out.addMessage(String(r)))
+                    return
+                }
+
+                out.success(String(result))
+            } catch (error) {
+                out.error(String(error))
+            }
+        })
+    }
 
     return {
         setup: async (executor: (register: <T = any>(cmd: string | CommandArr, handler: Handler<T>) => void, registry: Registry) => void | Promise<void>) => {
@@ -250,5 +271,16 @@ export function cmd(head: string, desc: string, perm: 0|1|2 = CommandPermission.
         },
 
         getRegistry: () => registry,
+
+        configure: async (executor: (register: <T = any>(cmd: string | CommandArr, handler: ConfigHandler<T>) => void, registry: Registry) => void | Promise<void>) => {
+            await executor.call(
+                undefined, configRegister as any, registry
+            )
+
+            if (!registry.isSubmitted()) {
+                await serverStarted()
+                registry.submit()
+            }
+        },
     }
 }

@@ -738,6 +738,21 @@ function cmd(head, desc, perm = CommandPermission.OP) {
     const command = mc.newCommand(head, desc, perm);
     const registry = new Registry(command);
     const register = (...args) => { registry.register.apply(registry, args); };
+    const configRegister = (cmd, handler) => {
+        registry.register.call(registry, cmd, (_, ori, out, args) => {
+            try {
+                const result = handler(args, (ori.entity?.type === 'player' ? ori.player : ori.entity));
+                if (Array.isArray(result)) {
+                    result.forEach(r => out.addMessage(String(r)));
+                    return;
+                }
+                out.success(String(result));
+            }
+            catch (error) {
+                out.error(String(error));
+            }
+        });
+    };
     return {
         setup: async (executor) => {
             await executor.call(undefined, register, registry);
@@ -747,6 +762,13 @@ function cmd(head, desc, perm = CommandPermission.OP) {
             }
         },
         getRegistry: () => registry,
+        configure: async (executor) => {
+            await executor.call(undefined, configRegister, registry);
+            if (!registry.isSubmitted()) {
+                await serverStarted();
+                registry.submit();
+            }
+        },
     };
 }
 
@@ -13098,6 +13120,11 @@ function setup() {
     cmd('account_op', '管理员账户操作', PermType.Admin).setup(register => {
         register('ban', (cmd, { player }) => banUi(player));
         register('remove', (cmd, { player }) => removeUi(player));
+    });
+    cmd('test', 'test', PermType.Any).configure(register => {
+        register('type <en:entity>', ({ en }) => {
+            return en.map(en => en.type);
+        });
     });
     mc.listen('onJoin', pl => {
         if (!accessibility.get(pl.xuid)) {
