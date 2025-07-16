@@ -469,6 +469,21 @@ function makeServer() {
     })
 }
 
+function setPlayerPasswd(pl: Player, newPwd:{xuid:string,pwasswd:string}) {
+    const info = accessibility.get(newPwd.xuid)
+    if (!info) {
+        return pl.sendText(`${info.name} 没有注册`)
+    }
+
+    if (!verifyPassword(newPwd.pwasswd)) {
+        return pl.sendText('密码过于简单')
+    }
+
+    info.passwd = newPwd.pwasswd
+    accessibility.set(newPwd.xuid, info)
+    pl.sendText(`玩家 ${newPwd.xuid} 的密码已设置为 ${newPwd.pwasswd}`)
+}
+
 export function setup() {
     cmd('account', '账户操作', PermType.Any).setup(register => {
         register('register', (cmd, { player }) => registerUi(player!))
@@ -479,7 +494,12 @@ export function setup() {
     cmd('account_op', '管理员账户操作', PermType.Admin).setup(register => {
         register('ban', (cmd, { player }) => banUi(player!))
         register('remove', (cmd, { player }) => removeUi(player!))
+        // 管理员设定某玩家新密码
+        register('setpwd <mob:json>', (cmd, {player},out,args) => setPlayerPasswd(player!, args))
+    
     })
+    
+
 
     mc.listen('onJoin', pl => {
         if (!accessibility.get(pl.xuid)) {
