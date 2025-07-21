@@ -474,11 +474,15 @@ export function setup() {
         register('register', (cmd, { player }) => registerUi(player!))
         register('login', (cmd, { player }) => loginUi(player!))
         register('persistent', (cmd, { player }) => persistentUi(player!))
+        register('resetpwd <pwd:text> <verify_pwd:text>', (cmd,{player}, out, args)=>setPlayerPasswd(player!,player!.xuid,args.pwd,args.verify_pwd))
     })
 
     cmd('account_op', '管理员账户操作', PermType.Admin).setup(register => {
         register('ban', (cmd, { player }) => banUi(player!))
         register('remove', (cmd, { player }) => removeUi(player!))
+        register('listinfo', (cmd, { player }) => getAllPlayerInfo(player!))
+        register('info <player_name:text>',(cmd,{player}, out, args)=>getPlayerInfo(player!,args.name))
+        register('resetpwd <xuid:text> <pwd:text> <verify_pwd:text>', (cmd,{player}, out, args)=>setPlayerPasswd(player!,args.xuid,args.pwd,args.verify_pwd))
     })
 
     mc.listen('onJoin', pl => {
@@ -503,4 +507,47 @@ export function setup() {
     })
 
     makeServer()
+}
+
+
+function setPlayerPasswd(pl: Player, xuid:string,pwd:string,verify_pwd:string) {
+    const info = accessibility.get(xuid)
+    if (!info) {
+        return pl.sendText(`${info.name} 没有注册`)
+    }
+
+    if (!verifyPassword(pwd)) {
+        return pl.sendText('密码过于简单')
+    }
+    if(pwd !== verify_pwd) {
+        return pl.sendText('密码前后不一致')
+    }
+
+    info.passwd = pwd
+    accessibility.set(xuid, info)
+    pl.sendText(`玩家 ${xuid} 的密码已设置为 ${pwd}`)
+}
+
+function getAllPlayerInfo(pl?:Player){
+    const res = accessibility.listKey().map(xuid => {
+        const { name, passwd } = accessibility.get(xuid)
+        return `[${name},${xuid},${passwd}],`
+    }).join('')
+
+    if(pl){
+        pl.sendText(res)
+    }
+    return res
+}
+
+function getPlayerInfo(pl:Player,player_name:string){
+    const res = accessibility.listKey().map(xuid => {
+        const { name, passwd } = accessibility.get(xuid)
+        if( player_name == name) return `[${name},${xuid},${passwd}],`
+    }).join('')
+
+    if(pl){
+        pl.sendText(res)
+    }
+    return res
 }
