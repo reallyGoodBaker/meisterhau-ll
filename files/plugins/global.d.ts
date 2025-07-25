@@ -504,6 +504,4 @@ type ObjKeyType<Obj, Val> = { [K in keyof Obj]: Val extends Obj[K] ? K : never }
 
 type ConstructorOf<Ret, Param=any[]> = new (...args: Param) => Ret
 
-
-
 }

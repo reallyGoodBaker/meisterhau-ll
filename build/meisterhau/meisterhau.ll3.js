@@ -13121,11 +13121,6 @@ function setup() {
         register('ban', (cmd, { player }) => banUi(player));
         register('remove', (cmd, { player }) => removeUi(player));
     });
-    cmd('test', 'test', PermType.Any).configure(register => {
-        register('type <en:entity>', ({ en }) => {
-            return en.map(en => en.type);
-        });
-    });
     mc.listen('onJoin', pl => {
         if (!accessibility.get(pl.xuid)) {
             return registerUi(pl);

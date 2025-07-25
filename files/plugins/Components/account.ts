@@ -5,6 +5,7 @@ import { JsonConf } from "@utils/jsonConf"
 import db from "./db.lib"
 import http from 'http'
 import qs from 'querystring'
+import { Matcher, testMatch } from "@utils/matcher"
 
 const accessibility = db('data/accessibility')
 const config = new JsonConf('ServerConfig/accountConf.json', {
@@ -53,15 +54,17 @@ const online = new Set<string>()
 
 export const listeners = new EventEmitter()
 
+export interface PlayerBanInfo {
+    time: number
+    duration: number
+    reason: string
+}
+
 export interface PlayerInfo {
     name: string
     allow: boolean
     passwd: string
-    ban?: {
-        time: number
-        duration: number
-        reason: string
-    }
+    ban?: PlayerBanInfo
     persistent?: PersistentLogin
 }
 
@@ -375,7 +378,7 @@ function persistentUi(player: Player) {
 
 function removeUi(pl: Player) {
     const removeConf = config.get('remove')
-    action(removeConf.title, removeConf.hint, mc.getOnlinePlayers().map(pl => ({
+    action(removeConf.title, removeConf.hint, selectAccount({}).map(pl => ({
         text: pl.name,
         onClick() {
             alert(removeConf.title, `移除玩家: ${pl.name}`, '确定', '取消', removeAccount).send(pl)
@@ -467,6 +470,59 @@ function makeServer() {
     .listen(config.get('server').port, () => {
         console.log(`Account service is running on http://localhost:${config.get('server').port}`)
     })
+}
+
+export interface AccountFilter {
+    name?: Matcher<string>
+    allow?: Matcher<boolean>
+    ban?: Matcher<Partial<PlayerBanInfo>>
+    persistent?: Matcher<PersistentLogin>
+}
+
+export function selectAccount(xuid: string): PlayerInfo[]
+export function selectAccount(filter: AccountFilter): PlayerInfo[]
+export function selectAccount(opt: AccountFilter | string): PlayerInfo[] {
+    if (typeof opt === 'string') {
+        const info = accessibility.get(opt)
+        if (info) {
+            return [ info ]
+        } else {
+            throw new Error(`No account found for xuid: ${opt}`)
+        }
+    }
+
+    const xuids = accessibility.listKey()
+    return xuids
+        .map(xuid => accessibility.get(xuid))
+        .filter(info => {
+            if (!info) {
+                return false
+            }
+
+            const { name, allow, ban, persistent } = info as PlayerInfo
+
+            if (opt.name && !testMatch(name, opt.name)) {
+                return false
+            }
+
+            if (opt.allow && !testMatch(allow, opt.allow)) {
+                return false
+            }
+
+            if (ban && opt.ban && !testMatch(ban, opt.ban)) {
+                return false
+            }
+
+            if (persistent && opt.persistent && !testMatch(persistent, opt.persistent)) {
+                return false
+            }
+
+            return true
+        })
+}
+
+export function selectAccountUi(operator: Player) {
+    
 }
 
 export function setup() {

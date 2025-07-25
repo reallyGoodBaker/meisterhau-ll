@@ -25,18 +25,14 @@ const cpFiles = () => new Promise(resolve => {
 
 function startDevServer() {
     cp.execSync('chcp 65001')
-    const child = cp.spawn(
+    return cp.spawn(
         'bedrock_server_mod', [],
         {
-            env: process.env,
             cwd: path.join(__dirname, '../dev'),
             shell: true,
+            stdio: 'inherit',
         }
     )
-
-    child.stderr.on('data', data => process.stderr.write(data))
-    child.stdout.on('data', data => process.stdout.write(data))
-    process.stdin.on('data', data => child.stdin.write(data))
 }
 
 function initDev() {
