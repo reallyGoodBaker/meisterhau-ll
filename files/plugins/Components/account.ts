@@ -453,28 +453,30 @@ function AccountServerUI() {
 }
 
 function makeServer() {
-    http.createServer((req, res) => {
-        if (req.url === '/') {
-            return res.end(AccountServerEmitter())
-        }
-
-        if (req.url === '/ui') {
-            return res.end(AccountServerUI())
-        }
-
-        if (req.url?.startsWith('/ban')) {
-            const { xuid, ban } = qs.parse(req.url.split('?')[1])
-            if (ban === 'true') {
-                banXuid(xuid as string)
-            } else {
-                unbanXuid(xuid as string)
+    try {
+        http.createServer((req, res) => {
+            if (req.url === '/') {
+                return res.end(AccountServerEmitter())
             }
-            res.end()
-        }
-    })
-    .listen(config.get('server').port, () => {
-        console.log(`Account service is running on http://localhost:${config.get('server').port}`)
-    })
+
+            if (req.url === '/ui') {
+                return res.end(AccountServerUI())
+            }
+
+            if (req.url?.startsWith('/ban')) {
+                const { xuid, ban } = qs.parse(req.url.split('?')[1])
+                if (ban === 'true') {
+                    banXuid(xuid as string)
+                } else {
+                    unbanXuid(xuid as string)
+                }
+                res.end()
+            }
+        })
+        .listen(config.get('server').port, () => {
+            console.log(`Account service is running on http://localhost:${config.get('server').port}`)
+        })
+    } finally {}
 }
 
 export interface AccountFilter {
