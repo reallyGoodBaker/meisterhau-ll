@@ -1203,6 +1203,17 @@ function listenAllMcEvents(collection) {
         return false
     })
 
+    mc.listen('onAttackBlock', pl => {
+        es.put('onAttack', [pl, Function.prototype, [ pl ]])
+        const status = Status.get(pl.uniqueId)
+
+        status.acceptableInput('onAttack', false)
+        setTimeout(() => {
+            status.acceptableInput('onAttack', true)
+        }, 300)
+        return false
+    })
+
     mc.listen('onTick', () => em.emitNone('onTick'))
 
     mc.listen('onRespawn', pl => {
