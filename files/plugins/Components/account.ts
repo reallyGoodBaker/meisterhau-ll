@@ -213,7 +213,7 @@ export function dropPersistentLogin(pl: Player) {
 }
 
 export function verifyPersistentLogin(pl: Player) {
-    const info = accessibility.get(pl.xuid)
+    const info = accessibility.get(pl.xuid) as PlayerInfo
     if (!info) {
         return false
     }
