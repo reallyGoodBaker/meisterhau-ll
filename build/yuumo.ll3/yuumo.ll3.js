@@ -3946,7 +3946,7 @@ var testui = /*#__PURE__*/Object.freeze({
 var require$$13 = /*@__PURE__*/getAugmentedNamespace(testui);
 
 function setup$1() {
-    cmd$6('marriage', '结婚', PermType.Any).setup(register => {
+    cmd$6('marriage', '结婚', CommandPermission.Everyone).setup(register => {
         register('marry <pl:player>', (cmd, ori, out, { pl }) => {
             const player = pl[0];
             if (!player) {
@@ -4027,6 +4027,10 @@ class JsonConf {
         }
         return this.get(name);
     }
+}
+
+function testMatch(item, matcher) {
+    return typeof matcher === 'function' ? matcher(item) : matcher === item;
 }
 
 const accessibility = db$3('data/accessibility');
@@ -4211,6 +4215,7 @@ function banAccount(pl, reason, duration = 4 * HOUR) {
         return pl.sendText(banConf.title + '错误');
     }
     info.ban = {
+        xuid: pl.xuid,
         time: Date.now(),
         duration,
         reason,
@@ -4238,9 +4243,12 @@ function unbanXuid(xuid) {
         accessibility.set(xuid, info);
     }
 }
-function removeAccount(pl) {
-    accessibility.delete(pl.xuid);
-    kick(pl, '你的账号已被移除');
+function removeAccount(xuid) {
+    accessibility.delete(xuid);
+    const pl = mc.getPlayer(xuid);
+    if (pl) {
+        kick(pl, '你的账号已被移除');
+    }
 }
 function timeoutWarning(pl, action, duration) {
     pl.sendToast('警告', `你有${Math.ceil(duration / 1000)}秒的时间完成${action}，否则你将会被踢出服务器`);
@@ -4328,10 +4336,10 @@ function persistentUi(player) {
 }
 function removeUi(pl) {
     const removeConf = config.get('remove');
-    ui.action(removeConf.title, removeConf.hint, mc.getOnlinePlayers().map(pl => ({
-        text: pl.name,
+    ui.action(removeConf.title, removeConf.hint, selectAccount({}).map(pl_ => ({
+        text: pl_.name,
         onClick() {
-            ui.alert(removeConf.title, `移除玩家: ${pl.name}`, '确定', '取消', removeAccount).send(pl);
+            ui.alert(removeConf.title, `移除玩家: ${pl_.name}`, '确定', '取消', () => removeAccount(pl_.xuid)).send(pl);
         }
     }))).send(pl);
 }
@@ -4417,15 +4425,54 @@ function makeServer() {
         console.log(`Account service is running on http://localhost:${config.get('server').port}`);
     });
 }
+function selectAccount(opt) {
+    if (typeof opt === 'string') {
+        const info = accessibility.get(opt);
+        if (info) {
+            return [info];
+        }
+        else {
+            throw new Error(`No account found for xuid: ${opt}`);
+        }
+    }
+    const xuids = accessibility.listKey();
+    return xuids
+        .map(xuid => ({ xuid, ...accessibility.get(xuid) }))
+        .filter(info => {
+        if (!info) {
+            return false;
+        }
+        const { name, allow, ban, persistent } = info;
+        if (opt.name && !testMatch(name, opt.name)) {
+            return false;
+        }
+        if (opt.allow && !testMatch(allow, opt.allow)) {
+            return false;
+        }
+        if (ban && opt.ban && !testMatch(ban, opt.ban)) {
+            return false;
+        }
+        if (persistent && opt.persistent && !testMatch(persistent, opt.persistent)) {
+            return false;
+        }
+        return true;
+    });
+}
+function selectAccountUi(operator) {
+}
 function setup() {
-    cmd$6('account', '账户操作', PermType.Any).setup(register => {
+    cmd$6('account', '账户操作', CommandPermission.Everyone).setup(register => {
         register('register', (cmd, { player }) => registerUi(player));
         register('login', (cmd, { player }) => loginUi(player));
         register('persistent', (cmd, { player }) => persistentUi(player));
+        register('resetpwd <pwd:text> <verify_pwd:text>', (cmd, { player }, out, args) => setPlayerPasswd(player, player.xuid, args.pwd, args.verify_pwd));
     });
-    cmd$6('account_op', '管理员账户操作', PermType.Admin).setup(register => {
+    cmd$6('account_op', '管理员账户操作', CommandPermission.OP).setup(register => {
         register('ban', (cmd, { player }) => banUi(player));
         register('remove', (cmd, { player }) => removeUi(player));
+        register('listinfo', (cmd, { player }) => getAllPlayerInfo(player));
+        register('info <player_name:text>', (cmd, { player }, out, args) => getPlayerInfo(player, args.name));
+        register('resetpwd <xuid:text> <pwd:text> <verify_pwd:text>', (cmd, { player }, out, args) => setPlayerPasswd(player, args.xuid, args.pwd, args.verify_pwd));
     });
     mc.listen('onJoin', pl => {
         if (!accessibility.get(pl.xuid)) {
@@ -4445,6 +4492,42 @@ function setup() {
     });
     makeServer();
 }
+function setPlayerPasswd(pl, xuid, pwd, verify_pwd) {
+    const info = accessibility.get(xuid);
+    if (!info) {
+        return pl.sendText(`${info.name} 没有注册`);
+    }
+    if (!verifyPassword(pwd)) {
+        return pl.sendText('密码过于简单');
+    }
+    if (pwd !== verify_pwd) {
+        return pl.sendText('密码前后不一致');
+    }
+    info.passwd = pwd;
+    accessibility.set(xuid, info);
+    pl.sendText(`玩家 ${xuid} 的密码已设置为 ${pwd}`);
+}
+function getAllPlayerInfo(pl) {
+    const res = accessibility.listKey().map(xuid => {
+        const { name, passwd } = accessibility.get(xuid);
+        return `[${name},${xuid},${passwd}],`;
+    }).join('');
+    if (pl) {
+        pl.sendText(res);
+    }
+    return res;
+}
+function getPlayerInfo(pl, player_name) {
+    const res = accessibility.listKey().map(xuid => {
+        const { name, passwd } = accessibility.get(xuid);
+        if (player_name == name)
+            return `[${name},${xuid},${passwd}],`;
+    }).join('');
+    if (pl) {
+        pl.sendText(res);
+    }
+    return res;
+}
 
 var account = /*#__PURE__*/Object.freeze({
 	__proto__: null,
@@ -4456,6 +4539,8 @@ var account = /*#__PURE__*/Object.freeze({
 	dropPersistentLogin: dropPersistentLogin,
 	listeners: listeners,
 	removeAccount: removeAccount,
+	selectAccount: selectAccount,
+	selectAccountUi: selectAccountUi,
 	setup: setup,
 	unbanXuid: unbanXuid,
 	updatePersistentLogin: updatePersistentLogin,

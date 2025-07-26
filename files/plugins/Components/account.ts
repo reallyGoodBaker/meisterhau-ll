@@ -1,6 +1,6 @@
 import { EventEmitter } from "events"
 import { action, alert, Dropdown, Input, Label, Slider, Switch, widget } from "./ui"
-import { cmd } from "@utils/command"
+import { cmd, CommandPermission } from "@utils/command"
 import { JsonConf } from "@utils/jsonConf"
 import db from "./db.lib"
 import http from 'http'
@@ -61,6 +61,7 @@ export interface PlayerBanInfo {
 }
 
 export interface PlayerInfo {
+    xuid: string
     name: string
     allow: boolean
     passwd: string
@@ -244,6 +245,7 @@ export function banAccount(pl: Player, reason: string, duration: number = 4 * HO
     }
 
     info.ban = {
+        xuid: pl.xuid,
         time: Date.now(),
         duration,
         reason,
@@ -278,9 +280,12 @@ export function unbanXuid(xuid: string) {
     }
 }
 
-export function removeAccount(pl: Player) {
-    accessibility.delete(pl.xuid)
-    kick(pl, '你的账号已被移除')
+export function removeAccount(xuid: string) {
+    accessibility.delete(xuid)
+    const pl = mc.getPlayer(xuid)
+    if (pl) {
+        kick(pl, '你的账号已被移除')
+    }
 }
 
 function timeoutWarning(pl: Player, action: string, duration: number) {
@@ -378,10 +383,10 @@ function persistentUi(player: Player) {
 
 function removeUi(pl: Player) {
     const removeConf = config.get('remove')
-    action(removeConf.title, removeConf.hint, selectAccount({}).map(pl => ({
-        text: pl.name,
+    action(removeConf.title, removeConf.hint, selectAccount({}).map(pl_ => ({
+        text: pl_.name,
         onClick() {
-            alert(removeConf.title, `移除玩家: ${pl.name}`, '确定', '取消', removeAccount).send(pl)
+            alert(removeConf.title, `移除玩家: ${pl_.name}`, '确定', '取消', () => removeAccount(pl_.xuid)).send(pl)
         }
     }))).send(pl)
 }
@@ -493,7 +498,7 @@ export function selectAccount(opt: AccountFilter | string): PlayerInfo[] {
 
     const xuids = accessibility.listKey()
     return xuids
-        .map(xuid => accessibility.get(xuid))
+        .map(xuid => ({ xuid, ...accessibility.get(xuid) }))
         .filter(info => {
             if (!info) {
                 return false
@@ -526,14 +531,14 @@ export function selectAccountUi(operator: Player) {
 }
 
 export function setup() {
-    cmd('account', '账户操作', PermType.Any).setup(register => {
+    cmd('account', '账户操作', CommandPermission.Everyone).setup(register => {
         register('register', (cmd, { player }) => registerUi(player!))
         register('login', (cmd, { player }) => loginUi(player!))
         register('persistent', (cmd, { player }) => persistentUi(player!))
         register('resetpwd <pwd:text> <verify_pwd:text>', (cmd,{player}, out, args)=>setPlayerPasswd(player!,player!.xuid,args.pwd,args.verify_pwd))
     })
 
-    cmd('account_op', '管理员账户操作', PermType.Admin).setup(register => {
+    cmd('account_op', '管理员账户操作', CommandPermission.OP).setup(register => {
         register('ban', (cmd, { player }) => banUi(player!))
         register('remove', (cmd, { player }) => removeUi(player!))
         register('listinfo', (cmd, { player }) => getAllPlayerInfo(player!))
