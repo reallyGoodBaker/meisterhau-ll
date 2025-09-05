@@ -1,5 +1,5 @@
 {
-    "format_version": "1.21.50",
+    "format_version": "1.21.80",
     "minecraft:crafting_items_catalog": {
         "categories": [
             {
@@ -7,7 +7,7 @@
                 "groups": [
                     {
                         "group_identifier": {
-                            "icon": "db_morphidae",
+                            "icon": "weapon:db_morphidae",
                             "name": "meisterhau:weapons"
                         },
                         "items": [

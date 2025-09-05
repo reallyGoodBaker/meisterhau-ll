@@ -139,6 +139,23 @@
                     "weapon*": true
                 }
             ]
+        },
+        "controller.render.fake_renderer": {
+            "geometry": "Geometry.default",
+            "materials": [
+                {
+                    "*": "material.default"
+                }
+            ],
+            "textures": [
+                "texture.default"
+            ],
+            "part_visibility": [
+                {
+                    "*": false,
+                    "*Item": true
+                }
+            ]
         }
     }
 }

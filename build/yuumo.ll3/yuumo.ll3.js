@@ -4403,27 +4403,30 @@ function AccountServerUI() {
     `;
 }
 function makeServer() {
-    http.createServer((req, res) => {
-        if (req.url === '/') {
-            return res.end(AccountServerEmitter());
-        }
-        if (req.url === '/ui') {
-            return res.end(AccountServerUI());
-        }
-        if (req.url?.startsWith('/ban')) {
-            const { xuid, ban } = qs.parse(req.url.split('?')[1]);
-            if (ban === 'true') {
-                banXuid(xuid);
+    try {
+        http.createServer((req, res) => {
+            if (req.url === '/') {
+                return res.end(AccountServerEmitter());
             }
-            else {
-                unbanXuid(xuid);
+            if (req.url === '/ui') {
+                return res.end(AccountServerUI());
             }
-            res.end();
-        }
-    })
-        .listen(config.get('server').port, () => {
-        console.log(`Account service is running on http://localhost:${config.get('server').port}`);
-    });
+            if (req.url?.startsWith('/ban')) {
+                const { xuid, ban } = qs.parse(req.url.split('?')[1]);
+                if (ban === 'true') {
+                    banXuid(xuid);
+                }
+                else {
+                    unbanXuid(xuid);
+                }
+                res.end();
+            }
+        })
+            .listen(config.get('server').port, () => {
+            console.log(`Account service is running on http://localhost:${config.get('server').port}`);
+        });
+    }
+    finally { }
 }
 function selectAccount(opt) {
     if (typeof opt === 'string') {

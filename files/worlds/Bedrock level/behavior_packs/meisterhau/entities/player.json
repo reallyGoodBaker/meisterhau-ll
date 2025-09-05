@@ -1,11 +1,19 @@
 {
-    "format_version": "1.18.20",
+    "format_version": "1.21.0",
     "minecraft:entity": {
         "description": {
             "identifier": "minecraft:player",
             "is_spawnable": false,
             "is_summonable": false,
-            "is_experimental": false
+            "is_experimental": false,
+            "animations": {
+                "attack": "controller.animation.attack"
+            },
+            "scripts": {
+                "animate": [
+                    "attack"
+                ]
+            }
         },
         "component_groups": {
             "minecraft:add_bad_omen": {

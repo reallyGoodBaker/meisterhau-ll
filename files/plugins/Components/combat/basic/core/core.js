@@ -25,6 +25,8 @@ const { em, es } = require('./event')
 const { listenEntitiyWithAi, ai } = require('./ai/core')
 const { setupAiCommands } = require('./ai')
 
+mc.getScoreObjective('attack_time') ?? mc.newScoreObjective('attack_time', 'attack_time')
+
 const yawToVec2 = yaw => {
     const rad = yaw * Math.PI / 180.0
     return {
@@ -520,30 +522,6 @@ function listenAllCustomEvents(mods) {
     }
 
     em.on('onTick', onTick(em))
-    em.on('onTick', () => {
-        for (const [uniqueId, status] of Status.status.entries()) {
-            if (typeof uniqueId !== 'string') {
-                return
-            }
-
-            if (uniqueId === 'global_status') {
-                continue
-            }
-
-            const pl = mc.getPlayer(uniqueId)
-            const bind = getMod(status.hand)
-
-            if (!pl || !bind) {
-                return
-            }
-
-            const attackTime = pl.quickEvalMolangScript('v.attack_time')
-            if (attackTime > 0 && attackTime < 0.3) {
-                es.put('onAttack', [pl, Function.prototype, [ pl ]])
-            }
-        }
-    })
-
     em.on('onTick', () => {
         Tick.tick++
 
@@ -1082,6 +1060,16 @@ function listenAllMcEvents(collection) {
 
         return !cancelEvent
     })
+
+    mc.listen('onScoreChanged', (pl, val, obj) => {
+        if (obj !== 'attack_time') {
+            return
+        }
+
+        if (val) {
+            es.put('onAttack', [pl, Function.prototype, [ pl ]])
+        }
+    })
     
     em.on('input.jump', (pl, press) => {
         if (press) {
@@ -1145,6 +1133,7 @@ function listenAllMcEvents(collection) {
             return false
         }
     })
+
 
     /**@type {EntityDamageCause[]}*/
     const causeList = [

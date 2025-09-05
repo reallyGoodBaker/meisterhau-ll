@@ -273,6 +273,7 @@
 		"animation.player.custom.walk": {
 			"loop": true,
 			"animation_length": 0.83,
+			"anim_time_update": "0.5 * q.ground_speed * q.delta_time + q.anim_time",
 			"bones": {
 				"root": {
 					"position": {
