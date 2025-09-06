@@ -8,21 +8,53 @@
                     {
                         "group_identifier": {
                             "icon": "weapon:db_morphidae",
-                            "name": "meisterhau:weapons"
+                            "name": "meisterhau:db_blade"
                         },
                         "items": [
                             "weapon:db_morphidae",
-                            "weapon:double_blade",
-                            "weapon:double_dagger",
+                            "weapon:double_blade"
+                        ]
+                    },
+                    {
+                        "group_identifier": {
+                            "icon": "weapon:uchigatana",
+                            "name": "meisterhau:uchigatana"
+                        },
+                        "items": [
                             "crossover:hermit_katana",
                             "crossover:keen_katana",
-                            "weapon:moon_glaive",
-                            "weapon:morphidae",
+                            "weapon:double_dagger",
+                            "weapon:uchigatana",
+                            "weapon:morphidae"
+                        ]
+                    },
+                    {
+                        "group_identifier": {
+                            "icon": "weapon:ootachi",
+                            "name": "meisterhau:ootachi"
+                        },
+                        "items": [
                             "weapon:ootachi_akaoni",
                             "weapon:ootachi_dragon",
-                            "weapon:ootachi",
-                            "weapon:shield_with_sword",
-                            "weapon:uchigatana"
+                            "weapon:ootachi"
+                        ]
+                    },
+                    {
+                        "group_identifier": {
+                            "icon": "weapon:shield_with_sword",
+                            "name": "meisterhau:shield_sword"
+                        },
+                        "items": [
+                            "weapon:shield_with_sword"
+                        ]
+                    },
+                    {
+                        "group_identifier": {
+                            "icon": "weapon:moon_glaive",
+                            "name": "meisterhau:moon_glaive"
+                        },
+                        "items": [
+                            "weapon:moon_glaive"
                         ]
                     }
                 ]

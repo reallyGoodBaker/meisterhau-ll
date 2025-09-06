@@ -5219,11 +5219,11 @@ class OotachiTricks extends DefaultTrickModule$4 {
         super('rgb39.weapon.ootachi', 'idle', ['weapon:ootachi', 'weapon:ootachi_akaoni', 'weapon:ootachi_dragon'], new OotachiMoves());
     }
 }
-const tricks$7 = new OotachiTricks();
+const tricks$8 = new OotachiTricks();
 
 var ootachi = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$7
+	tricks: tricks$8
 });
 
 var require$$4 = /*@__PURE__*/getAugmentedNamespace(ootachi);
@@ -5890,11 +5890,11 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         }
     };
 }
-const tricks$6 = new ShieldSwordTricks();
+const tricks$7 = new ShieldSwordTricks();
 
 var shield_with_sword = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$6
+	tricks: tricks$7
 });
 
 var require$$6$1 = /*@__PURE__*/getAugmentedNamespace(shield_with_sword);
@@ -6947,11 +6947,11 @@ class UchigatanaModule extends DefaultTrickModule$4 {
         ], new UchigatanaMoves());
     }
 }
-const tricks$5 = new UchigatanaModule();
+const tricks$6 = new UchigatanaModule();
 
 var uchigatana = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$5
+	tricks: tricks$6
 });
 
 var require$$7$1 = /*@__PURE__*/getAugmentedNamespace(uchigatana);
@@ -7892,11 +7892,11 @@ class DoubleBlade extends DefaultTrickModule$4 {
         ], new DoubleBladeMoves());
     }
 }
-const tricks$4 = new DoubleBlade();
+const tricks$5 = new DoubleBlade();
 
 var double_blade = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$4
+	tricks: tricks$5
 });
 
 var require$$8$1 = /*@__PURE__*/getAugmentedNamespace(double_blade);
@@ -8013,11 +8013,11 @@ class StaffModule extends DefaultTrickModule$4 {
         super('rgb:staff', 'idle', ['weapon:staff'], new StaffMoves());
     }
 }
-const tricks$3 = new StaffModule();
+const tricks$4 = new StaffModule();
 
 var staff = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$3
+	tricks: tricks$4
 });
 
 var require$$9 = /*@__PURE__*/getAugmentedNamespace(staff);
@@ -8107,11 +8107,11 @@ class FantasyDoubleTachiTricks extends DefaultTrickModule$4 {
         super('rgb39:fantasy_double_tachi', 'hold', ['weapon:fantasy_double_tachi'], new FantasyDoubleTachi());
     }
 }
-const tricks$2 = new FantasyDoubleTachiTricks();
+const tricks$3 = new FantasyDoubleTachiTricks();
 
 var fantasy_double_tachi = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$2
+	tricks: tricks$3
 });
 
 var require$$10$1 = /*@__PURE__*/getAugmentedNamespace(fantasy_double_tachi);
@@ -8881,14 +8881,237 @@ class DoubleAxeTrick extends DefaultTrickModule$4 {
         super('rgb39:double_axe', 'idle', ['weapon:double_diamond_axe'], new DoubleAxeMoves());
     }
 }
-const tricks$1 = new DoubleAxeTrick();
+const tricks$2 = new DoubleAxeTrick();
 
 var double_axe = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	tricks: tricks$2
+});
+
+var require$$11$1 = /*@__PURE__*/getAugmentedNamespace(double_axe);
+
+class OneHandedMoves extends DefaultMoves$4 {
+    constructor() {
+        super();
+        this.setup('resume');
+        this.animations.block.left = 'animation.onhanded.block';
+    }
+    resume = {
+        transitions: {
+            idle: {
+                onEndOfLife: {
+                    hasTarget: false
+                }
+            },
+            holding: {
+                onEndOfLife: {
+                    hasTarget: true
+                }
+            },
+        }
+    };
+    idle = {
+        cast: Infinity,
+        onEnter(pl, ctx) {
+            playAnimCompatibility(pl, 'animation.onhanded.idle', 'animation.onhanded.idle');
+        },
+        transitions: {
+            hurt: {
+                onHurt: null,
+            },
+            i2r: {
+                onChangeSprinting: {
+                    sprinting: true
+                }
+            },
+            holding: {
+                onLock: null
+            }
+        }
+    };
+    running = {
+        cast: Infinity,
+        onEnter(pl, ctx) {
+            playAnimCompatibility(pl, 'animation.onhanded.running', 'animation.onhanded.running');
+        },
+        transitions: {
+            r2i: {
+                onChangeSprinting: {
+                    sprinting: false
+                }
+            },
+            hurt: {
+                onHurt: null,
+            },
+        }
+    };
+    i2r = {
+        cast: 4,
+        onEnter(pl, ctx) {
+            playAnimCompatibility(pl, 'animation.onhanded.i2r', 'animation.onhanded.i2r');
+        },
+        transitions: {
+            hurt: {
+                onHurt: null,
+            },
+            running: {
+                onEndOfLife: null
+            },
+            r2i: {
+                onChangeSprinting: {
+                    sprinting: false
+                }
+            },
+        }
+    };
+    r2i = {
+        cast: 4,
+        onEnter(pl, ctx) {
+            playAnimCompatibility(pl, 'animation.onhanded.r2i', 'animation.onhanded.r2i');
+        },
+        transitions: {
+            hurt: {
+                onHurt: null,
+            },
+            idle: {
+                onEndOfLife: null
+            },
+            r2i: {
+                onChangeSprinting: {
+                    sprinting: true
+                }
+            }
+        }
+    };
+    holding = {
+        cast: Infinity,
+        onEnter(pl, ctx) {
+            playAnimCompatibility(pl, 'animation.onhanded.holding', 'animation.onhanded.holding');
+        },
+        transitions: {
+            hurt: {
+                onHurt: null,
+            },
+            idle: {
+                onEndOfLife: {
+                    hasTarget: false
+                }
+            },
+            i2r: {
+                onChangeSprinting: {
+                    sprinting: true
+                }
+            },
+            attack1: {
+                onAttack: null
+            },
+        }
+    };
+    attack1 = {
+        cast: 12,
+        backswing: 6,
+        onEnter(pl, ctx) {
+            ctx.lookAtTarget(pl);
+            playAnimCompatibility(pl, 'animation.onhanded.attack1', 'animation.onhanded.attack1');
+            ctx.freeze(pl);
+            ctx.status.isBlocking = true;
+        },
+        onLeave(pl, ctx) {
+            ctx.status.isBlocking = false;
+            ctx.unfreeze(pl);
+        },
+        onAct(pl, ctx) {
+            ctx.trap(pl);
+        },
+        transitions: {
+            block: {
+                onBlock: null
+            },
+            resume: {
+                onEndOfLife: null
+            },
+            hurt: {
+                onHurt: null,
+            },
+            blocked: {
+                onBlocked: null
+            },
+            parried: {
+                onParried: null
+            },
+            attack2: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            },
+        },
+        timeline: {
+            4: (_, ctx) => ctx.status.isBlocking = false,
+            6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.5),
+            7: (pl, ctx) => ctx.selectFromRange(pl, {
+                radius: 3,
+                angle: 30,
+                rotation: 15
+            }).forEach(en => ctx.attack(pl, en, {
+                damage: 13,
+                knockback: 0.2,
+                direction: 'middle'
+            }))
+        }
+    };
+    attack2 = {
+        cast: 20,
+        onEnter(pl, ctx) {
+            ctx.lookAtTarget(pl);
+            playAnimCompatibility(pl, 'animation.onhanded.attack2', 'animation.onhanded.attack2');
+            ctx.freeze(pl);
+            ctx.adsorbOrSetVelocity(pl, 1);
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl);
+        },
+        transitions: {
+            resume: {
+                onEndOfLife: null
+            },
+            hurt: {
+                onHurt: null,
+            },
+            blocked: {
+                onBlocked: null
+            },
+            parried: {
+                onParried: null
+            }
+        },
+        timeline: {
+            6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1),
+            8: (pl, ctx) => ctx.selectFromRange(pl, {
+                radius: 3,
+            }).forEach(en => ctx.attack(pl, en, {
+                damage: 14,
+                permeable: true,
+                direction: 'vertical',
+            })),
+            12: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.5),
+        }
+    };
+}
+class OneHandedSword extends DefaultTrickModule$4 {
+    constructor() {
+        super('meisterhau:onehanded', 'idle', [
+            'weapon:shiver_blade'
+        ], new OneHandedMoves());
+    }
+}
+const tricks$1 = new OneHandedSword();
+
+var onehanded = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	tricks: tricks$1
 });
 
-var require$$11$1 = /*@__PURE__*/getAugmentedNamespace(double_axe);
+var require$$12$1 = /*@__PURE__*/getAugmentedNamespace(onehanded);
 
 var collection = [
     double_dagger,
@@ -8903,6 +9126,7 @@ var collection = [
     require$$9,
     require$$10$1,
     require$$11$1,
+    require$$12$1,
 ];
 
 var collection$1 = /*@__PURE__*/getDefaultExportFromCjs(collection);

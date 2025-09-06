@@ -6,6 +6,10 @@ const inputStates = new Map()
 
 export function syncInputButtons() {
     world.getAllPlayers().forEach(cur => {
+        if (!cur.isValid) {
+            return
+        }
+
         const { inputInfo, name } = cur
         const prevState = inputStates.get(name)
         const currentState = {
