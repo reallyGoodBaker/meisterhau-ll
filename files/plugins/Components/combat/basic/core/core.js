@@ -9,8 +9,7 @@ const {
     lookAt, lookAtTarget, distanceToTarget, adsorbToTarget, adsorbTo,
     onTick, toggleLock, hasLock, releaseTarget, adsorbOrSetVelocity
 } = require('../generic/lock')
-const { setVelocity, isCollide } = require('../generic/kinematic')
-const { vec2, vec2ToAngle } = require('../generic/vec')
+const { setVelocity } = require('../generic/kinematic')
 const { clearCamera } = require('../generic/camera')
 const { Tick } = require('../components/tick')
 const { CameraFading } = require('../components/camera-fading')
@@ -24,8 +23,6 @@ const { IncomingAttack } = require('../default')
 const { em, es } = require('./event')
 const { listenEntitiyWithAi, ai } = require('./ai/core')
 const { setupAiCommands } = require('./ai')
-
-mc.getScoreObjective('attack_time') ?? mc.newScoreObjective('attack_time', 'attack_time')
 
 const yawToVec2 = yaw => {
     const rad = yaw * Math.PI / 180.0
@@ -898,7 +895,7 @@ function listenAllCustomEvents(mods) {
     })
 
     // TODO
-    em.on('onReleaseLock', (pl, hand) => {
+    em.on('onReleaseLock', (pl) => {
         const bind = getModCompatibility(pl)
         const status = Status.get(pl.uniqueId)
 
@@ -1227,9 +1224,14 @@ function listenAllMcEvents(collection) {
         Status.status.delete(en.uniqueId)
     })
 
-    listenAllCustomEvents(mods)
+    mc.listen('onServerStarted', () => {
+        mc.getScoreObjective('attack_time') ?? mc.newScoreObjective('attack_time', 'attack_time')
+
+        listenAllCustomEvents(mods)
+        listenEntitiyWithAi()
+    })
+
     registerCommand()
-    listenEntitiyWithAi()
     setupAiCommands()
 }
 

@@ -16,9 +16,9 @@ remote.expose('knockback', (id, _x, _z, _h, _v) => {
         return
     }
 
-    const [ x, z, h, v ] = numbers(_x, _z, _h, _v)
+    const [ x, z, _, v ] = numbers(_x, _z, _h, _v)
 
-    en.applyKnockback(x, z, h, v)
+    en.applyKnockback({ x, z }, v)
 })
 
 remote.expose('impulse', (id, _x, _y, _z) => {

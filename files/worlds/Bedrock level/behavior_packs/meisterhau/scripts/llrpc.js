@@ -97,7 +97,7 @@ function handleReturn(msg) {
     em.emitNone(id, success, val)
 }
 
-world.afterEvents.worldInitialize.subscribe(ev => {
+system.beforeEvents.startup.subscribe(ev => {
     system.runInterval(handleOnce)
     system.runInterval(syncInputButtons)
 })

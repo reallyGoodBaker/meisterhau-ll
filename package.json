@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "@levimc-lse/types": "^2.17.0",
-    "@minecraft/server": "^1.17.0-beta.1.21.51-stable",
+    "@minecraft/server": "^2.1.0-beta",
     "@minecraft/server-admin": "^1.0.0-beta.11940b24",
     "@minecraft/server-net": "^1.0.0-beta.11940b24",
     "@rollup/plugin-commonjs": "^25.0.7",

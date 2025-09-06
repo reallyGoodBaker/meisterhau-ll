@@ -1,7 +1,10 @@
 const { remote } = require('../setup')
 
 async function knockback(en, x, z, h, v) {
-    return await remote.call('knockback', en.uniqueId, x, z, h, v)
+    const m = Math.sqrt(x * x + z * z)
+    const nx = x / m
+    const nz = z / m
+    return await remote.call('knockback', en.uniqueId, nx * h, nz * h, h, v)
 }
 
 async function impulse(en, x, y, z) {

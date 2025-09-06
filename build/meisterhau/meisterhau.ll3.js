@@ -2310,10 +2310,10 @@ var _default = /*#__PURE__*/Object.freeze({
 	setVelocityByOrientation: setVelocityByOrientation
 });
 
-var require$$19 = /*@__PURE__*/getAugmentedNamespace(_default);
+var require$$18 = /*@__PURE__*/getAugmentedNamespace(_default);
 
 const { playAnim: playAnim$5, playSoundAll: playSoundAll$4 } = require$$2$2;
-const { DefaultMoves: DefaultMoves$3, DefaultTrickModule: DefaultTrickModule$3 } = require$$19;
+const { DefaultMoves: DefaultMoves$3, DefaultTrickModule: DefaultTrickModule$3 } = require$$18;
 
 class DoubleDaggerMoves extends DefaultMoves$3 {
     constructor() {
@@ -2985,7 +2985,7 @@ double_dagger.tricks = new DoubleDaggerTricks();
 var emptyHand = {};
 
 const { playAnim: playAnim$4, playSoundAll: playSoundAll$3 } = require$$2$2;
-const { DefaultMoves: DefaultMoves$2, DefaultTrickModule: DefaultTrickModule$2 } = require$$19;
+const { DefaultMoves: DefaultMoves$2, DefaultTrickModule: DefaultTrickModule$2 } = require$$18;
 
 class EmptyHandMoves extends DefaultMoves$2 {
     /**
@@ -3043,7 +3043,7 @@ var hud$2 = /*#__PURE__*/Object.freeze({
 var require$$3 = /*@__PURE__*/getAugmentedNamespace(hud$2);
 
 const { playAnim: playAnim$3, playSoundAll: playSoundAll$2 } = require$$2$2;
-const { DefaultMoves: DefaultMoves$1, DefaultTrickModule: DefaultTrickModule$1 } = require$$19;
+const { DefaultMoves: DefaultMoves$1, DefaultTrickModule: DefaultTrickModule$1 } = require$$18;
 const { constrictCalc, randomRange } = require$$2$1;
 const { hud } = require$$3;
 
@@ -3636,7 +3636,7 @@ lightSaber.tricks = new LightSaberTrick();
 var moon_glaive = {};
 
 const { playAnim: playAnim$2, playSoundAll: playSoundAll$1, DEFAULT_POSTURE_SPEED: DEFAULT_POSTURE_SPEED$2 } = require$$2$2;
-const { DefaultMoves, DefaultTrickModule } = require$$19;
+const { DefaultMoves, DefaultTrickModule } = require$$18;
 
 class MoonGlaiveTricks extends DefaultTrickModule {
     constructor() {
@@ -8114,7 +8114,7 @@ var fantasy_double_tachi = /*#__PURE__*/Object.freeze({
 	tricks: tricks$2
 });
 
-var require$$10 = /*@__PURE__*/getAugmentedNamespace(fantasy_double_tachi);
+var require$$10$1 = /*@__PURE__*/getAugmentedNamespace(fantasy_double_tachi);
 
 class DoubleAxeMoves extends DefaultMoves$4 {
     constructor() {
@@ -8901,7 +8901,7 @@ var collection = [
     require$$7$1,
     require$$8$1,
     require$$9,
-    require$$10,
+    require$$10$1,
     require$$11$1,
 ];
 
@@ -8920,7 +8920,10 @@ function checkCompleteness(mod) {
 const { remote: remote$1 } = requireSetup();
 
 async function knockback$3(en, x, z, h, v) {
-    return await remote$1.call('knockback', en.uniqueId, x, z, h, v)
+    const m = Math.sqrt(x * x + z * z);
+    const nx = x / m;
+    const nz = z / m;
+    return await remote$1.call('knockback', en.uniqueId, nx * h, nz * h, h, v)
 }
 
 async function impulse$1(en, x, y, z) {
@@ -9259,7 +9262,7 @@ const setVelocity$2 = (pl, rotation, h, v) => {
     knockback$2(pl, Math.cos(rad), Math.sin(rad), h, v);
 };
 
-function isCollide$1(pl) {
+function isCollide(pl) {
     const { x: _x, z: _z } = pl.pos;
     const x = Math.abs(_x);
     const z = Math.abs(_z);
@@ -9294,7 +9297,7 @@ function isCollide$1(pl) {
 }
 
 var kinematic = {
-    setVelocity: setVelocity$2, isCollide: isCollide$1
+    setVelocity: setVelocity$2, isCollide
 };
 
 let TargetLock$1 = class TargetLock extends BaseComponent {
@@ -9887,11 +9890,11 @@ var task = {
     Task: Task$1
 };
 
-var require$$11 = /*@__PURE__*/getAugmentedNamespace(tick);
+var require$$10 = /*@__PURE__*/getAugmentedNamespace(tick);
 
-var require$$12 = /*@__PURE__*/getAugmentedNamespace(cameraFading);
+var require$$11 = /*@__PURE__*/getAugmentedNamespace(cameraFading);
 
-var require$$13 = /*@__PURE__*/getAugmentedNamespace(damageModifier);
+var require$$12 = /*@__PURE__*/getAugmentedNamespace(damageModifier);
 
 function registerCommand$1() {
     cmd('components', '管理组件', 1).setup(register => {
@@ -10026,7 +10029,7 @@ var commands = /*#__PURE__*/Object.freeze({
 	registerCommand: registerCommand$1
 });
 
-var require$$14 = /*@__PURE__*/getAugmentedNamespace(commands);
+var require$$13 = /*@__PURE__*/getAugmentedNamespace(commands);
 
 class Scheduler extends BaseComponent {
     period;
@@ -10282,13 +10285,13 @@ var antiTreeshaking$2 = /*#__PURE__*/Object.freeze({
 	antiTreeshaking: antiTreeshaking$1
 });
 
-var require$$15 = /*@__PURE__*/getAugmentedNamespace(antiTreeshaking$2);
+var require$$14 = /*@__PURE__*/getAugmentedNamespace(antiTreeshaking$2);
 
-var require$$16 = /*@__PURE__*/getAugmentedNamespace(stamina);
+var require$$15 = /*@__PURE__*/getAugmentedNamespace(stamina);
 
-var require$$17 = /*@__PURE__*/getAugmentedNamespace(input$2);
+var require$$16 = /*@__PURE__*/getAugmentedNamespace(input$2);
 
-var require$$18 = /*@__PURE__*/getAugmentedNamespace(team);
+var require$$17 = /*@__PURE__*/getAugmentedNamespace(team);
 
 requireEvents();
 
@@ -10370,7 +10373,7 @@ var event = /*#__PURE__*/Object.freeze({
 	es: es$1
 });
 
-var require$$20 = /*@__PURE__*/getAugmentedNamespace(event);
+var require$$19 = /*@__PURE__*/getAugmentedNamespace(event);
 
 class InputSimulator {
     simulate(input, actor, ...extraArgs) {
@@ -10625,7 +10628,7 @@ var core$1 = /*#__PURE__*/Object.freeze({
 	listenEntitiyWithAi: listenEntitiyWithAi$1
 });
 
-var require$$21 = /*@__PURE__*/getAugmentedNamespace(core$1);
+var require$$20 = /*@__PURE__*/getAugmentedNamespace(core$1);
 
 // 不继承自DefaultMoves也可以，但是会少很多预设的状态
 class OrnateTwoHanderMoves extends DefaultMoves$4 {
@@ -11151,7 +11154,7 @@ var ai$1 = /*#__PURE__*/Object.freeze({
 	setupAiCommands: setupAiCommands$1
 });
 
-var require$$22 = /*@__PURE__*/getAugmentedNamespace(ai$1);
+var require$$21 = /*@__PURE__*/getAugmentedNamespace(ai$1);
 
 const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = kinematics$1;
 const { combat: { damage: _damage, _damageLL } } = func;
@@ -11164,22 +11167,20 @@ const {
     lookAt, lookAtTarget, distanceToTarget, adsorbToTarget, adsorbTo,
     onTick, toggleLock, hasLock, releaseTarget, adsorbOrSetVelocity
 } = lock;
-const { setVelocity, isCollide } = kinematic;
+const { setVelocity } = kinematic;
 const { clearCamera } = camera_1;
-const { Tick } = require$$11;
-const { CameraFading } = require$$12;
-const { DamageModifier } = require$$13;
-const { registerCommand } = require$$14;
-const { antiTreeshaking } = require$$15;
-const { Stamina } = require$$16;
-const { input } = require$$17;
-const { Team } = require$$18;
-const { IncomingAttack } = require$$19;
-const { em, es } = require$$20;
-const { listenEntitiyWithAi, ai } = require$$21;
-const { setupAiCommands } = require$$22;
-
-mc.getScoreObjective('attack_time') ?? mc.newScoreObjective('attack_time', 'dummy');
+const { Tick } = require$$10;
+const { CameraFading } = require$$11;
+const { DamageModifier } = require$$12;
+const { registerCommand } = require$$13;
+const { antiTreeshaking } = require$$14;
+const { Stamina } = require$$15;
+const { input } = require$$16;
+const { Team } = require$$17;
+const { IncomingAttack } = require$$18;
+const { em, es } = require$$19;
+const { listenEntitiyWithAi, ai } = require$$20;
+const { setupAiCommands } = require$$21;
 
 const yawToVec2 = yaw => {
     const rad = yaw * Math.PI / 180.0;
@@ -12052,7 +12053,7 @@ function listenAllCustomEvents(mods) {
     });
 
     // TODO
-    em.on('onReleaseLock', (pl, hand) => {
+    em.on('onReleaseLock', (pl) => {
         const bind = getModCompatibility(pl);
         const status = Status.get(pl.uniqueId);
 
@@ -12381,9 +12382,14 @@ function listenAllMcEvents(collection) {
         Status.status.delete(en.uniqueId);
     });
 
-    listenAllCustomEvents(mods);
+    mc.listen('onServerStarted', () => {
+        mc.getScoreObjective('attack_time') ?? mc.newScoreObjective('attack_time', 'attack_time');
+
+        listenAllCustomEvents(mods);
+        listenEntitiyWithAi();
+    });
+
     registerCommand();
-    listenEntitiyWithAi();
     setupAiCommands();
 }
 
