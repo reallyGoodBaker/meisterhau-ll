@@ -9,3 +9,4 @@ build/**/*.js
 files/plugins/meisterhau/*.js
 files/plugins/yuumo.ll3/*.js
 *.d.ts
+*.rar
