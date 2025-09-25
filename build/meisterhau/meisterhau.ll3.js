@@ -6206,10 +6206,10 @@ class UchigatanaMoves extends DefaultMoves$4 {
             const prev = ctx.previousStatus;
             switch (prev) {
                 case 'attack1':
-                case 'dcRightL':
+                case 'dcLeftL':
                     playAnim$6(pl, 'animation.weapon.uchigatana.attack2.lh');
                     break;
-                case 'dcLeftL':
+                case 'dcRightL':
                     playAnim$6(pl, 'animation.weapon.uchigatana.dc.llh');
                     break;
                 default:

@@ -188,7 +188,6 @@
                 {
                     "controller.render.player.map": "variable.map_face_icon"
                 },
-                "controller.render.fake_renderer",
                 "controller.render.player.arm_overlay"
             ],
             "enable_attachables": true

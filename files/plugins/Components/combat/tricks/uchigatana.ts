@@ -324,10 +324,10 @@ class UchigatanaMoves extends DefaultMoves {
         
             switch (prev) {
                 case 'attack1':
-                case 'dcRightL':
+                case 'dcLeftL':
                     playAnim(pl, 'animation.weapon.uchigatana.attack2.lh')
                     break
-                case 'dcLeftL':
+                case 'dcRightL':
                     playAnim(pl, 'animation.weapon.uchigatana.dc.llh')
                     break
                 default:
