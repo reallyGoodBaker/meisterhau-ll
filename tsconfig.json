@@ -118,5 +118,5 @@
   "include": [
     "./files/plugins/Components",
     "./files/plugins/global.d.ts"
-  ]
+, "files/plugins/Components/combat/basic/core/ai/tricks/.ts"  ]
 }

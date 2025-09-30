@@ -23,6 +23,7 @@ const { IncomingAttack } = require('../default')
 const { em, es } = require('./event')
 const { listenEntitiyWithAi, ai } = require('./ai/core')
 const { setupAiCommands } = require('./ai')
+const { registerHudCommands } = require('../components/hud/command')
 
 const yawToVec2 = yaw => {
     const rad = yaw * Math.PI / 180.0
@@ -677,6 +678,7 @@ function listenAllCustomEvents(mods) {
         }
 
         victimStatus.componentManager.attachComponent(new IncomingAttack(
+            damage,
             direction,
             permeable,
             parryable,
@@ -1231,6 +1233,7 @@ function listenAllMcEvents(collection) {
         listenEntitiyWithAi()
     })
 
+    registerHudCommands()
     registerCommand()
     setupAiCommands()
 }

@@ -65,5 +65,17 @@ export function setupAiCommands() {
                     out.success(`成功切换到 ${name} 策略`)
                 }
             })
+
+            register('<en:entity> info', (_, ori, out, args) => {
+                const { en } = args as { en: Entity[] }
+                for (const e of en) {
+                    const entityAI = ai.getAI(e)
+                    if (!entityAI) {
+                        continue
+                    }
+
+                    out.success(`${entityAI.actor.name}\nUID: ${entityAI.uniqueId}\n策略: ${entityAI.strategy}`)
+                }
+            })
         })
 }

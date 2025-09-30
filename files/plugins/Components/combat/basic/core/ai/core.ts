@@ -23,7 +23,7 @@ export interface EventTrigger<Ctx = any, V = any> {
 }
 
 export interface AIEventTriggerContext {
-    en: Entity | Player
+    actor: Entity | Player
     status: Status
 }
 
@@ -78,23 +78,23 @@ export abstract class EventChannel<Ctx> {
 
     abstract getContext(): Ctx
 
-    addTrigger<C extends Ctx, V>(event: string, trigger: EventTrigger<C, V>) {
-        this._signals[event] = trigger as EventTrigger<Ctx>
+    addTrigger<C extends Ctx, V>(signal: string, trigger: EventTrigger<C, V>) {
+        this._signals[signal] = trigger as EventTrigger<Ctx>
     }
 
-    removeTrigger(event: string) {
-        delete this._signals[event]
+    removeTrigger(signal: string) {
+        delete this._signals[signal]
     }
 
-    trigger(event: string, value?: any) {
-        const trigger = this._signals[event]
+    trigger(signal: string, value?: any) {
+        const trigger = this._signals[signal]
         if (trigger) {
             return trigger(value, this.getContext())
         }
         return false
     }
 
-    event<T=any>(ev: string, trigger: EventTrigger<Ctx, T>): [
+    signal<T=any>(ev: string, trigger: EventTrigger<Ctx, T>): [
         EventSignalReader<T>, EventRemoveListener
     ] {
         this.addTrigger(ev, trigger)
@@ -109,7 +109,9 @@ export abstract class MeisterhauAI extends EventChannel<AIEventTriggerContext> {
     readonly inputSimulator = new InputSimulator()
     readonly status: Status
     readonly uniqueId: string
-    
+
+    private readonly _fsms: Record<string, any> = {}
+
     constructor(
         readonly actor: Actor,
         public strategy: string = 'default',
@@ -175,8 +177,9 @@ export abstract class MeisterhauAI extends EventChannel<AIEventTriggerContext> {
         this.inputSimulator.dodge(this.actor)
     }
 
-    abstract run(): void
-    abstract stop(): void
+    onStart(): void {}
+    onUpdate(breakVal: (val?: any) => void): void {}
+    onStop(breakVal?: any): void {}
     
     loop<T=any>(expr: (value: (val?: T) => void) => T | Promise<T>): T | Promise<T> {
         const context: LoopContext = {
@@ -203,11 +206,26 @@ export abstract class MeisterhauAI extends EventChannel<AIEventTriggerContext> {
 
     setStrategy(strategy: string) {
         this.strategy = strategy
-        this._fsm = this.getStrategy(strategy)
+        this._fsm = this._fsms[strategy] || (this._fsms[strategy] = this.getStrategy(strategy))
+    }
+
+    async _start(cleanStart=false) {
+        if (cleanStart) {
+            this?.onStart?.()   
+        }
+
+        const v = await this.loop(async breakVal => {
+            await this.tick()
+            this?.onUpdate?.(breakVal)
+        })
+
+        if (cleanStart) {
+            this?.onStop?.(v)
+        }
     }
 
     start() {
-        this.run()
+        this._start(true)
     }
 
     waitTick(ticks: number=1) {
@@ -224,9 +242,9 @@ export abstract class MeisterhauAI extends EventChannel<AIEventTriggerContext> {
     }
 
     restart(strategy: string = 'default') {
-        this.stop()
+        this?.onStop?.()
         this.setStrategy(strategy)
-        this.start()
+        this._start()
     }
 
     randomActions(conf: Record<number, MeisterhauAIState>) {

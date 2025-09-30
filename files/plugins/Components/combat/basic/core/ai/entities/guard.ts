@@ -2,7 +2,7 @@ import { Timer } from '@combat/basic/components/timer'
 import { initCombatComponent } from '../../core'
 import { Status } from '../../status'
 import { ai, AIEventTriggerContext, MeisterhauAI, MeisterhauAIState } from '../core'
-import { tricks } from '../tricks/ornateTwoHander'
+import { tricks } from '../../../../tricks/ornateTwoHander'
 
 export class Guard extends MeisterhauAI {
 
@@ -24,15 +24,15 @@ export class Guard extends MeisterhauAI {
 
     getContext(): AIEventTriggerContext {
         return {
-            en: this.actor,
+            actor: this.actor,
             status: this.status,
         }
     }
 
     getCrazyStrategy() {
         const self = this
-        const [ inRangeSignal ] = this.event('inRange', (_, ctx) => {
-            this.target = ctx.en.getEntityFromViewVector(5)
+        const [ inRangeSignal ] = this.signal('inRange', (_, ctx) => {
+            this.target = ctx.actor.getEntityFromViewVector(5)
             if (this.target) {
                 return true
             }
@@ -73,8 +73,8 @@ export class Guard extends MeisterhauAI {
 
     getDefaultStrategy() {
         const self = this
-        const [ inRangeSignal ] = this.event('inRange', (_, ctx) => {
-            this.target = ctx.en.getEntityFromViewVector(5)
+        const [ inRangeSignal ] = this.signal('inRange', (_, { actor }) => {
+            this.target = actor.getEntityFromViewVector(5)
             if (this.target) {
                 return true
             }
@@ -82,14 +82,14 @@ export class Guard extends MeisterhauAI {
             return false
         })
 
-        const [ isBlockingSignal ] = this.event('isBlocking', () => {
+        const [ isBlockingSignal ] = this.signal('isBlocking', () => {
             if (!this.target) {
                 return false
             }
             return Status.get(this.target.uniqueId).isBlocking
         })
 
-        const [ isPlayerInputSignal ] = this.event<(keyof InputableTransitionMap)[]>('isPlayerInput', (input: (keyof InputableTransitionMap)[]) => {
+        const [ isPlayerInputSignal ] = this.signal<(keyof InputableTransitionMap)[]>('isPlayerInput', (input: (keyof InputableTransitionMap)[]) => {
             if (!this.target) {
                 return false
             }
@@ -193,22 +193,8 @@ export class Guard extends MeisterhauAI {
         return moves()
     }
 
-    async run() {
+    async onStart() {
         initCombatComponent(this.actor, tricks, this.status)
-        console.log(
-            await this.loop(stop => {
-                if (!this.allowLooping) {
-                    stop('done.')
-                    return
-                }
-
-                this.tick()
-            })
-        )
-    }
-
-    stop(): void {
-        this.allowLooping = false
     }
 }
 

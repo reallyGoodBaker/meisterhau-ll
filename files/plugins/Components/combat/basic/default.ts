@@ -31,6 +31,7 @@ type StateKey<T> = ObjKeyType<T, Move>
 
 export class IncomingAttack extends CustomComponent {
     constructor(
+        public damage: number,
         public direction: AttackDirection = 'left',
         public permeable: boolean = false,
         public parryable: boolean = true,

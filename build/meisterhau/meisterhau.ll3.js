@@ -769,7 +769,7 @@ function cmd(head, desc, perm = CommandPermission.OP) {
     };
 }
 
-var command = /*#__PURE__*/Object.freeze({
+var command$1 = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	get CommandPermission () { return CommandPermission; },
 	Registry: Registry,
@@ -777,7 +777,7 @@ var command = /*#__PURE__*/Object.freeze({
 	serverStarted: serverStarted
 });
 
-var require$$1 = /*@__PURE__*/getAugmentedNamespace(command);
+var require$$1 = /*@__PURE__*/getAugmentedNamespace(command$1);
 
 var server;
 var hasRequiredServer;
@@ -1860,13 +1860,15 @@ function getAnim(animCategory, direction) {
     return anim;
 }
 let IncomingAttack$1 = class IncomingAttack extends CustomComponent {
+    damage;
     direction;
     permeable;
     parryable;
     powerful;
     trace;
-    constructor(direction = 'left', permeable = false, parryable = true, powerful = false, trace = false) {
+    constructor(damage, direction = 'left', permeable = false, parryable = true, powerful = false, trace = false) {
         super();
+        this.damage = damage;
         this.direction = direction;
         this.permeable = permeable;
         this.parryable = parryable;
@@ -10675,20 +10677,20 @@ class EventChannel {
             return false;
         }
     });
-    addTrigger(event, trigger) {
-        this._signals[event] = trigger;
+    addTrigger(signal, trigger) {
+        this._signals[signal] = trigger;
     }
-    removeTrigger(event) {
-        delete this._signals[event];
+    removeTrigger(signal) {
+        delete this._signals[signal];
     }
-    trigger(event, value) {
-        const trigger = this._signals[event];
+    trigger(signal, value) {
+        const trigger = this._signals[signal];
         if (trigger) {
             return trigger(value, this.getContext());
         }
         return false;
     }
-    event(ev, trigger) {
+    signal(ev, trigger) {
         this.addTrigger(ev, trigger);
         return [
             (v) => this.trigger(ev, v),
@@ -10702,6 +10704,7 @@ class MeisterhauAI extends EventChannel {
     inputSimulator = new InputSimulator();
     status;
     uniqueId;
+    _fsms = {};
     constructor(actor, strategy = 'default') {
         super();
         this.actor = actor;
@@ -10751,6 +10754,9 @@ class MeisterhauAI extends EventChannel {
     dodge() {
         this.inputSimulator.dodge(this.actor);
     }
+    onStart() { }
+    onUpdate(breakVal) { }
+    onStop(breakVal) { }
     loop(expr) {
         const context = {
             breakValue: undefined,
@@ -10767,10 +10773,22 @@ class MeisterhauAI extends EventChannel {
     }
     setStrategy(strategy) {
         this.strategy = strategy;
-        this._fsm = this.getStrategy(strategy);
+        this._fsm = this._fsms[strategy] || (this._fsms[strategy] = this.getStrategy(strategy));
+    }
+    async _start(cleanStart = false) {
+        if (cleanStart) {
+            this?.onStart?.();
+        }
+        const v = await this.loop(async (breakVal) => {
+            await this.tick();
+            this?.onUpdate?.(breakVal);
+        });
+        if (cleanStart) {
+            this?.onStop?.(v);
+        }
     }
     start() {
-        this.run();
+        this._start(true);
     }
     waitTick(ticks = 1) {
         return new Promise(resolve => {
@@ -10785,9 +10803,9 @@ class MeisterhauAI extends EventChannel {
         });
     }
     restart(strategy = 'default') {
-        this.stop();
+        this?.onStop?.();
         this.setStrategy(strategy);
-        this.start();
+        this._start();
     }
     randomActions(conf) {
         const keys = Object.keys(conf);
@@ -11156,14 +11174,14 @@ class Guard extends MeisterhauAI {
     }
     getContext() {
         return {
-            en: this.actor,
+            actor: this.actor,
             status: this.status,
         };
     }
     getCrazyStrategy() {
         const self = this;
-        const [inRangeSignal] = this.event('inRange', (_, ctx) => {
-            this.target = ctx.en.getEntityFromViewVector(5);
+        const [inRangeSignal] = this.signal('inRange', (_, ctx) => {
+            this.target = ctx.actor.getEntityFromViewVector(5);
             if (this.target) {
                 return true;
             }
@@ -11196,20 +11214,20 @@ class Guard extends MeisterhauAI {
     }
     getDefaultStrategy() {
         const self = this;
-        const [inRangeSignal] = this.event('inRange', (_, ctx) => {
-            this.target = ctx.en.getEntityFromViewVector(5);
+        const [inRangeSignal] = this.signal('inRange', (_, { actor }) => {
+            this.target = actor.getEntityFromViewVector(5);
             if (this.target) {
                 return true;
             }
             return false;
         });
-        const [isBlockingSignal] = this.event('isBlocking', () => {
+        const [isBlockingSignal] = this.signal('isBlocking', () => {
             if (!this.target) {
                 return false;
             }
             return Status$3.get(this.target.uniqueId).isBlocking;
         });
-        const [isPlayerInputSignal] = this.event('isPlayerInput', (input) => {
+        const [isPlayerInputSignal] = this.signal('isPlayerInput', (input) => {
             if (!this.target) {
                 return false;
             }
@@ -11301,18 +11319,8 @@ class Guard extends MeisterhauAI {
         }
         return moves();
     }
-    async run() {
+    async onStart() {
         core.initCombatComponent(this.actor, tricks, this.status);
-        console.log(await this.loop(stop => {
-            if (!this.allowLooping) {
-                stop('done.');
-                return;
-            }
-            this.tick();
-        }));
-    }
-    stop() {
-        this.allowLooping = false;
     }
 }
 ai$2.register('meisterhau:guard', Guard, tricks);
@@ -11370,6 +11378,16 @@ function setupAiCommands$1() {
                 out.success(`成功切换到 ${name} 策略`);
             }
         });
+        register('<en:entity> info', (_, ori, out, args) => {
+            const { en } = args;
+            for (const e of en) {
+                const entityAI = ai$2.getAI(e);
+                if (!entityAI) {
+                    continue;
+                }
+                out.success(`${entityAI.actor.name}\nUID: ${entityAI.uniqueId}\n策略: ${entityAI.strategy}`);
+            }
+        });
     });
 }
 
@@ -11379,6 +11397,45 @@ var ai$1 = /*#__PURE__*/Object.freeze({
 });
 
 var require$$21 = /*@__PURE__*/getAugmentedNamespace(ai$1);
+
+const lang = {
+    left: '左侧',
+    right: '右侧',
+    middle: '刺击',
+    vertical: '上侧',
+};
+class HurtDisplay extends BaseComponent {
+    onTick(manager) {
+        manager.getComponent(IncomingAttack$1).use(incoming => {
+            const dirText = lang[incoming.direction];
+            const text = `受到来自 ${dirText} 的 ${incoming.damage} 点伤害`;
+            this.getEntity().use(player => player.tell(text));
+        });
+    }
+}
+
+function registerHudCommands$1() {
+    cmd('display', '切换 HUD 显示状态').setup(register => {
+        register('hurt [enabled:bool]', (cmd, ori, out, res) => {
+            const { enabled } = res;
+            if (enabled) {
+                const id = ori.player?.uniqueId ?? ori.entity?.uniqueId;
+                Status$3.get(id).componentManager.attachComponent(new HurtDisplay());
+            }
+            else {
+                const id = ori.player?.uniqueId ?? ori.entity?.uniqueId;
+                Status$3.get(id).componentManager.detachComponent(HurtDisplay);
+            }
+        });
+    });
+}
+
+var command = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	registerHudCommands: registerHudCommands$1
+});
+
+var require$$22 = /*@__PURE__*/getAugmentedNamespace(command);
 
 const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = kinematics$1;
 const { combat: { damage: _damage, _damageLL } } = func;
@@ -11405,6 +11462,7 @@ const { IncomingAttack } = require$$18;
 const { em, es } = require$$19;
 const { listenEntitiyWithAi, ai } = require$$20;
 const { setupAiCommands } = require$$21;
+const { registerHudCommands } = require$$22;
 
 const yawToVec2 = yaw => {
     const rad = yaw * Math.PI / 180.0;
@@ -12059,6 +12117,7 @@ function listenAllCustomEvents(mods) {
         }
 
         victimStatus.componentManager.attachComponent(new IncomingAttack(
+            damage,
             direction,
             permeable,
             parryable,
@@ -12613,6 +12672,7 @@ function listenAllMcEvents(collection) {
         listenEntitiyWithAi();
     });
 
+    registerHudCommands();
     registerCommand();
     setupAiCommands();
 }
