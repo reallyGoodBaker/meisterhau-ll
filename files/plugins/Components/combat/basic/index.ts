@@ -18,6 +18,14 @@ export function entitySelector(en: Entity) {
     return `@e[c=1,type=${en.type},x=${pos.x},y=${pos.y},z=${pos.z},r=1]`
 }
 
+export function actorSelector(actor: Actor) {
+    if ('xuid' in actor) {
+        return `"${actor.name}"`
+    }
+
+    return entitySelector(actor)
+}
+
 export function playAnimEntity(en: Entity, anim: string, nextAnim?: string, time?: number, stopExp?: string, controller?: string) {
     mc.runcmdEx(`/playanimation ${entitySelector(en)} ` + [anim, nextAnim, time, stopExp, controller].filter(x => x).join(' '))
 }

@@ -7,18 +7,24 @@ import { tricks } from '../../../../tricks/ornateTwoHander'
 export class Guard extends MeisterhauAI {
 
     target: Entity | null = null
-    allowLooping = true
 
-    getStrategy(strategy: string): AsyncGenerator<MeisterhauAIState, void, unknown> {
+    async onStart() {
+        initCombatComponent(this.actor, tricks, this.status)
+    }
+
+    getStrategy(strategy: string) {
         switch (strategy) {
-            case 'cheater':
-                return this.getDefaultStrategy() as any
+            case 'default':
+                return this.getDefaultStrategy()
 
             case 'crazy':
-                return this.getCrazyStrategy() as any
+                return this.getCrazyStrategy()
+
+            case 'left-combo':
+                return this.getLeftComboStrategy()
 
             default:
-                return this.getDefaultStrategy()
+                return
         }
     }
 
@@ -41,7 +47,8 @@ export class Guard extends MeisterhauAI {
         })
 
         async function *moves() {
-            while (self.allowLooping) {
+            // 使动作反复循环，直到AI停止
+            while (!self.stopped) {
                 await self.waitTick()
 
                 if (!inRangeSignal()) {
@@ -108,8 +115,8 @@ export class Guard extends MeisterhauAI {
         const attackIntent = self.status.componentManager.getOrCreate(Timer, 60).unwrap()
 
         async function *moves() {
-            // 使动作反复循环
-            while (self.allowLooping) {
+            // 使动作反复循环，直到AI停止
+            while (!self.stopped) {
                 // 等待下一个游戏刻防止卡死
                 await self.waitTick()
 
@@ -193,8 +200,16 @@ export class Guard extends MeisterhauAI {
         return moves()
     }
 
-    async onStart() {
-        initCombatComponent(this.actor, tricks, this.status)
+    getLeftComboStrategy() {
+        const ai = this
+        async function *moves() {
+            yield () => ai.attack()
+            await ai.wait(800)
+            yield () => ai.attack()
+            await ai.wait(2000)
+        }
+
+        return moves()
     }
 }
 

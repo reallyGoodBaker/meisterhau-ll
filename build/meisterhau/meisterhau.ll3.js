@@ -10639,6 +10639,35 @@ var MeisterhauFSMState;
     MeisterhauFSMState[MeisterhauFSMState["PAUSED"] = 2] = "PAUSED";
     MeisterhauFSMState[MeisterhauFSMState["STOPPED"] = 3] = "STOPPED";
 })(MeisterhauFSMState || (MeisterhauFSMState = {}));
+class SimpleAbortController {
+    _aborted = false;
+    _listeners = [];
+    get signal() {
+        return {
+            aborted: this._aborted,
+            addEventListener: (event, listener) => {
+                if (event === 'abort') {
+                    this._listeners.push(listener);
+                }
+            },
+            removeEventListener: (event, listener) => {
+                if (event === 'abort') {
+                    const index = this._listeners.indexOf(listener);
+                    if (index > -1) {
+                        this._listeners.splice(index, 1);
+                    }
+                }
+            }
+        };
+    }
+    abort() {
+        if (!this._aborted) {
+            this._aborted = true;
+            this._listeners.forEach(listener => listener());
+            this._listeners = [];
+        }
+    }
+}
 class MeisterhauAITicker extends CustomComponent {
     ctx;
     loopExpr;
@@ -10651,8 +10680,9 @@ class MeisterhauAITicker extends CustomComponent {
         this.resolvers = resolvers;
         this.breakLoop = breakLoop;
     }
-    onTick() {
+    onTick(manager) {
         if (this.ctx.stopFlag) {
+            manager.detachComponent(MeisterhauAITicker);
             return this.resolvers.resolve(this.ctx.breakValue);
         }
         this.loopExpr.call(undefined, this.breakLoop)
@@ -10661,6 +10691,14 @@ class MeisterhauAITicker extends CustomComponent {
     reject(err) {
         this.ctx.stopFlag = true;
         this.resolvers.reject(err);
+    }
+    resolve(val) {
+        this.ctx.breakValue = val;
+        this.ctx.stopFlag = true;
+        this.resolvers.resolve(val);
+    }
+    stop() {
+        this.ctx.stopFlag = true;
     }
 }
 class EventChannel {
@@ -10704,23 +10742,49 @@ class MeisterhauAI extends EventChannel {
     inputSimulator = new InputSimulator();
     status;
     uniqueId;
-    _fsms = {};
+    abortController;
     constructor(actor, strategy = 'default') {
         super();
         this.actor = actor;
         this.strategy = strategy;
         this.status = Status$3.get(this.actor.uniqueId);
         this.uniqueId = this.actor.uniqueId;
+        this.abortController = new SimpleAbortController();
         this.setStrategy(strategy);
     }
     _fsm;
     async wait(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        return new Promise((resolve) => {
+            if (this.abortController.signal.aborted) {
+                resolve();
+                return;
+            }
+            const timeout = setTimeout(() => {
+                if (!this.abortController.signal.aborted) {
+                    resolve();
+                }
+            }, ms);
+            const abortHandler = () => {
+                clearTimeout(timeout);
+                resolve();
+            };
+            this.abortController.signal.addEventListener('abort', abortHandler);
+            // 确保在Promise完成时清理
+            Promise.resolve().then(() => {
+                this.abortController.signal.removeEventListener('abort', abortHandler);
+            });
+        });
     }
     async tick() {
-        if (this._fsm) {
-            const { value } = await this._fsm.next();
-            if (value) {
+        if (this._fsm && !this.abortController.signal.aborted) {
+            const { value, done } = await this._fsm.next();
+            if (done || this.abortController.signal.aborted) {
+                this.aiTicker?.stop();
+                this._fsm = undefined;
+                return;
+            }
+            // 在执行状态函数前再次检查是否已停止
+            if (!this.abortController.signal.aborted) {
                 await value(this);
             }
         }
@@ -10757,6 +10821,7 @@ class MeisterhauAI extends EventChannel {
     onStart() { }
     onUpdate(breakVal) { }
     onStop(breakVal) { }
+    aiTicker;
     loop(expr) {
         const context = {
             breakValue: undefined,
@@ -10769,13 +10834,21 @@ class MeisterhauAI extends EventChannel {
         const resolvers = Promise.withResolvers();
         const aiTicker = new MeisterhauAITicker(context, expr, resolvers, value);
         this.status.componentManager.attachComponent(aiTicker);
+        this.aiTicker = aiTicker;
         return resolvers.promise;
     }
     setStrategy(strategy) {
         this.strategy = strategy;
-        this._fsm = this._fsms[strategy] || (this._fsms[strategy] = this.getStrategy(strategy));
+        const fsm = this.getStrategy(strategy);
+        if (!fsm) {
+            return;
+        }
+        return (this._fsm = fsm);
     }
     async _start(cleanStart = false) {
+        // 重置abortController
+        this.abortController.abort();
+        Object.assign(this.abortController, new SimpleAbortController());
         if (cleanStart) {
             this?.onStart?.();
         }
@@ -10784,16 +10857,27 @@ class MeisterhauAI extends EventChannel {
             this?.onUpdate?.(breakVal);
         });
         if (cleanStart) {
-            this?.onStop?.(v);
+            this.onStop?.(v);
         }
     }
     start() {
         this._start(true);
     }
+    stop(returnVal) {
+        this.abortController.abort();
+        this.aiTicker?.stop();
+        this._fsm?.return?.(returnVal);
+        this.onStop?.(returnVal);
+        this._fsm = undefined;
+    }
     waitTick(ticks = 1) {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
             let count = 0;
             const onTick = () => {
+                if (this.abortController.signal.aborted) {
+                    resolve();
+                    return;
+                }
                 count++;
                 if (count >= ticks) {
                     resolve();
@@ -10802,10 +10886,20 @@ class MeisterhauAI extends EventChannel {
             this.status.componentManager.beforeTick(onTick);
         });
     }
-    restart(strategy = 'default') {
-        this?.onStop?.();
-        this.setStrategy(strategy);
-        this._start();
+    get stopped() {
+        return this.abortController.signal.aborted;
+    }
+    async restart(strategy = 'default') {
+        this.stop();
+        await this.waitTick();
+        // 重置abortController
+        this.abortController.abort();
+        Object.assign(this.abortController, new SimpleAbortController());
+        if (this.setStrategy(strategy)) {
+            this._start();
+            return true;
+        }
+        return false;
     }
     randomActions(conf) {
         const keys = Object.keys(conf);
@@ -10866,6 +10960,7 @@ var core$1 = /*#__PURE__*/Object.freeze({
 	EventChannel: EventChannel,
 	MeisterhauAI: MeisterhauAI,
 	get MeisterhauFSMState () { return MeisterhauFSMState; },
+	SimpleAbortController: SimpleAbortController,
 	get ai () { return ai$2; },
 	listenEntitiyWithAi: listenEntitiyWithAi$1
 });
@@ -11161,15 +11256,19 @@ const tricks = new OrnateTwoHander();
 
 class Guard extends MeisterhauAI {
     target = null;
-    allowLooping = true;
+    async onStart() {
+        core.initCombatComponent(this.actor, tricks, this.status);
+    }
     getStrategy(strategy) {
         switch (strategy) {
-            case 'cheater':
+            case 'default':
                 return this.getDefaultStrategy();
             case 'crazy':
                 return this.getCrazyStrategy();
+            case 'left-combo':
+                return this.getLeftComboStrategy();
             default:
-                return this.getDefaultStrategy();
+                return;
         }
     }
     getContext() {
@@ -11188,7 +11287,8 @@ class Guard extends MeisterhauAI {
             return false;
         });
         async function* moves() {
-            while (self.allowLooping) {
+            // 使动作反复循环，直到AI停止
+            while (!self.stopped) {
                 await self.waitTick();
                 if (!inRangeSignal()) {
                     continue;
@@ -11197,6 +11297,7 @@ class Guard extends MeisterhauAI {
                 switch (randomAct) {
                     case 1:
                         yield () => self.attack();
+                        console.log('crazy strategy attack');
                         await self.wait(800);
                         break;
                     case 2:
@@ -11241,8 +11342,8 @@ class Guard extends MeisterhauAI {
         // 这里先获得一个计时器
         const attackIntent = self.status.componentManager.getOrCreate(Timer, 60).unwrap();
         async function* moves() {
-            // 使动作反复循环
-            while (self.allowLooping) {
+            // 使动作反复循环，直到AI停止
+            while (!self.stopped) {
                 // 等待下一个游戏刻防止卡死
                 await self.waitTick();
                 // 等待目标进入射程
@@ -11255,6 +11356,7 @@ class Guard extends MeisterhauAI {
                 if (isPlayerInputSignal(['onDodge'])) {
                     // 使用 yield 返回一个函数，而不是直接调用，这样可以让这个函数的执行时机被合理安排
                     yield () => self.attack();
+                    console.log('default strategy attack');
                     await self.wait(800);
                     // 玩家匆忙操作时通过连段进行惩罚
                     if (isPlayerInputSignal(['onAttack', 'onUseItem', 'onDodge'])) {
@@ -11319,8 +11421,18 @@ class Guard extends MeisterhauAI {
         }
         return moves();
     }
-    async onStart() {
-        core.initCombatComponent(this.actor, tricks, this.status);
+    getLeftComboStrategy() {
+        const ai = this;
+        async function* moves() {
+            yield () => ai.attack();
+            await ai.wait(800);
+            yield () => ai.attack();
+            await ai.wait(2000);
+        }
+        return moves();
+    }
+    onStop(breakVal) {
+        console.log(`stopped strategy ${this.strategy}`);
     }
 }
 ai$2.register('meisterhau:guard', Guard, tricks);
@@ -11367,7 +11479,7 @@ function setupAiCommands$1() {
                 ai$2.getAI(e)?.dodge();
             }
         });
-        register('<en:entity> strategy <name:string>', (_, ori, out, args) => {
+        register('<en:entity> strategy <name:string>', async (_, ori, out, args) => {
             const { en, name } = args;
             for (const e of en) {
                 const entityAI = ai$2.getAI(e);
@@ -11375,7 +11487,6 @@ function setupAiCommands$1() {
                     continue;
                 }
                 entityAI.restart(name);
-                out.success(`成功切换到 ${name} 策略`);
             }
         });
         register('<en:entity> info', (_, ori, out, args) => {

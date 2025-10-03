@@ -22,7 +22,7 @@
         "weapon.deflection": {
             "category": "player",
             "sounds": [
-                "sounds/deflection"
+                "sounds/deflect"
             ]
         },
         "weapon.parry2": {

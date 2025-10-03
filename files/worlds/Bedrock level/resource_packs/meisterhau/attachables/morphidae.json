@@ -8,7 +8,7 @@
                 "enchanted": "entity_alphatest_glint"
             },
             "textures": {
-                "default": "textures/entity/db_morphidae",
+                "default": "textures/entity/db_morphidae/tex",
                 "enchanted": "textures/misc/enchanted_item_glint"
             },
             "geometry": {

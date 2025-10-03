@@ -3,6 +3,7 @@ import './entities'
 import { transition } from '../core'
 import { ai } from './core'
 import { Status } from '../status'
+import { inputSimulator } from '../inputSimulator'
 
 export function setupAiCommands() {
     cmd('ai', '控制ai行为', CommandPermission.OP)
@@ -21,39 +22,39 @@ export function setupAiCommands() {
             register('<en:entity> perform attack', (_, ori, out, args) => {
                 const { en } = args as { en: Entity[] }
                 for (const e of en) {
-                    ai.getAI(e)?.attack()
+                    inputSimulator.attack(e)
                 }
             })
 
             register('<en:entity> perform useItem', (_, ori, out, args) => {
                 const { en } = args as { en: Entity[] }
                 for (const e of en) {
-                    ai.getAI(e)?.useItem()
+                    inputSimulator.useItem(e)
                 }
             })
 
             register('<en:entity> perform sneak', (_, ori, out, args) => {
                 const { en } = args as { en: Entity[] }
                 for (const e of en) {
-                    ai.getAI(e)?.sneak()
+                    inputSimulator.sneak(e)
                 }
             })
 
             register('<en:entity> perform release_sneak', (_, ori, out, args) => {
                 const { en } = args as { en: Entity[] }
                 for (const e of en) {
-                    ai.getAI(e)?.releaseSneak()
+                    inputSimulator.releaseSneak(e)
                 }
             })
 
             register('<en:entity> perform dodge', (_, ori, out, args) => {
                 const { en } = args as { en: Entity[] }
                 for (const e of en) {
-                    ai.getAI(e)?.dodge()
+                    inputSimulator.dodge(e)
                 }
             })
 
-            register('<en:entity> strategy <name:string>', (_, ori, out, args) => {
+            register('<en:entity> strategy <name:string>', async (_, ori, out, args) => {
                 const { en, name } = args as { en: Entity[], name: string }
                 for (const e of en) {
                     const entityAI = ai.getAI(e)
@@ -62,7 +63,6 @@ export function setupAiCommands() {
                     }
 
                     entityAI.restart(name)
-                    out.success(`成功切换到 ${name} 策略`)
                 }
             })
 
@@ -74,7 +74,7 @@ export function setupAiCommands() {
                         continue
                     }
 
-                    out.success(`${entityAI.actor.name}\nUID: ${entityAI.uniqueId}\n策略: ${entityAI.strategy}`)
+                    out.success(`${entityAI.actor.name}\nUID: ${entityAI.actor.uniqueId}\n策略: ${entityAI.strategy}`)
                 }
             })
         })

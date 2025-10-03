@@ -1,8 +1,7 @@
-import { Actor, InputSimulator } from '@core/inputSimulator'
+import { Actor } from '@core/inputSimulator'
 import { Status } from '@core/status'
 import { serverStarted } from '@utils/command'
-import { input } from 'scripts-rpc/func/input'
-import { CustomComponent } from '../component'
+import { ComponentManager, CustomComponent } from '../component'
 
 export interface MeisterhauAIState {
     (ai: MeisterhauAI): Promise<void>
@@ -27,6 +26,38 @@ export interface AIEventTriggerContext {
     status: Status
 }
 
+export class SimpleAbortController {
+    private _aborted = false
+    private _listeners: Array<() => void> = []
+
+    get signal() {
+        return {
+            aborted: this._aborted,
+            addEventListener: (event: string, listener: () => void) => {
+                if (event === 'abort') {
+                    this._listeners.push(listener)
+                }
+            },
+            removeEventListener: (event: string, listener: () => void) => {
+                if (event === 'abort') {
+                    const index = this._listeners.indexOf(listener)
+                    if (index > -1) {
+                        this._listeners.splice(index, 1)
+                    }
+                }
+            }
+        }
+    }
+
+    abort() {
+        if (!this._aborted) {
+            this._aborted = true
+            this._listeners.forEach(listener => listener())
+            this._listeners = []
+        }
+    }
+}
+
 interface LoopContext {
     breakValue: any
     stopFlag: boolean
@@ -42,8 +73,9 @@ class MeisterhauAITicker extends CustomComponent {
         super()
     }
 
-    onTick() {
+    onTick(manager: ComponentManager) {
         if (this.ctx.stopFlag) {
+            manager.detachComponent(MeisterhauAITicker)
             return this.resolvers.resolve(this.ctx.breakValue)
         }
 
@@ -55,131 +87,84 @@ class MeisterhauAITicker extends CustomComponent {
         this.ctx.stopFlag = true
         this.resolvers.reject(err)
     }
-}
 
-export type EventSignalReader<T = any> = (value?: T) => boolean
-export type EventRemoveListener = () => void
-
-export abstract class EventChannel<Ctx> {
-    private _signals: Record<string, EventTrigger<Ctx>> = {}
-    //@ts-ignore
-    readonly signals: Record<string, boolean> = new Proxy(this._signals, {
-        get: (target, prop) => {
-            if (prop in target) {
-                return this.trigger(prop as string)
-            }
-            return false
-        },
-
-        set() {
-            return false
-        }
-    })
-
-    abstract getContext(): Ctx
-
-    addTrigger<C extends Ctx, V>(signal: string, trigger: EventTrigger<C, V>) {
-        this._signals[signal] = trigger as EventTrigger<Ctx>
+    resolve(val: any) {
+        this.ctx.breakValue = val
+        this.ctx.stopFlag = true
+        this.resolvers.resolve(val)
     }
 
-    removeTrigger(signal: string) {
-        delete this._signals[signal]
-    }
-
-    trigger(signal: string, value?: any) {
-        const trigger = this._signals[signal]
-        if (trigger) {
-            return trigger(value, this.getContext())
-        }
-        return false
-    }
-
-    signal<T=any>(ev: string, trigger: EventTrigger<Ctx, T>): [
-        EventSignalReader<T>, EventRemoveListener
-    ] {
-        this.addTrigger(ev, trigger)
-        return [
-            (v?: T) => this.trigger(ev, v),
-            () => this.removeTrigger(ev),
-        ]
+    stop() {
+        this.ctx.stopFlag = true
     }
 }
 
-export abstract class MeisterhauAI extends EventChannel<AIEventTriggerContext> {
-    readonly inputSimulator = new InputSimulator()
+
+export abstract class MeisterhauAI {
+    readonly abortController: SimpleAbortController
     readonly status: Status
-    readonly uniqueId: string
-
-    private readonly _fsms: Record<string, any> = {}
 
     constructor(
-        readonly actor: Actor,
+        public readonly actor: Actor,
         public strategy: string = 'default',
     ) {
-        super()
-        this.status = Status.get(this.actor.uniqueId)
-        this.uniqueId = this.actor.uniqueId
-
+        this.status = Status.get(actor.uniqueId)
+        this.abortController = new SimpleAbortController()
         this.setStrategy(strategy)
     }
 
-    abstract getStrategy(strategy: string): AsyncGenerator<MeisterhauAIState, void, unknown>
+    abstract getStrategy(strategy: string): AsyncGenerator<MeisterhauAIState, void, unknown> | undefined
 
     private _fsm?: AsyncGenerator<MeisterhauAIState, void, unknown>
 
     async wait(ms: number) {
-        return new Promise(resolve => setTimeout(resolve, ms))
+        return new Promise<void>((resolve) => {
+            if (this.abortController.signal.aborted) {
+                resolve()
+                return
+            }
+            
+            const timeout = setTimeout(() => {
+                if (!this.abortController.signal.aborted) {
+                    resolve()
+                }
+            }, ms)
+            
+            const abortHandler = () => {
+                clearTimeout(timeout)
+                resolve()
+            }
+            
+            this.abortController.signal.addEventListener('abort', abortHandler)
+            
+            // 确保在Promise完成时清理
+            Promise.resolve().then(() => {
+                this.abortController.signal.removeEventListener('abort', abortHandler)
+            })
+        })
     }
 
     async tick() {
-        if (this._fsm) {
-            const { value } = await this._fsm.next()
-            if (value) {
+        if (this._fsm && !this.abortController.signal.aborted) {
+            const { value, done } = await this._fsm.next()
+            if (done || this.abortController.signal.aborted) {
+                this.aiTicker?.stop()
+                this._fsm = undefined
+                return
+            }
+
+            // 在执行状态函数前再次检查是否已停止
+            if (!this.abortController.signal.aborted) {
                 await value(this)
             }
         }
     }
 
-    async jump(timeout=300) {
-        input.performPress(this.uniqueId, 'jump')
-        this.inputSimulator.jump(this.actor)
-        await this.wait(timeout)
-        input.performRelease(this.uniqueId, 'jump')
-    }
-
-    sneak() {
-        input.performPress(this.uniqueId, 'sneak')
-        this.inputSimulator.sneak(this.actor)
-    }
-
-    releaseSneak() {
-        input.performRelease(this.uniqueId,'sneak')
-        this.inputSimulator.releaseSneak(this.actor)
-    }
-
-    useItem(item?: Item) {
-        this.inputSimulator.useItem(this.actor, item)
-    }
-
-    changeSprinting(isSprinting=true) {
-        this.inputSimulator.changeSprinting(this.actor, isSprinting)
-    }
-
-    attack() {
-        this.inputSimulator.attack(this.actor)
-    }
-
-    feint() {
-        this.inputSimulator.feint(this.actor)
-    }
-
-    dodge() {
-        this.inputSimulator.dodge(this.actor)
-    }
-
     onStart(): void {}
     onUpdate(breakVal: (val?: any) => void): void {}
     onStop(breakVal?: any): void {}
+
+    private aiTicker?: MeisterhauAITicker
     
     loop<T=any>(expr: (value: (val?: T) => void) => T | Promise<T>): T | Promise<T> {
         const context: LoopContext = {
@@ -200,16 +185,26 @@ export abstract class MeisterhauAI extends EventChannel<AIEventTriggerContext> {
         )
 
         this.status.componentManager.attachComponent(aiTicker)
+        this.aiTicker = aiTicker
 
         return resolvers.promise as Promise<T>
     }
 
     setStrategy(strategy: string) {
         this.strategy = strategy
-        this._fsm = this._fsms[strategy] || (this._fsms[strategy] = this.getStrategy(strategy))
+        const fsm = this.getStrategy(strategy)
+        if (!fsm) {
+            return
+        }
+
+        return (this._fsm = fsm)
     }
 
     async _start(cleanStart=false) {
+        // 重置abortController
+        this.abortController.abort()
+        Object.assign(this.abortController, new SimpleAbortController())
+        
         if (cleanStart) {
             this?.onStart?.()   
         }
@@ -220,7 +215,7 @@ export abstract class MeisterhauAI extends EventChannel<AIEventTriggerContext> {
         })
 
         if (cleanStart) {
-            this?.onStop?.(v)
+            this.onStop?.(v)
         }
     }
 
@@ -228,10 +223,22 @@ export abstract class MeisterhauAI extends EventChannel<AIEventTriggerContext> {
         this._start(true)
     }
 
+    stop(returnVal?: any) {
+        this.abortController.abort()
+        this.aiTicker?.stop()
+        this._fsm?.return?.(returnVal)
+        this.onStop?.(returnVal)
+        this._fsm = undefined
+    }
+
     waitTick(ticks: number=1) {
-        return new Promise<void>(resolve => {
+        return new Promise<void>((resolve) => {
             let count = 0
             const onTick = () => {
+                if (this.abortController.signal.aborted) {
+                    resolve()
+                    return
+                }
                 count++
                 if (count >= ticks) {
                     resolve()
@@ -241,10 +248,23 @@ export abstract class MeisterhauAI extends EventChannel<AIEventTriggerContext> {
         })
     }
 
-    restart(strategy: string = 'default') {
-        this?.onStop?.()
-        this.setStrategy(strategy)
-        this._start()
+    get stopped() {
+        return this.abortController.signal.aborted
+    }
+
+    async restart(strategy: string = 'default') {
+        this.stop()
+        await this.waitTick()
+        // 重置abortController
+        this.abortController.abort()
+        Object.assign(this.abortController, new SimpleAbortController())
+        
+        if (this.setStrategy(strategy)) {
+            this._start()
+            return true   
+        }
+
+        return false
     }
 
     randomActions(conf: Record<number, MeisterhauAIState>) {
