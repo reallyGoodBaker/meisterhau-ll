@@ -167,7 +167,7 @@ class OneHandedMoves extends DefaultMoves {
         timeline: {
             4: (_, ctx) => ctx.status.isBlocking = false,
             6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 0.5),
-            7: (pl, ctx) => ctx.selectFromRange(pl, {
+            7: (pl, ctx) => ctx.selectFromSector(pl, {
                 radius: 3,
                 angle: 30,
                 rotation: 15
@@ -206,7 +206,7 @@ class OneHandedMoves extends DefaultMoves {
         },
         timeline: {
             6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1),
-            8: (pl, ctx) => ctx.selectFromRange(pl, {
+            8: (pl, ctx) => ctx.selectFromSector(pl, {
                 radius: 3,
             }).forEach(en => ctx.attack(pl, en, {
                 damage: 14,

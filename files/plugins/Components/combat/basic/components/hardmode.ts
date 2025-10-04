@@ -114,13 +114,13 @@ export class RaidomodComponent extends BaseComponent {
 cmd('raidomode', '居合模式', CommandPermission.Everyone).setup(register => {
     register('<pl:player> enable', (cmd, ori, out, res) => {
         (res.pl as Player[]).forEach(pl => {
-            Status.get(pl.uniqueId).componentManager.attachComponent(new RaidomodComponent())
+            Status.getOrCreate(pl.uniqueId).componentManager.attachComponent(new RaidomodComponent())
         })
     })
 
     register('<pl:player> disable', (cmd, ori, out, res) => {
         (res.pl as Player[]).forEach(pl => {
-            Status.get(pl.uniqueId).componentManager.detachComponent(RaidomodComponent)
+            Status.getOrCreate(pl.uniqueId).componentManager.detachComponent(RaidomodComponent)
         })
     })
 })

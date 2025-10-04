@@ -112,10 +112,22 @@ remote.expose('faceTo', (src, t) => {
 
     try {
         source.teleport(source.location, {
-            keepVelocity: true,
-            facingLocation: target.location
+            facingLocation: target.getHeadLocation()
         })
     } catch (error) {
         world.sendMessage(error + '')
     }
+})
+
+remote.expose('setRotation', (en, pitch, yaw) => {
+    const entity = world.getEntity(en)
+
+    if (!entity) {
+        return
+    }
+
+    entity.setRotation({
+        x: pitch,
+        y: yaw
+    })
 })

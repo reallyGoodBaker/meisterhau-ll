@@ -15,7 +15,7 @@ export function setupAiCommands() {
                     if (!registration)
                         continue
 
-                    transition(e, registration[1], Status.get(e.uniqueId), event_name, Function.prototype as any, [ e ])
+                    transition(e, registration[1], Status.getOrCreate(e.uniqueId), event_name, Function.prototype as any, [ e ])
                 }
             })
 

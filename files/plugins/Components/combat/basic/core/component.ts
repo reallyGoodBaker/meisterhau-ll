@@ -1,6 +1,7 @@
 import { Optional } from '@utils/optional'
 
 export interface Component {
+    allowTick: boolean
     onTick(manager: ComponentManager, en: Optional<Player|Entity>): void
     detach(manager: ComponentManager): void
     getManager(): ComponentManager
@@ -18,6 +19,8 @@ const REFLECT_ENTITY = Symbol('reflect-entity')
 export class CustomComponent implements Component {
     [REFLECT_MANAGER]?: ComponentManager
     [REFLECT_ENTITY]: Optional<Player|Entity> = Optional.none()
+
+    allowTick: boolean = false
 
     onTick(manager: ComponentManager, en: Optional<Player|Entity>): void {}
 
@@ -155,9 +158,9 @@ export class ComponentManager {
                 component[REFLECT_MANAGER] = this
             }
 
-            const { onTick } = component
+            const { onTick, allowTick } = component
 
-            if (onTick) {
+            if (allowTick && onTick) {
                 this.profiler(
                     () => onTick.call(component, this, Optional.some(en)),
                     component

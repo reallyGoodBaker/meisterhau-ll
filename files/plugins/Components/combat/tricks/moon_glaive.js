@@ -104,7 +104,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1)
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 radius: 2.5,
                 angle: 120,
                 rotation: -60
@@ -366,7 +366,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 50,
                 rotation: -25,
                 radius: 2.6,
@@ -437,7 +437,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             11: (pl, ctx) => ctx.adsorbToTarget(pl, 0.5),
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 70,
                 rotation: -35,
                 radius: 2.6,
@@ -488,7 +488,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             18: (pl, ctx) => ctx.adsorbToTarget(pl, 0.5),
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 46,
                 rotation: -23,
                 radius: 2.8,
@@ -539,7 +539,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 90,
                 rotation: -50,
                 radius: 2.8,
@@ -623,7 +623,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             11: (pl, ctx) => ctx.adsorbToTarget(pl, 0.5),
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 70,
                 rotation: -35,
                 radius: 2.6,
@@ -666,7 +666,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 120,
                 rotation: -60,
                 radius: 2.8,
@@ -719,7 +719,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 60,
                 rotation: -30,
                 radius: 2.6,
@@ -766,7 +766,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             20: (pl, ctx) => ctx.adsorbToTarget(pl, 0.5),
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 46,
                 rotation: -23,
                 radius: 2.8,

@@ -71,6 +71,8 @@ class MeisterhauAITicker extends CustomComponent {
         readonly breakLoop: (val: any) => void,
     ) {
         super()
+
+        this.allowTick = true
     }
 
     onTick(manager: ComponentManager) {
@@ -80,7 +82,7 @@ class MeisterhauAITicker extends CustomComponent {
         }
 
         ;(this.loopExpr.call(undefined, this.breakLoop) as Promise<any>)
-            ?.catch?.(this.reject)
+            ?.catch?.(err => this.reject(err))
     }
 
     reject(err: any) {
@@ -108,7 +110,7 @@ export abstract class MeisterhauAI {
         public readonly actor: Actor,
         public strategy: string = 'default',
     ) {
-        this.status = Status.get(actor.uniqueId)
+        this.status = Status.getOrCreate(actor.uniqueId)
         this.abortController = new SimpleAbortController()
         this.setStrategy(strategy)
     }

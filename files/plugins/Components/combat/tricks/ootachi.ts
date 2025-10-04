@@ -169,7 +169,7 @@ class OotachiMoves extends DefaultMoves {
             playAnim(pl, 'animation.weapon.ootachi.combo1.attack')
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 radius: 3,
                 angle: 45,
                 rotation: -20,
@@ -239,7 +239,7 @@ class OotachiMoves extends DefaultMoves {
         },
         onAct(pl, ctx) {
             playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1)
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 radius: 3,
                 angle: 120,
                 rotation: -60,
@@ -323,7 +323,7 @@ class OotachiMoves extends DefaultMoves {
         },
         onAct(pl, ctx) {
             playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1)
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 radius: 3.5,
                 angle: 50,
                 rotation: -25
@@ -406,7 +406,7 @@ class OotachiMoves extends DefaultMoves {
         },
         onAct(pl, ctx) {
             playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1)
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 radius: 3,
                 angle: 80,
                 rotation: -40
@@ -480,7 +480,7 @@ class OotachiMoves extends DefaultMoves {
         onAct(pl, ctx) {
             ctx.lookAtTarget(pl)
             playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1)
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 radius: 3.5,
                 angle: 30,
                 rotation: -15
@@ -530,7 +530,7 @@ class OotachiMoves extends DefaultMoves {
         },
         onAct(pl, ctx) {
             playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1)
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 radius: 3.5,
                 angle: 90,
                 rotation: -45
@@ -715,7 +715,7 @@ class OotachiMoves extends DefaultMoves {
         timeline: {
             14: (pl, ctx) => ctx.trap(pl),
             8: pl => playSoundAll('weapon.woosh.3', pl.pos, 1),
-            10: (pl, ctx) => ctx.selectFromRange(pl, {
+            10: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 40,
                 radius: 3,
                 rotation: -20,
@@ -765,7 +765,7 @@ class OotachiMoves extends DefaultMoves {
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.5)
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 radius: 1.5,
                 angle: 60,
                 rotation: -30

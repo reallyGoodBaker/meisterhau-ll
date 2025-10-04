@@ -121,7 +121,7 @@ class DoubleAxeMoves extends DefaultMoves {
             2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
             4: (_, ctx) => ctx.status.isBlocking = false,
             6: (pl, ctx) => playSoundAll('weapon.whoosh.thick.' + randomRange(1, 4, true), pl.pos),
-            8: (pl, ctx) => ctx.selectFromRange(pl, {
+            8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 90,
                 radius: 2.5,
                 rotation: 45
@@ -181,7 +181,7 @@ class DoubleAxeMoves extends DefaultMoves {
             5: (_, ctx) => ctx.status.hegemony = true,
             15: (_, ctx) => ctx.status.hegemony = false,
             6: pl => playSoundAll('weapon.whoosh.thick.' + randomRange(1, 4, true), pl.pos),
-            8: (pl, ctx) => ctx.selectFromRange(pl, {
+            8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 90,
                 radius: 2.5,
                 rotation: 45
@@ -241,7 +241,7 @@ class DoubleAxeMoves extends DefaultMoves {
             5: (_, ctx) => ctx.status.hegemony = true,
             15: (_, ctx) => ctx.status.hegemony = false,
             6: pl => playSoundAll('weapon.whoosh.thick.' + randomRange(1, 4, true), pl.pos),
-            8: (pl, ctx) => ctx.selectFromRange(pl, {
+            8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 90,
                 radius: 2.5,
                 rotation: 45
@@ -315,7 +315,7 @@ class DoubleAxeMoves extends DefaultMoves {
             7: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             19: (_, ctx) => ctx.status.hegemony = false,
             10: pl => playSoundAll('weapon.whoosh.thick.' + randomRange(1, 4, true), pl.pos),
-            12: (pl, ctx) => ctx.selectFromRange(pl, {
+            12: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 120,
                 radius: 2.8,
                 rotation: 60
@@ -378,7 +378,7 @@ class DoubleAxeMoves extends DefaultMoves {
             6: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             19: (_, ctx) => ctx.status.hegemony = false,
             10: pl => playSoundAll('weapon.whoosh.thick.' + randomRange(1, 4, true), pl.pos),
-            12: (pl, ctx) => ctx.selectFromRange(pl, {
+            12: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 120,
                 radius: 2.8,
                 rotation: 60
@@ -426,7 +426,7 @@ class DoubleAxeMoves extends DefaultMoves {
             },
             8: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             20: (_, ctx) => ctx.status.hegemony = false,
-            12: (pl, ctx) => ctx.selectFromRange(pl, {
+            12: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 90,
                 radius: 2.8,
                 rotation: 45
@@ -489,7 +489,7 @@ class DoubleAxeMoves extends DefaultMoves {
             6: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             19: (_, ctx) => ctx.status.hegemony = false,
             10: pl => playSoundAll('weapon.whoosh.thick.' + randomRange(1, 4, true), pl.pos),
-            12: (pl, ctx) => ctx.selectFromRange(pl, {
+            12: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 120,
                 radius: 2.8,
                 rotation: 60
@@ -537,7 +537,7 @@ class DoubleAxeMoves extends DefaultMoves {
             },
             8: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             20: (_, ctx) => ctx.status.hegemony = false,
-            12: (pl, ctx) => ctx.selectFromRange(pl, {
+            12: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 90,
                 radius: 2.8,
                 rotation: 45
@@ -654,7 +654,7 @@ class DoubleAxeMoves extends DefaultMoves {
         timeline: {
             2: (pl, ctx) => ctx.adsorbToTarget(pl, 3, 1),
             3: pl => playSoundAll('weapon.whoosh.break_defense', pl.pos),
-            4: (pl, ctx) => ctx.selectFromRange(pl, {
+            4: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 180,
                 radius: 2.8,
                 rotation: 90,
@@ -711,7 +711,7 @@ class DoubleAxeMoves extends DefaultMoves {
         },
         timeline: {
             2: (pl, ctx) => ctx.adsorbToTarget(pl, 3, 1),
-            5: (pl, ctx) => ctx.selectFromRange(pl, {
+            5: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 120,
                 radius: 2.8,
                 rotation: 60
@@ -774,7 +774,7 @@ class DoubleAxeMoves extends DefaultMoves {
             3: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             15: (_, ctx) => ctx.status.hegemony = false,
             6: pl => playSoundAll('weapon.whoosh.thick.' + randomRange(1, 4, true), pl.pos),
-            8: (pl, ctx) => ctx.selectFromRange(pl, {
+            8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 120,
                 radius: 2.8,
                 rotation: 60

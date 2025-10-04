@@ -81,7 +81,7 @@ export class Match {
 }
 
 mc.listen('onPlayerDie', pl => {
-    Status.get(pl.uniqueId).componentManager.getComponent(Team).use(team => {
+    Status.getOrCreate(pl.uniqueId).componentManager.getComponent(Team).use(team => {
         const match = Match.findMatch(team)
         if (!match) {
             return
@@ -130,8 +130,8 @@ cmd('match', '开启对局', CommandPermission.Everyone).setup(register => {
         const source = ori.player as Player
         const { pl, rounds } = res as { pl: Player[], rounds: number }
         
-        const sourceTeamOpt = Status.get(source.uniqueId).componentManager.getComponent(Team)
-        const targetTeamOpt = Status.get(pl[0].uniqueId).componentManager.getComponent(Team)
+        const sourceTeamOpt = Status.getOrCreate(source.uniqueId).componentManager.getComponent(Team)
+        const targetTeamOpt = Status.getOrCreate(pl[0].uniqueId).componentManager.getComponent(Team)
 
         if (sourceTeamOpt.isEmpty() || targetTeamOpt.isEmpty()) {
             return out.error('必须在不同伍中才能进行对局')

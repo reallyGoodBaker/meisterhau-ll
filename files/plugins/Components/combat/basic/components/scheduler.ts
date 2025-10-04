@@ -10,6 +10,8 @@ export class Scheduler extends BaseComponent {
         public period: number = 1
     ) {
         super()
+
+        this.allowTick = true
     }
 
     onAttach(): boolean | void | Promise<boolean | void> {

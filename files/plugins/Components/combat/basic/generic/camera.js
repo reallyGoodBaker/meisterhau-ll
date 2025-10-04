@@ -97,7 +97,7 @@ const battleCamera = (pl, en) => {
         }
     }
 
-    const manager = Status.get(pl.uniqueId).componentManager
+    const manager = Status.getOrCreate(pl.uniqueId).componentManager
     const cameraComponentOpt = manager.getComponent(CameraComponent)
     if (cameraComponentOpt.isEmpty()) {
         return

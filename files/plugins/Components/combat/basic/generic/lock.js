@@ -1,4 +1,4 @@
-const { selectFromRange } = require('./range')
+const { selectFromSector } = require('./range')
 const { battleCamera, cameraInput, clearCamera } = require('./camera')
 const { knockback } = require('../../../scripts-rpc/func/kinematics')
 const { setVelocity } = require('./kinematic')
@@ -22,8 +22,8 @@ function lockTarget(src, target) {
         // cameraInput(pl, false)
         locks.set(src, target)
         pl.setMovementSpeed(DEFAULT_POSTURE_SPEED)
-        Status.get(src).componentManager.attachComponent(
-            new TargetLock(src, Optional.some(target)),
+        Status.getOrCreate(src).componentManager.attachComponent(
+            new TargetLock(Optional.some(pl), Optional.some(target)),
             new StatusHud(),
         )
     } else {
@@ -33,7 +33,7 @@ function lockTarget(src, target) {
 
 function releaseTarget(src) {
     const pl = mc.getPlayer(src)
-    const manager = Status.get(src).componentManager
+    const manager = Status.getOrCreate(src).componentManager
     manager.detachComponent(StatusHud)
     manager.detachComponent(TargetLock)
     cameraInput(pl)
@@ -72,14 +72,22 @@ function getAngle(a, b) {
     return [angleXZ - 90, -angleY]
 }
 
-function lookAt(pl, en) {
-    if (!en) {
-        return releaseTarget(pl)
+/**
+ * @param {import('../core/inputSimulator').Actor} actor 
+ * @param {import('../core/inputSimulator').Actor} target 
+ * @returns 
+ */
+function lookAt(actor, target) {
+    if (!target) {
+        return releaseTarget(actor)
     }
 
-    const [ yaw, pitch ] = getAngle(pl, en)
+    const [ yaw, pitch ] = getAngle(actor, target)
 
-    pl.teleport(pl.feetPos, new DirectionAngle(0, yaw))
+    actor.teleport(actor.feetPos, new DirectionAngle(0, yaw))
+
+    // setRotation(actor, yaw, pitch)
+
     // const bs = new BinaryStream()
     // bs.writeVarInt64(+pl.uniqueId)
     // bs.writeVec3(pl.pos)
@@ -97,19 +105,36 @@ function lookAt(pl, en) {
     //     pl.sendPacket(pack)
     // })
     // mc.runcmdEx(`execute as "${pl.name}" at @s run tp @s ~~~ ${yaw} 0 false`)
-    // faceTo(pl, en)
+    // faceTo(actor, target)
+}
+
+function getTargetFromLock(actor) {
+    return Status.getComponentManager(actor.uniqueId).match(
+        Optional.none(),
+        comps => comps.getComponent(TargetLock).match(
+            Optional.none(),
+            lock => lock.target
+        )
+    )
 }
 
 function lookAtTarget(pl) {
-    const en = locks.get(pl.uniqueId)
-    if (!en) {
+    // const en = locks.get(pl.uniqueId)
+    // if (!en) {
+    //     return
+    // }
+    const targetEntity = getTargetFromLock(pl)
+
+    if (targetEntity.isEmpty()) {
         return
     }
-    lookAt(pl, en)
+
+    lookAt(pl, targetEntity.unwrap())
 }
 
 function hasLock(pl) {
-    return locks.has(pl.uniqueId)
+    // return locks.has(pl.uniqueId)
+    return !getTargetFromLock(pl).isEmpty()
 }
 
 function adsorbTo(pl, en, max, offset=2) {
@@ -125,17 +150,17 @@ function adsorbTo(pl, en, max, offset=2) {
 }
 
 function adsorbToTarget(pl, max, offset) {
-    const en = locks.get(pl.uniqueId)
-    if (!en) {
+    const en = getTargetFromLock(pl)
+    if (en.isEmpty()) {
         return
     }
 
-    adsorbTo(pl, en, max, offset)
+    adsorbTo(pl, en.unwrap(), max, offset)
 }
 
 function adsorbOrSetVelocity(pl, max, velocityRot=90, offset=1.5) {
-    const en = locks.get(pl.uniqueId)
-    if (en) {
+    const en = getTargetFromLock(pl)
+    if (!en.isEmpty()) {
         // lookAtTarget(pl)
         adsorbToTarget(pl, max, offset)
         return
@@ -145,13 +170,14 @@ function adsorbOrSetVelocity(pl, max, velocityRot=90, offset=1.5) {
 }
 
 function distanceToTarget(pl) {
-    const en = locks.get(pl.uniqueId)
+    // const en = locks.get(pl.uniqueId)
+    const en = getTargetFromLock(pl)
 
-    if (!en) {
+    if (en.isEmpty()) {
         return Infinity
     }
 
-    return en.distanceTo(pl.pos)
+    return en.unwrap().distanceTo(pl.pos)
 }
 
 const onTick = em => () => {
@@ -176,7 +202,7 @@ function getClosedEntity(en) {
     let closed = null
         ,dist = Infinity
 
-    selectFromRange(en, {
+    selectFromSector(en, {
         radius: 10,
         angle: 46,
         rotate: -23,

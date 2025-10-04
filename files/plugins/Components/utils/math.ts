@@ -52,3 +52,19 @@ export const alerpn = (from: number[], to: number[], progress: number) => {
 
     return res
 }
+
+export interface Vector {
+    x: number
+    y: number
+    z: number
+}
+
+const PiDiv180 = Math.PI / 180.0
+
+export function yawToVec2(yaw: number) {
+    const rad = yaw * PiDiv180
+    return {
+        x: Math.cos(rad),
+        y: Math.sin(rad)
+    }
+}

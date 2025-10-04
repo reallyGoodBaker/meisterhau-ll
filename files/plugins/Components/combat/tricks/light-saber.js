@@ -118,7 +118,7 @@ class LightSaberMoves extends DefaultMoves {
             ctx.freeze(pl)
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 25,
                 rotation: -12,
                 radius: 3.2
@@ -412,7 +412,7 @@ class LightSaberMoves extends DefaultMoves {
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 radius: 3.2,
                 angle: 20,
                 rotation: -10
@@ -458,7 +458,7 @@ class LightSaberMoves extends DefaultMoves {
             pl.tell(hud(ctx.status.stamina/100, 20), 5)
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 45,
                 rotation: -22.5,
                 radius: 2.5
@@ -517,7 +517,7 @@ class LightSaberMoves extends DefaultMoves {
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 12)
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 45,
                 rotation: -22.5,
                 radius: 2.5

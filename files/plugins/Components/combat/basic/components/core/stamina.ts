@@ -27,6 +27,8 @@ export class Stamina extends CustomComponent {
     ) {
         super()
         this.prevStamina = this.stamina
+
+        this.allowTick = true
     }
 
     async resetRestore(manager: ComponentManager) {

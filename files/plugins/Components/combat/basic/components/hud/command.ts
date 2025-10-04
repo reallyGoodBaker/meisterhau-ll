@@ -8,10 +8,10 @@ export function registerHudCommands() {
             const { enabled } = res as { enabled: boolean }
             if (enabled) {
                 const id = ori.player?.uniqueId ?? ori.entity?.uniqueId!
-                Status.get(id).componentManager.attachComponent(new HurtDisplay())
+                Status.getOrCreate(id).componentManager.attachComponent(new HurtDisplay())
             } else {
                 const id = ori.player?.uniqueId ?? ori.entity?.uniqueId!
-                Status.get(id).componentManager.detachComponent(HurtDisplay)
+                Status.getOrCreate(id).componentManager.detachComponent(HurtDisplay)
             }
         })
     })

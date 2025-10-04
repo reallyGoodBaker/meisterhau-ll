@@ -1,3 +1,4 @@
+import { Optional } from '@utils/optional'
 import { CameraComponent } from '../components/camera'
 import { Stamina } from '../components/core/stamina'
 import { ComponentManager } from './component'
@@ -10,6 +11,14 @@ export const defaultAcceptableInputs = [
 export class Status {
     static readonly status = new Map<string, Status>()
     static get(uniqueId: string) {
+        return this.status.get(uniqueId)
+    }
+
+    static getComponentManager(uniqueId: string) {
+        return Optional.some(this.get(uniqueId)?.componentManager)
+    }
+
+    static getOrCreate(uniqueId: string) {
         return this.status.get(uniqueId) || new Status(uniqueId)
     }
 

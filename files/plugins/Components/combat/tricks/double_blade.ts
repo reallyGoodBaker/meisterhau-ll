@@ -156,7 +156,7 @@ class DoubleBladeMoves extends DefaultMoves {
             6: pl => playSoundAll('weapon.woosh.2', pl.pos),
             5: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             8: (pl, ctx) => {
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     angle: 40,
                     radius: 2.2,
                     rotation: -20
@@ -241,7 +241,7 @@ class DoubleBladeMoves extends DefaultMoves {
             4: (pl, ctx) => setVelocityByOrientation(pl as Player, ctx, 1.4, 1),
             6: pl => playSoundAll('weapon.woosh.2', pl.pos),
             5: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
-            8: (pl, ctx) => ctx.selectFromRange(pl, {
+            8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 40,
                 radius: 2.2,
                 rotation: -20
@@ -323,7 +323,7 @@ class DoubleBladeMoves extends DefaultMoves {
             6: pl => playSoundAll('weapon.woosh.2', pl.pos),
             5: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             8: (pl, ctx) => 
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     angle: 40,
                     radius: 2.2,
                     rotation: -20
@@ -402,7 +402,7 @@ class DoubleBladeMoves extends DefaultMoves {
             6: pl => playSoundAll('weapon.woosh.2', pl.pos),
             5: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             8: (pl, ctx) =>
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     angle: 40,
                     radius: 2.2,
                     rotation: -20
@@ -503,7 +503,7 @@ class DoubleBladeMoves extends DefaultMoves {
         },
         onAct(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 20
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 120,
                 radius: 2.8,
                 rotation: -60
@@ -567,7 +567,7 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 60,
                 radius: 2,
                 rotation: -30
@@ -614,7 +614,7 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 120,
                 radius: 2.8,
                 rotation: -60
@@ -751,7 +751,7 @@ class DoubleBladeMoves extends DefaultMoves {
         },
         timeline: {
             1: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90, 1),
-            4: (pl, ctx) => ctx.selectFromRange(pl, {
+            4: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 120,
                 radius: 2.5,
                 rotation: -60
@@ -810,7 +810,7 @@ class DoubleBladeMoves extends DefaultMoves {
         timeline: {
             6: pl => playSoundAll('weapon.woosh.2', pl.pos),
             7: (pl, ctx) => {
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     angle: 40,
                     radius: 2.2,
                     rotation: -20
@@ -884,7 +884,7 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.status.repulsible = true
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 60,
                 radius: 2.8,
                 rotation: -30

@@ -1,12 +1,15 @@
 import { Timer } from '@combat/basic/components/timer'
 import { initCombatComponent } from '../../core'
-import { Status } from '../../status'
 import { ai, AIEventTriggerContext, MeisterhauAI, MeisterhauAIState } from '../core'
 import { tricks } from '../../../../tricks/ornateTwoHander'
+import { EasyAISensing } from '../easyAiSensing'
+import { AiActions } from '../aiActions'
 
 export class Guard extends MeisterhauAI {
 
     target: Entity | null = null
+    readonly actions = new AiActions(this.actor)
+    readonly sensing = new EasyAISensing(this)
 
     async onStart() {
         initCombatComponent(this.actor, tricks, this.status)
@@ -35,40 +38,56 @@ export class Guard extends MeisterhauAI {
         }
     }
 
+    async tryAcquireTarget() {
+        if (!this.sensing.hasTarget()) {
+            this.actions.lookAtNearest(8, [ 'player' ])
+            await this.waitTick()
+            return this.actions.setForwardActorAsTarget(8)
+        }
+
+        return true
+    }
+
+    async tryReleaseTarget() {
+        if (this.sensing.hasTarget() && !this.sensing.targetInRange(10)) {
+            this.actions.removeTarget()
+        }
+    }
+
     getCrazyStrategy() {
         const self = this
-        const [ inRangeSignal ] = this.signal('inRange', (_, ctx) => {
-            this.target = ctx.actor.getEntityFromViewVector(5)
-            if (this.target) {
-                return true
-            }
-
-            return false
-        })
 
         async function *moves() {
             // 使动作反复循环，直到AI停止
             while (!self.stopped) {
                 await self.waitTick()
 
-                if (!inRangeSignal()) {
+                // 没有获得到目标
+                if (!await self.tryAcquireTarget()) {
+                    continue
+                }
+
+                // 在目标离开射程时释放目标
+                self.tryReleaseTarget()
+
+                if (!self.sensing.targetInRange(5)) {
                     continue
                 }
 
                 const randomAct = Math.floor(Math.random() * 3)
                 switch (randomAct) {
                     case 1:
-                        yield () => self.attack()
+                        yield () => self.actions.attack()
                         await self.wait(800)
                         break
                 
                     case 2:
-                        yield () => self.useItem()
+                        yield () => self.actions.useItem()
                         await self.wait(800)
                         break
                 
                     case 3:
-                        yield () => self.sneak()
+                        yield () => self.actions.sneak()
                         await self.wait(800)
                         break
                 }
@@ -80,35 +99,6 @@ export class Guard extends MeisterhauAI {
 
     getDefaultStrategy() {
         const self = this
-        const [ inRangeSignal ] = this.signal('inRange', (_, { actor }) => {
-            this.target = actor.getEntityFromViewVector(5)
-            if (this.target) {
-                return true
-            }
-
-            return false
-        })
-
-        const [ isBlockingSignal ] = this.signal('isBlocking', () => {
-            if (!this.target) {
-                return false
-            }
-            return Status.get(this.target.uniqueId).isBlocking
-        })
-
-        const [ isPlayerInputSignal ] = this.signal<(keyof InputableTransitionMap)[]>('isPlayerInput', (input: (keyof InputableTransitionMap)[]) => {
-            if (!this.target) {
-                return false
-            }
-
-            const preinput = Status.get(this.target.uniqueId)?.preInput
-            if (!preinput) {
-                return false
-            }
-
-
-            return input.includes(preinput as keyof InputableTransitionMap) 
-        })
 
         // 60 ticks 后进入要是玩家还不操作就自动攻击
         // 这里先获得一个计时器
@@ -120,53 +110,61 @@ export class Guard extends MeisterhauAI {
                 // 等待下一个游戏刻防止卡死
                 await self.waitTick()
 
+                // 没有获得到目标
+                if (!await self.tryAcquireTarget()) {
+                    continue
+                }
+
+                // 在目标离开射程时释放目标
+                self.tryReleaseTarget()
+
                 // 等待目标进入射程
-                if (!inRangeSignal()) {
+                if (!self.sensing.targetInRange(5)) {
                     // 重置时间防止攻击意图消失
                     attackIntent.reset()
                     continue
                 }
 
                 // 玩家输入闪避
-                if (isPlayerInputSignal([ 'onDodge' ])) {
+                if (self.sensing.hasTargetInputed('onDodge')) {
                     // 使用 yield 返回一个函数，而不是直接调用，这样可以让这个函数的执行时机被合理安排
-                    yield () => self.attack() as any
+                    yield () => self.actions.attack() as any
                     await self.wait(800)
                     // 玩家匆忙操作时通过连段进行惩罚
-                    if (isPlayerInputSignal([ 'onAttack', 'onUseItem', 'onDodge' ])) {
-                        yield () => self.attack()
+                    if (self.sensing.hasTargetInputed('onAttack', 'onUseItem', 'onDodge')) {
+                        yield () => self.actions.attack()
                         await self.wait(1400)
                     }
                     continue
                 }
 
                 // 玩家输入攻击
-                if (isPlayerInputSignal([ 'onUseItem' ])) {
+                if (self.sensing.hasTargetInputed('onAttack')) {
                     // 霸体换血
-                    yield () => self.useItem()
+                    yield () => self.actions.useItem()
                     await self.wait(800)
                     // 玩家匆忙操作时通过连段进行惩罚
-                    if (isPlayerInputSignal([ 'onAttack', 'onUseItem', 'onDodge' ])) {
-                        yield () => self.useItem()
+                    if (self.sensing.hasTargetInputed('onAttack', 'onUseItem', 'onDodge')) {
+                        yield () => self.actions.useItem()
                         await self.wait(1400)
                     }
                     continue
                 }
 
                 // 玩家在格挡
-                if (isBlockingSignal()) {
+                if (self.sensing.targetIsBlocking()) {
                     // 火刀破防
-                    yield () => self.sneak()
+                    yield () => self.actions.sneak()
                     await self.wait(400)
                     // 玩家尝试闪避、攻击打断、招架时取消出招
-                    if (isPlayerInputSignal([ 'onDodge', 'onAttack', 'onUseItem' ])) {
-                        yield () => self.feint()
+                    if (self.sensing.hasTargetInputed('onDodge', 'onAttack', 'onUseItem')) {
+                        yield () => self.actions.feint()
                         await self.wait(100)
                         // 霸体换血
-                        yield () => self.useItem()
+                        yield () => self.actions.useItem()
                         await self.wait(950)
                         // 连段，惩罚心慌的玩家
-                        yield () => self.useItem()
+                        yield () => self.actions.useItem()
                         await self.wait(1800)
                         continue
                     }
@@ -178,17 +176,17 @@ export class Guard extends MeisterhauAI {
                     // 立刻释放, 防止卡死
                     attackIntent.reset()
                     // 60 ticks 后进入要是玩家还不操作就自动攻击
-                    yield () => self.sneak()
+                    yield () => self.actions.sneak()
                     await self.wait(400)
                     // 玩家尝试闪避、攻击打断、招架时取消出招
-                    if (isPlayerInputSignal([ 'onDodge', 'onAttack', 'onUseItem' ])) {
-                        yield () => self.feint()
+                    if (self.sensing.hasTargetInputed('onDodge', 'onAttack', 'onUseItem')) {
+                        yield () => self.actions.feint()
                         await self.wait(100)
                         // 霸体换血
-                        yield () => self.attack()
+                        yield () => self.actions.attack()
                         await self.wait(950)
                         // 连段，惩罚心慌的玩家
-                        yield () => self.attack()
+                        yield () => self.actions.attack()
                         await self.wait(1400)
                         continue
                     }
@@ -203,9 +201,9 @@ export class Guard extends MeisterhauAI {
     getLeftComboStrategy() {
         const ai = this
         async function *moves() {
-            yield () => ai.attack()
+            yield () => ai.actions.attack()
             await ai.wait(800)
-            yield () => ai.attack()
+            yield () => ai.actions.attack()
             await ai.wait(2000)
         }
 

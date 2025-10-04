@@ -40,7 +40,7 @@ class KokorowatariMoves extends DefaultMoves {
             ctx.lookAtTarget(actor)
         },
         timeline: {
-            9: (actor, ctx) => ctx.selectFromRange(actor, {
+            9: (actor, ctx) => ctx.selectFromSector(actor, {
                 radius: 4,
             }).forEach(en => {
                 ctx.attack(actor, en, {
@@ -71,7 +71,7 @@ class Kokorowatari extends DefaultTrickModule {
     constructor() {
         super(
             // 只要不重复可以随便写
-            'rgb:ai/shinobu',
+            'rgb.shinobu',
             // 动作模组的默认起始状态
             'idle',
             [ 'monogatari:kokorowatari' ],

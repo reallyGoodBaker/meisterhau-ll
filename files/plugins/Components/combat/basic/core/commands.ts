@@ -18,7 +18,7 @@ export function registerCommand() {
                 const component = componentCtor.create(_args)
 
                 for (const target of targets) {
-                    Status.get(target.uniqueId).componentManager.attachComponent(component)
+                    Status.getOrCreate(target.uniqueId).componentManager.attachComponent(component)
                 }
     
                 output.success(`已为 ${targets.length} 个玩家添加组件 '${args.name}'`)
@@ -35,7 +35,7 @@ export function registerCommand() {
             }
 
             for (const terget of targets) {
-                Status.get(terget.uniqueId).componentManager.detachComponent(componentCtor)
+                Status.get(terget.uniqueId)?.componentManager.detachComponent(componentCtor)
             }
 
             output.success(`已为 ${targets.length} 个玩家移除组件 '${args.name}'`)
@@ -121,7 +121,11 @@ export function registerCommand() {
             }
 
             for (const target of pl) {
-                const manager = Status.get(target.uniqueId).componentManager
+                const manager = Status.get(target.uniqueId)?.componentManager
+
+                if (!manager) {
+                    continue
+                }
 
                 manager.update(componentCtor, component => {
                     const _args = jsonArgs ? JSON.parse(jsonArgs) : undefined

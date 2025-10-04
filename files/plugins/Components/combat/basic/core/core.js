@@ -2,7 +2,7 @@ const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } =
 const { combat: { damage: _damage, _damageLL } } = require('../../../scripts-rpc/func/index')
 const { playAnim, playParticle } = require('../index')
 const { movement, camera, movementInput } = require('../generic/index')
-const { selectFromRange } = require('../generic/range')
+const { selectFromSector } = require('../generic/range')
 const { Status, defaultAcceptableInputs } = require('./status')
 const { Task } = require('../generic/task')
 const {
@@ -24,14 +24,7 @@ const { em, es } = require('./event')
 const { listenEntitiyWithAi, ai } = require('./ai/core')
 const { setupAiCommands } = require('./ai')
 const { registerHudCommands } = require('../components/hud/command')
-
-const yawToVec2 = yaw => {
-    const rad = yaw * Math.PI / 180.0
-    return {
-        x: Math.cos(rad),
-        y: Math.sin(rad)
-    }
-}
+const { yawToVec2 } = require('../../../utils/math')
 
 function isEntity(actor) {
     return Boolean(actor?.type)
@@ -101,7 +94,7 @@ const mobEvents = [
 /**@type {Map<string, Status>}*/
 
 /**@type {(pl: any) => Status}*/
-const _status = pl => Status.get(pl.uniqueId)
+const _status = pl => Status.getOrCreate(pl.uniqueId)
 
 function freeze(pl) {
     movement(pl, false)
@@ -152,7 +145,7 @@ function _ctx(pl, mixins={}) {
         camera,
         movement,
         movementInput,
-        selectFromRange,
+        selectFromSector,
         knockback,
         attack,
         freeze,
@@ -181,7 +174,7 @@ function _ctx(pl, mixins={}) {
 }
 
 function watchMainhandChange(pl) {
-    const status = Status.get(pl.uniqueId)
+    const status = Status.getOrCreate(pl.uniqueId)
     const hand = pl.getHand()?.type ?? 'minecraft:air'
     
     status.hand = hand
@@ -237,13 +230,13 @@ const dataPackers = {
         }
     },
     onEndOfLife(args) {
-        const status = Status.get(args[0].uniqueId)
+        const status = Status.getOrCreate(args[0].uniqueId)
         return {
             preInput: status.preInput
         }
     },
     onTrap([pl, data]) {
-        const status = Status.get(pl.uniqueId)
+        const status = Status.getOrCreate(pl.uniqueId)
         return {
             preInput: status.preInput,
             ...data
@@ -261,7 +254,7 @@ const dataPackers = {
     },
     onHurt([ pl ]) {
         return {
-            hegemony: Status.get(pl.uniqueId).hegemony
+            hegemony: Status.getOrCreate(pl.uniqueId).hegemony
         }
     }
 }
@@ -480,7 +473,7 @@ function listenPlayerItemChange(mods) {
     })
 
     em.on('onChangeMainhand', (pl, hand, old) => {
-        const status = Status.get(pl.uniqueId)
+        const status = Status.getOrCreate(pl.uniqueId)
         const oldBind = getMod(old)
 
         if (!status) {
@@ -619,7 +612,7 @@ function listenAllCustomEvents(mods) {
         } = damageOpt
 
         const victimIsEntity = !victim.xuid
-        const abuserStatus = Status.get(abuser.uniqueId)
+        const abuserStatus = Status.getOrCreate(abuser.uniqueId)
 
         if (victimIsEntity && !ai.isRegistered(victim)) {
             transition(
@@ -641,7 +634,7 @@ function listenAllCustomEvents(mods) {
             )
         }
 
-        const victimStatus = Status.get(victim.uniqueId)
+        const victimStatus = Status.getOrCreate(victim.uniqueId)
 
         const _knockback = (h, repulsible) => {
             if (powerful || repulsible) {
@@ -725,7 +718,7 @@ function listenAllCustomEvents(mods) {
     })
 
     em.on('deflect', (abuser, victim, damageOpt) => {
-        const aStatus = Status.get(abuser.uniqueId)
+        const aStatus = Status.getOrCreate(abuser.uniqueId)
         transition(
             abuser,
             getModCompatibility(abuser),
@@ -735,7 +728,7 @@ function listenAllCustomEvents(mods) {
             [abuser, victim, damageOpt]
         )
 
-        const vStatus = Status.get(victim.uniqueId)
+        const vStatus = Status.getOrCreate(victim.uniqueId)
         transition(
             victim,
             getModCompatibility(victim),
@@ -747,7 +740,7 @@ function listenAllCustomEvents(mods) {
     })
 
     em.on('dodge', (abuser, victim, damageOpt) => {
-        const aStatus = Status.get(abuser.uniqueId)
+        const aStatus = Status.getOrCreate(abuser.uniqueId)
         transition(
             abuser,
             getModCompatibility(abuser),
@@ -757,7 +750,7 @@ function listenAllCustomEvents(mods) {
             [abuser, victim, damageOpt]
         )
 
-        const vStatus = Status.get(victim.uniqueId)
+        const vStatus = Status.getOrCreate(victim.uniqueId)
         transition(
             victim,
             getModCompatibility(victim),
@@ -769,7 +762,7 @@ function listenAllCustomEvents(mods) {
     })
 
     em.on('parried', (abuser, victim, damageOpt) => {
-        const aStatus = Status.get(abuser.uniqueId)
+        const aStatus = Status.getOrCreate(abuser.uniqueId)
         transition(
             abuser,
             getModCompatibility(abuser),
@@ -779,7 +772,7 @@ function listenAllCustomEvents(mods) {
             [abuser, victim, damageOpt]
         )
 
-        const vStatus = Status.get(victim.uniqueId)
+        const vStatus = Status.getOrCreate(victim.uniqueId)
         transition(
             victim,
             getModCompatibility(victim),
@@ -794,7 +787,7 @@ function listenAllCustomEvents(mods) {
         transition(
             abuser,
             getModCompatibility(abuser),
-            Status.get(abuser.uniqueId),
+            Status.getOrCreate(abuser.uniqueId),
             'onBlocked',
             Function.prototype,
             [abuser, victim, damageOpt]
@@ -803,7 +796,7 @@ function listenAllCustomEvents(mods) {
         transition(
             victim,
             getModCompatibility(victim),
-            Status.get(victim.uniqueId),
+            Status.getOrCreate(victim.uniqueId),
             'onBlock',
             Function.prototype,
             [victim, abuser, damageOpt]
@@ -822,7 +815,7 @@ function listenAllCustomEvents(mods) {
         transition(
             abuser,
             getModCompatibility(abuser),
-            Status.get(abuser.uniqueId),
+            Status.getOrCreate(abuser.uniqueId),
             'onHit',
             Function.prototype,
             [abuser, victim, damageOpt]
@@ -831,7 +824,7 @@ function listenAllCustomEvents(mods) {
         let flag = true,
             prevent = () => flag = false
 
-        const victimStatus = Status.get(victim.uniqueId)
+        const victimStatus = Status.getOrCreate(victim.uniqueId)
         const victimMod = getModCompatibility(victim)
 
         if (!victimStatus.hegemony) {
@@ -865,7 +858,7 @@ function listenAllCustomEvents(mods) {
         transition(
             victim,
             getModCompatibility(victim),
-            Status.get(victim.uniqueId),
+            Status.getOrCreate(victim.uniqueId),
             'onHurtByMob',
             prevent,
             [ victim, abuser, damageOpt ]
@@ -873,10 +866,10 @@ function listenAllCustomEvents(mods) {
     })
 
     em.on('knockdown', (abuser, victim, knockbackStrength, time=30) => {
-        const aStatus = Status.get(abuser.uniqueId)
+        const aStatus = Status.getOrCreate(abuser.uniqueId)
         const aMod = getMod(aStatus.hand)
 
-        const vStatus = Status.get(victim.uniqueId)
+        const vStatus = Status.getOrCreate(victim.uniqueId)
         const vMod = getMod(vStatus.hand)
 
         if (vStatus && !vStatus.repulsible) {
@@ -899,7 +892,7 @@ function listenAllCustomEvents(mods) {
     // TODO
     em.on('onReleaseLock', (pl) => {
         const bind = getModCompatibility(pl)
-        const status = Status.get(pl.uniqueId)
+        const status = Status.getOrCreate(pl.uniqueId)
 
         if (!bind || !status) {
             return
@@ -910,7 +903,7 @@ function listenAllCustomEvents(mods) {
 
     em.on('onLock', (pl, hand, target) => {
         const bind = getModCompatibility(pl)
-        const status = Status.get(pl.uniqueId)
+        const status = Status.getOrCreate(pl.uniqueId)
 
         if (!bind || !status) {
             return
@@ -921,7 +914,7 @@ function listenAllCustomEvents(mods) {
 
     em.on('onFeint', (pl, hand, prevent) => {
         const bind = getModCompatibility(pl)
-        const status = Status.get(pl.uniqueId)
+        const status = Status.getOrCreate(pl.uniqueId)
 
         if (!bind || !status) {
             return
@@ -931,7 +924,7 @@ function listenAllCustomEvents(mods) {
     })
 
     em.on('trap', (pl, data) => {
-        const status = Status.get(pl.uniqueId)
+        const status = Status.getOrCreate(pl.uniqueId)
         const bind = getModCompatibility(pl)
 
         if (!bind || !status) {
@@ -975,7 +968,7 @@ function listenAllMcEvents(collection) {
             return true
         }
 
-        const status = Status.get(args[0].uniqueId)
+        const status = Status.getOrCreate(args[0].uniqueId)
         const inputable = status.acceptableInput(type)
 
         if (inputable) {
@@ -998,7 +991,7 @@ function listenAllMcEvents(collection) {
                 return
             }
 
-            const status = Status.get(pl.uniqueId)
+            const status = Status.getOrCreate(pl.uniqueId)
             const mod = ai.getRegistration(pl.type)[1]
 
             if (!mod) {
@@ -1043,7 +1036,7 @@ function listenAllMcEvents(collection) {
         if (hasLock(pl)) {
             if (toggleLock(pl.uniqueId) === null) {
                 const mod = getModCompatibility(pl)
-                const status = Status.get(pl.uniqueId)
+                const status = Status.getOrCreate(pl.uniqueId)
 
                 clearCamera(pl)
                 initCombatComponent(pl, mod, status)
@@ -1182,7 +1175,7 @@ function listenAllMcEvents(collection) {
 
     mc.listen('onAttackEntity', pl => {
         es.put('onAttack', [pl, Function.prototype, [ pl ]])
-        const status = Status.get(pl.uniqueId)
+        const status = Status.getOrCreate(pl.uniqueId)
 
         status.acceptableInput('onAttack', false)
         setTimeout(() => {
@@ -1193,7 +1186,7 @@ function listenAllMcEvents(collection) {
 
     mc.listen('onAttackBlock', pl => {
         es.put('onAttack', [pl, Function.prototype, [ pl ]])
-        const status = Status.get(pl.uniqueId)
+        const status = Status.getOrCreate(pl.uniqueId)
 
         status.acceptableInput('onAttack', false)
         setTimeout(() => {
@@ -1208,7 +1201,7 @@ function listenAllMcEvents(collection) {
         setTimeout(() => {
             unfreeze(pl)
             clearCamera(pl)
-            initCombatComponent(pl, getModCompatibility(pl), Status.get(pl.uniqueId))
+            initCombatComponent(pl, getModCompatibility(pl), Status.getOrCreate(pl.uniqueId))
         }, 300)
     })
 

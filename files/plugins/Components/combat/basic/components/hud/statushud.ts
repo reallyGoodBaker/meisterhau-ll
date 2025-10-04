@@ -44,7 +44,7 @@ export class StatusHud extends HudComponent {
             }
 
             const target = lock.target.unwrap()
-            this.targetStamina = Status.get((target as Player).uniqueId).componentManager.getComponent(Stamina)
+            this.targetStamina = Status.getOrCreate((target as Player).uniqueId).componentManager.getComponent(Stamina)
         })
     }
 

@@ -15,6 +15,7 @@ export class Timer extends BaseComponent {
         public readonly duration: number = 0
     ) {
         super()
+        this.allowTick = true
         this.rest = this.duration
     }
 

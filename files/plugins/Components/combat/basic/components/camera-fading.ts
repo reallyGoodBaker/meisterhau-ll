@@ -31,6 +31,7 @@ export class CameraFading extends BaseComponent {
         super()
         const lastTo = config[config.length - 1].to
 
+        this.allowTick = true
         this.config = config
         this.last = [ 'linear', lastTo, lastTo, 1 ]
     }
@@ -125,7 +126,7 @@ export class CameraFading extends BaseComponent {
                 break
         }
 
-        const manager = Status.get((abuser as Player).uniqueId).componentManager
+        const manager = Status.getOrCreate((abuser as Player).uniqueId).componentManager
         manager.beforeTick(() => {
             manager.attachComponent(new CameraFading([
                 {

@@ -140,7 +140,7 @@ module.exports = {
             },
             onAct(pl, ctx) {
                 playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1)
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 3,
                     angle: 45,
                     rotation: -20,
@@ -191,7 +191,7 @@ module.exports = {
             },
             onAct(pl, ctx) {
                 playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1)
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 3,
                     angle: 30,
                     rotation: -15,
@@ -283,7 +283,7 @@ module.exports = {
             },
             onAct(pl, ctx) {
                 playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1)
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 2.6,
                     angle: 60,
                     rotation: -30
@@ -329,7 +329,7 @@ module.exports = {
             },
             onAct(pl, ctx) {
                 playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1)
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 3,
                     angle: 80,
                     rotation: -40
@@ -403,7 +403,7 @@ module.exports = {
             },
             onAct(pl, ctx) {
                 playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1)
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 3.5,
                     angle: 30,
                     rotation: -15
@@ -448,7 +448,7 @@ module.exports = {
             },
             onAct(pl, ctx) {
                 playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1)
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 3.5,
                     angle: 90,
                     rotation: -45
@@ -571,7 +571,7 @@ module.exports = {
                 ctx.adsorbOrSetVelocity(pl, 3, 90)
             },
             onAct(pl, ctx) {
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 2.6,
                     angle: 60,
                     rotation: -30

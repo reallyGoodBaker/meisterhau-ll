@@ -176,7 +176,7 @@ class ShieldSwordMoves extends DefaultMoves {
         },
         onAct(pl, ctx) {
             playSoundAll(`weapon.woosh.${randomRange(1, 3, true)}`, pl.pos, 1)
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 radius: 2.8,
                 angle: 60,
                 rotation: -30
@@ -238,7 +238,7 @@ class ShieldSwordMoves extends DefaultMoves {
         onAct(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10
             playSoundAll(`weapon.woosh.${randomRange(3, 5, true)}`, pl.pos, 1)
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 40,
                 rotation: -20,
                 radius: 3.2
@@ -285,7 +285,7 @@ class ShieldSwordMoves extends DefaultMoves {
             ctx.unfreeze(pl)
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 radius: 1,
                 angle: 120,
                 rotation: -60
@@ -351,7 +351,7 @@ class ShieldSwordMoves extends DefaultMoves {
         },
         onAct(pl, ctx) {
             playSoundAll(`weapon.woosh.${randomRange(1, 2, true)}`, pl.pos, 1)
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 radius: 3,
                 angle: 46,
                 rotation: -23
@@ -509,7 +509,7 @@ class ShieldSwordMoves extends DefaultMoves {
         },
         onAct(pl, ctx) {
             ctx.lookAtTarget(pl)
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 radius: 3,
                 angle: 120,
                 rotation: -90,
@@ -524,7 +524,7 @@ class ShieldSwordMoves extends DefaultMoves {
         },
         timeline: {
             4: (pl, ctx) => {
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 2.5,
                     angle: 120,
                     rotation: -60,
@@ -582,7 +582,7 @@ class ShieldSwordMoves extends DefaultMoves {
         },
         onAct(pl, ctx) {
             playSoundAll(`weapon.woosh.${randomRange(1,3, true)}`, pl.pos, 1)
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 30,
                 rotation: -15,
                 radius: 3.5,

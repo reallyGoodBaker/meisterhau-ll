@@ -140,7 +140,7 @@ class UchigatanaMoves extends DefaultMoves {
                 setVelocityByOrientation(pl as Player, ctx, 1.5)
             },
             6: pl => playSoundAll(`weapon.woosh.2`, pl.pos, 1),
-            7: (pl, ctx) => ctx.selectFromRange(pl).forEach(en => {
+            7: (pl, ctx) => ctx.selectFromSector(pl).forEach(en => {
                 ctx.attack(pl, en, {
                     damage: 12,
                     direction: 'right',
@@ -210,7 +210,7 @@ class UchigatanaMoves extends DefaultMoves {
             9: pl => playSoundAll(`weapon.woosh.2`, pl.pos, 1),
             11: (pl, ctx) => {
                 ctx.components.getComponent(Stamina).unwrap().stamina -= 10
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 3,
                     angle: 180,
                     rotation: -90,
@@ -301,7 +301,7 @@ class UchigatanaMoves extends DefaultMoves {
         timeline: {
             3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
             9: pl => playSoundAll(`weapon.woosh.2`, pl.pos, 1),
-            10: (pl, ctx) => ctx.selectFromRange(pl, {
+            10: (pl, ctx) => ctx.selectFromSector(pl, {
                 radius: 2.6,
                 angle: 40,
                 rotation: 20,
@@ -347,7 +347,7 @@ class UchigatanaMoves extends DefaultMoves {
             7: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             14: (pl, ctx) => {
                 ctx.components.getComponent(Stamina).unwrap().stamina -= 15
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 2.6,
                     angle: 40,
                     rotation: 20,
@@ -605,7 +605,7 @@ class UchigatanaMoves extends DefaultMoves {
         timeline: {
             1: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
             5: pl => playSoundAll(`weapon.woosh.3`, pl.pos, 1),
-            6: (pl, ctx) => ctx.selectFromRange(pl, {
+            6: (pl, ctx) => ctx.selectFromSector(pl, {
                 radius: 2.4,
                 angle: 40,
                 rotation: -20,
@@ -658,7 +658,7 @@ class UchigatanaMoves extends DefaultMoves {
         },
         timeline: {
             3: pl => playSoundAll(`weapon.woosh.3`, pl.pos, 1),
-            4: (pl, ctx) => ctx.selectFromRange(pl, {
+            4: (pl, ctx) => ctx.selectFromSector(pl, {
                 radius: 2.4,
                 angle: 90,
                 rotation: -45,
@@ -710,7 +710,7 @@ class UchigatanaMoves extends DefaultMoves {
         },
         timeline: {
             3: pl => playSoundAll(`weapon.woosh.3`, pl.pos, 1),
-            4: (pl, ctx) => ctx.selectFromRange(pl, {
+            4: (pl, ctx) => ctx.selectFromSector(pl, {
                 radius: 2.4,
                 angle: 90,
                 rotation: -45,
@@ -773,7 +773,7 @@ class UchigatanaMoves extends DefaultMoves {
             },
             13: (pl, ctx) => {
                 ctx.components.getComponent(Stamina).unwrap().stamina -= 15
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 2.4,
                     angle: 90,
                     rotation: -45,
@@ -841,7 +841,7 @@ class UchigatanaMoves extends DefaultMoves {
             },
             13: (pl, ctx) => {
                 ctx.components.getComponent(Stamina).unwrap().stamina -= 15
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 2.4,
                     angle: 90,
                     rotation: -45,
@@ -995,7 +995,7 @@ class UchigatanaMoves extends DefaultMoves {
             5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90),
             8: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
             9: pl => playSoundAll(`weapon.woosh.2`, pl.pos, 1),
-            10: (pl, ctx) => ctx.selectFromRange(pl, {
+            10: (pl, ctx) => ctx.selectFromSector(pl, {
                 radius: 2.5,
                 angle: 90,
                 rotation: -45,
@@ -1061,7 +1061,7 @@ class UchigatanaMoves extends DefaultMoves {
                 ctx.adsorbOrSetVelocity(pl, 1, 90)
             },
             9: (pl, ctx) => {
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 2.5,
                     angle: 120,
                     rotation: -60,

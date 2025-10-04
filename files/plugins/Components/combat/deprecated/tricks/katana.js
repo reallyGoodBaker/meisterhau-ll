@@ -54,7 +54,7 @@ module.exports = {
             onAct(pl, ctx) {
                 ctx.setVelocity(pl, 90, 0.8, 0)
                 ctx.camera(pl, false)
-                const targets = ctx.selectFromRange(pl, {
+                const targets = ctx.selectFromSector(pl, {
                     angle: 10,
                     rotation: -5,
                     radius: 5
@@ -124,7 +124,7 @@ module.exports = {
                 ctx.freeze(pl)
                 playAnim(pl, 'animation.twohanded.pry.draw')
 
-                const entities = ctx.selectFromRange(pl, {
+                const entities = ctx.selectFromSector(pl, {
                     radius: 4,
                     angle: 120,
                     rotation: -60
@@ -157,9 +157,9 @@ module.exports = {
                 playAnim(pl, `animation.twohanded.chop.${Math.random() > 0.5? 'left': 'right'}`, 'animation.general.stand', 0.2)
             },
             onAct(pl, ctx) {
-                const { selectFromRange } = ctx
+                const { selectFromSector } = ctx
 
-                const entities = selectFromRange(pl, {
+                const entities = selectFromSector(pl, {
                     radius: 2.2,
                     angle: 90,
                     rotation: -45
@@ -264,7 +264,7 @@ module.exports = {
                 ctx.setVelocity(pl, 90, 1, 0)
                 playAnim(pl, 'animation.twohanded.pry.draw')
                 
-                const entities = ctx.selectFromRange(pl, {
+                const entities = ctx.selectFromSector(pl, {
                     radius: 3.5,
                     angle: 60,
                     rotation: -30

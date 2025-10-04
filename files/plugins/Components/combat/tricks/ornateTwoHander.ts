@@ -1,4 +1,4 @@
-import { entitySelector, playAnimCompatibility, playAnimEntity } from "@combat/basic"
+import { playAnimCompatibility } from "@combat/basic"
 import { DefaultMoves, DefaultTrickModule } from "@combat/basic/default"
 
 // 不继承自DefaultMoves也可以，但是会少很多预设的状态
@@ -16,8 +16,8 @@ class OrnateTwoHanderMoves extends DefaultMoves {
         cast: Infinity,
         // 在这个状态时每一刻执行的代码
         onTick(pl, ctx) {
-            // 让npc面向玩家
-            mc.runcmdEx(`execute as ${entitySelector(pl as Entity)} at @s run tp ~~~ facing @p`)
+            // 面向目标
+            ctx.lookAtTarget(pl)
         },
         // 状态转换
         transitions: {
@@ -41,8 +41,8 @@ class OrnateTwoHanderMoves extends DefaultMoves {
     left: Move = {
         cast: 27,
         onEnter(pl, ctx) {
-            mc.runcmdEx(`execute as ${entitySelector(pl as Entity)} at @s run tp ~~~ facing @p`)
-            playAnimEntity(pl as Entity, 'animation.weapon.ai.guard.attack.left')
+            ctx.lookAtTarget(pl)
+            playAnimCompatibility(pl, 'animation.weapon.ai.guard.attack.left')
             ctx.status.hegemony = true
         },
         onLeave(pl, ctx) {
@@ -59,7 +59,7 @@ class OrnateTwoHanderMoves extends DefaultMoves {
                 ctx.setVelocity(pl, 90, 1, 0)
             },
             12: (pl, ctx) => {
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     angle: 120,
                     radius: 3,
                     rotation: -60
@@ -94,8 +94,8 @@ class OrnateTwoHanderMoves extends DefaultMoves {
     top: Move = {
         cast: 27,
         onEnter(pl, ctx) {
-            mc.runcmdEx(`execute as ${entitySelector(pl as Entity)} at @s run tp ~~~ facing @p`)
-            playAnimEntity(pl as Entity, 'animation.weapon.ai.guard.attack.top')
+            ctx.lookAtTarget(pl)
+            playAnimCompatibility(pl, 'animation.weapon.ai.guard.attack.top')
         },
         timeline: {
             2: (pl, ctx) => {
@@ -111,7 +111,7 @@ class OrnateTwoHanderMoves extends DefaultMoves {
                 ctx.setVelocity(pl, 90, 1, 0)
             },
             14: (pl, ctx) => {
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     angle: 60,
                     radius: 4,
                     rotation: -30
@@ -144,8 +144,8 @@ class OrnateTwoHanderMoves extends DefaultMoves {
     right: Move = {
         cast: 27,
         onEnter(pl, ctx) {
-            mc.runcmdEx(`execute as ${entitySelector(pl as Entity)} at @s run tp ~~~ facing @p`)
-            playAnimEntity(pl as Entity, 'animation.weapon.ai.guard.attack.right')
+            ctx.lookAtTarget(pl)
+            playAnimCompatibility(pl, 'animation.weapon.ai.guard.attack.right')
         },
         onLeave(pl, ctx) {
             ctx.status.hegemony = false
@@ -161,7 +161,7 @@ class OrnateTwoHanderMoves extends DefaultMoves {
                 ctx.setVelocity(pl, 90, 1, 0)
             },
             14: (pl, ctx) => {
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     angle: 120,
                     radius: 3,
                     rotation: -60
@@ -198,7 +198,7 @@ class OrnateTwoHanderMoves extends DefaultMoves {
     left2: Move = {
         cast: 30,
         onEnter(pl, ctx) {
-            mc.runcmdEx(`execute as ${entitySelector(pl as Entity)} at @s run tp ~~~ facing @p`)
+            ctx.lookAtTarget(pl)
             playAnimCompatibility(pl, 'animation.weapon.ai.guard.attack.left2', 'left2')
             ctx.status.hegemony = true
         },
@@ -207,7 +207,7 @@ class OrnateTwoHanderMoves extends DefaultMoves {
         },
         timeline: {
             12: (pl, ctx) => {
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     angle: 180,
                     radius: 3,
                     rotation: -90
@@ -242,7 +242,7 @@ class OrnateTwoHanderMoves extends DefaultMoves {
     right2: Move = {
         cast: 28,
         onEnter(pl, ctx) {
-            mc.runcmdEx(`execute as ${entitySelector(pl as Entity)} at @s run tp ~~~ facing @p`)
+            ctx.lookAtTarget(pl)
             playAnimCompatibility(pl, 'animation.weapon.ai.guard.attack.right2', 'left2')
             ctx.status.hegemony = true
         },
@@ -251,7 +251,7 @@ class OrnateTwoHanderMoves extends DefaultMoves {
         },
         timeline: {
             9: (pl, ctx) => {
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     angle: 180,
                     radius: 3,
                     rotation: -90
@@ -288,7 +288,7 @@ class OrnateTwoHander extends DefaultTrickModule {
     constructor() {
         super(
             // 只要不重复可以随便写
-            'rgb:ai/ornate_two_hander',
+            'rgb.ornate_two_hander',
             // 动作模组的默认起始状态
             'idle',
             [ 'crossover:ornate_two_hander' ],

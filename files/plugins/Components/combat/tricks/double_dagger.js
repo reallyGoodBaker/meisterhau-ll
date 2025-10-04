@@ -98,7 +98,7 @@ class DoubleDaggerMoves extends DefaultMoves {
         },
         onAct(pl, ctx) {
             playSoundAll('weapon.woosh.1', pl.pos, 1)
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 90,
                 radius: 2,
                 rotation: 30
@@ -174,7 +174,7 @@ class DoubleDaggerMoves extends DefaultMoves {
             ctx.lookAtTarget(pl)
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 60,
                 radius: 2.5,
                 rotation: 30
@@ -236,7 +236,7 @@ class DoubleDaggerMoves extends DefaultMoves {
             playAnim(pl, 'animation.double_dagger.stab')
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 60,
                 radius: 3,
                 rotation: 30
@@ -411,7 +411,7 @@ class DoubleDaggerMoves extends DefaultMoves {
         },
         onAct(pl, ctx) {
             ctx.lookAtTarget(pl)
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 radius: 2.5,
                 angle: 60,
                 rotation: -30,
@@ -460,7 +460,7 @@ class DoubleDaggerMoves extends DefaultMoves {
         },
         onAct(pl, ctx) {
             ctx.lookAtTarget(pl)
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 radius: 2,
                 angle: 60,
                 rotation: -30,
@@ -501,7 +501,7 @@ class DoubleDaggerMoves extends DefaultMoves {
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.8)
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl, {
+            ctx.selectFromSector(pl, {
                 angle: 120,
                 rotation: -60,
             }).forEach(en => {
@@ -587,7 +587,7 @@ class DoubleDaggerMoves extends DefaultMoves {
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.8)
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl).forEach(en => {
+            ctx.selectFromSector(pl).forEach(en => {
                 ctx.attack(pl, en, {
                     damage: 18,
                     knockback: 2,
@@ -628,7 +628,7 @@ class DoubleDaggerMoves extends DefaultMoves {
             ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8)
         },
         onAct(pl, ctx) {
-            ctx.selectFromRange(pl).forEach(en => {
+            ctx.selectFromSector(pl).forEach(en => {
                 ctx.attack(pl, en, {
                     damage: 8,
                     knockback: 5,

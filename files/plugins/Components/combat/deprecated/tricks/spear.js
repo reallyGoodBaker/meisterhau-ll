@@ -71,7 +71,7 @@ module.exports = {
                 ctx.setVelocity(pl,90,2,0)
             },
             onAct(pl,ctx){
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 4,
                     angle: 15,
                     rotation: -7.5
@@ -104,7 +104,7 @@ module.exports = {
                 ctx.setVelocity(pl,90,1,0)
             },
             onAct(pl,ctx){
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 3.2,
                     angle: 20,
                     rotation: -10

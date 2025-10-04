@@ -9,6 +9,12 @@ const lang = {
 }
 
 export class HurtDisplay extends BaseComponent {
+    constructor() {
+        super()
+
+        this.allowTick = true
+    }
+
     onTick(manager: ComponentManager) {
         manager.getComponent(IncomingAttack).use(incoming => {
             const dirText = lang[incoming.direction]

@@ -61,7 +61,7 @@ module.exports = {
                 playAnim(pl, 'animation.highground.blocking.hlit.strike')
             },
             onAct(pl, ctx) {
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 2.5,
                     angle: 30,
                     rotation: 15
@@ -146,7 +146,7 @@ module.exports = {
                 ctx.adsorbToTarget(pl, 10)
             },
             onAct(pl, ctx) {
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 3.2,
                     angle: 60,
                     rotation: -30
@@ -222,7 +222,7 @@ module.exports = {
             },
             onAct(pl, ctx) {
                 ctx.status.isBlocking = false
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 3,
                     angle: 80,
                     rotation: 10
@@ -287,7 +287,7 @@ module.exports = {
                 playAnim(pl, 'animation.highground.blocking.strike_back')
             },
             onAct(pl, ctx) {
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 3,
                     angle: 45,
                     rotation: -22.5
@@ -353,7 +353,7 @@ module.exports = {
                 }, 350)
             },
             onAct(pl, ctx) {
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     radius: 3.2,
                     angle: 120,
                     rotation: 45
@@ -498,7 +498,7 @@ module.exports = {
             onAct(pl, ctx) {
                 ctx.camera(pl, false)
                 ctx.setVelocity(pl, 180, 1, 0.1)
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     angle: 120,
                     rotation: -60,
                     radius: 3.5
@@ -744,7 +744,7 @@ module.exports = {
                 if (pl.isOnGround && ctx.distanceToTarget(pl) > 2) {
                     ctx.setVelocity(pl, 90, 1.5, 0.1)
                 }
-                const entities = ctx.selectFromRange(pl, {
+                const entities = ctx.selectFromSector(pl, {
                     angle: 10,
                     rotation: -5,
                     radius: 3.5
@@ -808,7 +808,7 @@ module.exports = {
                 if (ctx.distanceToTarget(pl) > 2) {
                     ctx.setVelocity(pl, 90, 0.5, 0.1)
                 }
-                ctx.selectFromRange(pl, {
+                ctx.selectFromSector(pl, {
                     angle: 30,
                     rotation: -15,
                     radius: 2.5,

@@ -1,9 +1,11 @@
-import { BaseComponent, ComponentManager } from "../../core/component"
+import { Actor } from "@combat/basic/core/inputSimulator"
+import { BaseComponent } from "../../core/component"
 import { Optional } from "@utils/optional"
 
 export class TargetLock extends BaseComponent {
-    get sourcePlayer() {
-        return Optional.some(mc.getPlayer(this.source))
+
+    get sourceIsPlayer() {
+        return !this.source.isEmpty() && ('xuid' in this.source.unwrap())
     }
 
     get targetIsPlayer() {
@@ -11,23 +13,27 @@ export class TargetLock extends BaseComponent {
     }
 
     constructor(
-        public source: string,
-        public target = Optional.none<Player|Entity>(),
+        public source = Optional.none<Actor>(),
+        public target = Optional.none<Actor>(),
     ) {
         super()
     }
 
-    onAttach(manager: ComponentManager): boolean | void | Promise<boolean | void> {
-        this.sourcePlayer.use(p => {
-            mc.runcmdEx(`/inputpermission set ${p.name} jump disabled`)
-            mc.runcmdEx(`/inputpermission set ${p.name} sneak disabled`)
-        })
+    onAttach() {
+        if (this.sourceIsPlayer) {
+            this.source.use(p => {
+                mc.runcmdEx(`/inputpermission set ${p.name} jump disabled`)
+                mc.runcmdEx(`/inputpermission set ${p.name} sneak disabled`)
+            })
+        }
     }
 
-    onDetach(manager: ComponentManager): void | Promise<void> {
-        this.sourcePlayer.use(p => {
-            mc.runcmdEx(`/inputpermission set ${p.name} jump enabled`)
-            mc.runcmdEx(`/inputpermission set ${p.name} sneak enabled`)
-        })
+    onDetach() {
+        if (this.sourceIsPlayer) {
+            this.source.use(p => {
+                mc.runcmdEx(`/inputpermission set ${p.name} jump enabled`)
+                mc.runcmdEx(`/inputpermission set ${p.name} sneak enabled`)
+            })
+        }
     }
 }

@@ -1,3 +1,4 @@
+const { ActorHelper } = require('@utils/actor')
 const { vec2, getAngleFromVector2 } = require('./vec')
 
 const defaultRange = {
@@ -6,7 +7,7 @@ const defaultRange = {
     radius: 2.5
 }
 
-function selectFromRange(pl, range) {
+function selectFromSector(pl, range) {
     const {
         angle, rotation, radius
     } = Object.assign({}, defaultRange, range)
@@ -26,16 +27,13 @@ function selectFromRange(pl, range) {
         ,rangeAngle = getAngleFromVector2(v1, v2)
 
     const result = []
+    const distSqr = radius * radius
 
-    mc.getOnlinePlayers().concat(mc.getAllEntities()).forEach(e => {
-        const dist = pl.distanceTo(e.pos)
+    const playersShouldBeSelected = mc.getOnlinePlayers()
+        .filter(p => p.uniqueId !== pl.uniqueId && p.health > 0 && pl.distanceToSqr(p) <= distSqr)
 
-        if (dist > radius) {
-            return
-        }
-
-        if (dist <= 2) {
-            result.push(e)
+    playersShouldBeSelected.concat(mc.getEntities(pl.pos, Math.max(1, radius - 2))).forEach(e => {
+        if (e.uniqueId === pl.uniqueId) {
             return
         }
 
@@ -48,9 +46,9 @@ function selectFromRange(pl, range) {
     })
 
     // console.log(result)
-    return result.filter(e => e.uniqueId !== pl.uniqueId)
+    return result
 }
 
 module.exports = {
-    selectFromRange, defaultRange,
+    selectFromSector, defaultRange,
 }

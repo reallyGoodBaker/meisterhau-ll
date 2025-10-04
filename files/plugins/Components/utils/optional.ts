@@ -36,4 +36,16 @@ export class Optional<T = any> {
 
         return false
     }
+
+    match<R>(
+        none: R | (() => R),
+        some: (v: T) => R,
+    ): R {
+        if (this.isEmpty()) {
+            // @ts-ignore
+            return none.call ? none() : none
+        }
+
+        return some(this.value)
+    }
 }
