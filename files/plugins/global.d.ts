@@ -337,7 +337,7 @@ interface MovementContext<RawArgs = Array> {
     /**
      * 从范围中选择目标
      */
-    selectFromRange(pl: any, range?: AttackRange): Entity[]
+    selectFromSector(pl: any, range?: AttackRange): Entity[]
     /**
      * 回调函数接受的参数
      * 详情参照liteloader文档

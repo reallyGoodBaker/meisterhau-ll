@@ -2,13 +2,15 @@
     "format_version": "1.21.0",
     "minecraft:client_entity": {
         "description": {
-            "identifier": "meisterhau:shinobu",
+            "identifier": "monogatari:shinobu",
             "materials": {
                 "default": "entity_alphatest",
                 "cape": "entity_alphatest",
                 "blend": "entity_alphablend",
                 "animated": "player_animated",
-                "spectator": "player_spectator"
+                "spectator": "player_spectator",
+                "overlay": "entity_change_color",
+                "weapon": "entity_alphatest"
             },
             "textures": {
                 "default": "textures/entity/shinobu",
@@ -19,7 +21,10 @@
                 "unstoppable_steve": "textures/entity/unstoppable_steve",
                 "trace_steve": "textures/entity/trace_steve",
                 "block_steve": "textures/entity/block_steve",
-                "cape": "textures/entity/cape_invisible"
+                "cape": "textures/entity/cape_invisible",
+                "white": "textures/misc/white_overlay",
+                "orange": "textures/misc/orange_overlay",
+                "blue": "textures/misc/blue_overlay"
             },
             "geometry": {
                 "default": "geometry.ai.shinobu",
@@ -49,7 +54,7 @@
                     "v.last_blink_time = 0.0;",
                     "v.hand_bob = 0.0;",
 
-                    "v.item_status = 1;",
+                    "v.item_status = 0;",
 
                     "v.overlay_color.r = 0;",
                     "v.overlay_color.g = 0;",
@@ -70,8 +75,8 @@
                 ]
             },
             "render_controllers": [
-                "controller.render.guard.third_person",
-                "controller.render.weapon.third_person"
+                "controller.render.ai",
+                "controller.render.ai.weapon"
             ],
             "enable_attachables": true
         }

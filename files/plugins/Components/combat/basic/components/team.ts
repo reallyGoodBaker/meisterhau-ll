@@ -32,4 +32,8 @@ export class Team extends BaseComponent {
             }
         })
     }
+
+    getTeamMembers(): Set<Player> {
+        return Team.players.get(this) || new Set()
+    }
 }

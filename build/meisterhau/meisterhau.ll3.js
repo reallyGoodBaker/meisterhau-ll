@@ -1071,6 +1071,9 @@ let Optional$1 = class Optional {
         return new Optional(null);
     }
     static some(value) {
+        if (value instanceof Optional) {
+            return value;
+        }
         return new Optional(value);
     }
     constructor(value) {
@@ -1132,13 +1135,20 @@ class BaseComponent extends CustomComponent {
     onDetach(manager) { }
 }
 class ComponentManager {
+    owner;
+    constructor(owner) {
+        this.owner = owner;
+    }
     static profilerEnable = false;
-    static global = new ComponentManager();
+    static global = new ComponentManager(Optional$1.none());
     #components = new Map();
     #prependTicks = [];
     #nextTicks = [];
     getComponent(ctor) {
         return Optional$1.some(this.#components.get(ctor));
+    }
+    getOwner() {
+        return this.owner.match(null, owner => owner);
     }
     getComponents(...ctor) {
         return ctor.map(c => this.#components.get(c));
@@ -1149,6 +1159,10 @@ class ComponentManager {
             this.detachComponent(ctor);
             init = true;
         }
+        // @ts-ignore
+        component[REFLECT_ENTITY] = this.owner;
+        // @ts-ignore
+        component[REFLECT_MANAGER] = this;
         if (REQUIRED_COMPONENTS in component) {
             //@ts-ignore
             for (const [ctor, comp] of component[REQUIRED_COMPONENTS]) {
@@ -1204,16 +1218,6 @@ class ComponentManager {
         }
         this.#prependTicks.length = 0;
         for (const component of this.#components.values()) {
-            //@ts-ignore
-            if (!component[REFLECT_ENTITY]) {
-                //@ts-ignore
-                component[REFLECT_ENTITY] = Optional$1.some(en);
-            }
-            //@ts-ignore
-            if (!component[REFLECT_MANAGER]) {
-                //@ts-ignore
-                component[REFLECT_MANAGER] = this;
-            }
             const { onTick, allowTick } = component;
             if (allowTick && onTick) {
                 this.profiler(() => onTick.call(component, this, Optional$1.some(en)), component);
@@ -1536,10 +1540,13 @@ let Status$3 = class Status {
     /**
      * 组件管理器
      */
-    componentManager = new ComponentManager();
+    componentManager;
     constructor(uniqueId) {
         this.uniqueId = uniqueId;
         Status.status.set(uniqueId, this);
+        this.componentManager = new ComponentManager(
+        // @ts-ignore
+        Optional$1.some(mc.getEntity(+uniqueId)));
         this.reset();
     }
     reset() {
@@ -1875,6 +1882,70 @@ var input$2 = /*#__PURE__*/Object.freeze({
 	get input () { return input$1; }
 });
 
+class Delegate {
+    _listener = Function.prototype;
+    bind(listener) {
+        this._listener = listener;
+    }
+    call(...args) {
+        this._listener(...args);
+    }
+}
+
+class AttackSensor extends CustomComponent {
+    onlySelf;
+    onlyTeammates;
+    range;
+    constructor(onlySelf = true, onlyTeammates = false, range = 4) {
+        super();
+        this.onlySelf = onlySelf;
+        this.onlyTeammates = onlyTeammates;
+        this.range = range;
+    }
+    onWillAttack = new Delegate();
+}
+
+var Team_1;
+let Team$1 = class Team extends BaseComponent {
+    static { Team_1 = this; }
+    name;
+    static players = new Map();
+    constructor(name = 'default') {
+        super();
+        this.name = name;
+    }
+    static create({ name }) {
+        return new Team_1(name);
+    }
+    onAttach() {
+        this.getEntity().use(pl => {
+            const players = Team_1.players.get(this) || new Set();
+            players.add(pl);
+            Team_1.players.set(this, players);
+        });
+    }
+    onDetach() {
+        this.getEntity().use(pl => {
+            const players = Team_1.players.get(this);
+            if (players) {
+                players.delete(pl);
+            }
+        });
+    }
+    getTeamMembers() {
+        return Team_1.players.get(this) || new Set();
+    }
+};
+Team$1 = Team_1 = __decorate([
+    PublicComponent('team'),
+    Fields(['name'])
+], Team$1);
+
+var team = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	get Team () { return Team$1; }
+});
+
 function getApproximatelyDir(direction) {
     return direction === 'right' ? 'right'
         : direction === 'middle' ? 'right'
@@ -1892,16 +1963,19 @@ function getAnim(animCategory, direction) {
     }
     return anim;
 }
-let IncomingAttack$1 = class IncomingAttack extends CustomComponent {
+let IncomingAttack$1 = class IncomingAttack extends BaseComponent {
     damage;
+    instigator;
     direction;
     permeable;
     parryable;
     powerful;
     trace;
-    constructor(damage, direction = 'left', permeable = false, parryable = true, powerful = false, trace = false) {
+    cancel = false;
+    constructor(damage, instigator, direction = 'left', permeable = false, parryable = true, powerful = false, trace = false) {
         super();
         this.damage = damage;
+        this.instigator = instigator;
         this.direction = direction;
         this.permeable = permeable;
         this.parryable = parryable;
@@ -1910,6 +1984,44 @@ let IncomingAttack$1 = class IncomingAttack extends CustomComponent {
     }
     approximateAttackDirection() {
         return getApproximatelyDir(this.direction);
+    }
+    // 添加此组件时候，通知 AttackSensor
+    onAttach() {
+        this.getEntity().use(actor => {
+            Status$3.getComponentManager(actor.uniqueId).use(comps => {
+                comps.getComponent(AttackSensor).use(sensor => {
+                    // 只关注自己
+                    if (sensor.onlySelf) {
+                        sensor.onWillAttack.call(this, actor);
+                        return;
+                    }
+                    const range = sensor.range ?? 4;
+                    if (sensor.onlyTeammates) {
+                        const teammates = comps.getComponent(Team$1).match(new Set(), team => team.getTeamMembers());
+                        teammates.forEach(teammate => {
+                            if (teammate === actor)
+                                return;
+                            const distance = teammate.distanceTo(actor.pos);
+                            if (distance > range)
+                                return;
+                            Status$3.getComponentManager(teammate.uniqueId).use(comps => {
+                                comps.getComponent(AttackSensor).use(sensor => {
+                                    sensor.onWillAttack.call(this, actor);
+                                });
+                            });
+                        });
+                        return;
+                    }
+                    mc.getEntities(actor.pos, range).forEach(entity => {
+                        Status$3.getComponentManager(entity.uniqueId).use(comps => {
+                            comps.getComponent(AttackSensor).use(sensor => {
+                                sensor.onWillAttack.call(this, actor);
+                            });
+                        });
+                    });
+                });
+            });
+        });
     }
 };
 function setVelocityByOrientation(pl, ctx, max, offset) {
@@ -5254,11 +5366,11 @@ class OotachiTricks extends DefaultTrickModule$4 {
         super('rgb39.weapon.ootachi', 'idle', ['weapon:ootachi', 'weapon:ootachi_akaoni', 'weapon:ootachi_dragon'], new OotachiMoves());
     }
 }
-const tricks$8 = new OotachiTricks();
+const tricks$9 = new OotachiTricks();
 
 var ootachi = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$8
+	tricks: tricks$9
 });
 
 var require$$4 = /*@__PURE__*/getAugmentedNamespace(ootachi);
@@ -5925,11 +6037,11 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         }
     };
 }
-const tricks$7 = new ShieldSwordTricks();
+const tricks$8 = new ShieldSwordTricks();
 
 var shield_with_sword = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$7
+	tricks: tricks$8
 });
 
 var require$$6$1 = /*@__PURE__*/getAugmentedNamespace(shield_with_sword);
@@ -6982,11 +7094,11 @@ class UchigatanaModule extends DefaultTrickModule$4 {
         ], new UchigatanaMoves());
     }
 }
-const tricks$6 = new UchigatanaModule();
+const tricks$7 = new UchigatanaModule();
 
 var uchigatana = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$6
+	tricks: tricks$7
 });
 
 var require$$7$1 = /*@__PURE__*/getAugmentedNamespace(uchigatana);
@@ -7927,11 +8039,11 @@ class DoubleBlade extends DefaultTrickModule$4 {
         ], new DoubleBladeMoves());
     }
 }
-const tricks$5 = new DoubleBlade();
+const tricks$6 = new DoubleBlade();
 
 var double_blade = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$5
+	tricks: tricks$6
 });
 
 var require$$8$1 = /*@__PURE__*/getAugmentedNamespace(double_blade);
@@ -8048,11 +8160,11 @@ class StaffModule extends DefaultTrickModule$4 {
         super('rgb:staff', 'idle', ['weapon:staff'], new StaffMoves());
     }
 }
-const tricks$4 = new StaffModule();
+const tricks$5 = new StaffModule();
 
 var staff = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$4
+	tricks: tricks$5
 });
 
 var require$$9 = /*@__PURE__*/getAugmentedNamespace(staff);
@@ -8142,11 +8254,11 @@ class FantasyDoubleTachiTricks extends DefaultTrickModule$4 {
         super('rgb39:fantasy_double_tachi', 'hold', ['weapon:fantasy_double_tachi'], new FantasyDoubleTachi());
     }
 }
-const tricks$3 = new FantasyDoubleTachiTricks();
+const tricks$4 = new FantasyDoubleTachiTricks();
 
 var fantasy_double_tachi = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$3
+	tricks: tricks$4
 });
 
 var require$$10$1 = /*@__PURE__*/getAugmentedNamespace(fantasy_double_tachi);
@@ -8916,11 +9028,11 @@ class DoubleAxeTrick extends DefaultTrickModule$4 {
         super('rgb39:double_axe', 'idle', ['weapon:double_diamond_axe'], new DoubleAxeMoves());
     }
 }
-const tricks$2 = new DoubleAxeTrick();
+const tricks$3 = new DoubleAxeTrick();
 
 var double_axe = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$2
+	tricks: tricks$3
 });
 
 var require$$11$1 = /*@__PURE__*/getAugmentedNamespace(double_axe);
@@ -9139,11 +9251,11 @@ class OneHandedSword extends DefaultTrickModule$4 {
         ], new OneHandedMoves());
     }
 }
-const tricks$1 = new OneHandedSword();
+const tricks$2 = new OneHandedSword();
 
 var onehanded = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$1
+	tricks: tricks$2
 });
 
 var require$$12$1 = /*@__PURE__*/getAugmentedNamespace(onehanded);
@@ -10396,44 +10508,6 @@ HealthModifier = HealthModifier_1 = __decorate([
     Fields(['remain'], ['delta', 'duration'])
 ], HealthModifier);
 
-var Team_1;
-let Team$1 = class Team extends BaseComponent {
-    static { Team_1 = this; }
-    name;
-    static players = new Map();
-    constructor(name = 'default') {
-        super();
-        this.name = name;
-    }
-    static create({ name }) {
-        return new Team_1(name);
-    }
-    onAttach() {
-        this.getEntity().use(pl => {
-            const players = Team_1.players.get(this) || new Set();
-            players.add(pl);
-            Team_1.players.set(this, players);
-        });
-    }
-    onDetach() {
-        this.getEntity().use(pl => {
-            const players = Team_1.players.get(this);
-            if (players) {
-                players.delete(pl);
-            }
-        });
-    }
-};
-Team$1 = Team_1 = __decorate([
-    PublicComponent('team'),
-    Fields(['name'])
-], Team$1);
-
-var team = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	get Team () { return Team$1; }
-});
-
 var MatchRules;
 (function (MatchRules) {
     MatchRules[MatchRules["BestOf"] = 0] = "BestOf";
@@ -10663,13 +10737,6 @@ var event = /*#__PURE__*/Object.freeze({
 
 var require$$19 = /*@__PURE__*/getAugmentedNamespace(event);
 
-var MeisterhauFSMState;
-(function (MeisterhauFSMState) {
-    MeisterhauFSMState[MeisterhauFSMState["UNINIT"] = 0] = "UNINIT";
-    MeisterhauFSMState[MeisterhauFSMState["RUNNING"] = 1] = "RUNNING";
-    MeisterhauFSMState[MeisterhauFSMState["PAUSED"] = 2] = "PAUSED";
-    MeisterhauFSMState[MeisterhauFSMState["STOPPED"] = 3] = "STOPPED";
-})(MeisterhauFSMState || (MeisterhauFSMState = {}));
 class SimpleAbortController {
     _aborted = false;
     _listeners = [];
@@ -10741,12 +10808,31 @@ class MeisterhauAI {
     constructor(actor, strategy = 'default') {
         this.actor = actor;
         this.strategy = strategy;
-        this.status = Status$3.getOrCreate(actor.uniqueId);
+        this.status = Status$3.getOrCreate(actor.unwrap().uniqueId);
         this.abortController = new SimpleAbortController();
         this.setStrategy(strategy);
     }
     _fsm;
-    async wait(ms) {
+    _waitExecuting = [];
+    hasAnyExecutingTasks() {
+        return this._waitExecuting.length > 0;
+    }
+    hasAnyTasks() {
+        return this._tasks.length > 0;
+    }
+    submitExecuting() {
+        this._waitExecuting.forEach(resolver => resolver.resolve());
+        this._waitExecuting.length = 0;
+    }
+    async waitExecutingTasks() {
+        if (!this.hasAnyTasks()) {
+            return Promise.resolve();
+        }
+        const resolver = Promise.withResolvers();
+        this._waitExecuting.push(resolver);
+        return resolver.promise;
+    }
+    async wait(ms = 0) {
         return new Promise((resolve) => {
             if (this.abortController.signal.aborted) {
                 resolve();
@@ -10768,6 +10854,31 @@ class MeisterhauAI {
             });
         });
     }
+    _tasks = [];
+    /**
+     * 当 force 为 true 时，无论当前是否已有任务正在执行，都将执行该任务
+     * 否则，只有当当前没有任务正在执行时，才会执行该任务
+     * @param task
+     * @param force
+     */
+    executeTask(task, force = false) {
+        if (force || !this.hasAnyExecutingTasks()) {
+            this._tasks.push(task);
+        }
+    }
+    async _executeTasks(appendToTask) {
+        // 在执行Task前再次检查是否已停止
+        if (!this.abortController.signal.aborted) {
+            for (const task of this._tasks) {
+                await task(this);
+            }
+            if (appendToTask) {
+                await appendToTask(this);
+            }
+            this.submitExecuting();
+        }
+        this._tasks.length = 0;
+    }
     async tick() {
         if (this._fsm && !this.abortController.signal.aborted) {
             const { value, done } = await this._fsm.next();
@@ -10776,10 +10887,7 @@ class MeisterhauAI {
                 this._fsm = undefined;
                 return;
             }
-            // 在执行状态函数前再次检查是否已停止
-            if (!this.abortController.signal.aborted) {
-                await value(this);
-            }
+            await this._executeTasks(value);
         }
     }
     onStart() { }
@@ -10883,33 +10991,39 @@ class MeisterhauAI {
 const ais = {};
 const aiRunning = new Map();
 var ai$2;
-(function (ai_1) {
-    function register(type, ai, tricks) {
-        ais[type] = [ai, tricks];
+(function (ai) {
+    function register(registration) {
+        ais[registration.type] = registration;
     }
-    ai_1.register = register;
+    ai.register = register;
     function getRegistration(type) {
         return ais[type];
     }
-    ai_1.getRegistration = getRegistration;
+    ai.getRegistration = getRegistration;
     function getAI(en) {
         return aiRunning.get(en.uniqueId);
     }
-    ai_1.getAI = getAI;
+    ai.getAI = getAI;
     function isRegistered(en) {
         return en.type in ais;
     }
-    ai_1.isRegistered = isRegistered;
+    ai.isRegistered = isRegistered;
 })(ai$2 || (ai$2 = {}));
 function setupAIEntity(en) {
     if (!en || !ais[en.type] || aiRunning.has(en.uniqueId)) {
         return;
     }
-    const [ctor] = ais[en.type];
+    const { ai: ctor, components, setup } = ais[en.type];
     if (ctor) {
-        const ai = Reflect.construct(ctor, [en]);
+        const ai = Reflect.construct(ctor, [Optional$1.some(en)]);
         aiRunning.set(en.uniqueId, ai);
         ai.start();
+        if (components) {
+            Status$3.getComponentManager(en.uniqueId).use(comps => {
+                comps.attachComponent(...components);
+            });
+        }
+        setup?.(ai, en);
     }
 }
 async function listenEntitiyWithAi$1() {
@@ -10922,7 +11036,6 @@ async function listenEntitiyWithAi$1() {
 var core$1 = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	MeisterhauAI: MeisterhauAI,
-	get MeisterhauFSMState () { return MeisterhauFSMState; },
 	SimpleAbortController: SimpleAbortController,
 	get ai () { return ai$2; },
 	listenEntitiyWithAi: listenEntitiyWithAi$1
@@ -11215,17 +11328,7 @@ class OrnateTwoHander extends DefaultTrickModule$4 {
         'idle', ['crossover:ornate_two_hander'], new OrnateTwoHanderMoves());
     }
 }
-const tricks = new OrnateTwoHander();
-
-class Delegate {
-    _listener = Function.prototype;
-    bind(listener) {
-        this._listener = listener;
-    }
-    call(...args) {
-        this._listener(...args);
-    }
-}
+const tricks$1 = new OrnateTwoHander();
 
 class AiHearing extends CustomComponent {
     conf;
@@ -11314,7 +11417,7 @@ class EasyAISensing {
         return this.components.getComponent(TargetLock$1).match(Optional$1.none(), targetLock => targetLock.target);
     }
     targetInRange(range) {
-        return this.getTarget().match(false, actor => actor.distanceTo(this.ai.actor) <= range);
+        return this.getTarget().match(false, actor => this.ai.actor.match(false, aiActor => actor.distanceTo(aiActor) <= range));
     }
     targetStatus() {
         return this.getTarget().match(Optional$1.none(), actor => Optional$1.some(Status$3.getOrCreate(actor.uniqueId)));
@@ -11335,6 +11438,10 @@ class EasyAISensing {
     }
     targetIsBlocking() {
         return this.targetStatus().match(false, actor => actor.isBlocking);
+    }
+    actorIterapted(iterapted = ['blocked', 'parried', 'hurt']) {
+        const stateName = this.ai.status.status;
+        return iterapted.includes(stateName);
     }
 }
 
@@ -11369,63 +11476,108 @@ class GlobalInputSimulator {
     }
 }
 const inputSimulator = new GlobalInputSimulator();
-function wait(timeout) {
+function wait(timeout = 0) {
     const resolvers = Promise.withResolvers();
     setTimeout(resolvers.resolve, timeout);
     return resolvers.promise;
 }
 class InputSimulator {
+    ai;
     actor;
-    constructor(actor) {
-        this.actor = actor;
+    constructor(ai) {
+        this.ai = ai;
+        this.actor = ai.actor;
     }
     async jump(timeout = 300) {
-        input$1.performPress(this.actor.uniqueId, 'jump');
-        inputSimulator.jump(this.actor);
-        await wait(timeout);
-        input$1.performRelease(this.actor.uniqueId, 'jump');
+        if (this.actor.isEmpty()) {
+            return;
+        }
+        this.ai.executeTask(async () => {
+            const actor = this.actor.unwrap();
+            input$1.performPress(actor.uniqueId, 'jump');
+            inputSimulator.jump(actor);
+            await wait(timeout);
+            input$1.performRelease(actor.uniqueId, 'jump');
+        });
     }
     sneak() {
-        input$1.performPress(this.actor.uniqueId, 'sneak');
-        inputSimulator.sneak(this.actor);
+        if (this.actor.isEmpty()) {
+            return;
+        }
+        const actor = this.actor.unwrap();
+        input$1.performPress(actor.uniqueId, 'sneak');
+        inputSimulator.sneak(actor);
     }
     releaseSneak() {
-        input$1.performRelease(this.actor.uniqueId, 'sneak');
-        inputSimulator.releaseSneak(this.actor);
+        if (this.actor.isEmpty()) {
+            return;
+        }
+        const actor = this.actor.unwrap();
+        input$1.performRelease(actor.uniqueId, 'sneak');
+        inputSimulator.releaseSneak(actor);
     }
     useItem(item) {
-        inputSimulator.useItem(this.actor, item);
+        if (this.actor.isEmpty()) {
+            return;
+        }
+        const actor = this.actor.unwrap();
+        inputSimulator.useItem(actor, item);
     }
     changeSprinting(isSprinting = true) {
-        inputSimulator.changeSprinting(this.actor, isSprinting);
+        if (this.actor.isEmpty()) {
+            return;
+        }
+        this.ai.executeTask(async () => {
+            const actor = this.actor.unwrap();
+            inputSimulator.changeSprinting(actor, isSprinting);
+        });
     }
     attack() {
-        inputSimulator.attack(this.actor);
+        if (this.actor.isEmpty()) {
+            return;
+        }
+        const actor = this.actor.unwrap();
+        inputSimulator.attack(actor);
     }
     feint() {
-        inputSimulator.feint(this.actor);
+        if (this.actor.isEmpty()) {
+            return;
+        }
+        const actor = this.actor.unwrap();
+        inputSimulator.feint(actor);
     }
     dodge() {
-        inputSimulator.dodge(this.actor);
+        if (this.actor.isEmpty()) {
+            return;
+        }
+        const actor = this.actor.unwrap();
+        inputSimulator.dodge(actor);
     }
 }
 
 class AiActions extends InputSimulator {
     setTarget(target) {
-        const targetLock = new TargetLock$1(Optional$1.some(this.actor), Optional$1.some(target));
-        const components = Status$3.get(this.actor.uniqueId)?.componentManager;
-        components?.attachComponent(targetLock);
+        this.actor.use(actor => {
+            const targetLock = new TargetLock$1(this.actor, Optional$1.some(target));
+            const components = Status$3.get(actor.uniqueId)?.componentManager;
+            components?.attachComponent(targetLock);
+        });
     }
     removeTarget() {
-        Status$3.get(this.actor.uniqueId)?.componentManager?.detachComponent(TargetLock$1);
+        this.actor.use(actor => Status$3.get(actor.uniqueId)?.componentManager?.detachComponent(TargetLock$1));
     }
     lookAtNearest(radius = 10, family = ['mob']) {
-        const selector = actorSelector(this.actor);
-        const typeFamiliy = family.map(t => `family=${t}`).join(",");
-        mc.runcmdEx(`execute at ${selector} as ${selector} run tp @s ~~~ facing @e[c=1,r=${radius}${typeFamiliy ? `,${typeFamiliy}` : ''}]`);
+        this.actor.use(actor => {
+            const selector = actorSelector(actor);
+            const typeFamiliy = family.map(t => `family=${t}`).join(",");
+            mc.runcmdEx(`execute at ${selector} as ${selector} run tp @s ~~~ facing @e[c=1,r=${radius}${typeFamiliy ? `,${typeFamiliy}` : ''}]`);
+        });
     }
     setForwardActorAsTarget(length = 8) {
-        const entity = this.actor.getEntityFromViewVector(length);
+        if (this.actor.isEmpty()) {
+            return false;
+        }
+        const entity = this.actor.unwrap().getEntityFromViewVector(length);
         if (!entity) {
             return false;
         }
@@ -11441,16 +11593,16 @@ class AiActions extends InputSimulator {
         return true;
     }
     triggerDefinedEvent(event) {
-        mc.runcmdEx(`event entity ${actorSelector(this.actor)} ${event}`);
+        this.actor.use(actor => mc.runcmdEx(`event entity ${actorSelector(actor)} ${event}`));
     }
 }
 
 class Guard extends MeisterhauAI {
     target = null;
-    actions = new AiActions(this.actor);
+    actions = new AiActions(this);
     sensing = new EasyAISensing(this);
     async onStart() {
-        core.initCombatComponent(this.actor, tricks, this.status);
+        core.initCombatComponent(this.actor, tricks$1, this.status);
     }
     getStrategy(strategy) {
         switch (strategy) {
@@ -11463,12 +11615,6 @@ class Guard extends MeisterhauAI {
             default:
                 return;
         }
-    }
-    getContext() {
-        return {
-            actor: this.actor,
-            status: this.status,
-        };
     }
     async tryAcquireTarget() {
         if (!this.sensing.hasTarget()) {
@@ -11501,7 +11647,7 @@ class Guard extends MeisterhauAI {
                 const randomAct = Math.floor(Math.random() * 3);
                 switch (randomAct) {
                     case 1:
-                        yield () => self.actions.attack();
+                        yield (() => self.actions.attack());
                         await self.wait(800);
                         break;
                     case 2:
@@ -11542,7 +11688,7 @@ class Guard extends MeisterhauAI {
                 // 玩家输入闪避
                 if (self.sensing.hasTargetInputed('onDodge')) {
                     // 使用 yield 返回一个函数，而不是直接调用，这样可以让这个函数的执行时机被合理安排
-                    yield () => self.actions.attack();
+                    yield (() => self.actions.attack());
                     await self.wait(800);
                     // 玩家匆忙操作时通过连段进行惩罚
                     if (self.sensing.hasTargetInputed('onAttack', 'onUseItem', 'onDodge')) {
@@ -11610,7 +11756,7 @@ class Guard extends MeisterhauAI {
     getLeftComboStrategy() {
         const ai = this;
         async function* moves() {
-            yield () => ai.actions.attack();
+            yield (() => ai.actions.attack());
             await ai.wait(800);
             yield () => ai.actions.attack();
             await ai.wait(2000);
@@ -11618,7 +11764,280 @@ class Guard extends MeisterhauAI {
         return moves();
     }
 }
-ai$2.register('meisterhau:guard', Guard, tricks);
+ai$2.register({
+    type: 'meisterhau:guard',
+    ai: Guard,
+    tricks: tricks$1,
+});
+
+// 不继承自DefaultMoves也可以，但是会少很多预设的状态
+class KokorowatariMoves extends DefaultMoves$4 {
+    constructor() {
+        super();
+        // 设置一个状态机的恢复点（所有预设的状态结束时都会切换到这个状态
+        // 这个状态不是默认起始状态，注意
+        this.setup('idle');
+        this.animations.block.left = 'animation.shinobu.ai.block';
+    }
+    // 定义idle状态
+    idle = {
+        // 前摇，无限刻
+        cast: Infinity,
+        // 在这个状态时每一刻执行的代码
+        onEnter(actor, ctx) {
+            playAnimCompatibility(actor, 'animation.shinobu.ai.hold', 'animation.shinobu.ai.hold');
+        },
+        onTick(actor, ctx) {
+            // 让npc面向玩家
+            ctx.lookAtTarget(actor);
+        },
+        // 状态转换
+        transitions: {
+            // 转换到hurt状态
+            hurt: {
+                // 转换条件是 onHurt ，没有多余参数
+                onHurt: null
+            },
+            attack1: {
+                onAttack: null
+            }
+        }
+    };
+    attack1 = {
+        cast: 14,
+        backswing: 6,
+        onEnter(actor, ctx) {
+            playAnimCompatibility(actor, 'animation.shinobu.ai.attack1', 'animation.shinobu.ai.hold');
+            ctx.lookAtTarget(actor);
+            ctx.status.isBlocking = true;
+        },
+        onLeave(actor, ctx) {
+            ctx.status.isBlocking = false;
+        },
+        timeline: {
+            5: actor => playSoundAll$5('weapon.whoosh.thick.2', actor.pos),
+            9: (actor, ctx) => ctx.selectFromSector(actor, {
+                radius: 4,
+            }).forEach(en => {
+                ctx.attack(actor, en, {
+                    damage: 12,
+                    direction: 'vertical',
+                    knockback: 0.5,
+                });
+            }),
+            13: (actor, ctx) => ctx.trap(actor),
+            0: (actor, ctx) => ctx.adsorbOrSetVelocity(actor, 1.2),
+            4: (actor, ctx) => ctx.status.isBlocking = false,
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            parried: {
+                onParried: null
+            },
+            blocked: {
+                onBlocked: null
+            },
+            idle: {
+                onEndOfLife: null
+            },
+            attack2: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            },
+            block: {
+                onBlock: null
+            },
+        }
+    };
+    attack2 = {
+        cast: 23,
+        onEnter(actor, ctx) {
+            playAnimCompatibility(actor, 'animation.shinobu.ai.attack2', 'animation.shinobu.ai.hold');
+            ctx.lookAtTarget(actor);
+        },
+        timeline: {
+            3: (actor, ctx) => ctx.adsorbOrSetVelocity(actor, 2),
+            4: actor => playSoundAll$5('weapon.whoosh.thick.1', actor.pos),
+            7: (actor, ctx) => ctx.selectFromSector(actor, {
+                angle: 30,
+                radius: 3.5,
+                rotation: 15
+            }).forEach(en => {
+                ctx.attack(actor, en, {
+                    damage: 18,
+                    direction: 'middle',
+                    knockback: 1,
+                });
+            }),
+            15: (actor, ctx) => ctx.trap(actor),
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            parried: {
+                onParried: null
+            },
+            idle: {
+                onEndOfLife: null
+            },
+            attack3: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            },
+        }
+    };
+    attack3 = {
+        cast: 30,
+        onEnter(actor, ctx) {
+            playAnimCompatibility(actor, 'animation.shinobu.ai.attack3', 'animation.shinobu.ai.hold');
+            ctx.lookAtTarget(actor);
+        },
+        timeline: {
+            3: (actor, ctx) => ctx.adsorbOrSetVelocity(actor, 2),
+            7: actor => playSoundAll$5('weapon.whoosh.thick.4', actor.pos),
+            11: (actor, ctx) => ctx.selectFromSector(actor, {
+                angle: 30,
+                radius: 3,
+                rotation: 15
+            }).forEach(en => {
+                ctx.attack(actor, en, {
+                    damage: 16,
+                    direction: 'vertical',
+                    permeable: true,
+                    knockback: 2,
+                    stiffness: 800,
+                });
+            }),
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            parried: {
+                onParried: null
+            },
+            idle: {
+                onEndOfLife: null
+            },
+        }
+    };
+}
+class Kokorowatari extends DefaultTrickModule$4 {
+    constructor() {
+        super(
+        // 只要不重复可以随便写
+        'rgb.shinobu', 
+        // 动作模组的默认起始状态
+        'idle', ['monogatari:kokorowatari'], new KokorowatariMoves());
+    }
+}
+const tricks = new Kokorowatari();
+
+class Shinobu extends MeisterhauAI {
+    actions = new AiActions(this);
+    sensing = new EasyAISensing(this);
+    getStrategy(strategy) {
+        // 优先实现 default 策略
+        if (strategy === 'default') {
+            return this.mildStrategy();
+        }
+        if (strategy === 'guard') {
+            return this.guardStrategy();
+        }
+        return undefined;
+    }
+    // 处理 ai 选择/放弃目标的逻辑
+    async tryAcquireOrReleaseTarget() {
+        // 获取 sensing 和 actions
+        if (!this.sensing.hasTarget()) {
+            // 让 ai 看向15格内最近的玩家
+            this.actions.lookAtNearest(15, ['player']);
+            await this.waitTick();
+            // 如果正前方有玩家，则设置目标
+            // 如果有别的需求（比如“看到”或“听到”），可以手动调用 setTarget
+            this.actions.setForwardActorAsTarget(8);
+        }
+        // 如果目标不在10格内，则放弃目标
+        if (this.sensing.hasTarget() && !this.sensing.targetInRange(10)) {
+            this.actions.removeTarget();
+        }
+    }
+    async combo1() {
+        // 等待所有任务完成
+        await this.waitExecutingTasks();
+        this.actions.attack();
+        await this.wait(600);
+        if (this.sensing.actorIterapted()) {
+            return;
+        }
+        this.actions.attack();
+        await this.wait(650);
+        if (this.sensing.actorIterapted()) {
+            return;
+        }
+        this.actions.attack();
+        await this.wait(1600);
+    }
+    onAttack(incomingAttack) {
+        this.actions.attack();
+        console.log('tried');
+    }
+    async *mildStrategy() {
+        // 使用循环可以让 ai 一直执行
+        // 一定要在循环中使用 MeisterhauAI.stopped
+        // 否则会导致死循环
+        while (!this.stopped) {
+            // 等待 1 tick防止死循环
+            await this.waitTick();
+            await this.tryAcquireOrReleaseTarget();
+            // 如果没有目标，则跳过
+            if (!this.sensing.hasTarget()) {
+                continue;
+            }
+            // 如果目标在3格内，则执行连招1
+            if (this.sensing.targetInRange(3)) {
+                // 执行第一个连招
+                yield () => this.combo1();
+            }
+        }
+    }
+    async *guardStrategy() {
+        // 使用循环可以让 ai 一直执行
+        // 一定要在循环中使用 MeisterhauAI.stopped
+        // 否则会导致死循环
+        while (!this.stopped) {
+            // 等待 1 tick防止死循环
+            await this.waitTick();
+            await this.tryAcquireOrReleaseTarget();
+            // 如果没有目标，则跳过
+            if (!this.sensing.hasTarget()) {
+                continue;
+            }
+            // 等待所有任务完成（从executeTask提交的任务）
+            await this.waitExecutingTasks();
+        }
+    }
+}
+ai$2.register({
+    type: 'monogatari:shinobu',
+    ai: Shinobu,
+    tricks,
+    components: [
+        new AttackSensor()
+    ],
+    setup(ai) {
+        ai.status.componentManager.getComponent(AttackSensor).use(sensor => {
+            sensor.onWillAttack.bind(incomingAttack => {
+                ai.onAttack(incomingAttack);
+            });
+        });
+    }
+});
 
 function setupAiCommands$1() {
     cmd('ai', '控制ai行为', CommandPermission.OP)
@@ -11629,7 +12048,7 @@ function setupAiCommands$1() {
                 const registration = ai$2.getRegistration(e.type);
                 if (!registration)
                     continue;
-                core.transition(e, registration[1], Status$3.getOrCreate(e.uniqueId), event_name, Function.prototype, [e]);
+                core.transition(e, registration.tricks, Status$3.getOrCreate(e.uniqueId), event_name, Function.prototype, [e]);
             }
         });
         register('<en:entity> perform attack', (_, ori, out, args) => {
@@ -11679,7 +12098,9 @@ function setupAiCommands$1() {
                 if (!entityAI) {
                     continue;
                 }
-                out.success(`${entityAI.actor.name}\nUID: ${entityAI.actor.uniqueId}\n策略: ${entityAI.strategy}`);
+                entityAI.actor.use(actor => {
+                    out.success(`${actor.name}\nUID: ${actor.uniqueId}\n策略: ${entityAI.strategy}`);
+                });
             }
         });
     });
@@ -12246,7 +12667,7 @@ function listenAllCustomEvents(mods) {
             return getMod(getHandedItemType(actor))
         }
 
-        return ai.getRegistration(actor.type)[1]
+        return ai.getRegistration(actor.type).tricks
     }
 
     em.on('onTick', onTick(em));
@@ -12269,7 +12690,7 @@ function listenAllCustomEvents(mods) {
                 if (!pl) {
                     continue
                 }
-                bind = ai.getRegistration(pl.type)[1];
+                bind = ai.getRegistration(pl.type).tricks;
             }
 
             if (!pl ||!bind) {
@@ -12387,7 +12808,11 @@ function listenAllCustomEvents(mods) {
 
             knockback(victim, 0, 0, 0, -2);
         };
-        const doDamage = () => {
+        const doDamage = incomingAttack => {
+            if (incomingAttack.cancel) {
+                return
+            }
+
             _knockback(_k, victimStatus.repulsible);
             victimStatus.shocked = shock;
 
@@ -12407,14 +12832,16 @@ function listenAllCustomEvents(mods) {
             return doDamage()
         }
 
-        victimStatus.componentManager.attachComponent(new IncomingAttack(
+        const incomingAttack = new IncomingAttack(
             damage,
+            abuser,
             direction,
             permeable,
             parryable,
             powerful,
             trace,
-        ));
+        );
+        victimStatus.componentManager.attachComponent(incomingAttack);
 
         if (victimStatus.isInvulnerable) {
             transition(
@@ -12451,7 +12878,7 @@ function listenAllCustomEvents(mods) {
             return em.emitNone('block', abuser, victim, damageOpt)
         }
 
-        doDamage();
+        doDamage(incomingAttack);
     });
 
     em.on('deflect', (abuser, victim, damageOpt) => {
@@ -12684,7 +13111,7 @@ function listenAllMcEvents(collection) {
             return getMod(getHandedItemType(actor))
         }
 
-        return ai.getRegistration(actor.type)[1]
+        return ai.getRegistration(actor.type).tricks
     }
 
     collection.forEach(mod => {
@@ -12729,7 +13156,7 @@ function listenAllMcEvents(collection) {
             }
 
             const status = Status.getOrCreate(pl.uniqueId);
-            const mod = ai.getRegistration(pl.type)[1];
+            const mod = ai.getRegistration(pl.type).tricks;
 
             if (!mod) {
                 return

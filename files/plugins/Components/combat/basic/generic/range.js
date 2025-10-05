@@ -32,7 +32,7 @@ function selectFromSector(pl, range) {
     const playersShouldBeSelected = mc.getOnlinePlayers()
         .filter(p => p.uniqueId !== pl.uniqueId && p.health > 0 && pl.distanceToSqr(p) <= distSqr)
 
-    playersShouldBeSelected.concat(mc.getEntities(pl.pos, Math.max(1, radius - 2))).forEach(e => {
+    playersShouldBeSelected.concat(mc.getEntities(pl.pos, Math.max(1.5, radius - 1.5))).forEach(e => {
         if (e.uniqueId === pl.uniqueId) {
             return
         }

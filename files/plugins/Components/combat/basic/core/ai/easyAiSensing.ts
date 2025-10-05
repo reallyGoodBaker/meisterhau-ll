@@ -29,7 +29,10 @@ export class EasyAISensing {
     targetInRange(range: number): boolean {
         return this.getTarget().match(
             false,
-            actor => actor.distanceTo(this.ai.actor) <= range,
+            actor => this.ai.actor.match(
+                false,
+                aiActor => actor.distanceTo(aiActor) <= range
+            ),
         )
     }
 
@@ -78,5 +81,10 @@ export class EasyAISensing {
             false,
             actor => actor.isBlocking,
         )
+    }
+
+    actorIterapted(iterapted: string[] = [ 'blocked', 'parried', 'hurt' ]): boolean {
+        const stateName = this.ai.status.status
+        return iterapted.includes(stateName)
     }
 }

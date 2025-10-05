@@ -48,8 +48,12 @@ export interface ComponentCtor<T extends Component | BasicComponent = Component>
 }
 
 export class ComponentManager {
+    constructor(
+        readonly owner: Optional<Entity>
+    ) {}
+
     static profilerEnable = false
-    static readonly global = new ComponentManager()
+    static readonly global = new ComponentManager(Optional.none())
 
     #components = new Map<ComponentCtor, Component>()
     #prependTicks: Function[] = []
@@ -57,6 +61,13 @@ export class ComponentManager {
 
     getComponent<T extends Component>(ctor: ComponentCtor<T>): Optional<T> {
         return Optional.some(this.#components.get(ctor)) as Optional<T>
+    }
+
+    getOwner() {
+        return this.owner.match(
+            null,
+            owner => owner
+        )
     }
 
     getComponents(...ctor: ComponentCtor[]): (Component|undefined)[] {
@@ -70,6 +81,11 @@ export class ComponentManager {
             this.detachComponent(ctor) 
             init = true
         }
+
+        // @ts-ignore
+        component[REFLECT_ENTITY] = this.owner
+        // @ts-ignore
+        component[REFLECT_MANAGER] = this
 
         if (REQUIRED_COMPONENTS in component) {
             //@ts-ignore
@@ -145,19 +161,6 @@ export class ComponentManager {
         this.#prependTicks.length = 0
 
         for (const component of this.#components.values()) {
-
-            //@ts-ignore
-            if (!component[REFLECT_ENTITY]) {
-                //@ts-ignore
-                component[REFLECT_ENTITY] = Optional.some(en)
-            }
-
-            //@ts-ignore
-            if (!component[REFLECT_MANAGER]) {
-                //@ts-ignore
-                component[REFLECT_MANAGER] = this
-            }
-
             const { onTick, allowTick } = component
 
             if (allowTick && onTick) {

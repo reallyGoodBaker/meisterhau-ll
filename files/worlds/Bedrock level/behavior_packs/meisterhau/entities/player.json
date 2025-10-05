@@ -69,7 +69,7 @@
                 "table": "loot_tables/empty.json"
             },
             "minecraft:collision_box": {
-                "width": 0.6,
+                "width": 0.8,
                 "height": 1.8
             },
             "minecraft:can_climb": {},

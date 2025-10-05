@@ -1,3 +1,4 @@
+import { AiHearing } from "./components/ai/hearing"
 import { Actor } from "./core/inputSimulator"
 
 export function playAnim(pl: Player|Entity, anim: string, nextAnim?: string, time?: number, stopExp?: string, controller?: string) {

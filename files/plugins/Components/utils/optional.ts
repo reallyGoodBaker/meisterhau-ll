@@ -4,8 +4,12 @@ export class Optional<T = any> {
         return new Optional(null as T)
     }
 
-    static some<T>(value: T): Optional<T> {
-        return new Optional(value)
+    static some<T>(value: T | Optional<T> | null | undefined): Optional<T> {
+        if (value instanceof Optional) {
+            return value
+        }
+
+        return new Optional(value) as any
     }
 
     constructor(

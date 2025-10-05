@@ -26,6 +26,27 @@
             "geometry": "geometry.default",
             "materials": [ { "*": "material.default" } ],
             "textures": [ "Array.t[v.item_status]" ]
+        },
+        "controller.render.ai.weapon": {
+            "arrays": {
+                "textures": {
+					"Array.t": [
+						"texture.weapon",
+						"texture.white",
+						"texture.orange",
+                        "texture.blue"
+					]
+				}
+            },
+            "geometry": "geometry.default",
+            "materials": [ { "*": "v.item_status > 0 ? material.overlay : material.weapon" } ],
+            "textures": [ "Array.t[v.item_status]" ],
+            "part_visibility": [
+                {
+                    "*": false,
+                    "weapon*": true
+                }
+            ]
         }
     }
 }

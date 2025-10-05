@@ -1,29 +1,14 @@
 import { Actor } from '@core/inputSimulator'
 import { Status } from '@core/status'
 import { serverStarted } from '@utils/command'
-import { ComponentManager, CustomComponent } from '../component'
+import { Component, ComponentManager, CustomComponent } from '../component'
+import { Optional } from '@utils/optional'
 
-export interface MeisterhauAIState {
+export interface MeisterhauAITask {
     (ai: MeisterhauAI): Promise<void>
     (ai: MeisterhauAI): void
     (): Promise<void>
     (): void
-}
-
-export enum MeisterhauFSMState {
-    UNINIT,
-    RUNNING,
-    PAUSED,
-    STOPPED,
-}
-
-export interface EventTrigger<Ctx = any, V = any> {
-    (value: V, context: Ctx): boolean
-}
-
-export interface AIEventTriggerContext {
-    actor: Entity | Player
-    status: Status
 }
 
 export class SimpleAbortController {
@@ -107,19 +92,43 @@ export abstract class MeisterhauAI {
     readonly status: Status
 
     constructor(
-        public readonly actor: Actor,
+        public readonly actor: Optional<Actor>,
         public strategy: string = 'default',
     ) {
-        this.status = Status.getOrCreate(actor.uniqueId)
+        this.status = Status.getOrCreate(actor.unwrap().uniqueId)
         this.abortController = new SimpleAbortController()
         this.setStrategy(strategy)
     }
 
-    abstract getStrategy(strategy: string): AsyncGenerator<MeisterhauAIState, void, unknown> | undefined
+    abstract getStrategy(strategy: string): AsyncGenerator<MeisterhauAITask, void, unknown> | undefined
 
-    private _fsm?: AsyncGenerator<MeisterhauAIState, void, unknown>
+    private _fsm?: AsyncGenerator<MeisterhauAITask, void, unknown>
+    private _waitExecuting: PromiseWithResolvers<void>[] = []
 
-    async wait(ms: number) {
+    hasAnyExecutingTasks() {
+        return this._waitExecuting.length > 0
+    }
+
+    hasAnyTasks() {
+        return this._tasks.length > 0
+    }
+
+    private submitExecuting() {
+        this._waitExecuting.forEach(resolver => resolver.resolve())
+        this._waitExecuting.length = 0
+    }
+
+    async waitExecutingTasks() {
+        if (!this.hasAnyTasks()) {
+            return Promise.resolve()
+        }
+
+        const resolver = Promise.withResolvers<void>()
+        this._waitExecuting.push(resolver)
+        return resolver.promise
+    }
+
+    async wait(ms: number = 0) {
         return new Promise<void>((resolve) => {
             if (this.abortController.signal.aborted) {
                 resolve()
@@ -146,6 +155,37 @@ export abstract class MeisterhauAI {
         })
     }
 
+    private _tasks: MeisterhauAITask[] = []
+
+    /**
+     * 当 force 为 true 时，无论当前是否已有任务正在执行，都将执行该任务
+     * 否则，只有当当前没有任务正在执行时，才会执行该任务
+     * @param task 
+     * @param force 
+     */
+    executeTask(task: MeisterhauAITask, force=false) {
+        if (force || !this.hasAnyExecutingTasks()) {
+            this._tasks.push(task)
+        }
+    }
+
+    private async _executeTasks(appendToTask: MeisterhauAITask) {
+        // 在执行Task前再次检查是否已停止
+        if (!this.abortController.signal.aborted) {
+            for (const task of this._tasks) {
+                await task(this)
+            }
+
+            if (appendToTask) {
+                await appendToTask(this)
+            }
+
+            this.submitExecuting()
+        }
+
+        this._tasks.length = 0
+    }
+
     async tick() {
         if (this._fsm && !this.abortController.signal.aborted) {
             const { value, done } = await this._fsm.next()
@@ -155,10 +195,7 @@ export abstract class MeisterhauAI {
                 return
             }
 
-            // 在执行状态函数前再次检查是否已停止
-            if (!this.abortController.signal.aborted) {
-                await value(this)
-            }
+            await this._executeTasks(value)
         }
     }
 
@@ -269,7 +306,7 @@ export abstract class MeisterhauAI {
         return false
     }
 
-    randomActions(conf: Record<number, MeisterhauAIState>) {
+    randomActions(conf: Record<number, MeisterhauAITask>) {
         const keys = Object.keys(conf)
         const sum = keys.reduce((a, b) => a + Number(b), 0)
         const rands = keys.map(v => Number(v) / sum)
@@ -288,12 +325,20 @@ export abstract class MeisterhauAI {
     }
 }
 
-const ais: Record<string, [ ConstructorOf<MeisterhauAI>, TrickModule ]> = {}
+const ais: Record<string, AiRegistration> = {}
 const aiRunning = new Map<string, MeisterhauAI>()
 
+export interface AiRegistration {
+    type: string
+    ai: ConstructorOf<MeisterhauAI>
+    tricks: TrickModule
+    components?: Component[]
+    setup?(ai: MeisterhauAI, entity: Entity): void
+}
+
 export namespace ai {
-    export function register(type: string, ai: ConstructorOf<MeisterhauAI>, tricks: TrickModule) {
-        ais[type] = [ ai, tricks ]
+    export function register(registration: AiRegistration) {
+        ais[registration.type] = registration
     }
 
     export function getRegistration(type: string) {
@@ -314,11 +359,19 @@ function setupAIEntity(en?: Entity | null) {
         return
     }
 
-    const [ ctor ] = ais[en.type]
+    const { ai: ctor, components, setup } = ais[en.type]
     if (ctor) {
-        const ai = Reflect.construct(ctor, [ en ])
+        const ai = Reflect.construct(ctor, [ Optional.some(en) ])
         aiRunning.set(en.uniqueId, ai)
         ai.start()
+
+        if (components) {
+            Status.getComponentManager(en.uniqueId).use(comps => {
+                comps.attachComponent(...components)
+            })
+        }
+
+        setup?.(ai, en)
     }
 }
 

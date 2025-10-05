@@ -15,7 +15,7 @@ export function setupAiCommands() {
                     if (!registration)
                         continue
 
-                    transition(e, registration[1], Status.getOrCreate(e.uniqueId), event_name, Function.prototype as any, [ e ])
+                    transition(e, registration.tricks, Status.getOrCreate(e.uniqueId), event_name, Function.prototype as any, [ e ])
                 }
             })
 
@@ -74,7 +74,9 @@ export function setupAiCommands() {
                         continue
                     }
 
-                    out.success(`${entityAI.actor.name}\nUID: ${entityAI.actor.uniqueId}\n策略: ${entityAI.strategy}`)
+                    entityAI.actor.use(actor => {
+                        out.success(`${actor.name}\nUID: ${actor.uniqueId}\n策略: ${entityAI.strategy}`)
+                    })
                 }
             })
         })

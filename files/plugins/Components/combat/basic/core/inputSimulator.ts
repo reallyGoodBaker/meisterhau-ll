@@ -1,5 +1,7 @@
 import { input } from "scripts-rpc/func/input"
 import { es } from "./event"
+import { MeisterhauAI } from "./ai/core"
+import { Optional } from "@utils/optional"
 
 export type Actor = Player | Entity
 class GlobalInputSimulator {
@@ -47,51 +49,99 @@ class GlobalInputSimulator {
 
 export const inputSimulator = new GlobalInputSimulator()
 
-function wait(timeout: number) {
+function wait(timeout: number = 0) {
     const resolvers = Promise.withResolvers<void>()
     setTimeout(resolvers.resolve, timeout)
     return resolvers.promise
 }
 
 export class InputSimulator {
+    readonly actor: Optional<Actor>
+
     constructor(
-        protected actor: Actor
-    ) {}
+        protected ai: MeisterhauAI
+    ) {
+        this.actor = ai.actor
+    }
 
     async jump(timeout=300) {
-        input.performPress(this.actor.uniqueId, 'jump')
-        inputSimulator.jump(this.actor)
-        await wait(timeout)
-        input.performRelease(this.actor.uniqueId, 'jump')
+        if (this.actor.isEmpty()) {
+            return
+        }
+
+        this.ai.executeTask(async () => {
+            const actor = this.actor.unwrap()
+            input.performPress(actor.uniqueId, 'jump')
+            inputSimulator.jump(actor)
+            await wait(timeout)
+            input.performRelease(actor.uniqueId, 'jump')
+        })
     }
 
     sneak() {
-        input.performPress(this.actor.uniqueId, 'sneak')
-        inputSimulator.sneak(this.actor)
+        if (this.actor.isEmpty()) {
+            return
+        }
+
+        const actor = this.actor.unwrap()
+        input.performPress(actor.uniqueId, 'sneak')
+        inputSimulator.sneak(actor)
     }
 
     releaseSneak() {
-        input.performRelease(this.actor.uniqueId,'sneak')
-        inputSimulator.releaseSneak(this.actor)
+        if (this.actor.isEmpty()) {
+            return
+        }
+
+        const actor = this.actor.unwrap()
+        input.performRelease(actor.uniqueId,'sneak')
+        inputSimulator.releaseSneak(actor)
     }
 
     useItem(item?: Item) {
-        inputSimulator.useItem(this.actor, item)
+        if (this.actor.isEmpty()) {
+            return
+        }
+
+        const actor = this.actor.unwrap()
+        inputSimulator.useItem(actor, item)
     }
 
     changeSprinting(isSprinting=true) {
-        inputSimulator.changeSprinting(this.actor, isSprinting)
+        if (this.actor.isEmpty()) {
+            return
+        }
+
+        this.ai.executeTask(async () => {
+            const actor = this.actor.unwrap()
+            inputSimulator.changeSprinting(actor, isSprinting)
+        })
     }
 
     attack() {
-        inputSimulator.attack(this.actor)
+        if (this.actor.isEmpty()) {
+            return
+        }
+
+        const actor = this.actor.unwrap()
+        inputSimulator.attack(actor)
     }
 
     feint() {
-        inputSimulator.feint(this.actor)
+        if (this.actor.isEmpty()) {
+            return
+        }
+
+        const actor = this.actor.unwrap()
+        inputSimulator.feint(actor)
     }
 
     dodge() {
-        inputSimulator.dodge(this.actor)
+        if (this.actor.isEmpty()) {
+            return
+        }
+
+        const actor = this.actor.unwrap()
+        inputSimulator.dodge(actor)
     }
 }

@@ -5,7 +5,8 @@ export class ActorHelper {
     static toEntity(actor: Actor): Entity {
         // @ts-ignore
         if (actor.xuid) {
-            return mc.getEntity(actor.uniqueId)
+            // @ts-ignore
+            return mc.getEntity(+actor.uniqueId)
         }
 
         return actor as Entity

@@ -2,8 +2,12 @@ import { playAnimCompatibility, playSoundAll } from "./index"
 import { CameraFading } from "@components/camera-fading"
 import { CameraComponent } from "@components/camera"
 import { Stamina } from "@components/core/stamina"
-import { CustomComponent } from "@combat/basic/core/component"
+import { BaseComponent } from "@combat/basic/core/component"
 import { input } from "scripts-rpc/func/input"
+import { Actor } from "./core/inputSimulator"
+import { Status } from "./core/status"
+import { AttackSensor } from "./components/attackSensor"
+import { Team } from "./components/team"
 
 export function getApproximatelyDir(direction: AttackDirection) {
     return direction === 'right' ? 'right'
@@ -29,9 +33,12 @@ function getAnim(animCategory: any, direction: string) {
 
 type StateKey<T> = ObjKeyType<T, Move>
 
-export class IncomingAttack extends CustomComponent {
+export class IncomingAttack extends BaseComponent {
+    public cancel: boolean = false
+
     constructor(
         public damage: number,
+        public instigator: Actor,
         public direction: AttackDirection = 'left',
         public permeable: boolean = false,
         public parryable: boolean = true,
@@ -43,6 +50,52 @@ export class IncomingAttack extends CustomComponent {
 
     approximateAttackDirection() {
         return getApproximatelyDir(this.direction)
+    }
+
+    // 添加此组件时候，通知 AttackSensor
+    onAttach() {
+        this.getEntity().use(actor => {
+            Status.getComponentManager(actor.uniqueId).use(comps => {
+                comps.getComponent(AttackSensor).use(sensor => {
+                    // 只关注自己
+                    if (sensor.onlySelf) {
+                        sensor.onWillAttack.call(this, actor)
+                        return
+                    }
+
+                    const range = sensor.range ?? 4
+                    if (sensor.onlyTeammates) {
+                        const teammates = comps.getComponent(Team).match<Set<Actor>>(
+                            new Set(),
+                            team => team.getTeamMembers()
+                        )
+
+                        teammates.forEach(teammate => {
+                            if (teammate === actor) return
+
+                            const distance = teammate.distanceTo(actor.pos)
+                            if (distance > range) return
+
+                            Status.getComponentManager(teammate.uniqueId).use(comps => {
+                                comps.getComponent(AttackSensor).use(sensor => {
+                                    sensor.onWillAttack.call(this, actor)
+                                })
+                            })
+                        })
+
+                        return
+                    }
+
+                    mc.getEntities(actor.pos, range).forEach(entity => {
+                        Status.getComponentManager(entity.uniqueId).use(comps => {
+                            comps.getComponent(AttackSensor).use(sensor => {
+                                sensor.onWillAttack.call(this, actor)
+                            })
+                        })
+                    })
+                })
+            })
+        })
     }
 }
 

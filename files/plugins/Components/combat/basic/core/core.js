@@ -509,7 +509,7 @@ function listenAllCustomEvents(mods) {
             return getMod(getHandedItemType(actor))
         }
 
-        return ai.getRegistration(actor.type)[1]
+        return ai.getRegistration(actor.type).tricks
     }
 
     em.on('onTick', onTick(em))
@@ -532,7 +532,7 @@ function listenAllCustomEvents(mods) {
                 if (!pl) {
                     continue
                 }
-                bind = ai.getRegistration(pl.type)[1]
+                bind = ai.getRegistration(pl.type).tricks
             }
 
             if (!pl ||!bind) {
@@ -650,7 +650,11 @@ function listenAllCustomEvents(mods) {
 
             knockback(victim, 0, 0, 0, -2)
         }
-        const doDamage = () => {
+        const doDamage = incomingAttack => {
+            if (incomingAttack.cancel) {
+                return
+            }
+
             _knockback(_k, victimStatus.repulsible)
             victimStatus.shocked = shock
 
@@ -670,14 +674,16 @@ function listenAllCustomEvents(mods) {
             return doDamage()
         }
 
-        victimStatus.componentManager.attachComponent(new IncomingAttack(
+        const incomingAttack = new IncomingAttack(
             damage,
+            abuser,
             direction,
             permeable,
             parryable,
             powerful,
             trace,
-        ))
+        )
+        victimStatus.componentManager.attachComponent(incomingAttack)
 
         if (victimStatus.isInvulnerable) {
             transition(
@@ -714,7 +720,7 @@ function listenAllCustomEvents(mods) {
             return em.emitNone('block', abuser, victim, damageOpt)
         }
 
-        doDamage()
+        doDamage(incomingAttack)
     })
 
     em.on('deflect', (abuser, victim, damageOpt) => {
@@ -947,7 +953,7 @@ function listenAllMcEvents(collection) {
             return getMod(getHandedItemType(actor))
         }
 
-        return ai.getRegistration(actor.type)[1]
+        return ai.getRegistration(actor.type).tricks
     }
 
     collection.forEach(mod => {
@@ -992,7 +998,7 @@ function listenAllMcEvents(collection) {
             }
 
             const status = Status.getOrCreate(pl.uniqueId)
-            const mod = ai.getRegistration(pl.type)[1]
+            const mod = ai.getRegistration(pl.type).tricks
 
             if (!mod) {
                 return

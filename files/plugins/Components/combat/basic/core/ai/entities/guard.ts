@@ -1,6 +1,6 @@
 import { Timer } from '@combat/basic/components/timer'
 import { initCombatComponent } from '../../core'
-import { ai, AIEventTriggerContext, MeisterhauAI, MeisterhauAIState } from '../core'
+import { ai, MeisterhauAI } from '../core'
 import { tricks } from '../../../../tricks/ornateTwoHander'
 import { EasyAISensing } from '../easyAiSensing'
 import { AiActions } from '../aiActions'
@@ -8,7 +8,7 @@ import { AiActions } from '../aiActions'
 export class Guard extends MeisterhauAI {
 
     target: Entity | null = null
-    readonly actions = new AiActions(this.actor)
+    readonly actions = new AiActions(this)
     readonly sensing = new EasyAISensing(this)
 
     async onStart() {
@@ -28,13 +28,6 @@ export class Guard extends MeisterhauAI {
 
             default:
                 return
-        }
-    }
-
-    getContext(): AIEventTriggerContext {
-        return {
-            actor: this.actor,
-            status: this.status,
         }
     }
 
@@ -77,7 +70,7 @@ export class Guard extends MeisterhauAI {
                 const randomAct = Math.floor(Math.random() * 3)
                 switch (randomAct) {
                     case 1:
-                        yield () => self.actions.attack()
+                        yield (() => self.actions.attack()) as any
                         await self.wait(800)
                         break
                 
@@ -128,7 +121,7 @@ export class Guard extends MeisterhauAI {
                 // 玩家输入闪避
                 if (self.sensing.hasTargetInputed('onDodge')) {
                     // 使用 yield 返回一个函数，而不是直接调用，这样可以让这个函数的执行时机被合理安排
-                    yield () => self.actions.attack() as any
+                    yield (() => self.actions.attack()) as any
                     await self.wait(800)
                     // 玩家匆忙操作时通过连段进行惩罚
                     if (self.sensing.hasTargetInputed('onAttack', 'onUseItem', 'onDodge')) {
@@ -201,7 +194,7 @@ export class Guard extends MeisterhauAI {
     getLeftComboStrategy() {
         const ai = this
         async function *moves() {
-            yield () => ai.actions.attack()
+            yield (() => ai.actions.attack()) as any
             await ai.wait(800)
             yield () => ai.actions.attack()
             await ai.wait(2000)
@@ -211,4 +204,8 @@ export class Guard extends MeisterhauAI {
     }
 }
 
-ai.register('meisterhau:guard', Guard, tricks)
+ai.register({
+    type: 'meisterhau:guard',
+    ai: Guard,
+    tricks,
+})

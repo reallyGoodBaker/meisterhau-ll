@@ -96,12 +96,17 @@ export class Status {
     /**
      * 组件管理器
      */
-    readonly componentManager = new ComponentManager()
+    readonly componentManager: ComponentManager
 
     constructor(
         private readonly uniqueId: string
     ) {
         Status.status.set(uniqueId, this)
+        this.componentManager = new ComponentManager(
+            // @ts-ignore
+            Optional.some(mc.getEntity(+uniqueId))
+        )
+
         this.reset()
     }
 

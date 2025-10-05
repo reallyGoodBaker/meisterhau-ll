@@ -7,23 +7,31 @@ import { actorSelector } from "@combat/basic"
 export class AiActions extends InputSimulator {
 
     setTarget(target: Actor) {
-        const targetLock = new TargetLock(Optional.some(this.actor), Optional.some(target))
-        const components = Status.get(this.actor.uniqueId)?.componentManager
-        components?.attachComponent(targetLock)
+        this.actor.use(actor => {
+            const targetLock = new TargetLock(this.actor, Optional.some(target))
+            const components = Status.get(actor.uniqueId)?.componentManager
+            components?.attachComponent(targetLock)
+        })
     }
 
     removeTarget() {
-        Status.get(this.actor.uniqueId)?.componentManager?.detachComponent(TargetLock)
+        this.actor.use(actor => Status.get(actor.uniqueId)?.componentManager?.detachComponent(TargetLock))
     }
 
     lookAtNearest(radius = 10, family: string[] = [ 'mob' ]) {
-        const selector = actorSelector(this.actor)
-        const typeFamiliy = family.map(t => `family=${t}`).join(",")
-        mc.runcmdEx(`execute at ${selector} as ${selector} run tp @s ~~~ facing @e[c=1,r=${radius}${typeFamiliy ? `,${typeFamiliy}` : ''}]`)
+        this.actor.use(actor => {
+            const selector = actorSelector(actor)
+            const typeFamiliy = family.map(t => `family=${t}`).join(",")
+            mc.runcmdEx(`execute at ${selector} as ${selector} run tp @s ~~~ facing @e[c=1,r=${radius}${typeFamiliy ? `,${typeFamiliy}` : ''}]`)
+        })
     }
 
     setForwardActorAsTarget(length = 8) {
-        const entity = this.actor.getEntityFromViewVector(length)
+        if (this.actor.isEmpty()) {
+            return false
+        }
+
+        const entity = this.actor.unwrap().getEntityFromViewVector(length)
         if (!entity) {
             return false
         }
@@ -41,7 +49,7 @@ export class AiActions extends InputSimulator {
     }
 
     triggerDefinedEvent(event: string) {
-        mc.runcmdEx(`event entity ${actorSelector(this.actor)} ${event}`)
+        this.actor.use(actor => mc.runcmdEx(`event entity ${actorSelector(actor)} ${event}`))
     }
 
 }
