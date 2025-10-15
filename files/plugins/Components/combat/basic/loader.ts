@@ -7,7 +7,7 @@ export default async function loadAll() {
     const mods = Array.from(collection).map(({ tricks }) => tricks)
     const result: [number, number] = [ 0, 0 ]
 
-    listenAllMcEvents(mods)
+    listenAllMcEvents(mods as TrickModule[])
     mods.forEach(mod => loadModule((mod as any), result))
     console.log(`加载了 ${mods.length} 个模块，成功 ${result[1]} 个，失败 ${result[0]}`)
 }

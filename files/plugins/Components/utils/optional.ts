@@ -25,7 +25,7 @@ export class Optional<T = any> {
     }
 
     isEmpty(): boolean {
-        return this.value === undefined || this.value === null
+        return this.value === void 0 || this.value === null
     }
 
     orElse(other: T): T {

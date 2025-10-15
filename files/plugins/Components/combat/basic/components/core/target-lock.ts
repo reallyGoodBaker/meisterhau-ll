@@ -1,4 +1,4 @@
-import { Actor } from "@combat/basic/core/inputSimulator"
+import { Actor } from "@utils/actor"
 import { BaseComponent } from "../../core/component"
 import { Optional } from "@utils/optional"
 

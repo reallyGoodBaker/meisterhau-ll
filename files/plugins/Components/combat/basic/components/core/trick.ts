@@ -26,7 +26,7 @@ export class TrickComponent extends CustomComponent {
         const trick = TrickComponent.tricks.get(sid)
         if (trick) {
             this.trick = trick
-            this.move = trick.moves[trick.entry]
+            this.move = trick.moves.getMove(trick.entry)
             this.moveName = trick.entry
             this.duration = 0
 

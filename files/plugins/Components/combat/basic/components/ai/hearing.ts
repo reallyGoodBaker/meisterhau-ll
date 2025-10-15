@@ -1,6 +1,6 @@
 import { CustomComponent } from "@combat/basic/core/component"
-import { Actor } from "@combat/basic/core/inputSimulator"
 import { Status } from "@combat/basic/core/status"
+import { Actor } from "@utils/actor"
 import { Delegate } from "@utils/events"
 import { Optional } from "@utils/optional"
 
@@ -37,26 +37,19 @@ export class AiHearing extends CustomComponent {
         const { pos, volumn, sourceActor, channel } = source
         const spreadRadius = Math.min(32, Math.max(volumn * 16, 16))
         const entities = mc.getEntities(pos, spreadRadius)
-        entities.forEach(entity => {
-            const hearing = Status.get(entity.uniqueId)?.componentManager.getComponent(AiHearing)
-            if (!hearing) {
-                return
+        entities.forEach(entity => Optional.some(Status.get(entity.uniqueId)?.componentManager.getComponent(AiHearing)).use(hearing => {
+            const dist = sourceActor.match(
+                Infinity,
+                actor => actor.distanceTo(entity)
+            )
+            const minVolumn = hearing.conf.minVolumn ?? 0
+            const maxVolumn = hearing.conf.maxVolumn ?? 2
+            const volumnRemain = Math.max(volumn - 0.0625 * dist, 0)
+            if (hearing.conf.channels.includes(channel) && volumnRemain >= minVolumn && volumnRemain <= maxVolumn) {
+                hearing.onHeard.call(source)
+                hearing.heardActors.add(sourceActor.unwrap())
             }
-
-            hearing.use(hearing => {
-                const dist = sourceActor.match(
-                    () => Infinity,
-                    actor => actor.distanceTo(entity)
-                )
-                const minVolumn = hearing.conf.minVolumn ?? 0
-                const maxVolumn = hearing.conf.maxVolumn ?? 2
-                const volumnRemain = Math.max(volumn - 0.0625 * dist, 0)
-                if (hearing.conf.channels.includes(channel) && volumnRemain >= minVolumn && volumnRemain <= maxVolumn) {
-                    hearing.onHeard.call(source)
-                    hearing.heardActors.add(sourceActor.unwrap())
-                }
-            })
-        })
+        }))
     }
 
     readonly heardActors: Set<Actor> = new Set()

@@ -2,8 +2,8 @@ import { input } from "scripts-rpc/func/input"
 import { es } from "./event"
 import { MeisterhauAI } from "./ai/core"
 import { Optional } from "@utils/optional"
+import { Actor } from "@utils/actor"
 
-export type Actor = Player | Entity
 class GlobalInputSimulator {
     simulate(
         input: keyof InputableTransitionMap,

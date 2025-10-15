@@ -130,7 +130,7 @@ export class Status {
         }
     }
 
-    acceptableInput(name: string, accept: boolean) {
+    acceptableInput(name: string, accept?: boolean) {
         if (accept !== undefined) {
             accept
                 ? this.acceptableInputs.add(name)

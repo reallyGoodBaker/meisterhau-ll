@@ -1,5 +1,6 @@
+import { Optional } from "@utils/optional"
 import { AiHearing } from "./components/ai/hearing"
-import { Actor } from "./core/inputSimulator"
+import { Actor } from "@utils/actor"
 
 export function playAnim(pl: Player|Entity, anim: string, nextAnim?: string, time?: number, stopExp?: string, controller?: string) {
     mc.runcmdEx(`/playanimation "${pl.name}" ` + [anim, nextAnim, time, stopExp, controller].filter(x => x).join(' '))
@@ -15,8 +16,11 @@ export function playAnimCompatibility(actor: Actor, anim: string, nextAnim?: str
 }
 
 export function entitySelector(en: Entity) {
-    const pos = en.pos
-    return `@e[c=1,type=${en.type},x=${pos.x},y=${pos.y},z=${pos.z},r=1]`
+    const pos = Optional.some(en?.pos)
+    return pos.match(
+        '@e[c=0]',
+        pos => `@e[c=1,type=${en.type},x=${pos.x},y=${pos.y},z=${pos.z},r=1]`
+    )
 }
 
 export function actorSelector(actor: Actor) {

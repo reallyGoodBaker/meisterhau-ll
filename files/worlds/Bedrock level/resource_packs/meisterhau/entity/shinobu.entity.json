@@ -32,6 +32,14 @@
                 "alex": "geometry.ai.shinobu",
                 "cape": "geometry.cape"
             },
+            "particle_effects": {
+                "draw": "weapon:draw",
+                "draw_trace": "weapon:draw_trace",
+                "draw_unstoppable": "weapon:draw_unstoppable",
+                "spark": "weapon:spark",
+                "spark_deflection": "weapon:spark_deflection",
+                "hit_weapon": "weapon:hit"
+            },
             "animations": {
                 "idle": "animation.shinobu.ai.hold",
                 "body_fix": "animation.player.move.body_rot_fix",

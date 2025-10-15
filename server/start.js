@@ -24,7 +24,7 @@ const cpFiles = () => new Promise(resolve => {
 })
 
 function startDevServer() {
-    cp.execSync('chcp 65001')
+    // cp.execSync('chcp 65001')
     return cp.spawn(
         'bedrock_server_mod', [],
         {

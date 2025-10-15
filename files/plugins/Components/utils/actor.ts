@@ -1,4 +1,10 @@
-import { Actor } from "@combat/basic/core/inputSimulator"
+import { Optional } from "./optional"
+
+export type Actor = Player | Entity
+
+export function actorProxy(actor: Actor) {
+    
+}
 
 export class ActorHelper {
 
@@ -25,4 +31,12 @@ export class ActorHelper {
         }
     }
 
+    static getPlayer(info: string): Optional<Actor> {
+        return Optional.some(mc.getPlayer(info))
+    }
+
+    static getEntity(info: string | number): Optional<Actor> {
+        // @ts-ignore
+        return Optional.some(mc.getEntity(+info))
+    }
 }

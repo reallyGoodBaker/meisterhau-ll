@@ -59,6 +59,11 @@ export interface Vector {
     z: number
 }
 
+export interface Rotation {
+    yaw: number
+    pitch: number
+}
+
 const PiDiv180 = Math.PI / 180.0
 
 export function yawToVec2(yaw: number) {

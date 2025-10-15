@@ -4,10 +4,10 @@ import { CameraComponent } from "@components/camera"
 import { Stamina } from "@components/core/stamina"
 import { BaseComponent } from "@combat/basic/core/component"
 import { input } from "scripts-rpc/func/input"
-import { Actor } from "./core/inputSimulator"
 import { Status } from "./core/status"
 import { AttackSensor } from "./components/attackSensor"
 import { Team } from "./components/team"
+import { Actor } from "@utils/actor"
 
 export function getApproximatelyDir(direction: AttackDirection) {
     return direction === 'right' ? 'right'
@@ -108,7 +108,19 @@ export function setVelocityByOrientation(pl: Player, ctx: MovementContext, max: 
     }
 }
 
-export class DefaultMoves {
+export class DefaultMoves implements Moves {
+    getMove(name: string): Move {
+        if (!(name in this)) {
+            throw new Error(`Move ${name} not found`)
+        }
+
+        return this[name as keyof this] as Move
+    }
+
+    hasMove(name: string): boolean {
+        return name in this
+    }
+
     animations = {
         parried: {
             /**

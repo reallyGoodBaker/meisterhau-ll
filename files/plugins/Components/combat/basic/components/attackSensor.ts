@@ -1,7 +1,7 @@
 import { Delegate } from "@utils/events"
 import { CustomComponent } from "../core/component"
 import { IncomingAttack } from "../default"
-import { Actor } from "../core/inputSimulator"
+import { Actor } from "@utils/actor"
 
 export class AttackSensor extends CustomComponent {
     constructor(

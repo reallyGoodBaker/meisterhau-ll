@@ -100,12 +100,6 @@
           }
         },
         {
-          "vr_button@general_section.vr_button": {
-            "$toggle_group_forced_index": "$vr_forced_index",
-            "ignored": "(not $is_holographic or not $include_controls_and_settings_sections)"
-          }
-        },
-        {
           "how_to_play_button@general_section.how_to_play_button": {
             "$toggle_group_forced_index": "$how_to_play_index",
             "ignored": "(not $include_controls_and_settings_sections)"
@@ -541,12 +535,6 @@
               {
                 "view_subscriptions_section@general_section.view_subscriptions_section": {
                   "ignored": "($education_edition or $is_editor_mode_enabled)",
-                  "visible": false
-                }
-              },
-              {
-                "vr_section@general_section.vr_section": {
-                  "ignored": "(not $is_holographic)",
                   "visible": false
                 }
               },

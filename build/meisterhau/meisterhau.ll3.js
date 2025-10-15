@@ -769,7 +769,7 @@ function cmd(head, desc, perm = CommandPermission.OP) {
     };
 }
 
-var command$1 = /*#__PURE__*/Object.freeze({
+var command = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	get CommandPermission () { return CommandPermission; },
 	Registry: Registry,
@@ -777,7 +777,7 @@ var command$1 = /*#__PURE__*/Object.freeze({
 	serverStarted: serverStarted
 });
 
-var require$$1$1 = /*@__PURE__*/getAugmentedNamespace(command$1);
+var require$$1$3 = /*@__PURE__*/getAugmentedNamespace(command);
 
 var server;
 var hasRequiredServer;
@@ -881,7 +881,7 @@ function requireSetup () {
 	if (hasRequiredSetup) return setup_1;
 	hasRequiredSetup = 1;
 	const { EventEmitter } = requireEvents();
-	const { cmd } = require$$1$1;
+	const { cmd } = require$$1$3;
 	const { setupNodeHttpServer } = requireServer();
 
 	const em = new EventEmitter();
@@ -976,19 +976,66 @@ function requireSetup () {
 
 var double_dagger = {};
 
-function playAnim$6(pl, anim, nextAnim, time, stopExp, controller) {
+let Optional$1 = class Optional {
+    value;
+    static none() {
+        return new Optional(null);
+    }
+    static some(value) {
+        if (value instanceof Optional) {
+            return value;
+        }
+        return new Optional(value);
+    }
+    constructor(value) {
+        this.value = value;
+    }
+    unwrap() {
+        if (!this.isEmpty()) {
+            return this.value;
+        }
+        throw new Error(`Optional is empty\n${new Error().stack}`);
+    }
+    isEmpty() {
+        return this.value === void 0 || this.value === null;
+    }
+    orElse(other) {
+        return this.value ?? other;
+    }
+    use(fn, self) {
+        if (!this.isEmpty()) {
+            fn.call(self, this.value);
+            return true;
+        }
+        return false;
+    }
+    match(none, some) {
+        if (this.isEmpty()) {
+            // @ts-ignore
+            return none.call ? none() : none;
+        }
+        return some(this.value);
+    }
+};
+
+var optional = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	Optional: Optional$1
+});
+
+function playAnim$4(pl, anim, nextAnim, time, stopExp, controller) {
     mc.runcmdEx(`/playanimation "${pl.name}" ` + [anim, nextAnim, time, stopExp, controller].filter(x => x).join(' '));
 }
 function playAnimCompatibility(actor, anim, nextAnim, time, stopExp, controller) {
     if ('xuid' in actor) {
-        playAnim$6(actor, anim, nextAnim, time, stopExp, controller);
+        playAnim$4(actor, anim, nextAnim, time, stopExp, controller);
         return;
     }
     playAnimEntity(actor, anim, nextAnim, time, stopExp, controller);
 }
 function entitySelector(en) {
-    const pos = en.pos;
-    return `@e[c=1,type=${en.type},x=${pos.x},y=${pos.y},z=${pos.z},r=1]`;
+    const pos = Optional$1.some(en?.pos);
+    return pos.match('@e[c=0]', pos => `@e[c=1,type=${en.type},x=${pos.x},y=${pos.y},z=${pos.z},r=1]`);
 }
 function actorSelector(actor) {
     if ('xuid' in actor) {
@@ -1004,12 +1051,12 @@ function playSound(pl, sound, pos, volume, pitch, minVolume) {
         pos.x, pos.y, pos.z, volume, pitch, minVolume
     ].join(' '));
 }
-function playSoundAll$5(sound, pos, volume, pitch, minVolume) {
+function playSoundAll$4(sound, pos, volume, pitch, minVolume) {
     mc.runcmdEx(`/playsound ${sound} @a ` + [
         pos.x, pos.y, pos.z, volume, pitch, minVolume
     ].join(' '));
 }
-function playParticle$1(particle, pos) {
+function playParticle(particle, pos) {
     mc.runcmdEx(`/particle ${particle} ` + [
         pos.x, pos.y, pos.z
     ].join(' '));
@@ -1026,15 +1073,15 @@ var basic = /*#__PURE__*/Object.freeze({
 	actorSelector: actorSelector,
 	entitySelector: entitySelector,
 	movable: movable,
-	playAnim: playAnim$6,
+	playAnim: playAnim$4,
 	playAnimCompatibility: playAnimCompatibility,
 	playAnimEntity: playAnimEntity,
-	playParticle: playParticle$1,
+	playParticle: playParticle,
 	playSound: playSound,
-	playSoundAll: playSoundAll$5
+	playSoundAll: playSoundAll$4
 });
 
-var require$$2$1 = /*@__PURE__*/getAugmentedNamespace(basic);
+var require$$0 = /*@__PURE__*/getAugmentedNamespace(basic);
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -1064,53 +1111,6 @@ typeof SuppressedError === "function" ? SuppressedError : function (error, suppr
     var e = new Error(message);
     return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
 };
-
-let Optional$1 = class Optional {
-    value;
-    static none() {
-        return new Optional(null);
-    }
-    static some(value) {
-        if (value instanceof Optional) {
-            return value;
-        }
-        return new Optional(value);
-    }
-    constructor(value) {
-        this.value = value;
-    }
-    unwrap() {
-        if (!this.isEmpty()) {
-            return this.value;
-        }
-        throw new Error(`Optional is empty\n${new Error().stack}`);
-    }
-    isEmpty() {
-        return this.value === undefined || this.value === null;
-    }
-    orElse(other) {
-        return this.value ?? other;
-    }
-    use(fn, self) {
-        if (!this.isEmpty()) {
-            fn.call(self, this.value);
-            return true;
-        }
-        return false;
-    }
-    match(none, some) {
-        if (this.isEmpty()) {
-            // @ts-ignore
-            return none.call ? none() : none;
-        }
-        return some(this.value);
-    }
-};
-
-var optional = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	Optional: Optional$1
-});
 
 const REFLECT_MANAGER = Symbol('reflect-manager');
 const REFLECT_ENTITY = Symbol('reflect-entity');
@@ -1250,6 +1250,9 @@ function RequireComponents(...params) {
         [REQUIRED_COMPONENTS] = new Map();
         constructor() {
             super();
+            this._init();
+        }
+        _init() {
             for (const param of params) {
                 if (Array.isArray(param)) {
                     const [Ctor, ...args] = param;
@@ -1293,7 +1296,7 @@ function getFieldEntries(t) {
     };
 }
 
-let CameraComponent$1 = class CameraComponent extends BaseComponent {
+class CameraComponent extends BaseComponent {
     /**
      * [ x, y, z ]
      */
@@ -1308,12 +1311,7 @@ let CameraComponent$1 = class CameraComponent extends BaseComponent {
     static defaultStatus = this.defaultOffset.concat(this.defaultRot);
     offset = CameraComponent.defaultOffset.slice();
     rot = [0, 0];
-};
-
-var camera$3 = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	CameraComponent: CameraComponent$1
-});
+}
 
 function constrictCalc$1(start, end, calcFn) {
     try {
@@ -1359,7 +1357,7 @@ const alerpn = (from, to, progress) => {
     return res;
 };
 const PiDiv180 = Math.PI / 180.0;
-function yawToVec2$1(yaw) {
+function yawToVec2(yaw) {
     const rad = yaw * PiDiv180;
     return {
         x: Math.cos(rad),
@@ -1374,7 +1372,7 @@ var math = /*#__PURE__*/Object.freeze({
 	lerpn: lerpn,
 	minmax: minmax,
 	randomRange: randomRange$1,
-	yawToVec2: yawToVec2$1
+	yawToVec2: yawToVec2
 });
 
 let Timer = class Timer extends BaseComponent {
@@ -1401,7 +1399,7 @@ Timer = __decorate([
     Fields(['rest'], ['duration', 'done'])
 ], Timer);
 
-let Stamina$1 = class Stamina extends CustomComponent {
+let Stamina = class Stamina extends CustomComponent {
     $stamina;
     maxStamina;
     restorePerTick;
@@ -1446,21 +1444,16 @@ let Stamina$1 = class Stamina extends CustomComponent {
         this.prevStamina = this.stamina;
     }
 };
-Stamina$1 = __decorate([
+Stamina = __decorate([
     PublicComponent('stamina'),
     Fields(['stamina', 'maxStamina', 'restorePerTick', 'restoreCooldown'])
-], Stamina$1);
+], Stamina);
 
-var stamina = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	get Stamina () { return Stamina$1; }
-});
-
-const defaultAcceptableInputs$1 = [
+const defaultAcceptableInputs = [
     'onJump', 'onSneak', 'onAttack', 'onUseItem',
     'onChangeSprinting', 'onFeint', 'onDodge',
 ];
-let Status$3 = class Status {
+let Status$1 = class Status {
     uniqueId;
     static status = new Map();
     static get(uniqueId) {
@@ -1534,7 +1527,7 @@ let Status$3 = class Status {
     /**
      * 玩家接受的事件输入
      */
-    acceptableInputs = new Set(defaultAcceptableInputs$1);
+    acceptableInputs = new Set(defaultAcceptableInputs);
     static defaultCameraOffsets = [2.2, 0, 0.7];
     cameraOffsets = Status.defaultCameraOffsets;
     /**
@@ -1558,10 +1551,10 @@ let Status$3 = class Status {
         this.isWaitingParry = false;
         this.stamina = 0;
         this.stiffness = 0;
-        defaultAcceptableInputs$1.forEach(type => this.acceptableInputs.add(type));
-        this.componentManager.attachComponent(new Stamina$1(0));
+        defaultAcceptableInputs.forEach(type => this.acceptableInputs.add(type));
+        this.componentManager.attachComponent(new Stamina(0));
         if (mc.getPlayer(this.uniqueId)) {
-            this.componentManager.attachComponent(new CameraComponent$1());
+            this.componentManager.attachComponent(new CameraComponent());
         }
     }
     acceptableInput(name, accept) {
@@ -1599,18 +1592,13 @@ let Status$3 = class Status {
 
 var status = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	Status: Status$3,
-	defaultAcceptableInputs: defaultAcceptableInputs$1
+	Status: Status$1,
+	defaultAcceptableInputs: defaultAcceptableInputs
 });
 
-let Tick$1 = class Tick extends CustomComponent {
+class Tick extends CustomComponent {
     static tick = 0;
-};
-
-var tick = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	Tick: Tick$1
-});
+}
 
 
 
@@ -1634,7 +1622,7 @@ const
 */;
 
 var CameraFading_1;
-let CameraFading$1 = CameraFading_1 = class CameraFading extends BaseComponent {
+let CameraFading = CameraFading_1 = class CameraFading extends BaseComponent {
     config;
     tickOffset = 0;
     finished = false;
@@ -1651,10 +1639,10 @@ let CameraFading$1 = CameraFading_1 = class CameraFading extends BaseComponent {
         return new CameraFading_1(config);
     }
     dt() {
-        return Tick$1.tick - this.tickOffset;
+        return Tick.tick - this.tickOffset;
     }
     onAttach() {
-        this.tickOffset = Tick$1.tick;
+        this.tickOffset = Tick.tick;
     }
     copy(from, to) {
         const len = Math.min(from.length, to.length);
@@ -1683,7 +1671,7 @@ let CameraFading$1 = CameraFading_1 = class CameraFading extends BaseComponent {
         return this.last;
     }
     onTick(manager) {
-        const { offset, rot } = manager.getComponent(CameraComponent$1).unwrap();
+        const { offset, rot } = manager.getComponent(CameraComponent).unwrap();
         const info = this.getTransInfo();
         const [curve, from, to, progress] = info;
         
@@ -1710,43 +1698,38 @@ let CameraFading$1 = CameraFading_1 = class CameraFading extends BaseComponent {
         let to = null;
         switch (direction) {
             case 'right':
-                to = [...CameraComponent$1.defaultOffset, -15, 0];
+                to = [...CameraComponent.defaultOffset, -15, 0];
                 break;
             case 'left':
-                to = [...CameraComponent$1.defaultOffset, 15, 0];
+                to = [...CameraComponent.defaultOffset, 15, 0];
                 break;
             case 'vertical':
-                to = [...CameraComponent$1.defaultOffset, 0, -5];
+                to = [...CameraComponent.defaultOffset, 0, -5];
                 break;
             default:
                 to = [1.5, 0, 0.5, 0, 0];
                 break;
         }
-        const manager = Status$3.getOrCreate(abuser.uniqueId).componentManager;
+        const manager = Status$1.getOrCreate(abuser.uniqueId).componentManager;
         manager.beforeTick(() => {
             manager.attachComponent(new CameraFading_1([
                 {
-                    from: CameraComponent$1.defaultStatus,
+                    from: CameraComponent.defaultStatus,
                     to,
                     duration: 1
                 },
                 {
-                    to: CameraComponent$1.defaultStatus,
+                    to: CameraComponent.defaultStatus,
                     duration: 1
                 }
             ]));
         });
     }
 };
-CameraFading$1 = CameraFading_1 = __decorate([
+CameraFading = CameraFading_1 = __decorate([
     PublicComponent('camera-fading'),
     Fields(['config'])
-], CameraFading$1);
-
-var cameraFading = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	get CameraFading () { return CameraFading$1; }
-});
+], CameraFading);
 
 var setupExports = requireSetup();
 
@@ -1787,7 +1770,7 @@ function eventCenter(opt) {
     });
     return em;
 }
-var input$1;
+var input;
 (function (input) {
     function isPressing(pl, button) {
         return serverExports.inputStates.get(pl.name)?.[button] ?? false;
@@ -1873,14 +1856,7 @@ var input$1;
         return y > 0 ? Orientation.Forward : Orientation.Backward;
     }
     input.approximateOrientation = approximateOrientation;
-})(input$1 || (input$1 = {}));
-
-var input$2 = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	get ButtonState () { return ButtonState; },
-	eventCenter: eventCenter,
-	get input () { return input$1; }
-});
+})(input || (input = {}));
 
 class Delegate {
     _listener = Function.prototype;
@@ -1906,7 +1882,7 @@ class AttackSensor extends CustomComponent {
 }
 
 var Team_1;
-let Team$1 = class Team extends BaseComponent {
+let Team = class Team extends BaseComponent {
     static { Team_1 = this; }
     name;
     static players = new Map();
@@ -1936,15 +1912,10 @@ let Team$1 = class Team extends BaseComponent {
         return Team_1.players.get(this) || new Set();
     }
 };
-Team$1 = Team_1 = __decorate([
+Team = Team_1 = __decorate([
     PublicComponent('team'),
     Fields(['name'])
-], Team$1);
-
-var team = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	get Team () { return Team$1; }
-});
+], Team);
 
 function getApproximatelyDir(direction) {
     return direction === 'right' ? 'right'
@@ -1963,7 +1934,7 @@ function getAnim(animCategory, direction) {
     }
     return anim;
 }
-let IncomingAttack$1 = class IncomingAttack extends BaseComponent {
+class IncomingAttack extends BaseComponent {
     damage;
     instigator;
     direction;
@@ -1988,7 +1959,7 @@ let IncomingAttack$1 = class IncomingAttack extends BaseComponent {
     // 添加此组件时候，通知 AttackSensor
     onAttach() {
         this.getEntity().use(actor => {
-            Status$3.getComponentManager(actor.uniqueId).use(comps => {
+            Status$1.getComponentManager(actor.uniqueId).use(comps => {
                 comps.getComponent(AttackSensor).use(sensor => {
                     // 只关注自己
                     if (sensor.onlySelf) {
@@ -1997,14 +1968,14 @@ let IncomingAttack$1 = class IncomingAttack extends BaseComponent {
                     }
                     const range = sensor.range ?? 4;
                     if (sensor.onlyTeammates) {
-                        const teammates = comps.getComponent(Team$1).match(new Set(), team => team.getTeamMembers());
+                        const teammates = comps.getComponent(Team).match(new Set(), team => team.getTeamMembers());
                         teammates.forEach(teammate => {
                             if (teammate === actor)
                                 return;
                             const distance = teammate.distanceTo(actor.pos);
                             if (distance > range)
                                 return;
-                            Status$3.getComponentManager(teammate.uniqueId).use(comps => {
+                            Status$1.getComponentManager(teammate.uniqueId).use(comps => {
                                 comps.getComponent(AttackSensor).use(sensor => {
                                     sensor.onWillAttack.call(this, actor);
                                 });
@@ -2013,7 +1984,7 @@ let IncomingAttack$1 = class IncomingAttack extends BaseComponent {
                         return;
                     }
                     mc.getEntities(actor.pos, range).forEach(entity => {
-                        Status$3.getComponentManager(entity.uniqueId).use(comps => {
+                        Status$1.getComponentManager(entity.uniqueId).use(comps => {
                             comps.getComponent(AttackSensor).use(sensor => {
                                 sensor.onWillAttack.call(this, actor);
                             });
@@ -2023,10 +1994,10 @@ let IncomingAttack$1 = class IncomingAttack extends BaseComponent {
             });
         });
     }
-};
+}
 function setVelocityByOrientation(pl, ctx, max, offset) {
-    const ori = input$1.approximateOrientation(pl);
-    if (ori === input$1.Orientation.Backward) {
+    const ori = input.approximateOrientation(pl);
+    if (ori === input.Orientation.Backward) {
         ctx.setVelocity(pl, ori * 90, max, -2);
     }
     else {
@@ -2034,6 +2005,15 @@ function setVelocityByOrientation(pl, ctx, max, offset) {
     }
 }
 let DefaultMoves$4 = class DefaultMoves {
+    getMove(name) {
+        if (!(name in this)) {
+            throw new Error(`Move ${name} not found`);
+        }
+        return this[name];
+    }
+    hasMove(name) {
+        return name in this;
+    }
     animations = {
         parried: {
             /**
@@ -2106,9 +2086,9 @@ let DefaultMoves$4 = class DefaultMoves {
         cast: 15,
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2];
-            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 10;
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 10;
             playAnimCompatibility(pl, getAnim(this.animations.blocked, direction));
-            playSoundAll$5(this.sounds.blocked, pl.pos, 1);
+            playSoundAll$4(this.sounds.blocked, pl.pos, 1);
             ctx.movement(pl, false);
             ctx.freeze(pl);
             ctx.setVelocity(pl, -100, 0.8, -2);
@@ -2126,12 +2106,12 @@ let DefaultMoves$4 = class DefaultMoves {
         cast: 10,
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2];
-            const stamina = ctx.status.componentManager.getComponent(Stamina$1).unwrap();
+            const stamina = ctx.status.componentManager.getComponent(Stamina).unwrap();
             stamina.setCooldown(5);
             stamina.stamina += 15;
             ctx.status.isBlocking = true;
             playAnimCompatibility(pl, getAnim(this.animations.block, direction));
-            playSoundAll$5(this.sounds.block, pl.pos, 1);
+            playSoundAll$4(this.sounds.block, pl.pos, 1);
             ctx.movement(pl, false);
             ctx.freeze(pl);
         },
@@ -2149,7 +2129,7 @@ let DefaultMoves$4 = class DefaultMoves {
         cast: Infinity,
         onEnter: (pl, ctx) => {
             const manager = ctx.status.componentManager;
-            manager.getComponent(Stamina$1).unwrap().setCooldown(5);
+            manager.getComponent(Stamina).unwrap().setCooldown(5);
             ctx.movement(pl, false);
             ctx.freeze(pl);
             ctx.status.disableInputs([
@@ -2183,7 +2163,7 @@ let DefaultMoves$4 = class DefaultMoves {
         },
         timeline: {
             0: (pl, ctx) => {
-                const { direction } = ctx.components.getComponent(IncomingAttack$1).unwrap();
+                const { direction } = ctx.components.getComponent(IncomingAttack).unwrap();
                 switch (direction) {
                     case 'left':
                         ctx.setVelocity(pl, -150, 1.5, -2);
@@ -2233,7 +2213,7 @@ let DefaultMoves$4 = class DefaultMoves {
     };
     parried = {
         onEnter: (pl, ctx) => {
-            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 15;
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 15;
             ctx.movement(pl, false);
             ctx.freeze(pl);
             ctx.status.disableInputs([
@@ -2296,20 +2276,20 @@ let DefaultMoves$4 = class DefaultMoves {
         onEnter: (pl, ctx) => {
             const target = ctx.rawArgs[1];
             const { direction } = ctx.rawArgs[2];
-            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina += 10;
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina += 10;
             ctx.movement(pl, false);
-            playSoundAll$5(this.sounds.parry, pl.pos, 1);
+            playSoundAll$4(this.sounds.parry, pl.pos, 1);
             ctx.status.isWaitingParry = true;
             playAnimCompatibility(pl, getAnim(this.animations.parry, direction));
             ctx.lookAt(pl, target);
-            ctx.status.componentManager.attachComponent(new CameraFading$1([
+            ctx.status.componentManager.attachComponent(new CameraFading([
                 {
-                    from: CameraComponent$1.defaultOffset,
+                    from: CameraComponent.defaultOffset,
                     to: [0.6, 0, 0.8, 0, 0],
                     duration: 2
                 },
                 {
-                    to: CameraComponent$1.defaultOffset,
+                    to: CameraComponent.defaultOffset,
                     duration: 3
                 }
             ]));
@@ -2317,7 +2297,7 @@ let DefaultMoves$4 = class DefaultMoves {
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
             ctx.status.isWaitingParry = false;
-            ctx.status.componentManager.detachComponent(CameraFading$1);
+            ctx.status.componentManager.detachComponent(CameraFading);
         },
         timeline: {
             13: (pl, ctx) => ctx.trap(pl, { tag: 'parryCounter' })
@@ -2452,15 +2432,15 @@ var _default = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	DefaultMoves: DefaultMoves$4,
 	DefaultTrickModule: DefaultTrickModule$4,
-	IncomingAttack: IncomingAttack$1,
+	IncomingAttack: IncomingAttack,
 	getApproximatelyDir: getApproximatelyDir,
 	setVelocityByOrientation: setVelocityByOrientation
 });
 
-var require$$18 = /*@__PURE__*/getAugmentedNamespace(_default);
+var require$$1$2 = /*@__PURE__*/getAugmentedNamespace(_default);
 
-const { playAnim: playAnim$5, playSoundAll: playSoundAll$4 } = require$$2$1;
-const { DefaultMoves: DefaultMoves$3, DefaultTrickModule: DefaultTrickModule$3 } = require$$18;
+const { playAnim: playAnim$3, playSoundAll: playSoundAll$3 } = require$$0;
+const { DefaultMoves: DefaultMoves$3, DefaultTrickModule: DefaultTrickModule$3 } = require$$1$2;
 
 class DoubleDaggerMoves extends DefaultMoves$3 {
     constructor() {
@@ -2504,7 +2484,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
     init = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$5(pl, 'animation.posture.clear');
+            playAnim$3(pl, 'animation.posture.clear');
         },
         transitions: {
             hold: {
@@ -2522,7 +2502,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
     hold = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim$5(pl, 'animation.double_dagger.hold', 'animation.double_dagger.hold');
+            playAnim$3(pl, 'animation.double_dagger.hold', 'animation.double_dagger.hold');
         },
         transitions: {
             init: {
@@ -2554,11 +2534,11 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         onEnter(pl, ctx) {
             ctx.status.isBlocking = true;
             ctx.freeze(pl);
-            playAnim$5(pl, 'animation.double_dagger.horizontal_swing');
+            playAnim$3(pl, 'animation.double_dagger.horizontal_swing');
             ctx.lookAtTarget(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll$4('weapon.woosh.1', pl.pos, 1);
+            playSoundAll$3('weapon.woosh.1', pl.pos, 1);
             ctx.selectFromSector(pl, {
                 angle: 90,
                 radius: 2,
@@ -2631,7 +2611,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         backswing: 10,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$5(pl, 'animation.double_dagger.horizontal_swing.to.vertical_chop');
+            playAnim$3(pl, 'animation.double_dagger.horizontal_swing.to.vertical_chop');
             ctx.lookAtTarget(pl);
         },
         onAct(pl, ctx) {
@@ -2653,7 +2633,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         timeline: {
             0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
             4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8),
-            9: pl => playSoundAll$4('weapon.woosh.3', pl.pos, 1),
+            9: pl => playSoundAll$3('weapon.woosh.3', pl.pos, 1),
             10: (pl, ctx) => ctx.trap(pl)
         },
         transitions: {
@@ -2694,7 +2674,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
             ctx.status.isWaitingParry = true;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$5(pl, 'animation.double_dagger.stab');
+            playAnim$3(pl, 'animation.double_dagger.stab');
         },
         onAct(pl, ctx) {
             ctx.selectFromSector(pl, {
@@ -2718,7 +2698,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
             3: (_, ctx) => ctx.status.isWaitingParry = false,
             6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8),
             8: (_, ctx) => ctx.status.isBlocking = true,
-            9: pl => playSoundAll$4('weapon.woosh.2', pl.pos, 1),
+            9: pl => playSoundAll$3('weapon.woosh.2', pl.pos, 1),
             12: (_, ctx) => ctx.status.isBlocking = false,
             14: (pl, ctx) => ctx.trap(pl)
         },
@@ -2762,7 +2742,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         onEnter(pl, ctx) {
             ctx.status.isWaitingDeflection = true;
             ctx.freeze(pl);
-            playAnim$5(pl, 'animation.double_dagger.dodge.front');
+            playAnim$3(pl, 'animation.double_dagger.dodge.front');
             ctx.lookAtTarget(pl);
         },
         onAct(_, ctx) {
@@ -2811,8 +2791,8 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
             ctx.status.isDodging = true;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playSoundAll$4('weapon.deflection', pl.pos, 1);
-            playAnim$5(pl, 'animation.double_dagger.deflection');
+            playSoundAll$3('weapon.deflection', pl.pos, 1);
+            playAnim$3(pl, 'animation.double_dagger.deflection');
         },
         onAct(_, ctx) {
             ctx.status.isDodging = false;
@@ -2868,7 +2848,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         backswing: 8,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$5(pl, 'animation.double_dagger.deflection.stab');
+            playAnim$3(pl, 'animation.double_dagger.deflection.stab');
         },
         onAct(pl, ctx) {
             ctx.lookAtTarget(pl);
@@ -2889,7 +2869,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         },
         timeline: {
             5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 60, 0),
-            6: pl => playSoundAll$4('weapon.woosh.2', pl.pos, 1)
+            6: pl => playSoundAll$3('weapon.woosh.2', pl.pos, 1)
         },
         transitions: {
             hurt: {
@@ -2917,7 +2897,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.adsorbOrSetVelocity(pl, 1.5, 90, 0.8);
-            playAnim$5(pl, 'animation.double_dagger.deflection.punch');
+            playAnim$3(pl, 'animation.double_dagger.deflection.punch');
         },
         onAct(pl, ctx) {
             ctx.lookAtTarget(pl);
@@ -2958,7 +2938,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         backswing: 14,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$5(pl, 'animation.double_dagger.dodge.catch');
+            playAnim$3(pl, 'animation.double_dagger.dodge.catch');
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.8);
         },
         onAct(pl, ctx) {
@@ -3044,7 +3024,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         backswing: 11,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$5(pl, 'animation.double_dagger.catch.stab');
+            playAnim$3(pl, 'animation.double_dagger.catch.stab');
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.8);
         },
         onAct(pl, ctx) {
@@ -3085,7 +3065,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         backswing: 10,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$5(pl, 'animation.double_dagger.catch.kick');
+            playAnim$3(pl, 'animation.double_dagger.catch.kick');
             ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8);
         },
         onAct(pl, ctx) {
@@ -3131,8 +3111,8 @@ double_dagger.tricks = new DoubleDaggerTricks();
 
 var emptyHand = {};
 
-const { playAnim: playAnim$4, playSoundAll: playSoundAll$3 } = require$$2$1;
-const { DefaultMoves: DefaultMoves$2, DefaultTrickModule: DefaultTrickModule$2 } = require$$18;
+const { playAnim: playAnim$2, playSoundAll: playSoundAll$2 } = require$$0;
+const { DefaultMoves: DefaultMoves$2, DefaultTrickModule: DefaultTrickModule$2 } = require$$1$2;
 
 class EmptyHandMoves extends DefaultMoves$2 {
     /**
@@ -3141,7 +3121,7 @@ class EmptyHandMoves extends DefaultMoves$2 {
     blocking = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$4(pl, 'animation.general.empty_hand');
+            playAnim$2(pl, 'animation.general.empty_hand');
         },
         transitions: {
             cast: {
@@ -3172,7 +3152,7 @@ emptyHand.tricks = new EmptyHandTricks();
 
 var lightSaber = {};
 
-var require$$23 = /*@__PURE__*/getAugmentedNamespace(math);
+var require$$2$1 = /*@__PURE__*/getAugmentedNamespace(math);
 
 function hud$1(progress, size, style = ['', '§6▮', '§4▯', '']) {
     const duration = Math.ceil(size * progress);
@@ -3189,9 +3169,9 @@ var hud$2 = /*#__PURE__*/Object.freeze({
 
 var require$$3 = /*@__PURE__*/getAugmentedNamespace(hud$2);
 
-const { playAnim: playAnim$3, playSoundAll: playSoundAll$2 } = require$$2$1;
-const { DefaultMoves: DefaultMoves$1, DefaultTrickModule: DefaultTrickModule$1 } = require$$18;
-const { constrictCalc, randomRange } = require$$23;
+const { playAnim: playAnim$1, playSoundAll: playSoundAll$1 } = require$$0;
+const { DefaultMoves: DefaultMoves$1, DefaultTrickModule: DefaultTrickModule$1 } = require$$1$2;
+const { constrictCalc, randomRange } = require$$2$1;
 const { hud } = require$$3;
 
 class LightSaberMoves extends DefaultMoves$1 {
@@ -3201,7 +3181,7 @@ class LightSaberMoves extends DefaultMoves$1 {
     hold = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim$3(pl, 'animation.weapon.light_saber.hold', 'animation.weapon.light_saber.hold');
+            playAnim$1(pl, 'animation.weapon.light_saber.hold', 'animation.weapon.light_saber.hold');
         },
         onTick(pl, ctx) {
             const { status } = ctx;
@@ -3249,7 +3229,7 @@ class LightSaberMoves extends DefaultMoves$1 {
     dodge = {
         cast: 15,
         onEnter(pl, ctx) {
-            playAnim$3(pl, 'animation.weapon.light_saber.dodge');
+            playAnim$1(pl, 'animation.weapon.light_saber.dodge');
             ctx.movement(pl, false);
             ctx.setVelocity(pl, -90, 2, 0);
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 10);
@@ -3304,7 +3284,7 @@ class LightSaberMoves extends DefaultMoves$1 {
         backswing: 10,
         onEnter(pl, ctx) {
             pl.setSprinting(false);
-            playAnim$3(pl, 'animation.weapon.light_saber.jump_attack');
+            playAnim$1(pl, 'animation.weapon.light_saber.jump_attack');
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 15);
             ctx.freeze(pl);
         },
@@ -3358,7 +3338,7 @@ class LightSaberMoves extends DefaultMoves$1 {
     beforeBlocking = {
         cast: 4,
         onEnter(pl, ctx) {
-            playAnim$3(pl, 'animation.weapon.light_saber.blocking', 'animation.weapon.light_saber.blocking');
+            playAnim$1(pl, 'animation.weapon.light_saber.blocking', 'animation.weapon.light_saber.blocking');
             ctx.status.isWaitingParry = true;
         },
         onLeave(pl, ctx) {
@@ -3440,7 +3420,7 @@ class LightSaberMoves extends DefaultMoves$1 {
             const damageOpt = ctx.rawArgs[2];
             const result = ctx.status.stamina - (damageOpt.damage || 0);
             ctx.status.stamina = result < 0 ? 0 : result;
-            playSoundAll$2(`weapon.sword.hit${randomRange(1, 4, true)}`, pl.pos, 1);
+            playSoundAll$1(`weapon.sword.hit${randomRange(1, 4, true)}`, pl.pos, 1);
         },
         transitions: {
             blocking: {
@@ -3465,7 +3445,7 @@ class LightSaberMoves extends DefaultMoves$1 {
     running = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$3(pl, 'animation.weapon.light_saber.run', 'animation.weapon.light_saber.run');
+            playAnim$1(pl, 'animation.weapon.light_saber.run', 'animation.weapon.light_saber.run');
         },
         onTick(pl, ctx) {
             pl.tell(hud(ctx.status.stamina/100, 20), 5);
@@ -3513,7 +3493,7 @@ class LightSaberMoves extends DefaultMoves$1 {
             ctx.movement(pl, false);
             ctx.setVelocity(pl, 90, 3, 0);
             pl.setSprinting(false);
-            playAnim$3(pl, 'animation.weapon.light_saber.dash');
+            playAnim$1(pl, 'animation.weapon.light_saber.dash');
         },
         onTick(pl, ctx) {
             pl.tell(hud(ctx.status.stamina/100, 20), 5);
@@ -3589,7 +3569,7 @@ class LightSaberMoves extends DefaultMoves$1 {
         cast: 10,
         backswing: 10,
         onEnter(pl, ctx) {
-            playAnim$3(pl, 'animation.weapon.light_saber.strike');
+            playAnim$1(pl, 'animation.weapon.light_saber.strike');
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 20);
             ctx.freeze(pl);
             ctx.adsorbOrSetVelocity(pl, 1, 90);
@@ -3642,7 +3622,7 @@ class LightSaberMoves extends DefaultMoves$1 {
         backswing: 11,
         onEnter(pl, ctx) {
             ctx.movement(pl, false);
-            playAnim$3(pl, 'animation.weapon.light_saber.attack1');
+            playAnim$1(pl, 'animation.weapon.light_saber.attack1');
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 10);
         },
         onTick(pl, ctx) {
@@ -3704,7 +3684,7 @@ class LightSaberMoves extends DefaultMoves$1 {
         backswing: 12,
         onEnter(pl, ctx) {
             ctx.movement(pl, false);
-            playAnim$3(pl, 'animation.weapon.light_saber.attack2');
+            playAnim$1(pl, 'animation.weapon.light_saber.attack2');
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 12);
         },
         onAct(pl, ctx) {
@@ -3782,8 +3762,8 @@ lightSaber.tricks = new LightSaberTrick();
 
 var moon_glaive = {};
 
-const { playAnim: playAnim$2, playSoundAll: playSoundAll$1, DEFAULT_POSTURE_SPEED: DEFAULT_POSTURE_SPEED$2 } = require$$2$1;
-const { DefaultMoves, DefaultTrickModule } = require$$18;
+const { playAnim, playSoundAll, DEFAULT_POSTURE_SPEED: DEFAULT_POSTURE_SPEED$2 } = require$$0;
+const { DefaultMoves, DefaultTrickModule } = require$$1$2;
 
 class MoonGlaiveTricks extends DefaultTrickModule {
     constructor() {
@@ -3828,7 +3808,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.releaseTarget(pl.uniqueId);
-            playAnim$2(pl, 'animation.weapon.moon_glaive.hold', 'animation.weapon.moon_glaive.hold');
+            playAnim(pl, 'animation.weapon.moon_glaive.hold', 'animation.weapon.moon_glaive.hold');
         },
         transitions: {
             hurt: {
@@ -3854,7 +3834,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.releaseTarget(pl.uniqueId);
-            playAnim$2(pl, 'animation.weapon.moon_glaive.running', 'animation.weapon.moon_glaive.running');
+            playAnim(pl, 'animation.weapon.moon_glaive.running', 'animation.weapon.moon_glaive.running');
         },
         transitions: {
             hurt: {
@@ -3882,7 +3862,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.setSpeed(pl, 0);
             ctx.camera(pl, false);
-            playAnim$2(pl, 'animation.weapon.moon_glaive.retention.negative_spinning');
+            playAnim(pl, 'animation.weapon.moon_glaive.retention.negative_spinning');
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1);
         },
         onAct(pl, ctx) {
@@ -3938,7 +3918,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$2(pl, 'animation.weapon.moon_glaive.retention', 'animation.weapon.moon_glaive.retention');
+            playAnim(pl, 'animation.weapon.moon_glaive.retention', 'animation.weapon.moon_glaive.retention');
         },
         onTick(pl, ctx) {
             ctx.lookAtTarget(pl);
@@ -3976,7 +3956,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         cast: 5,
         onEnter(pl, ctx) {
             ctx.camera(pl, false);
-            playAnim$2(pl, 'animation.weapon.moon_glaive.to_retention');
+            playAnim(pl, 'animation.weapon.moon_glaive.to_retention');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -4013,7 +3993,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         cast: 5,
         onEnter(pl, ctx) {
             ctx.camera(pl, false);
-            playAnim$2(pl, 'animation.weapon.moon_glaive.from_retention');
+            playAnim(pl, 'animation.weapon.moon_glaive.from_retention');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -4035,7 +4015,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         cast: Infinity,
         onEnter(pl, ctx) {
             pl.setSprinting(false);
-            playAnim$2(pl, 'animation.weapon.moon_glaive.hold_locked', 'animation.weapon.moon_glaive.hold_locked');
+            playAnim(pl, 'animation.weapon.moon_glaive.hold_locked', 'animation.weapon.moon_glaive.hold_locked');
             ctx.trap(pl);
         },
         transitions: {
@@ -4098,7 +4078,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             ctx.status.isDodging = true;
             ctx.setSpeed(pl, 0);
             ctx.camera(pl);
-            playAnim$2(pl, 'animation.weapon.moon_glaive.dodge');
+            playAnim(pl, 'animation.weapon.moon_glaive.dodge');
             ctx.setVelocity(pl, -90, 2.5, 0);
         },
         onLeave(pl, ctx) {
@@ -4142,7 +4122,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$2(pl, 'animation.weapon.moon_glaive.push');
+            playAnim(pl, 'animation.weapon.moon_glaive.push');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -4208,7 +4188,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$2(pl, 'animation.weapon.moon_glaive.chop');
+            playAnim(pl, 'animation.weapon.moon_glaive.chop');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -4256,7 +4236,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
             ctx.status.repulsible = false;
-            playAnim$2(pl, 'animation.weapon.moon_glaive.vertical_chop');
+            playAnim(pl, 'animation.weapon.moon_glaive.vertical_chop');
         },
         onLeave(pl, ctx) {
             ctx.status.hegemony = true;
@@ -4313,7 +4293,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$2(pl, 'animation.weapon.moon_glaive.heavy_sweap');
+            playAnim(pl, 'animation.weapon.moon_glaive.heavy_sweap');
             ctx.status.isWaitingParry = true;
         },
         onLeave(pl, ctx) {
@@ -4394,7 +4374,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$2(pl, 'animation.weapon.moon_glaive.chop.combo');
+            playAnim(pl, 'animation.weapon.moon_glaive.chop.combo');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -4441,7 +4421,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             ctx.status.hegemony = true;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$2(pl, 'animation.weapon.moon_glaive.positive_spinning');
+            playAnim(pl, 'animation.weapon.moon_glaive.positive_spinning');
         },
         onLeave(pl, ctx) {
             ctx.status.hegemony = false;
@@ -4495,7 +4475,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$2(pl, 'animation.weapon.moon_glaive.parry.knock');
+            playAnim(pl, 'animation.weapon.moon_glaive.parry.knock');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -4536,7 +4516,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
             ctx.status.repulsible = false;
-            playAnim$2(pl, 'animation.weapon.moon_glaive.parry.chop');
+            playAnim(pl, 'animation.weapon.moon_glaive.parry.chop');
         },
         onLeave(pl, ctx) {
             ctx.status.repulsible = true;
@@ -4600,12 +4580,12 @@ class OotachiMoves extends DefaultMoves$4 {
             ctx.releaseTarget(pl.uniqueId);
             if (ctx.previousStatus === 'running') {
                 ctx.task
-                    .queue(() => playAnim$6(pl, 'animation.weapon.ootachi.trans.running.idle'), 0)
-                    .queue(() => playAnim$6(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle'), 210)
+                    .queue(() => playAnim$4(pl, 'animation.weapon.ootachi.trans.running.idle'), 0)
+                    .queue(() => playAnim$4(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle'), 210)
                     .run();
             }
             else
-                playAnim$6(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle');
+                playAnim$4(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle');
         },
         onLeave(_, ctx) {
             ctx.task.cancel();
@@ -4628,7 +4608,7 @@ class OotachiMoves extends DefaultMoves$4 {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$6(pl, 'animation.weapon.ootachi.kamae.inno', 'animation.weapon.ootachi.kamae.inno');
+            playAnim$4(pl, 'animation.weapon.ootachi.kamae.inno', 'animation.weapon.ootachi.kamae.inno');
         },
         onTick(pl, ctx) {
             ctx.lookAtTarget(pl);
@@ -4701,8 +4681,8 @@ class OotachiMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.releaseTarget(pl.uniqueId);
             ctx.task
-                .queue(() => playAnim$6(pl, 'animation.weapon.ootachi.trans.idle.running'), 0)
-                .queue(() => playAnim$6(pl, 'animation.weapon.ootachi.running', 'animation.weapon.ootachi.running'), 210)
+                .queue(() => playAnim$4(pl, 'animation.weapon.ootachi.trans.idle.running'), 0)
+                .queue(() => playAnim$4(pl, 'animation.weapon.ootachi.running', 'animation.weapon.ootachi.running'), 210)
                 .run();
         },
         onLeave(_, ctx) {
@@ -4723,15 +4703,15 @@ class OotachiMoves extends DefaultMoves$4 {
         timeline: {
             2: (pl, ctx) => setVelocityByOrientation(pl, ctx, 1.4, 1),
             4: (_, ctx) => ctx.status.isBlocking = false,
-            7: pl => playSoundAll$5(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1),
+            7: pl => playSoundAll$4(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1),
             14: (pl, ctx) => ctx.trap(pl, { tag: 'combo' })
         },
         onEnter(pl, ctx) {
-            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 16;
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 16;
             ctx.status.isBlocking = true;
             ctx.freeze(pl);
             setVelocityByOrientation(pl, ctx, 0.5, 1);
-            playAnim$6(pl, 'animation.weapon.ootachi.combo1.attack');
+            playAnim$4(pl, 'animation.weapon.ootachi.combo1.attack');
         },
         onAct(pl, ctx) {
             ctx.selectFromSector(pl, {
@@ -4790,7 +4770,7 @@ class OotachiMoves extends DefaultMoves$4 {
         backswing: 13,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 22;
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 22;
             ctx.task.queueList([
                 { handler: () => ctx.adsorbOrSetVelocity(pl, 1, 90), timeout: 0 },
                 { handler: () => {
@@ -4798,11 +4778,11 @@ class OotachiMoves extends DefaultMoves$4 {
                     }, timeout: 200 },
                 { handler: () => ctx.adsorbOrSetVelocity(pl, 0.5, 90), timeout: 400 },
             ]).run();
-            playAnim$6(pl, 'animation.weapon.ootachi.combo1.chop');
+            playAnim$4(pl, 'animation.weapon.ootachi.combo1.chop');
             ctx.lookAtTarget(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll$5(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$4(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromSector(pl, {
                 radius: 3,
                 angle: 120,
@@ -4876,14 +4856,14 @@ class OotachiMoves extends DefaultMoves$4 {
         cast: 9,
         backswing: 17,
         onEnter(pl, ctx) {
-            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 18;
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 18;
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
-            playAnim$6(pl, `animation.weapon.ootachi.combo2.cut.${ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'}`);
+            playAnim$4(pl, `animation.weapon.ootachi.combo2.cut.${ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'}`);
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1.5);
         },
         onAct(pl, ctx) {
-            playSoundAll$5(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$4(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromSector(pl, {
                 radius: 3.5,
                 angle: 50,
@@ -4941,24 +4921,24 @@ class OotachiMoves extends DefaultMoves$4 {
         cast: 13,
         backswing: 13,
         onEnter(pl, ctx) {
-            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 28;
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 28;
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
             ctx.status.hegemony = true;
             ctx.status.repulsible = false;
             if (ctx.previousStatus === 'parry') {
-                const parryDir = ctx.components.getComponent(IncomingAttack$1).unwrap().approximateAttackDirection();
+                const parryDir = ctx.components.getComponent(IncomingAttack).unwrap().approximateAttackDirection();
                 if (parryDir === 'left') {
-                    playAnim$6(pl, 'animation.weapon.ootachi.combo2.sweap.r2');
+                    playAnim$4(pl, 'animation.weapon.ootachi.combo2.sweap.r2');
                     ctx.adsorbOrSetVelocity(pl, 1, 180);
                 }
                 else {
-                    playAnim$6(pl, 'animation.weapon.ootachi.combo2.sweap.r');
+                    playAnim$4(pl, 'animation.weapon.ootachi.combo2.sweap.r');
                     ctx.adsorbOrSetVelocity(pl, 0.2, 90);
                 }
             }
             else {
-                playAnim$6(pl, `animation.weapon.ootachi.combo2.sweap.${ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'}`);
+                playAnim$4(pl, `animation.weapon.ootachi.combo2.sweap.${ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'}`);
                 ctx.adsorbOrSetVelocity(pl, 0.2, 90);
             }
             ctx.task
@@ -4966,7 +4946,7 @@ class OotachiMoves extends DefaultMoves$4 {
                 .run();
         },
         onAct(pl, ctx) {
-            playSoundAll$5(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$4(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromSector(pl, {
                 radius: 3,
                 angle: 80,
@@ -5027,9 +5007,9 @@ class OotachiMoves extends DefaultMoves$4 {
         cast: 9,
         backswing: 16,
         onEnter(pl, ctx) {
-            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 17;
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 17;
             ctx.freeze(pl);
-            playAnim$6(pl, `animation.weapon.ootachi.combo3.stab.${ctx.previousStatus === 'combo2Sweap' ? 'r' : 'l'}`);
+            playAnim$4(pl, `animation.weapon.ootachi.combo3.stab.${ctx.previousStatus === 'combo2Sweap' ? 'r' : 'l'}`);
             ctx.task
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 0.5, 90), 0)
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 200)
@@ -5037,7 +5017,7 @@ class OotachiMoves extends DefaultMoves$4 {
         },
         onAct(pl, ctx) {
             ctx.lookAtTarget(pl);
-            playSoundAll$5(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$4(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromSector(pl, {
                 radius: 3.5,
                 angle: 30,
@@ -5073,18 +5053,18 @@ class OotachiMoves extends DefaultMoves$4 {
         cast: 18,
         backswing: 17,
         onEnter(pl, ctx) {
-            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 33;
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 33;
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
             ctx.adsorbOrSetVelocity(pl, 1, 90);
-            playAnim$6(pl, `animation.weapon.ootachi.combo3.sweap.${ctx.previousStatus === 'combo2Sweap' ? 'r' : 'l'}`);
+            playAnim$4(pl, `animation.weapon.ootachi.combo3.sweap.${ctx.previousStatus === 'combo2Sweap' ? 'r' : 'l'}`);
             ctx.task
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 200)
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 280)
                 .run();
         },
         onAct(pl, ctx) {
-            playSoundAll$5(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$4(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromSector(pl, {
                 radius: 3.5,
                 angle: 90,
@@ -5130,7 +5110,7 @@ class OotachiMoves extends DefaultMoves$4 {
         backswing: 1,
         onEnter(pl, ctx) {
             ctx.movement(pl);
-            const direct = input$1.approximateOrientation(pl);
+            const direct = input.approximateOrientation(pl);
             if (direct !== 1) {
                 ctx.setVelocity(pl, direct * 90, 2.5);
             }
@@ -5138,10 +5118,10 @@ class OotachiMoves extends DefaultMoves$4 {
                 ctx.adsorbToTarget(pl, 2);
             }
             if (direct !== 3) {
-                playAnim$6(pl, 'animation.weapon.ootachi.dodge.front');
+                playAnim$4(pl, 'animation.weapon.ootachi.dodge.front');
             }
             else {
-                playAnim$6(pl, 'animation.weapon.ootachi.dodge.back');
+                playAnim$4(pl, 'animation.weapon.ootachi.dodge.back');
             }
             ctx.trap(pl, { tag: direct === 1 ? 'front' : 'side' });
         },
@@ -5169,7 +5149,7 @@ class OotachiMoves extends DefaultMoves$4 {
         backswing: 5,
         onEnter(_, ctx) {
             const manager = ctx.status.componentManager;
-            manager.getComponent(Stamina$1).unwrap().setCooldown(10);
+            manager.getComponent(Stamina).unwrap().setCooldown(10);
             ctx.status.isBlocking = true;
         },
         onAct(_, ctx) {
@@ -5201,7 +5181,7 @@ class OotachiMoves extends DefaultMoves$4 {
         onEnter(_, ctx) {
             ctx.status.repulsible = false;
             const manager = ctx.status.componentManager;
-            manager.getComponent(Stamina$1).unwrap().setCooldown(10);
+            manager.getComponent(Stamina).unwrap().setCooldown(10);
             ctx.status.isBlocking = true;
         },
         onAct(_, ctx) {
@@ -5256,16 +5236,16 @@ class OotachiMoves extends DefaultMoves$4 {
         },
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 20;
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 20;
             ctx.lookAtTarget(pl);
-            playAnim$6(pl, 'animation.weapon.ootachi.dodge.heavy', 'animation.weapon.ootachi.dodge.heavy');
+            playAnim$4(pl, 'animation.weapon.ootachi.dodge.heavy', 'animation.weapon.ootachi.dodge.heavy');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
         },
         timeline: {
             14: (pl, ctx) => ctx.trap(pl),
-            8: pl => playSoundAll$5('weapon.woosh.3', pl.pos, 1),
+            8: pl => playSoundAll$4('weapon.woosh.3', pl.pos, 1),
             10: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 40,
                 radius: 3,
@@ -5287,7 +5267,7 @@ class OotachiMoves extends DefaultMoves$4 {
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^^1^0.5`);
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^-0.1^1^0.5`);
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^0.1^1^0.5`);
-            playSoundAll$5('weapon.heavy', pl.pos, 1);
+            playSoundAll$4('weapon.heavy', pl.pos, 1);
         },
         onLeave(pl, ctx) {
             ctx.status.repulsible = true;
@@ -5309,8 +5289,8 @@ class OotachiMoves extends DefaultMoves$4 {
         backswing: 3,
         onEnter(pl, ctx) {
             ctx.status.repulsible = false;
-            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 12;
-            playAnim$6(pl, 'animation.weapon.ootachi.hlit');
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 12;
+            playAnim$4(pl, 'animation.weapon.ootachi.hlit');
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.5);
         },
         onAct(pl, ctx) {
@@ -5375,76 +5355,6 @@ var ootachi = /*#__PURE__*/Object.freeze({
 
 var require$$4 = /*@__PURE__*/getAugmentedNamespace(ootachi);
 
-var sheathed_katana = {};
-
-const { playAnim: playAnim$1, playSoundAll } = require$$2$1;
-
-/**
- * @type {TrickModule}
- */
-sheathed_katana.tricks = {
-    sid: 'rgb39.weapon.katana',
-    bind: 'weapon:katana',
-    entry: 'default',
-    moves: {
-        default: {
-            cast: Infinity,
-            onEnter(pl, ctx) {
-                ctx.status.isBlocking = true;
-                playAnim$1(pl, 'animation.general.stand');
-            },
-            transitions: {
-                blocking: {
-                    onBlock: null
-                },
-                knockdown: {
-                    onKnockdown: { allowedState: 'both' }
-                },
-            }
-        },
-
-        blocking: {
-            cast: 5,
-            onEnter(pl) {
-                const side = Math.random() > 0.5 ? 'left' : 'right';
-                playAnim$1(pl, 'animation.twohanded.block.' + side, 'animation.twohanded.block.' + side);
-            },
-            transitions: {
-                default: { onEndOfLife: null },
-                blocking: { onBlock: null },
-                knockdown: {
-                    onKnockdown: { allowedState: 'both' }
-                },
-            }
-        },
-
-        knockdown: {
-            cast: 30,
-            onEnter: (pl, ctx) => {
-                ctx.freeze(pl);
-                ctx.status.disableInputs([
-                    'onAttack',
-                    'onUseItem'
-                ]);
-                playAnim$1(pl, 'animation.general.fell');
-            },
-            onLeave(pl, ctx) {
-                ctx.unfreeze(pl);
-                playAnim$1(pl, 'animation.general.stand');
-                ctx.status.enableInputs([
-                    'onAttack',
-                    'onUseItem'
-                ]);
-            },
-            transitions: {
-                default: {
-                    onEndOfLife: null
-                }
-            }
-        },
-    }
-};
-
 class ShieldSwordTricks extends DefaultTrickModule$4 {
     constructor() {
         super('rgb39.weapon.shield_sword', 'idle', ['weapon:shield_with_sword'], new ShieldSwordMoves());
@@ -5457,17 +5367,17 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         this.block = {
             cast: 7,
             onEnter(pl, ctx) {
-                const stamina = ctx.components.getComponent(Stamina$1).unwrap();
+                const stamina = ctx.components.getComponent(Stamina).unwrap();
                 stamina.stamina -= 15;
                 if (stamina.stamina <= 0) {
                     ctx.trap(pl);
                     return;
                 }
-                playSoundAll$5(`weapon.sheild.hit${randomRange$1(1, 3, true)}`, pl.pos, 1);
+                playSoundAll$4(`weapon.sheild.hit${randomRange$1(1, 3, true)}`, pl.pos, 1);
                 ctx.status.isBlocking = true;
                 ctx.freeze(pl);
                 ctx.lookAtTarget(pl);
-                playAnim$6(pl, 'animation.weapon.shield_with_sword.block');
+                playAnim$4(pl, 'animation.weapon.shield_with_sword.block');
             },
             onLeave(pl, ctx) {
                 ctx.status.isBlocking = false;
@@ -5507,9 +5417,9 @@ class ShieldSwordMoves extends DefaultMoves$4 {
     idle = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().setCooldown(0);
+            ctx.components.getComponent(Stamina).unwrap().setCooldown(0);
             ctx.unfreeze(pl);
-            playAnim$6(pl, 'animation.weapon.shield_with_sword.idle', 'animation.weapon.shield_with_sword.idle');
+            playAnim$4(pl, 'animation.weapon.shield_with_sword.idle', 'animation.weapon.shield_with_sword.idle');
         },
         transitions: {
             hurt: {
@@ -5528,8 +5438,8 @@ class ShieldSwordMoves extends DefaultMoves$4 {
     hold = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().setCooldown(0);
-            playAnim$6(pl, 'animation.weapon.shield_with_sword.hold', 'animation.weapon.shield_with_sword.hold');
+            ctx.components.getComponent(Stamina).unwrap().setCooldown(0);
+            playAnim$4(pl, 'animation.weapon.shield_with_sword.hold', 'animation.weapon.shield_with_sword.hold');
         },
         transitions: {
             idle: {
@@ -5595,9 +5505,9 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         cast: 7,
         backswing: 13,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 18;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 18;
             ctx.freeze(pl);
-            playAnim$6(pl, 'animation.weapon.shield_with_sword.draw');
+            playAnim$4(pl, 'animation.weapon.shield_with_sword.draw');
             ctx.adsorbOrSetVelocity(pl, 1, 90);
             ctx.status.isBlocking = true;
         },
@@ -5606,7 +5516,7 @@ class ShieldSwordMoves extends DefaultMoves$4 {
             ctx.status.isBlocking = false;
         },
         onAct(pl, ctx) {
-            playSoundAll$5(`weapon.woosh.${randomRange$1(1, 3, true)}`, pl.pos, 1);
+            playSoundAll$4(`weapon.woosh.${randomRange$1(1, 3, true)}`, pl.pos, 1);
             ctx.selectFromSector(pl, {
                 radius: 2.8,
                 angle: 60,
@@ -5657,17 +5567,17 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         cast: 8,
         backswing: 15,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 15;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 15;
             ctx.freeze(pl);
             ctx.adsorbOrSetVelocity(pl, 2, 90);
-            playAnim$6(pl, 'animation.weapon.shield_with_sword.heavy_chop_act');
+            playAnim$4(pl, 'animation.weapon.shield_with_sword.heavy_chop_act');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
-            playSoundAll$5(`weapon.woosh.${randomRange$1(3, 5, true)}`, pl.pos, 1);
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
+            playSoundAll$4(`weapon.woosh.${randomRange$1(3, 5, true)}`, pl.pos, 1);
             ctx.selectFromSector(pl, {
                 angle: 40,
                 rotation: -20,
@@ -5705,9 +5615,9 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         cast: 7,
         backswing: 13,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 18;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 18;
             ctx.freeze(pl);
-            playAnim$6(pl, 'animation.weapon.shield_with_sword.punch');
+            playAnim$4(pl, 'animation.weapon.shield_with_sword.punch');
             ctx.adsorbOrSetVelocity(pl, 2, 90, 0.5);
         },
         onLeave(pl, ctx) {
@@ -5744,7 +5654,7 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         cast: 2,
         backswing: 8,
         onEnter(pl) {
-            playSoundAll$5(`weapon.sheild.hit${randomRange$1(1, 3, true)}`, pl.pos, 0.5);
+            playSoundAll$4(`weapon.sheild.hit${randomRange$1(1, 3, true)}`, pl.pos, 0.5);
         },
         onAct(pl, ctx) {
             ctx.trap(pl);
@@ -5768,16 +5678,16 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         cast: 7,
         backswing: 13,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 18;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 18;
             ctx.freeze(pl);
             ctx.adsorbOrSetVelocity(pl, 2, 90);
-            playAnim$6(pl, 'animation.weapon.shield_with_sword.chop_combo');
+            playAnim$4(pl, 'animation.weapon.shield_with_sword.chop_combo');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll$5(`weapon.woosh.${randomRange$1(1, 2, true)}`, pl.pos, 1);
+            playSoundAll$4(`weapon.woosh.${randomRange$1(1, 2, true)}`, pl.pos, 1);
             ctx.selectFromSector(pl, {
                 radius: 3,
                 angle: 46,
@@ -5809,7 +5719,7 @@ class ShieldSwordMoves extends DefaultMoves$4 {
     running = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim$6(pl, 'animation.weapon.shield_with_sword.running', 'animation.weapon.shield_with_sword.running');
+            playAnim$4(pl, 'animation.weapon.shield_with_sword.running', 'animation.weapon.shield_with_sword.running');
             ctx.releaseTarget(pl.uniqueId);
         },
         transitions: {
@@ -5824,8 +5734,8 @@ class ShieldSwordMoves extends DefaultMoves$4 {
     beforeBlocking = {
         cast: 2,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().setCooldown(Infinity);
-            playAnim$6(pl, 'animation.weapon.shield_with_sword.idle_to_blocking');
+            ctx.components.getComponent(Stamina).unwrap().setCooldown(Infinity);
+            playAnim$4(pl, 'animation.weapon.shield_with_sword.idle_to_blocking');
         },
         transitions: {
             hurt: {
@@ -5852,9 +5762,9 @@ class ShieldSwordMoves extends DefaultMoves$4 {
     blocking = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().setCooldown(Infinity);
+            ctx.components.getComponent(Stamina).unwrap().setCooldown(Infinity);
             ctx.status.isBlocking = true;
-            playAnim$6(pl, 'animation.weapon.shield_with_sword.blocking', 'animation.weapon.shield_with_sword.blocking');
+            playAnim$4(pl, 'animation.weapon.shield_with_sword.blocking', 'animation.weapon.shield_with_sword.blocking');
         },
         onLeave(_, ctx) {
             ctx.status.isBlocking = false;
@@ -5884,11 +5794,11 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         cast: 3,
         backswing: 11,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 20;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 20;
             ctx.freeze(pl);
             ctx.status.repulsible = false;
             ctx.status.isInvulnerable = true;
-            playAnim$6(pl, 'animation.weapon.shield_with_sword.rock_solid');
+            playAnim$4(pl, 'animation.weapon.shield_with_sword.rock_solid');
         },
         onAct(_, ctx) {
             ctx.status.repulsible = true;
@@ -5924,7 +5834,7 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.adsorbToTarget(pl, 4, 0.5);
-            playAnim$6(pl, 'animation.weapon.shield_with_sword.sweap_counter');
+            playAnim$4(pl, 'animation.weapon.shield_with_sword.sweap_counter');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -5973,10 +5883,10 @@ class ShieldSwordMoves extends DefaultMoves$4 {
     afterBlocking = {
         cast: 3,
         onEnter(pl) {
-            playAnim$6(pl, 'animation.weapon.shield_with_sword.blocking_to_idle');
+            playAnim$4(pl, 'animation.weapon.shield_with_sword.blocking_to_idle');
         },
         onLeave(_, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().setCooldown(0);
+            ctx.components.getComponent(Stamina).unwrap().setCooldown(0);
         },
         transitions: {
             hurt: {
@@ -5991,16 +5901,16 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         cast: 7,
         backswing: 6,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 20;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 20;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$6(pl, 'animation.weapon.shield_with_sword.sword_counter');
+            playAnim$4(pl, 'animation.weapon.shield_with_sword.sword_counter');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll$5(`weapon.woosh.${randomRange$1(1, 3, true)}`, pl.pos, 1);
+            playSoundAll$4(`weapon.woosh.${randomRange$1(1, 3, true)}`, pl.pos, 1);
             ctx.selectFromSector(pl, {
                 angle: 30,
                 rotation: -15,
@@ -6044,7 +5954,7 @@ var shield_with_sword = /*#__PURE__*/Object.freeze({
 	tricks: tricks$8
 });
 
-var require$$6$1 = /*@__PURE__*/getAugmentedNamespace(shield_with_sword);
+var require$$5$1 = /*@__PURE__*/getAugmentedNamespace(shield_with_sword);
 
 class UchigatanaMoves extends DefaultMoves$4 {
     constructor() {
@@ -6065,7 +5975,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
     hold = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim$6(pl, 'animation.weapon.uchigatana.hold', 'animation.weapon.uchigatana.hold');
+            playAnim$4(pl, 'animation.weapon.uchigatana.hold', 'animation.weapon.uchigatana.hold');
         },
         transitions: {
             kamae: {
@@ -6084,7 +5994,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
     kamae = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$6(pl, 'animation.weapon.uchigatana.kamae', 'animation.weapon.uchigatana.kamae');
+            playAnim$4(pl, 'animation.weapon.uchigatana.kamae', 'animation.weapon.uchigatana.kamae');
         },
         transitions: {
             hold: {
@@ -6120,7 +6030,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
     running = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$6(pl, 'animation.weapon.uchigatana.running', 'animation.weapon.uchigatana.running');
+            playAnim$4(pl, 'animation.weapon.uchigatana.running', 'animation.weapon.uchigatana.running');
         },
         transitions: {
             resume: {
@@ -6155,11 +6065,11 @@ class UchigatanaMoves extends DefaultMoves$4 {
         backswing: 9,
         onEnter(pl, ctx) {
             ctx.status.repulsible = false;
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 15;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 15;
             ctx.status.isBlocking = true;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$6(pl, 'animation.weapon.uchigatana.attack1');
+            playAnim$4(pl, 'animation.weapon.uchigatana.attack1');
         },
         onAct(pl, ctx) {
             ctx.trap(pl);
@@ -6175,7 +6085,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
                 ctx.status.isBlocking = false;
                 setVelocityByOrientation(pl, ctx, 1.5);
             },
-            6: pl => playSoundAll$5(`weapon.woosh.2`, pl.pos, 1),
+            6: pl => playSoundAll$4(`weapon.woosh.2`, pl.pos, 1),
             7: (pl, ctx) => ctx.selectFromSector(pl).forEach(en => {
                 ctx.attack(pl, en, {
                     damage: 12,
@@ -6224,10 +6134,10 @@ class UchigatanaMoves extends DefaultMoves$4 {
         cast: 17,
         backswing: 9,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$6(pl, 'animation.weapon.uchigatana.attack1.heavy');
+            playAnim$4(pl, 'animation.weapon.uchigatana.attack1.heavy');
         },
         onAct(pl, ctx) {
             ctx.trap(pl, { tag: 'counter' });
@@ -6242,9 +6152,9 @@ class UchigatanaMoves extends DefaultMoves$4 {
             5: (_, ctx) => ctx.status.isWaitingParry = false,
             6: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             7: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
-            9: pl => playSoundAll$5(`weapon.woosh.2`, pl.pos, 1),
+            9: pl => playSoundAll$4(`weapon.woosh.2`, pl.pos, 1),
             11: (pl, ctx) => {
-                ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
+                ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
                 ctx.selectFromSector(pl, {
                     radius: 3,
                     angle: 180,
@@ -6300,10 +6210,10 @@ class UchigatanaMoves extends DefaultMoves$4 {
         cast: 14,
         backswing: 6,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 18;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 18;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$6(pl, ctx.previousStatus === 'attack1'
+            playAnim$4(pl, ctx.previousStatus === 'attack1'
                 ? 'animation.weapon.uchigatana.attack2.ll'
                 : 'animation.weapon.uchigatana.attack2.hl');
         },
@@ -6331,7 +6241,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
         },
         timeline: {
             3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
-            9: pl => playSoundAll$5(`weapon.woosh.2`, pl.pos, 1),
+            9: pl => playSoundAll$4(`weapon.woosh.2`, pl.pos, 1),
             10: (pl, ctx) => ctx.selectFromSector(pl, {
                 radius: 2.6,
                 angle: 40,
@@ -6348,19 +6258,19 @@ class UchigatanaMoves extends DefaultMoves$4 {
         cast: 18,
         backswing: 7,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
             ctx.freeze(pl);
             const prev = ctx.previousStatus;
             switch (prev) {
                 case 'attack1':
                 case 'dcLeftL':
-                    playAnim$6(pl, 'animation.weapon.uchigatana.attack2.lh');
+                    playAnim$4(pl, 'animation.weapon.uchigatana.attack2.lh');
                     break;
                 case 'dcRightL':
-                    playAnim$6(pl, 'animation.weapon.uchigatana.dc.llh');
+                    playAnim$4(pl, 'animation.weapon.uchigatana.dc.llh');
                     break;
                 default:
-                    playAnim$6(pl, 'animation.weapon.uchigatana.attack2.hh');
+                    playAnim$4(pl, 'animation.weapon.uchigatana.attack2.hh');
             }
             ctx.lookAtTarget(pl);
         },
@@ -6371,10 +6281,10 @@ class UchigatanaMoves extends DefaultMoves$4 {
             3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
             8: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
             10: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
-            13: pl => playSoundAll$5('weapon.woosh.2', pl.pos),
+            13: pl => playSoundAll$4('weapon.woosh.2', pl.pos),
             7: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             14: (pl, ctx) => {
-                ctx.components.getComponent(Stamina$1).unwrap().stamina -= 15;
+                ctx.components.getComponent(Stamina).unwrap().stamina -= 15;
                 ctx.selectFromSector(pl, {
                     radius: 2.6,
                     angle: 40,
@@ -6416,31 +6326,31 @@ class UchigatanaMoves extends DefaultMoves$4 {
         cast: 5,
         backswing: 7,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().setCooldown(20);
+            ctx.components.getComponent(Stamina).unwrap().setCooldown(20);
             ctx.freeze(pl);
-            const ori = input$1.approximateOrientation(pl);
+            const ori = input.approximateOrientation(pl);
             switch (ori) {
-                case input$1.Orientation.Left:
-                    playAnim$6(pl, 'animation.weapon.uchigatana.dodge.left');
+                case input.Orientation.Left:
+                    playAnim$4(pl, 'animation.weapon.uchigatana.dodge.left');
                     ctx.setVelocity(pl, 0, 1.8);
                     break;
-                case input$1.Orientation.Right:
-                    playAnim$6(pl, 'animation.weapon.uchigatana.dodge.right');
+                case input.Orientation.Right:
+                    playAnim$4(pl, 'animation.weapon.uchigatana.dodge.right');
                     ctx.setVelocity(pl, 180, 1.8);
                     break;
-                case input$1.Orientation.Forward:
-                    playAnim$6(pl, 'animation.weapon.uchigatana.dodge.front');
+                case input.Orientation.Forward:
+                    playAnim$4(pl, 'animation.weapon.uchigatana.dodge.front');
                     ctx.adsorbToTarget(pl, 2);
                     break;
                 default:
-                    playAnim$6(pl, 'animation.weapon.uchigatana.dodge.back');
+                    playAnim$4(pl, 'animation.weapon.uchigatana.dodge.back');
                     ctx.setVelocity(pl, -90, 1.5);
                     break;
             }
-            if (ori !== input$1.Orientation.Backward && ori !== input$1.Orientation.None) {
+            if (ori !== input.Orientation.Backward && ori !== input.Orientation.None) {
                 ctx.status.isWaitingDeflection = true;
             }
-            if (ori !== input$1.Orientation.Forward) {
+            if (ori !== input.Orientation.Forward) {
                 ctx.status.isDodging = true;
             }
         },
@@ -6500,8 +6410,8 @@ class UchigatanaMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.lookAtTarget(pl);
             ctx.status.isWaitingDeflection = true;
-            playSoundAll$5('weapon.deflection', pl.pos, 1);
-            playAnim$6(pl, 'animation.weapon.uchigatana.deflect.front');
+            playSoundAll$4('weapon.deflection', pl.pos, 1);
+            playAnim$4(pl, 'animation.weapon.uchigatana.deflect.front');
             ctx.adsorbToTarget(pl, 0.2);
         },
         onAct(pl, ctx) {
@@ -6538,9 +6448,9 @@ class UchigatanaMoves extends DefaultMoves$4 {
         },
         onEnter(pl, ctx) {
             ctx.lookAtTarget(pl);
-            playSoundAll$5('weapon.deflection', pl.pos, 1);
+            playSoundAll$4('weapon.deflection', pl.pos, 1);
             ctx.status.isWaitingDeflection = true;
-            playAnim$6(pl, 'animation.weapon.uchigatana.deflect.left');
+            playAnim$4(pl, 'animation.weapon.uchigatana.deflect.left');
             ctx.adsorbToTarget(pl, 0.2);
         },
         onAct(pl, ctx) {
@@ -6577,9 +6487,9 @@ class UchigatanaMoves extends DefaultMoves$4 {
         },
         onEnter(pl, ctx) {
             ctx.lookAtTarget(pl);
-            playSoundAll$5('weapon.deflection', pl.pos, 1);
+            playSoundAll$4('weapon.deflection', pl.pos, 1);
             ctx.status.isWaitingDeflection = true;
-            playAnim$6(pl, 'animation.weapon.uchigatana.deflect.right');
+            playAnim$4(pl, 'animation.weapon.uchigatana.deflect.right');
             ctx.adsorbToTarget(pl, 0.2);
         },
         onAct(pl, ctx) {
@@ -6611,10 +6521,10 @@ class UchigatanaMoves extends DefaultMoves$4 {
         },
         onEnter(pl, ctx) {
             ctx.status.repulsible = false;
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 20;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 20;
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
-            playAnim$6(pl, 'animation.weapon.uchigatana.dc.fh');
+            playAnim$4(pl, 'animation.weapon.uchigatana.dc.fh');
         },
         onLeave(pl, ctx) {
             ctx.status.repulsible = true;
@@ -6622,7 +6532,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
         },
         timeline: {
             1: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
-            5: pl => playSoundAll$5(`weapon.woosh.3`, pl.pos, 1),
+            5: pl => playSoundAll$4(`weapon.woosh.3`, pl.pos, 1),
             6: (pl, ctx) => ctx.selectFromSector(pl, {
                 radius: 2.4,
                 angle: 40,
@@ -6664,9 +6574,9 @@ class UchigatanaMoves extends DefaultMoves$4 {
         },
         onEnter(pl, ctx) {
             ctx.status.repulsible = false;
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 12;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 12;
             ctx.freeze(pl);
-            playAnim$6(pl, 'animation.weapon.uchigatana.dc.ll');
+            playAnim$4(pl, 'animation.weapon.uchigatana.dc.ll');
             ctx.adsorbToTarget(pl, 1.5);
         },
         onLeave(pl, ctx) {
@@ -6674,7 +6584,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             ctx.unfreeze(pl);
         },
         timeline: {
-            3: pl => playSoundAll$5(`weapon.woosh.3`, pl.pos, 1),
+            3: pl => playSoundAll$4(`weapon.woosh.3`, pl.pos, 1),
             4: (pl, ctx) => ctx.selectFromSector(pl, {
                 radius: 2.4,
                 angle: 90,
@@ -6715,9 +6625,9 @@ class UchigatanaMoves extends DefaultMoves$4 {
         },
         onEnter(pl, ctx) {
             ctx.status.repulsible = false;
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 12;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 12;
             ctx.freeze(pl);
-            playAnim$6(pl, 'animation.weapon.uchigatana.dc.rl');
+            playAnim$4(pl, 'animation.weapon.uchigatana.dc.rl');
             ctx.adsorbToTarget(pl, 1.5);
         },
         onLeave(pl, ctx) {
@@ -6725,7 +6635,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             ctx.unfreeze(pl);
         },
         timeline: {
-            3: pl => playSoundAll$5(`weapon.woosh.3`, pl.pos, 1),
+            3: pl => playSoundAll$4(`weapon.woosh.3`, pl.pos, 1),
             4: (pl, ctx) => ctx.selectFromSector(pl, {
                 radius: 2.4,
                 angle: 90,
@@ -6769,9 +6679,9 @@ class UchigatanaMoves extends DefaultMoves$4 {
         },
         onEnter(pl, ctx) {
             ctx.status.repulsible = false;
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
             ctx.freeze(pl);
-            playAnim$6(pl, 'animation.weapon.uchigatana.dc.lh');
+            playAnim$4(pl, 'animation.weapon.uchigatana.dc.lh');
             ctx.adsorbToTarget(pl, 3, 1.5);
         },
         onLeave(pl, ctx) {
@@ -6787,7 +6697,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
                 ctx.adsorbToTarget(_, 3, 1.2);
             },
             13: (pl, ctx) => {
-                ctx.components.getComponent(Stamina$1).unwrap().stamina -= 15;
+                ctx.components.getComponent(Stamina).unwrap().stamina -= 15;
                 ctx.selectFromSector(pl, {
                     radius: 2.4,
                     angle: 90,
@@ -6836,9 +6746,9 @@ class UchigatanaMoves extends DefaultMoves$4 {
         },
         onEnter(pl, ctx) {
             ctx.status.repulsible = false;
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
             ctx.freeze(pl);
-            playAnim$6(pl, 'animation.weapon.uchigatana.dc.rh');
+            playAnim$4(pl, 'animation.weapon.uchigatana.dc.rh');
             ctx.adsorbToTarget(pl, 3, 1.6);
         },
         onLeave(pl, ctx) {
@@ -6854,7 +6764,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
                 ctx.adsorbToTarget(_, 3, 1.2);
             },
             13: (pl, ctx) => {
-                ctx.components.getComponent(Stamina$1).unwrap().stamina -= 15;
+                ctx.components.getComponent(Stamina).unwrap().stamina -= 15;
                 ctx.selectFromSector(pl, {
                     radius: 2.4,
                     angle: 90,
@@ -6877,9 +6787,9 @@ class UchigatanaMoves extends DefaultMoves$4 {
     raidoEnter = {
         cast: 12,
         onEnter(pl, ctx) {
-            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 10;
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 10;
             ctx.freeze(pl);
-            playAnim$6(pl, 'animation.weapon.uchigatana.raido.enter');
+            playAnim$4(pl, 'animation.weapon.uchigatana.raido.enter');
             ctx.lookAtTarget(pl);
             ctx.status.isDodging = true;
         },
@@ -6911,7 +6821,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
         },
         timeline: {
             1: (pl, ctx) => ctx.setVelocity(pl, -90, 1),
-            3: pl => playSoundAll$5(`weapon.raido.1`, pl.pos),
+            3: pl => playSoundAll$4(`weapon.raido.1`, pl.pos),
             4: (_, ctx) => ctx.status.isDodging = false,
             5: (pl, ctx) => ctx.setVelocity(pl, -90, 1),
             7: (pl, ctx) => ctx.setVelocity(pl, -90, 0.2),
@@ -6920,7 +6830,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
     raido = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim$6(pl, 'animation.weapon.uchigatana.raido', 'animation.weapon.uchigatana.raido');
+            playAnim$4(pl, 'animation.weapon.uchigatana.raido', 'animation.weapon.uchigatana.raido');
             ctx.freeze(pl);
         },
         onLeave(pl, ctx) {
@@ -6943,7 +6853,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
     raidoExit = {
         cast: 7,
         onEnter(pl, ctx) {
-            playAnim$6(pl, 'animation.weapon.uchigatana.raido.exit');
+            playAnim$4(pl, 'animation.weapon.uchigatana.raido.exit');
             ctx.freeze(pl);
         },
         onLeave(pl, ctx) {
@@ -6969,8 +6879,8 @@ class UchigatanaMoves extends DefaultMoves$4 {
         cast: 16,
         backswing: 4,
         onEnter(pl, ctx) {
-            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 18;
-            playAnim$6(pl, 'animation.weapon.uchigatana.raido.attack');
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 18;
+            playAnim$4(pl, 'animation.weapon.uchigatana.raido.attack');
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
             ctx.status.isBlocking = true;
@@ -7004,7 +6914,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             4: (_, ctx) => ctx.status.isBlocking = false,
             5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90),
             8: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
-            9: pl => playSoundAll$5(`weapon.woosh.2`, pl.pos, 1),
+            9: pl => playSoundAll$4(`weapon.woosh.2`, pl.pos, 1),
             10: (pl, ctx) => ctx.selectFromSector(pl, {
                 radius: 2.5,
                 angle: 90,
@@ -7022,11 +6932,11 @@ class UchigatanaMoves extends DefaultMoves$4 {
         cast: 12,
         backswing: 7,
         onEnter(pl, ctx) {
-            ctx.status.componentManager.getComponent(Stamina$1).unwrap().stamina -= 10;
+            ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 10;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            const parryDir = ctx.components.getComponent(IncomingAttack$1).unwrap().approximateAttackDirection();
-            playAnim$6(pl, `animation.weapon.uchigatana.parry_counter.${parryDir}`);
+            const parryDir = ctx.components.getComponent(IncomingAttack).unwrap().approximateAttackDirection();
+            playAnim$4(pl, `animation.weapon.uchigatana.parry_counter.${parryDir}`);
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -7066,7 +6976,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             1: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
             7: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
             8: (pl, ctx) => {
-                playSoundAll$5(`weapon.woosh.2`, pl.pos, 1);
+                playSoundAll$4(`weapon.woosh.2`, pl.pos, 1);
                 ctx.adsorbOrSetVelocity(pl, 1, 90);
             },
             9: (pl, ctx) => {
@@ -7101,7 +7011,7 @@ var uchigatana = /*#__PURE__*/Object.freeze({
 	tricks: tricks$7
 });
 
-var require$$7$1 = /*@__PURE__*/getAugmentedNamespace(uchigatana);
+var require$$6$1 = /*@__PURE__*/getAugmentedNamespace(uchigatana);
 
 class DoubleBladeMoves extends DefaultMoves$4 {
     constructor() {
@@ -7129,7 +7039,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
     idle = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$6(pl, 'animation.double_blade.idle', 'animation.double_blade.idle');
+            playAnim$4(pl, 'animation.double_blade.idle', 'animation.double_blade.idle');
         },
         transitions: {
             i2r: {
@@ -7148,7 +7058,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
     running = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$6(pl, 'animation.double_blade.running', 'animation.double_blade.running');
+            playAnim$4(pl, 'animation.double_blade.running', 'animation.double_blade.running');
         },
         transitions: {
             r2i: {
@@ -7164,7 +7074,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
     i2r = {
         cast: 5,
         onEnter(pl) {
-            playAnim$6(pl, 'animation.double_blade.i2r');
+            playAnim$4(pl, 'animation.double_blade.i2r');
         },
         transitions: {
             running: {
@@ -7180,7 +7090,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
     r2i = {
         cast: 5,
         onEnter(pl) {
-            playAnim$6(pl, 'animation.double_blade.r2i');
+            playAnim$4(pl, 'animation.double_blade.r2i');
         },
         transitions: {
             idle: {
@@ -7196,7 +7106,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
     hold = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$6(pl, 'animation.double_blade.hold', 'animation.double_blade.hold');
+            playAnim$4(pl, 'animation.double_blade.hold', 'animation.double_blade.hold');
         },
         transitions: {
             hurt: {
@@ -7228,10 +7138,10 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         backswing: 8,
         onEnter(pl, ctx) {
             ctx.status.isBlocking = true;
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 22;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 22;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$6(pl, ctx.previousStatus === 'shieldKick' ? 'animation.double_blade.skl' : 'animation.double_blade.start_left');
+            playAnim$4(pl, ctx.previousStatus === 'shieldKick' ? 'animation.double_blade.skl' : 'animation.double_blade.start_left');
             setVelocityByOrientation(pl, ctx, 0.5, 1);
         },
         onLeave(pl, ctx) {
@@ -7245,7 +7155,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             4: (_, ctx) => {
                 ctx.status.isBlocking = false;
             },
-            6: pl => playSoundAll$5('weapon.woosh.2', pl.pos),
+            6: pl => playSoundAll$4('weapon.woosh.2', pl.pos),
             5: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             8: (pl, ctx) => {
                 ctx.selectFromSector(pl, {
@@ -7314,10 +7224,10 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         backswing: 8,
         onEnter(pl, ctx) {
             ctx.status.isWaitingParry = true;
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 22;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 22;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$6(pl, 'animation.double_blade.start_right');
+            playAnim$4(pl, 'animation.double_blade.start_right');
             setVelocityByOrientation(pl, ctx, 0.5, 1);
         },
         onLeave(pl, ctx) {
@@ -7330,7 +7240,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         timeline: {
             3: (_, ctx) => ctx.status.isWaitingParry = false,
             4: (pl, ctx) => setVelocityByOrientation(pl, ctx, 1.4, 1),
-            6: pl => playSoundAll$5('weapon.woosh.2', pl.pos),
+            6: pl => playSoundAll$4('weapon.woosh.2', pl.pos),
             5: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 40,
@@ -7396,10 +7306,10 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         cast: 13,
         backswing: 8,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 22;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 22;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$6(pl, 'animation.double_blade.lr');
+            playAnim$4(pl, 'animation.double_blade.lr');
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1);
         },
         onLeave(pl, ctx) {
@@ -7410,7 +7320,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         },
         timeline: {
             4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90, 1),
-            6: pl => playSoundAll$5('weapon.woosh.2', pl.pos),
+            6: pl => playSoundAll$4('weapon.woosh.2', pl.pos),
             5: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 40,
@@ -7473,10 +7383,10 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         cast: 13,
         backswing: 8,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 22;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 22;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$6(pl, 'animation.double_blade.rl');
+            playAnim$4(pl, 'animation.double_blade.rl');
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1);
         },
         onLeave(pl, ctx) {
@@ -7487,7 +7397,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         },
         timeline: {
             4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90, 1),
-            6: pl => playSoundAll$5('weapon.woosh.2', pl.pos),
+            6: pl => playSoundAll$4('weapon.woosh.2', pl.pos),
             5: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 40,
@@ -7550,9 +7460,9 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         cast: 1,
         backswing: 10,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().setCooldown(10);
+            ctx.components.getComponent(Stamina).unwrap().setCooldown(10);
             ctx.freeze(pl);
-            playAnim$6(pl, 'animation.double_blade.dodge');
+            playAnim$4(pl, 'animation.double_blade.dodge');
             ctx.setVelocity(pl, 180, 1);
         },
         onAct(_, ctx) {
@@ -7578,16 +7488,16 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         cast: 14,
         backswing: 15,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
             ctx.freeze(pl);
-            playAnim$6(pl, 'animation.double_blade.ll');
+            playAnim$4(pl, 'animation.double_blade.ll');
             ctx.lookAtTarget(pl);
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 20;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 20;
             ctx.selectFromSector(pl, {
                 angle: 120,
                 radius: 2.8,
@@ -7607,7 +7517,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
             11: (pl, ctx) => {
                 ctx.adsorbOrSetVelocity(pl, 2, 90);
-                playSoundAll$5('weapon.woosh.3', pl.pos);
+                playSoundAll$4('weapon.woosh.3', pl.pos);
             },
             10: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             17: (pl, ctx) => ctx.trap(pl, { tag: 'dodge' }),
@@ -7641,10 +7551,10 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         cast: 8,
         backswing: 12,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$6(pl, 'animation.double_blade.rr');
+            playAnim$4(pl, 'animation.double_blade.rr');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -7687,9 +7597,9 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         cast: 7,
         backswing: 16,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 25;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 25;
             ctx.freeze(pl);
-            playAnim$6(pl, ctx.previousStatus === 'shieldKick' ? 'animation.double_blade.skh' : 'animation.double_blade.rrl');
+            playAnim$4(pl, ctx.previousStatus === 'shieldKick' ? 'animation.double_blade.skh' : 'animation.double_blade.rrl');
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1);
         },
         onLeave(pl, ctx) {
@@ -7710,7 +7620,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         timeline: {
             5: (pl, ctx) => {
                 ctx.adsorbOrSetVelocity(pl, 1.4);
-                playSoundAll$5('weapon.woosh.2', pl.pos);
+                playSoundAll$4('weapon.woosh.2', pl.pos);
             },
         },
         transitions: {
@@ -7729,22 +7639,22 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         cast: 15,
         onEnter(pl, ctx) {
             ctx.status.isBlocking = true;
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
             ctx.freeze(pl);
             const prevStatus = ctx.previousStatus;
             if (prevStatus === 'shieldCounter') {
-                playAnim$6(pl, 'animation.double_blade.counter_shield');
+                playAnim$4(pl, 'animation.double_blade.counter_shield');
                 ctx.adsorbOrSetVelocity(pl, 1, 90, 1);
             }
             else if (prevStatus.includes('RL') || prevStatus === 'startLeft') {
-                playAnim$6(pl, 'animation.double_blade.shield_left');
+                playAnim$4(pl, 'animation.double_blade.shield_left');
             }
             else if (prevStatus.includes('LR') || prevStatus === 'startRight') {
-                playAnim$6(pl, 'animation.double_blade.shield_right');
+                playAnim$4(pl, 'animation.double_blade.shield_right');
                 ctx.adsorbOrSetVelocity(pl, 0.5, 90, 1);
             }
             else {
-                playAnim$6(pl, 'animation.double_blade.shield');
+                playAnim$4(pl, 'animation.double_blade.shield');
             }
         },
         onLeave(pl, ctx) {
@@ -7771,10 +7681,10 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         backswing: 9,
         onEnter(pl, ctx) {
             ctx.status.isBlocking = true,
-                ctx.components.getComponent(Stamina$1).unwrap().stamina += 30;
+                ctx.components.getComponent(Stamina).unwrap().stamina += 30;
             ctx.freeze(pl);
-            playSoundAll$5('weapon.sword.hit2', pl.pos);
-            playAnim$6(pl, 'animation.double_blade.shield_success');
+            playSoundAll$4('weapon.sword.hit2', pl.pos);
+            playAnim$4(pl, 'animation.double_blade.shield_success');
             ctx.lookAtTarget(pl);
         },
         onLeave(pl, ctx) {
@@ -7821,9 +7731,9 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         cast: 15,
         onEnter(pl, ctx) {
             ctx.status.repulsible = false;
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
             ctx.freeze(pl);
-            playAnim$6(pl, 'animation.double_blade.shield.kick');
+            playAnim$4(pl, 'animation.double_blade.shield.kick');
             ctx.lookAtTarget(pl);
         },
         onLeave(pl, ctx) {
@@ -7874,10 +7784,10 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         backswing: 8,
         onEnter(pl, ctx) {
             ctx.status.repulsible = false;
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 15;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 15;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$6(pl, 'animation.double_blade.skl');
+            playAnim$4(pl, 'animation.double_blade.skl');
             setVelocityByOrientation(pl, ctx, 1, 1.5);
         },
         onLeave(pl, ctx) {
@@ -7888,7 +7798,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             ctx.trap(pl, { tag: 'after' });
         },
         timeline: {
-            6: pl => playSoundAll$5('weapon.woosh.2', pl.pos),
+            6: pl => playSoundAll$4('weapon.woosh.2', pl.pos),
             7: (pl, ctx) => {
                 ctx.selectFromSector(pl, {
                     angle: 40,
@@ -7953,9 +7863,9 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.status.hegemony = true;
             ctx.status.repulsible = false;
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 25;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 25;
             ctx.freeze(pl);
-            playAnim$6(pl, 'animation.double_blade.shield_counter');
+            playAnim$4(pl, 'animation.double_blade.shield_counter');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -7976,7 +7886,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         },
         timeline: {
             3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
-            5: pl => playSoundAll$5('weapon.woosh.3', pl.pos),
+            5: pl => playSoundAll$4('weapon.woosh.3', pl.pos),
             14: (pl, ctx) => ctx.trap(pl),
         },
         transitions: {
@@ -8006,9 +7916,9 @@ class DoubleBladeMoves extends DefaultMoves$4 {
     shieldFromBackswing = {
         cast: 15,
         onEnter(pl, ctx) {
-            ctx.components.getComponent(Stamina$1).unwrap().stamina -= 10;
+            ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
             ctx.freeze(pl);
-            playAnim$6(pl, 'animation.double_blade.shield');
+            playAnim$4(pl, 'animation.double_blade.shield');
         },
         onLeave(pl, ctx) {
             ctx.status.isBlocking = false;
@@ -8046,7 +7956,7 @@ var double_blade = /*#__PURE__*/Object.freeze({
 	tricks: tricks$6
 });
 
-var require$$8$1 = /*@__PURE__*/getAugmentedNamespace(double_blade);
+var require$$7$1 = /*@__PURE__*/getAugmentedNamespace(double_blade);
 
 class StaffMoves extends DefaultMoves$4 {
     constructor() {
@@ -8070,7 +7980,7 @@ class StaffMoves extends DefaultMoves$4 {
     idle = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$6(pl, 'animation.weapon.staff.idle', 'animation.weapon.staff.idle');
+            playAnim$4(pl, 'animation.weapon.staff.idle', 'animation.weapon.staff.idle');
         },
         transitions: {
             transI2R: {
@@ -8089,7 +7999,7 @@ class StaffMoves extends DefaultMoves$4 {
     transI2R = {
         cast: 4,
         onEnter(pl) {
-            playAnim$6(pl, 'animation.weapon.staff.trans.i2r');
+            playAnim$4(pl, 'animation.weapon.staff.trans.i2r');
         },
         transitions: {
             running: {
@@ -8108,7 +8018,7 @@ class StaffMoves extends DefaultMoves$4 {
     transR2I = {
         cast: 4,
         onEnter(pl) {
-            playAnim$6(pl, 'animation.weapon.staff.trans.r2i');
+            playAnim$4(pl, 'animation.weapon.staff.trans.r2i');
         },
         transitions: {
             idle: {
@@ -8127,7 +8037,7 @@ class StaffMoves extends DefaultMoves$4 {
     running = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$6(pl, 'animation.weapon.staff.running', 'animation.weapon.staff.running');
+            playAnim$4(pl, 'animation.weapon.staff.running', 'animation.weapon.staff.running');
         },
         transitions: {
             transR2I: {
@@ -8143,7 +8053,7 @@ class StaffMoves extends DefaultMoves$4 {
     hold = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$6(pl, 'animation.weapon.staff.hold', 'animation.weapon.staff.hold');
+            playAnim$4(pl, 'animation.weapon.staff.hold', 'animation.weapon.staff.hold');
         },
         transitions: {
             idle: {
@@ -8167,7 +8077,7 @@ var staff = /*#__PURE__*/Object.freeze({
 	tricks: tricks$5
 });
 
-var require$$9 = /*@__PURE__*/getAugmentedNamespace(staff);
+var require$$8$1 = /*@__PURE__*/getAugmentedNamespace(staff);
 
 class FantasyDoubleTachi extends DefaultMoves$4 {
     constructor() {
@@ -8261,7 +8171,7 @@ var fantasy_double_tachi = /*#__PURE__*/Object.freeze({
 	tricks: tricks$4
 });
 
-var require$$10$1 = /*@__PURE__*/getAugmentedNamespace(fantasy_double_tachi);
+var require$$9 = /*@__PURE__*/getAugmentedNamespace(fantasy_double_tachi);
 
 class DoubleAxeMoves extends DefaultMoves$4 {
     constructor() {
@@ -8374,7 +8284,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         timeline: {
             2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
             4: (_, ctx) => ctx.status.isBlocking = false,
-            6: (pl, ctx) => playSoundAll$5('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
+            6: (pl, ctx) => playSoundAll$4('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 90,
                 radius: 2.5,
@@ -8433,7 +8343,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
             5: (_, ctx) => ctx.status.hegemony = true,
             15: (_, ctx) => ctx.status.hegemony = false,
-            6: pl => playSoundAll$5('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
+            6: pl => playSoundAll$4('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 90,
                 radius: 2.5,
@@ -8492,7 +8402,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
             5: (_, ctx) => ctx.status.hegemony = true,
             15: (_, ctx) => ctx.status.hegemony = false,
-            6: pl => playSoundAll$5('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
+            6: pl => playSoundAll$4('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 90,
                 radius: 2.5,
@@ -8565,7 +8475,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             9: (_, ctx) => ctx.status.hegemony = true,
             7: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             19: (_, ctx) => ctx.status.hegemony = false,
-            10: pl => playSoundAll$5('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
+            10: pl => playSoundAll$4('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             12: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 120,
                 radius: 2.8,
@@ -8627,7 +8537,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             7: (_, ctx) => ctx.status.hegemony = true,
             6: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             19: (_, ctx) => ctx.status.hegemony = false,
-            10: pl => playSoundAll$5('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
+            10: pl => playSoundAll$4('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             12: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 120,
                 radius: 2.8,
@@ -8671,7 +8581,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             11: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
             10: (_, ctx) => {
                 ctx.status.hegemony = true;
-                playSoundAll$5('weapon.whoosh.thick.' + randomRange$1(1, 4, true), _.pos);
+                playSoundAll$4('weapon.whoosh.thick.' + randomRange$1(1, 4, true), _.pos);
             },
             8: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             20: (_, ctx) => ctx.status.hegemony = false,
@@ -8736,7 +8646,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             7: (_, ctx) => ctx.status.hegemony = true,
             6: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             19: (_, ctx) => ctx.status.hegemony = false,
-            10: pl => playSoundAll$5('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
+            10: pl => playSoundAll$4('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             12: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 120,
                 radius: 2.8,
@@ -8780,7 +8690,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             11: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
             10: (_, ctx) => {
                 ctx.status.hegemony = true;
-                playSoundAll$5('weapon.whoosh.thick.' + randomRange$1(1, 4, true), _.pos);
+                playSoundAll$4('weapon.whoosh.thick.' + randomRange$1(1, 4, true), _.pos);
             },
             8: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             20: (_, ctx) => ctx.status.hegemony = false,
@@ -8800,17 +8710,17 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         backswing: 7,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            const ori = input$1.approximateOrientation(pl);
+            const ori = input.approximateOrientation(pl);
             switch (ori) {
-                case input$1.Orientation.Left:
+                case input.Orientation.Left:
                     playAnimCompatibility(pl, 'animation.meisterhau.double_axe.dodge.left');
                     ctx.setVelocity(pl, 0, 1.8);
                     break;
-                case input$1.Orientation.Right:
+                case input.Orientation.Right:
                     playAnimCompatibility(pl, 'animation.meisterhau.double_axe.dodge.right');
                     ctx.setVelocity(pl, 180, 1.8);
                     break;
-                case input$1.Orientation.Forward:
+                case input.Orientation.Forward:
                     playAnimCompatibility(pl, 'animation.meisterhau.double_axe.dodge.front');
                     ctx.adsorbToTarget(pl, 2);
                     break;
@@ -8819,10 +8729,10 @@ class DoubleAxeMoves extends DefaultMoves$4 {
                     ctx.setVelocity(pl, -90, 1.5);
                     break;
             }
-            if (ori !== input$1.Orientation.Backward && ori !== input$1.Orientation.None) {
+            if (ori !== input.Orientation.Backward && ori !== input.Orientation.None) {
                 ctx.status.isWaitingDeflection = true;
             }
-            if (ori !== input$1.Orientation.Forward) {
+            if (ori !== input.Orientation.Forward) {
                 ctx.status.isDodging = true;
             }
         },
@@ -8852,7 +8762,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         cast: 5,
         backswing: 4,
         onEnter(pl, ctx) {
-            playSoundAll$5('weapon.deflection', pl.pos, 1);
+            playSoundAll$4('weapon.deflection', pl.pos, 1);
             playAnimCompatibility(pl, 'animation.meisterhau.double_axe.deflect', 'animation.meisterhau.double_axe.deflect');
             ctx.freeze(pl);
             ctx.adsorbToTarget(pl, 3);
@@ -8892,7 +8802,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         },
         timeline: {
             2: (pl, ctx) => ctx.adsorbToTarget(pl, 3, 1),
-            3: pl => playSoundAll$5('weapon.whoosh.break_defense', pl.pos),
+            3: pl => playSoundAll$4('weapon.whoosh.break_defense', pl.pos),
             4: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 180,
                 radius: 2.8,
@@ -9010,7 +8920,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             5: (_, ctx) => ctx.status.hegemony = true,
             3: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             15: (_, ctx) => ctx.status.hegemony = false,
-            6: pl => playSoundAll$5('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
+            6: pl => playSoundAll$4('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 120,
                 radius: 2.8,
@@ -9035,7 +8945,7 @@ var double_axe = /*#__PURE__*/Object.freeze({
 	tricks: tricks$3
 });
 
-var require$$11$1 = /*@__PURE__*/getAugmentedNamespace(double_axe);
+var require$$10 = /*@__PURE__*/getAugmentedNamespace(double_axe);
 
 class OneHandedMoves extends DefaultMoves$4 {
     constructor() {
@@ -9258,7 +9168,7 @@ var onehanded = /*#__PURE__*/Object.freeze({
 	tricks: tricks$2
 });
 
-var require$$12$1 = /*@__PURE__*/getAugmentedNamespace(onehanded);
+var require$$11 = /*@__PURE__*/getAugmentedNamespace(onehanded);
 
 var collection = [
     double_dagger,
@@ -9266,14 +9176,14 @@ var collection = [
     lightSaber,
     moon_glaive,
     require$$4,
-    sheathed_katana,
+    // require('./tricks/sheathed_katana'),
+    require$$5$1,
     require$$6$1,
     require$$7$1,
     require$$8$1,
     require$$9,
-    require$$10$1,
-    require$$11$1,
-    require$$12$1,
+    require$$10,
+    require$$11,
 ];
 
 var collection$1 = /*@__PURE__*/getDefaultExportFromCjs(collection);
@@ -9282,7 +9192,7 @@ function checkCompleteness(mod) {
     if (!mod.sid || !mod.bind || !mod.entry || !mod.moves) {
         return '缺少必要的属性: sid | bind | entry | moves';
     }
-    if (!Object.keys(mod.moves).includes(mod.entry)) {
+    if (!mod.moves.hasMove(mod.entry)) {
         return `无效的 entry: '${mod.entry}'`;
     }
     return false;
@@ -9290,22 +9200,22 @@ function checkCompleteness(mod) {
 
 const { remote } = requireSetup();
 
-async function knockback$3(en, x, z, h, v) {
+async function knockback$2(en, x, z, h, v) {
     const m = Math.sqrt(x * x + z * z);
     const nx = x / m;
     const nz = z / m;
     return await remote.call('knockback', en.uniqueId, nx * h, nz * h, h, v)
 }
 
-async function impulse$1(en, x, y, z) {
+async function impulse(en, x, y, z) {
     return await remote.call('impulse', en.uniqueId, x, y, z)
 }
 
-async function clearVelocity$1(en) {
+async function clearVelocity(en) {
     return await remote.call('clearVelocity', en.uniqueId)
 }
 
-async function applyKnockbackAtVelocityDirection$1(en, h, v) {
+async function applyKnockbackAtVelocityDirection(en, h, v) {
     return await remote.call('applyKnockbackAtVelocityDirection', en.uniqueId, h, v)
 }
 
@@ -9318,7 +9228,7 @@ async function faceTo(src, t) {
 }
 
 var kinematics$1 = {
-    knockback: knockback$3, impulse: impulse$1, clearVelocity: clearVelocity$1, applyKnockbackAtVelocityDirection: applyKnockbackAtVelocityDirection$1, rotate, faceTo
+    knockback: knockback$2, impulse, clearVelocity, applyKnockbackAtVelocityDirection, rotate, faceTo
 };
 
 async function damage(victim, damage, cause, abuser, projectile) {
@@ -9339,16 +9249,16 @@ var combat$1 = /*#__PURE__*/Object.freeze({
 	setRotation: setRotation
 });
 
-var require$$1 = /*@__PURE__*/getAugmentedNamespace(combat$1);
+var require$$1$1 = /*@__PURE__*/getAugmentedNamespace(combat$1);
 
 const kinematics = kinematics$1;
-const combat = require$$1;
+const combat = require$$1$1;
 
 var func = {
     kinematics, combat,
 };
 
-function vec2$2(x1, y1, x2, y2) {
+function vec2$1(x1, y1, x2, y2) {
     const dx = x2 - x1,
         dy = y2 - y1;
     return {
@@ -9364,7 +9274,7 @@ function getAngleFromVector2$1(v1, v2) {
     return Math.acos(angle)
 }
 
-function rotate2$1(v, rad) {
+function rotate2(v, rad) {
     const { dx, dy, m } = v;
     const x = dx * Math.cos(rad) - dy * Math.sin(rad);
     const y = dx * Math.sin(rad) + dy * Math.cos(rad);
@@ -9373,13 +9283,13 @@ function rotate2$1(v, rad) {
     }
 }
 
-function multiply2$1(v, factor) {
+function multiply2(v, factor) {
     const { dx, dy } = v;
-    return vec2$2(0, 0, dx*factor, dy*factor)
+    return vec2$1(0, 0, dx*factor, dy*factor)
 }
 
 function minus(a, b) {
-    return vec2$2(
+    return vec2$1(
         0, 0,
         a.dx - b.dx,
         a.dy - b.dy
@@ -9387,7 +9297,7 @@ function minus(a, b) {
 }
 
 function vec2ToAngle(v) {
-    let angle = getAngleFromVector2$1(v, vec2$2(0, 0, 0, -1));
+    let angle = getAngleFromVector2$1(v, vec2$1(0, 0, 0, -1));
 
     if (v.dx < 0) {
         angle = -angle;
@@ -9397,11 +9307,11 @@ function vec2ToAngle(v) {
 }
 
 var vec = {
-    vec2: vec2$2, getAngleFromVector2: getAngleFromVector2$1, rotate2: rotate2$1, multiply2: multiply2$1, minus,
+    vec2: vec2$1, getAngleFromVector2: getAngleFromVector2$1, rotate2, multiply2, minus,
     vec2ToAngle, 
 };
 
-const { vec2: vec2$1, getAngleFromVector2 } = vec;
+const { vec2, getAngleFromVector2 } = vec;
 
 const defaultRange = {
     angle: 60,
@@ -9409,7 +9319,7 @@ const defaultRange = {
     radius: 2.5
 };
 
-function selectFromSector$2(pl, range) {
+function selectFromSector$1(pl, range) {
     const {
         angle, rotation, radius
     } = Object.assign({}, defaultRange, range);
@@ -9424,8 +9334,8 @@ function selectFromSector$2(pl, range) {
         ,Tx = sx + Math.cos(endAngle * RAD) * radius
         ,Tz = sz + Math.sin(endAngle * RAD) * radius;
 
-    const v1 = vec2$1(sx, sz, tx, tz)
-        ,v2 = vec2$1(sx, sz, Tx, Tz)
+    const v1 = vec2(sx, sz, tx, tz)
+        ,v2 = vec2(sx, sz, Tx, Tz)
         ,rangeAngle = getAngleFromVector2(v1, v2);
 
     const result = [];
@@ -9434,12 +9344,12 @@ function selectFromSector$2(pl, range) {
     const playersShouldBeSelected = mc.getOnlinePlayers()
         .filter(p => p.uniqueId !== pl.uniqueId && p.health > 0 && pl.distanceToSqr(p) <= distSqr);
 
-    playersShouldBeSelected.concat(mc.getEntities(pl.pos, Math.max(1, radius - 2))).forEach(e => {
+    playersShouldBeSelected.concat(mc.getEntities(pl.pos, Math.max(1.5, radius - 1.5))).forEach(e => {
         if (e.uniqueId === pl.uniqueId) {
             return
         }
 
-        const v = vec2$1(sx, sz, e.pos.x, e.pos.z);
+        const v = vec2(sx, sz, e.pos.x, e.pos.z);
         const angle = getAngleFromVector2(v1, v);
 
         if (!isNaN(angle) && angle <= rangeAngle) {
@@ -9452,96 +9362,58 @@ function selectFromSector$2(pl, range) {
 }
 
 var range = {
-    selectFromSector: selectFromSector$2, defaultRange,
+    selectFromSector: selectFromSector$1, defaultRange,
 };
 
-var require$$0 = /*@__PURE__*/getAugmentedNamespace(camera$3);
-
-var require$$5 = /*@__PURE__*/getAugmentedNamespace(status);
-
-const { CameraComponent } = require$$0;
-const { Status: Status$2 } = require$$5;
-const { rotate2, vec2, multiply2 } = vec;
-
-const cameraInput$1 = (pl, enabled=true) => {
+const cameraInput$1 = (pl, enabled = true) => {
     mc.runcmdEx(`inputpermission set "${pl.name}" camera ${enabled ? 'enabled' : 'disabled'}`);
 };
-
-const camera$2 = (pl, easeTime, easeType, pos, lookAt) => {
+const camera$1 = (pl, easeTime, easeType, pos, lookAt) => {
     mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} facing ${lookAt.x} ${lookAt.y} ${lookAt.z}`);
 };
-
 const cameraRot = (pl, easeTime, easeType, pos, rotX, rotY) => {
-    mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} rot ${rotX} ${rotY}`); 
+    mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} rot ${rotX} ${rotY}`);
 };
-
-function clearCamera$2(pl) {
+function clearCamera$1(pl) {
     mc.runcmdEx(`camera "${pl.name}" set meisterhau:battle`);
 }
-
 const ROT = Math.PI * 1;
 const ANGLE = 180 / Math.PI;
-
 const battleCameraMiddlePoint = (pl, en) => {
     const plPos = pl.pos;
     const enPos = en.pos;
-    const initVec = vec2(plPos.x, plPos.z, enPos.x, enPos.z);
+    const initVec = vec.vec2(plPos.x, plPos.z, enPos.x, enPos.z);
     const dist = initVec.m;
     const offsetZ = 1.5;
     const offsetX = 5;
     const moduloScale = offsetZ / initVec.m;
-    
     const middlePoint = {
         x: (plPos.x + enPos.x) / 2,
         y: (plPos.y + enPos.y) / 2,
         z: (plPos.z + enPos.z) / 2,
     };
-
-    const cameraVec = multiply2(
-        rotate2(
-            initVec,
-            Math.acos(
-                Math.max(0, Math.min(offsetZ / dist, 1))
-            ) - ROT
-        ),
-        moduloScale
-    );
-    
+    const cameraVec = vec.multiply2(vec.rotate2(initVec, Math.acos(Math.max(0, Math.min(offsetZ / dist, 1))) - ROT), moduloScale);
     const crossPos = {
         x: plPos.x - cameraVec.dx,
         z: plPos.z - cameraVec.dy,
     };
-
-    const cameraTargetVec = vec2(
-        crossPos.x,
-        crossPos.z,
-        enPos.x, enPos.z
-    );
-
-    const cameraPosVec = multiply2(
-        rotate2(cameraTargetVec, Math.PI),
-        offsetX / cameraTargetVec.m
-    );
-
+    const cameraTargetVec = vec.vec2(crossPos.x, crossPos.z, enPos.x, enPos.z);
+    const cameraPosVec = vec.multiply2(vec.rotate2(cameraTargetVec, Math.PI), offsetX / cameraTargetVec.m);
     const cameraPos = {
         x: crossPos.x + cameraPosVec.dx,
         z: crossPos.z + cameraPosVec.dy,
         y: plPos.y - 0.4,
     };
-
-    camera$2(pl, 0.1, 'linear', cameraPos, { ...middlePoint, y: cameraPos.y });
+    camera$1(pl, 0.1, 'linear', cameraPos, { ...middlePoint, y: cameraPos.y });
 };
-
 const battleCamera$1 = (pl, en) => {
     if (!pl) {
-        return
+        return;
     }
-
     const plPos = pl.pos;
     let enPos = en.pos;
-    let initVec = vec2(plPos.x, plPos.z, enPos.x, enPos.z);
+    let initVec = vec.vec2(plPos.x, plPos.z, enPos.x, enPos.z);
     const dist = initVec.m;
-
     if (dist < 3) {
         const dxn = initVec.dx / dist;
         const dyn = initVec.dy / dist;
@@ -9550,55 +9422,32 @@ const battleCamera$1 = (pl, en) => {
             dy: dyn * 3,
             m: 3,
         };
-
         enPos = {
             x: plPos.x + dxn * 3,
             y: enPos.y,
             z: plPos.z + dyn * 3,
         };
     }
-
-    const manager = Status$2.getOrCreate(pl.uniqueId).componentManager;
+    const manager = Status$1.getOrCreate(pl.uniqueId).componentManager;
     const cameraComponentOpt = manager.getComponent(CameraComponent);
     if (cameraComponentOpt.isEmpty()) {
-        return
+        return;
     }
-
     const cameraComponent = cameraComponentOpt.unwrap();
-    const [ offsetX, offsetY, offsetZ ] = cameraComponent.offset;
+    const [offsetX, offsetY, offsetZ] = cameraComponent.offset;
     const moduloScale = offsetZ / initVec.m;
-
-    const cameraVec = multiply2(
-        rotate2(
-            initVec,
-            Math.acos(
-                Math.max(0, Math.min(offsetZ / dist, 0.5))
-            ) - ROT
-        ),
-        moduloScale
-    );
-
+    const cameraVec = vec.multiply2(vec.rotate2(initVec, Math.acos(Math.max(0, Math.min(offsetZ / dist, 0.5))) - ROT), moduloScale);
     const crossPos = {
         x: plPos.x - cameraVec.dx,
         z: plPos.z - cameraVec.dy,
     };
-
-    const cameraTargetVec = vec2(
-        crossPos.x, crossPos.z,
-        enPos.x, enPos.z
-    );
-
-    const cameraPosVec = multiply2(
-        rotate2(cameraTargetVec, Math.PI),
-        offsetX / cameraTargetVec.m
-    );
-
+    const cameraTargetVec = vec.vec2(crossPos.x, crossPos.z, enPos.x, enPos.z);
+    const cameraPosVec = vec.multiply2(vec.rotate2(cameraTargetVec, Math.PI), offsetX / cameraTargetVec.m);
     const cameraPos = {
         x: crossPos.x + cameraPosVec.dx,
         z: crossPos.z + cameraPosVec.dy,
         y: plPos.y - .2 + offsetY,
     };
-
     // camera(pl, 0.1, 'linear', cameraPos, {
     //     x: enPos.x,
     //     z: enPos.z,
@@ -9609,23 +9458,28 @@ const battleCamera$1 = (pl, en) => {
         z: enPos.z - cameraPos.z,
         y: cameraPos.y
     };
-
     const yaw = Math.atan2(cameraEntityVec.z, cameraEntityVec.x) * ANGLE - 90;
-    const [ dYaw, dPitch ] = cameraComponent.rot;
+    const [dYaw, dPitch] = cameraComponent.rot;
     cameraRot(pl, 0.1, 'linear', cameraPos, dPitch, yaw + dYaw);
 };
 
-var camera_1 = {
-    battleCamera: battleCamera$1, battleCameraMiddlePoint, cameraInput: cameraInput$1, clearCamera: clearCamera$2
-};
+var camera$2 = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	battleCamera: battleCamera$1,
+	battleCameraMiddlePoint: battleCameraMiddlePoint,
+	cameraInput: cameraInput$1,
+	clearCamera: clearCamera$1
+});
 
-const { knockback: knockback$2 } = kinematics$1;
+var require$$1 = /*@__PURE__*/getAugmentedNamespace(camera$2);
+
+const { knockback: knockback$1 } = kinematics$1;
 
 
-const setVelocity$2 = (pl, rotation, h, v) => {
+const setVelocity$1 = (pl, rotation, h, v) => {
     const { yaw } = pl.direction;
     const rad = (yaw + rotation) * Math.PI / 180.0;
-    knockback$2(pl, Math.cos(rad), Math.sin(rad), h, v);
+    knockback$1(pl, Math.cos(rad), Math.sin(rad), h, v);
 };
 
 function isCollide(pl) {
@@ -9663,8 +9517,10 @@ function isCollide(pl) {
 }
 
 var kinematic = {
-    setVelocity: setVelocity$2, isCollide
+    setVelocity: setVelocity$1, isCollide
 };
+
+var require$$5 = /*@__PURE__*/getAugmentedNamespace(status);
 
 let TargetLock$1 = class TargetLock extends BaseComponent {
     source;
@@ -9748,7 +9604,7 @@ HudComponent = HudComponent_1 = __decorate([
 ], HudComponent);
 
 var DamageModifier_1;
-let DamageModifier$1 = class DamageModifier extends BaseComponent {
+let DamageModifier = class DamageModifier extends BaseComponent {
     static { DamageModifier_1 = this; }
     static defaultModifier = 0.2;
     static defaultModifierOpt = new DamageModifier_1(DamageModifier_1.defaultModifier);
@@ -9764,15 +9620,10 @@ let DamageModifier$1 = class DamageModifier extends BaseComponent {
         this.#modifier = modifier;
     }
 };
-DamageModifier$1 = DamageModifier_1 = __decorate([
+DamageModifier = DamageModifier_1 = __decorate([
     PublicComponent('damage-modifier'),
     Fields(['modifier'])
-], DamageModifier$1);
-
-var damageModifier = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	get DamageModifier () { return DamageModifier$1; }
-});
+], DamageModifier);
 
 var HardmodeComponent_1, RaidomodComponent_1;
 let HardmodeComponent = class HardmodeComponent extends BaseComponent {
@@ -9783,14 +9634,14 @@ let HardmodeComponent = class HardmodeComponent extends BaseComponent {
     }
     shouldRemoveDamageModifier = false;
     onAttach(manager) {
-        if (manager.getComponent(DamageModifier$1).isEmpty()) {
+        if (manager.getComponent(DamageModifier).isEmpty()) {
             this.shouldRemoveDamageModifier = true;
-            manager.attachComponent(new DamageModifier$1(HardmodeComponent_1.damageModifier));
+            manager.attachComponent(new DamageModifier(HardmodeComponent_1.damageModifier));
         }
     }
     onDetach(manager) {
         if (this.shouldRemoveDamageModifier) {
-            manager.detachComponent(DamageModifier$1);
+            manager.detachComponent(DamageModifier);
         }
     }
 };
@@ -9807,9 +9658,9 @@ let RaidomodComponent = class RaidomodComponent extends BaseComponent {
     timer = Optional$1.none();
     stage = 0;
     async onAttach(manager) {
-        if (manager.getComponent(DamageModifier$1).isEmpty()) {
+        if (manager.getComponent(DamageModifier).isEmpty()) {
             this.shouldRemoveDamageModifier = true;
-            manager.attachComponent(new DamageModifier$1(RaidomodComponent_1.damageModifier));
+            manager.attachComponent(new DamageModifier(RaidomodComponent_1.damageModifier));
         }
         const [timer] = await manager.attachComponent(new Timer(100));
         this.timer = timer;
@@ -9856,7 +9707,7 @@ let RaidomodComponent = class RaidomodComponent extends BaseComponent {
     // }
     onDetach(manager) {
         if (this.shouldRemoveDamageModifier) {
-            manager.detachComponent(DamageModifier$1);
+            manager.detachComponent(DamageModifier);
         }
     }
 };
@@ -9866,12 +9717,12 @@ RaidomodComponent = RaidomodComponent_1 = __decorate([
 cmd('raidomode', '居合模式', CommandPermission.Everyone).setup(register => {
     register('<pl:player> enable', (cmd, ori, out, res) => {
         res.pl.forEach(pl => {
-            Status$3.getOrCreate(pl.uniqueId).componentManager.attachComponent(new RaidomodComponent());
+            Status$1.getOrCreate(pl.uniqueId).componentManager.attachComponent(new RaidomodComponent());
         });
     });
     register('<pl:player> disable', (cmd, ori, out, res) => {
         res.pl.forEach(pl => {
-            Status$3.getOrCreate(pl.uniqueId).componentManager.detachComponent(RaidomodComponent);
+            Status$1.getOrCreate(pl.uniqueId).componentManager.detachComponent(RaidomodComponent);
         });
     });
 });
@@ -9891,7 +9742,7 @@ let StatusHud$1 = StatusHud_1 = class StatusHud extends HudComponent {
         if ((this.targetLock = manager.getComponent(TargetLock$1)).isEmpty()) {
             return true;
         }
-        if ((this.stamina = manager.getComponent(Stamina$1)).isEmpty()) {
+        if ((this.stamina = manager.getComponent(Stamina)).isEmpty()) {
             return true;
         }
         manager.beforeTick(() => {
@@ -9900,7 +9751,7 @@ let StatusHud$1 = StatusHud_1 = class StatusHud extends HudComponent {
                 return;
             }
             const target = lock.target.unwrap();
-            this.targetStamina = Status$3.getOrCreate(target.uniqueId).componentManager.getComponent(Stamina$1);
+            this.targetStamina = Status$1.getOrCreate(target.uniqueId).componentManager.getComponent(Stamina);
         });
     }
     renderStatus() {
@@ -9955,12 +9806,12 @@ var statushud = /*#__PURE__*/Object.freeze({
 
 var require$$8 = /*@__PURE__*/getAugmentedNamespace(statushud);
 
-const { selectFromSector: selectFromSector$1 } = range;
-const { battleCamera, cameraInput, clearCamera: clearCamera$1 } = camera_1;
-const { knockback: knockback$1 } = kinematics$1;
-const { setVelocity: setVelocity$1 } = kinematic;
-const { DEFAULT_POSTURE_SPEED: DEFAULT_POSTURE_SPEED$1, DEFAULT_SPEED: DEFAULT_SPEED$1 } = require$$2$1;
-const { Status: Status$1 } = require$$5;
+const { selectFromSector } = range;
+const { battleCamera, cameraInput, clearCamera } = require$$1;
+const { knockback } = kinematics$1;
+const { setVelocity } = kinematic;
+const { DEFAULT_POSTURE_SPEED: DEFAULT_POSTURE_SPEED$1, DEFAULT_SPEED: DEFAULT_SPEED$1 } = require$$0;
+const { Status } = require$$5;
 const { TargetLock } = require$$6;
 const { Optional } = require$$7;
 const { StatusHud } = require$$8;
@@ -9979,31 +9830,31 @@ function lockTarget(src, target) {
         // cameraInput(pl, false)
         locks.set(src, target);
         pl.setMovementSpeed(DEFAULT_POSTURE_SPEED$1);
-        Status$1.getOrCreate(src).componentManager.attachComponent(
+        Status.getOrCreate(src).componentManager.attachComponent(
             new TargetLock(Optional.some(pl), Optional.some(target)),
             new StatusHud(),
         );
     } else {
-        clearCamera$1(pl);
+        clearCamera(pl);
     }
 }
 
-function releaseTarget$1(src) {
+function releaseTarget(src) {
     const pl = mc.getPlayer(src);
-    const manager = Status$1.getOrCreate(src).componentManager;
+    const manager = Status.getOrCreate(src).componentManager;
     manager.detachComponent(StatusHud);
     manager.detachComponent(TargetLock);
     cameraInput(pl);
-    clearCamera$1(pl);
+    clearCamera(pl);
     locks.delete(src);
     pl.setMovementSpeed(DEFAULT_SPEED$1);
     cooldowns.add(pl.uniqueId);
     setTimeout(() => cooldowns.delete(pl.uniqueId), 500);
 }
 
-function toggleLock$1(src) {
+function toggleLock(src) {
     if (locks.has(src)) {
-        releaseTarget$1(src);
+        releaseTarget(src);
         return null
     }
 
@@ -10034,9 +9885,9 @@ function getAngle(a, b) {
  * @param {import('../core/inputSimulator').Actor} target 
  * @returns 
  */
-function lookAt$1(actor, target) {
+function lookAt(actor, target) {
     if (!target) {
-        return releaseTarget$1(actor)
+        return releaseTarget(actor)
     }
 
     const [ yaw, pitch ] = getAngle(actor, target);
@@ -10066,7 +9917,7 @@ function lookAt$1(actor, target) {
 }
 
 function getTargetFromLock(actor) {
-    return Status$1.getComponentManager(actor.uniqueId).match(
+    return Status.getComponentManager(actor.uniqueId).match(
         Optional.none(),
         comps => comps.getComponent(TargetLock).match(
             Optional.none(),
@@ -10075,7 +9926,7 @@ function getTargetFromLock(actor) {
     )
 }
 
-function lookAtTarget$1(pl) {
+function lookAtTarget(pl) {
     // const en = locks.get(pl.uniqueId)
     // if (!en) {
     //     return
@@ -10086,18 +9937,18 @@ function lookAtTarget$1(pl) {
         return
     }
 
-    lookAt$1(pl, targetEntity.unwrap());
+    lookAt(pl, targetEntity.unwrap());
 }
 
-function hasLock$2(pl) {
+function hasLock$1(pl) {
     // return locks.has(pl.uniqueId)
     return !getTargetFromLock(pl).isEmpty()
 }
 
-function adsorbTo$1(pl, en, max, offset=2) {
+function adsorbTo(pl, en, max, offset=2) {
     const dist = en.distanceTo(pl.pos) - offset;
 
-    knockback$1(
+    knockback(
         pl,
         en.pos.x - pl.pos.x,
         en.pos.z - pl.pos.z,
@@ -10106,27 +9957,27 @@ function adsorbTo$1(pl, en, max, offset=2) {
     );
 }
 
-function adsorbToTarget$1(pl, max, offset) {
+function adsorbToTarget(pl, max, offset) {
     const en = getTargetFromLock(pl);
     if (en.isEmpty()) {
         return
     }
 
-    adsorbTo$1(pl, en.unwrap(), max, offset);
+    adsorbTo(pl, en.unwrap(), max, offset);
 }
 
-function adsorbOrSetVelocity$1(pl, max, velocityRot=90, offset=1.5) {
+function adsorbOrSetVelocity(pl, max, velocityRot=90, offset=1.5) {
     const en = getTargetFromLock(pl);
     if (!en.isEmpty()) {
         // lookAtTarget(pl)
-        adsorbToTarget$1(pl, max, offset);
+        adsorbToTarget(pl, max, offset);
         return
     }
 
-    setVelocity$1(pl, velocityRot, max, -1);
+    setVelocity(pl, velocityRot, max, -1);
 }
 
-function distanceToTarget$1(pl) {
+function distanceToTarget(pl) {
     // const en = locks.get(pl.uniqueId)
     const en = getTargetFromLock(pl);
 
@@ -10137,7 +9988,7 @@ function distanceToTarget$1(pl) {
     return en.unwrap().distanceTo(pl.pos)
 }
 
-const onTick$1 = em => () => {
+const onTick = em => () => {
     locks.forEach(async (t, s) => {
         const _s = mc.getPlayer(s);
 
@@ -10145,7 +9996,7 @@ const onTick$1 = em => () => {
             battleCamera(_s, t);
         } else if (_s) {
             em.emitNone('onReleaseLock', _s, _s.getHand().type);
-            releaseTarget$1(s);
+            releaseTarget(s);
         }
     });
 };
@@ -10159,7 +10010,7 @@ function getClosedEntity(en) {
     let closed = null
         ,dist = Infinity;
 
-    selectFromSector$1(en, {
+    selectFromSector(en, {
         radius: 10,
         angle: 46,
         rotate: -23,
@@ -10184,40 +10035,40 @@ function getClosedEntity(en) {
 }
 
 var lock = {
-    onTick: onTick$1, getClosedEntity, lockTarget, releaseTarget: releaseTarget$1, toggleLock: toggleLock$1,
-    lookAt: lookAt$1, lookAtTarget: lookAtTarget$1, distanceToTarget: distanceToTarget$1, hasLock: hasLock$2, adsorbToTarget: adsorbToTarget$1,
-    adsorbTo: adsorbTo$1, adsorbOrSetVelocity: adsorbOrSetVelocity$1
+    onTick, getClosedEntity, lockTarget, releaseTarget, toggleLock,
+    lookAt, lookAtTarget, distanceToTarget, hasLock: hasLock$1, adsorbToTarget,
+    adsorbTo, adsorbOrSetVelocity
 };
 
-const { DEFAULT_POSTURE_SPEED, DEFAULT_SPEED } = require$$2$1;
-const { hasLock: hasLock$1 } = lock;
+const { DEFAULT_POSTURE_SPEED, DEFAULT_SPEED } = require$$0;
+const { hasLock } = lock;
 
-function movement$1(pl, enabled=true) {
+function movement(pl, enabled=true) {
     if (!enabled) {
         pl.setMovementSpeed(0);
         return
     }
 
     pl.setMovementSpeed(
-        hasLock$1(pl) ? DEFAULT_POSTURE_SPEED : DEFAULT_SPEED
+        hasLock(pl) ? DEFAULT_POSTURE_SPEED : DEFAULT_SPEED
     );
 }
 
-function movementInput$1(pl, enabled=true) {
+function movementInput(pl, enabled=true) {
     mc.runcmdEx(`inputpermission set "${pl.name}" lateral_movement ${enabled ? 'enabled' : 'disabled'}`);
 }
 
-function camera$1(pl, enabled=true) {
+function camera(pl, enabled=true) {
     mc.runcmdEx(`inputpermission set "${pl.name}" camera ${enabled ? 'enabled' : 'disabled'}`);
 }
 
 var generic = {
-    movement: movement$1, camera: camera$1, movementInput: movementInput$1
+    movement, camera, movementInput
 };
 
 const tasks = new Map();
 
-let Task$1 = class Task {
+class Task {
     constructor(uniqueId) {
         if (!tasks.get(uniqueId)) {
             tasks.set(uniqueId, this);
@@ -10280,19 +10131,13 @@ let Task$1 = class Task {
     run() {
         this.#next();
     }
-};
+}
 
 var task = {
-    Task: Task$1
+    Task
 };
 
-var require$$10 = /*@__PURE__*/getAugmentedNamespace(tick);
-
-var require$$11 = /*@__PURE__*/getAugmentedNamespace(cameraFading);
-
-var require$$12 = /*@__PURE__*/getAugmentedNamespace(damageModifier);
-
-function registerCommand$1() {
+function registerCommand() {
     cmd('components', '管理组件', 1).setup(register => {
         register('add <pl:player> <name:string> [args:json]', (_, __, output, args) => {
             const targets = args.pl;
@@ -10305,7 +10150,7 @@ function registerCommand$1() {
                 const _args = jsonArgs ? JSON.parse(jsonArgs) : undefined;
                 const component = componentCtor.create(_args);
                 for (const target of targets) {
-                    Status$3.getOrCreate(target.uniqueId).componentManager.attachComponent(component);
+                    Status$1.getOrCreate(target.uniqueId).componentManager.attachComponent(component);
                 }
                 output.success(`已为 ${targets.length} 个玩家添加组件 '${args.name}'`);
             }
@@ -10320,7 +10165,7 @@ function registerCommand$1() {
                 return output.error('无效的组件名');
             }
             for (const terget of targets) {
-                Status$3.get(terget.uniqueId)?.componentManager.detachComponent(componentCtor);
+                Status$1.get(terget.uniqueId)?.componentManager.detachComponent(componentCtor);
             }
             output.success(`已为 ${targets.length} 个玩家移除组件 '${args.name}'`);
         });
@@ -10328,7 +10173,7 @@ function registerCommand$1() {
             const pl = args.pl;
             const useDetail = args.detail ?? false;
             for (const p of pl) {
-                const status = Status$3.get(p.uniqueId);
+                const status = Status$1.get(p.uniqueId);
                 if (!status) {
                     continue;
                 }
@@ -10355,7 +10200,7 @@ function registerCommand$1() {
                 return output.error('无效的组件名');
             }
             for (const pl of args.pl) {
-                const status = Status$3.get(pl.uniqueId);
+                const status = Status$1.get(pl.uniqueId);
                 if (!status) {
                     continue;
                 }
@@ -10391,7 +10236,7 @@ function registerCommand$1() {
                 return output.error('无效的组件名');
             }
             for (const target of pl) {
-                const manager = Status$3.get(target.uniqueId)?.componentManager;
+                const manager = Status$1.get(target.uniqueId)?.componentManager;
                 if (!manager) {
                     continue;
                 }
@@ -10423,13 +10268,6 @@ function registerCommand$1() {
     });
 }
 
-var commands = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	registerCommand: registerCommand$1
-});
-
-var require$$13 = /*@__PURE__*/getAugmentedNamespace(commands);
-
 class Scheduler extends BaseComponent {
     period;
     offset = 0;
@@ -10440,10 +10278,10 @@ class Scheduler extends BaseComponent {
         this.allowTick = true;
     }
     onAttach() {
-        this.offset = Tick$1.tick;
+        this.offset = Tick.tick;
     }
     onTick() {
-        this.update = (Tick$1.tick - this.offset) % this.period === 0;
+        this.update = (Tick.tick - this.offset) % this.period === 0;
     }
 }
 
@@ -10576,15 +10414,15 @@ class Match {
     }
 }
 mc.listen('onPlayerDie', pl => {
-    Status$3.getOrCreate(pl.uniqueId).componentManager.getComponent(Team$1).use(team => {
+    Status$1.getOrCreate(pl.uniqueId).componentManager.getComponent(Team).use(team => {
         const match = Match.findMatch(team);
         if (!match) {
             return;
         }
         match.lose(team);
         const [winner, loser] = match.result();
-        const winningPlayers = Team$1.players.get(winner);
-        const losingPlayers = Team$1.players.get(loser);
+        const winningPlayers = Team.players.get(winner);
+        const losingPlayers = Team.players.get(loser);
         if (match.finished()) {
             if (winningPlayers) {
                 winningPlayers.forEach(pl => {
@@ -10616,8 +10454,8 @@ cmd('match', '开启对局', CommandPermission.Everyone).setup(register => {
     register('<pl:player> best_of <rounds:int>', (cmd, ori, out, res) => {
         const source = ori.player;
         const { pl, rounds } = res;
-        const sourceTeamOpt = Status$3.getOrCreate(source.uniqueId).componentManager.getComponent(Team$1);
-        const targetTeamOpt = Status$3.getOrCreate(pl[0].uniqueId).componentManager.getComponent(Team$1);
+        const sourceTeamOpt = Status$1.getOrCreate(source.uniqueId).componentManager.getComponent(Team);
+        const targetTeamOpt = Status$1.getOrCreate(pl[0].uniqueId).componentManager.getComponent(Team);
         if (sourceTeamOpt.isEmpty() || targetTeamOpt.isEmpty()) {
             return out.error('必须在不同伍中才能进行对局');
         }
@@ -10632,28 +10470,6 @@ cmd('match', '开启对局', CommandPermission.Everyone).setup(register => {
         new Match(sourceTeam, targetTeam, MatchRules.BestOf, rounds);
     });
 });
-
-function antiTreeshaking$1() {
-    return [
-        HudComponent,
-        HealthModifier,
-        HardmodeComponent,
-        Match,
-    ];
-}
-
-var antiTreeshaking$2 = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	antiTreeshaking: antiTreeshaking$1
-});
-
-var require$$14 = /*@__PURE__*/getAugmentedNamespace(antiTreeshaking$2);
-
-var require$$15 = /*@__PURE__*/getAugmentedNamespace(stamina);
-
-var require$$16 = /*@__PURE__*/getAugmentedNamespace(input$2);
-
-var require$$17 = /*@__PURE__*/getAugmentedNamespace(team);
 
 requireEvents();
 
@@ -10726,16 +10542,8 @@ var eventStream = {
     EventInputStream
 };
 
-const em$1 = eventCenter({ enableWatcher: true });
-const es$1 = eventStream.EventInputStream.get(em$1);
-
-var event = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	em: em$1,
-	es: es$1
-});
-
-var require$$19 = /*@__PURE__*/getAugmentedNamespace(event);
+const em = eventCenter({ enableWatcher: true });
+const es = eventStream.EventInputStream.get(em);
 
 class SimpleAbortController {
     _aborted = false;
@@ -10808,7 +10616,7 @@ class MeisterhauAI {
     constructor(actor, strategy = 'default') {
         this.actor = actor;
         this.strategy = strategy;
-        this.status = Status$3.getOrCreate(actor.unwrap().uniqueId);
+        this.status = Status$1.getOrCreate(actor.unwrap().uniqueId);
         this.abortController = new SimpleAbortController();
         this.setStrategy(strategy);
     }
@@ -10990,7 +10798,7 @@ class MeisterhauAI {
 }
 const ais = {};
 const aiRunning = new Map();
-var ai$2;
+var ai;
 (function (ai) {
     function register(registration) {
         ais[registration.type] = registration;
@@ -11008,7 +10816,7 @@ var ai$2;
         return en.type in ais;
     }
     ai.isRegistered = isRegistered;
-})(ai$2 || (ai$2 = {}));
+})(ai || (ai = {}));
 function setupAIEntity(en) {
     if (!en || !ais[en.type] || aiRunning.has(en.uniqueId)) {
         return;
@@ -11019,29 +10827,19 @@ function setupAIEntity(en) {
         aiRunning.set(en.uniqueId, ai);
         ai.start();
         if (components) {
-            Status$3.getComponentManager(en.uniqueId).use(comps => {
+            Status$1.getComponentManager(en.uniqueId).use(comps => {
                 comps.attachComponent(...components);
             });
         }
         setup?.(ai, en);
     }
 }
-async function listenEntitiyWithAi$1() {
+async function listenEntitiyWithAi() {
     await serverStarted();
     setInterval(() => {
         mc.getAllEntities().forEach(setupAIEntity);
     }, 5000);
 }
-
-var core$1 = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	MeisterhauAI: MeisterhauAI,
-	SimpleAbortController: SimpleAbortController,
-	get ai () { return ai$2; },
-	listenEntitiyWithAi: listenEntitiyWithAi$1
-});
-
-var require$$20 = /*@__PURE__*/getAugmentedNamespace(core$1);
 
 // 不继承自DefaultMoves也可以，但是会少很多预设的状态
 class OrnateTwoHanderMoves extends DefaultMoves$4 {
@@ -11343,22 +11141,16 @@ class AiHearing extends CustomComponent {
         const { pos, volumn, sourceActor, channel } = source;
         const spreadRadius = Math.min(32, Math.max(volumn * 16, 16));
         const entities = mc.getEntities(pos, spreadRadius);
-        entities.forEach(entity => {
-            const hearing = Status$3.get(entity.uniqueId)?.componentManager.getComponent(AiHearing);
-            if (!hearing) {
-                return;
+        entities.forEach(entity => Optional$1.some(Status$1.get(entity.uniqueId)?.componentManager.getComponent(AiHearing)).use(hearing => {
+            const dist = sourceActor.match(Infinity, actor => actor.distanceTo(entity));
+            const minVolumn = hearing.conf.minVolumn ?? 0;
+            const maxVolumn = hearing.conf.maxVolumn ?? 2;
+            const volumnRemain = Math.max(volumn - 0.0625 * dist, 0);
+            if (hearing.conf.channels.includes(channel) && volumnRemain >= minVolumn && volumnRemain <= maxVolumn) {
+                hearing.onHeard.call(source);
+                hearing.heardActors.add(sourceActor.unwrap());
             }
-            hearing.use(hearing => {
-                const dist = sourceActor.match(() => Infinity, actor => actor.distanceTo(entity));
-                const minVolumn = hearing.conf.minVolumn ?? 0;
-                const maxVolumn = hearing.conf.maxVolumn ?? 2;
-                const volumnRemain = Math.max(volumn - 0.0625 * dist, 0);
-                if (hearing.conf.channels.includes(channel) && volumnRemain >= minVolumn && volumnRemain <= maxVolumn) {
-                    hearing.onHeard.call(source);
-                    hearing.heardActors.add(sourceActor.unwrap());
-                }
-            });
-        });
+        }));
     }
     heardActors = new Set();
     constructor(conf) {
@@ -11374,13 +11166,13 @@ class AiVision extends CustomComponent {
         const { fov, range } = config;
         const maybeSeenActors = mc.getEntities(actor.pos, range);
         return maybeSeenActors.filter(maybeSeenActor => {
-            const direction = yawToVec2$1(actor.direction.yaw);
+            const direction = yawToVec2(actor.direction.yaw);
             const actorOffset = vec.vec2(actor.pos.x, actor.pos.y, maybeSeenActor.pos.x, maybeSeenActor.pos.y);
             // dot product
             return (direction.x * actorOffset.dx + direction.y * actorOffset.dy) / actorOffset.m > Math.cos(fov / 2);
         });
     }
-    #attachTime = Tick$1.tick;
+    #attachTime = Tick.tick;
     constructor(config) {
         super();
         this.config = config;
@@ -11390,7 +11182,7 @@ class AiVision extends CustomComponent {
     onUnseen = new Delegate();
     seenActors = new Set();
     onTick() {
-        if ((Tick$1.tick - this.#attachTime) % this.config.interval === 0) {
+        if ((Tick.tick - this.#attachTime) % this.config.interval === 0) {
             this.getEntity().use(actor => {
                 const actorsInSight = new Set(AiVision.getActorsInSight(this.config, actor));
                 const unseenActors = this.seenActors.difference(actorsInSight);
@@ -11420,7 +11212,7 @@ class EasyAISensing {
         return this.getTarget().match(false, actor => this.ai.actor.match(false, aiActor => actor.distanceTo(aiActor) <= range));
     }
     targetStatus() {
-        return this.getTarget().match(Optional$1.none(), actor => Optional$1.some(Status$3.getOrCreate(actor.uniqueId)));
+        return this.getTarget().match(Optional$1.none(), actor => Optional$1.some(Status$1.getOrCreate(actor.uniqueId)));
     }
     hasTargetInputed(...inputTypes) {
         return this.targetStatus().match(false, status => {
@@ -11448,7 +11240,7 @@ class EasyAISensing {
 class GlobalInputSimulator {
     simulate(input, actor, ...extraArgs) {
         extraArgs.unshift(actor);
-        es$1.put(input, [actor, Function.prototype, extraArgs]);
+        es.put(input, [actor, Function.prototype, extraArgs]);
     }
     jump(actor) {
         this.simulate('onJump', actor);
@@ -11494,10 +11286,10 @@ class InputSimulator {
         }
         this.ai.executeTask(async () => {
             const actor = this.actor.unwrap();
-            input$1.performPress(actor.uniqueId, 'jump');
+            input.performPress(actor.uniqueId, 'jump');
             inputSimulator.jump(actor);
             await wait(timeout);
-            input$1.performRelease(actor.uniqueId, 'jump');
+            input.performRelease(actor.uniqueId, 'jump');
         });
     }
     sneak() {
@@ -11505,7 +11297,7 @@ class InputSimulator {
             return;
         }
         const actor = this.actor.unwrap();
-        input$1.performPress(actor.uniqueId, 'sneak');
+        input.performPress(actor.uniqueId, 'sneak');
         inputSimulator.sneak(actor);
     }
     releaseSneak() {
@@ -11513,7 +11305,7 @@ class InputSimulator {
             return;
         }
         const actor = this.actor.unwrap();
-        input$1.performRelease(actor.uniqueId, 'sneak');
+        input.performRelease(actor.uniqueId, 'sneak');
         inputSimulator.releaseSneak(actor);
     }
     useItem(item) {
@@ -11559,15 +11351,16 @@ class AiActions extends InputSimulator {
     setTarget(target) {
         this.actor.use(actor => {
             const targetLock = new TargetLock$1(this.actor, Optional$1.some(target));
-            const components = Status$3.get(actor.uniqueId)?.componentManager;
+            const components = Status$1.get(actor.uniqueId)?.componentManager;
             components?.attachComponent(targetLock);
         });
     }
     removeTarget() {
-        this.actor.use(actor => Status$3.get(actor.uniqueId)?.componentManager?.detachComponent(TargetLock$1));
+        this.actor.use(actor => Status$1.get(actor.uniqueId)?.componentManager?.detachComponent(TargetLock$1));
     }
     lookAtNearest(radius = 10, family = ['mob']) {
         this.actor.use(actor => {
+            console.log(actor);
             const selector = actorSelector(actor);
             const typeFamiliy = family.map(t => `family=${t}`).join(",");
             mc.runcmdEx(`execute at ${selector} as ${selector} run tp @s ~~~ facing @e[c=1,r=${radius}${typeFamiliy ? `,${typeFamiliy}` : ''}]`);
@@ -11602,7 +11395,9 @@ class Guard extends MeisterhauAI {
     actions = new AiActions(this);
     sensing = new EasyAISensing(this);
     async onStart() {
-        core.initCombatComponent(this.actor, tricks$1, this.status);
+        this.actor.use(actor => {
+            initCombatComponent(actor, tricks$1, this.status);
+        });
     }
     getStrategy(strategy) {
         switch (strategy) {
@@ -11764,7 +11559,7 @@ class Guard extends MeisterhauAI {
         return moves();
     }
 }
-ai$2.register({
+ai.register({
     type: 'meisterhau:guard',
     ai: Guard,
     tricks: tricks$1,
@@ -11815,7 +11610,7 @@ class KokorowatariMoves extends DefaultMoves$4 {
             ctx.status.isBlocking = false;
         },
         timeline: {
-            5: actor => playSoundAll$5('weapon.whoosh.thick.2', actor.pos),
+            5: actor => playSoundAll$4('weapon.whoosh.thick.2', actor.pos),
             9: (actor, ctx) => ctx.selectFromSector(actor, {
                 radius: 4,
             }).forEach(en => {
@@ -11860,7 +11655,7 @@ class KokorowatariMoves extends DefaultMoves$4 {
         },
         timeline: {
             3: (actor, ctx) => ctx.adsorbOrSetVelocity(actor, 2),
-            4: actor => playSoundAll$5('weapon.whoosh.thick.1', actor.pos),
+            4: actor => playSoundAll$4('weapon.whoosh.thick.1', actor.pos),
             7: (actor, ctx) => ctx.selectFromSector(actor, {
                 angle: 30,
                 radius: 3.5,
@@ -11899,7 +11694,7 @@ class KokorowatariMoves extends DefaultMoves$4 {
         },
         timeline: {
             3: (actor, ctx) => ctx.adsorbOrSetVelocity(actor, 2),
-            7: actor => playSoundAll$5('weapon.whoosh.thick.4', actor.pos),
+            7: actor => playSoundAll$4('weapon.whoosh.thick.4', actor.pos),
             11: (actor, ctx) => ctx.selectFromSector(actor, {
                 angle: 30,
                 radius: 3,
@@ -11985,7 +11780,6 @@ class Shinobu extends MeisterhauAI {
     }
     onAttack(incomingAttack) {
         this.actions.attack();
-        console.log('tried');
     }
     async *mildStrategy() {
         // 使用循环可以让 ai 一直执行
@@ -12023,7 +11817,7 @@ class Shinobu extends MeisterhauAI {
         }
     }
 }
-ai$2.register({
+ai.register({
     type: 'monogatari:shinobu',
     ai: Shinobu,
     tricks,
@@ -12039,16 +11833,16 @@ ai$2.register({
     }
 });
 
-function setupAiCommands$1() {
+function setupAiCommands() {
     cmd('ai', '控制ai行为', CommandPermission.OP)
         .setup(register => {
         register('<en:entity> transition <event_name:string>', (_, ori, out, args) => {
             const { en, event_name } = args;
             for (const e of en) {
-                const registration = ai$2.getRegistration(e.type);
+                const registration = ai.getRegistration(e.type);
                 if (!registration)
                     continue;
-                core.transition(e, registration.tricks, Status$3.getOrCreate(e.uniqueId), event_name, Function.prototype, [e]);
+                transition(e, registration.tricks, Status$1.getOrCreate(e.uniqueId), event_name, Function.prototype, [e]);
             }
         });
         register('<en:entity> perform attack', (_, ori, out, args) => {
@@ -12084,7 +11878,7 @@ function setupAiCommands$1() {
         register('<en:entity> strategy <name:string>', async (_, ori, out, args) => {
             const { en, name } = args;
             for (const e of en) {
-                const entityAI = ai$2.getAI(e);
+                const entityAI = ai.getAI(e);
                 if (!entityAI) {
                     continue;
                 }
@@ -12094,7 +11888,7 @@ function setupAiCommands$1() {
         register('<en:entity> info', (_, ori, out, args) => {
             const { en } = args;
             for (const e of en) {
-                const entityAI = ai$2.getAI(e);
+                const entityAI = ai.getAI(e);
                 if (!entityAI) {
                     continue;
                 }
@@ -12105,13 +11899,6 @@ function setupAiCommands$1() {
         });
     });
 }
-
-var ai$1 = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	setupAiCommands: setupAiCommands$1
-});
-
-var require$$21 = /*@__PURE__*/getAugmentedNamespace(ai$1);
 
 const lang = {
     left: '左侧',
@@ -12125,7 +11912,7 @@ class HurtDisplay extends BaseComponent {
         this.allowTick = true;
     }
     onTick(manager) {
-        manager.getComponent(IncomingAttack$1).use(incoming => {
+        manager.getComponent(IncomingAttack).use(incoming => {
             const dirText = lang[incoming.direction];
             const text = `受到来自 ${dirText} 的 ${incoming.damage} 点伤害`;
             this.getEntity().use(player => player.tell(text));
@@ -12133,75 +11920,39 @@ class HurtDisplay extends BaseComponent {
     }
 }
 
-function registerHudCommands$1() {
+function registerHudCommands() {
     cmd('display', '切换 HUD 显示状态').setup(register => {
         register('hurt [enabled:bool]', (cmd, ori, out, res) => {
             const { enabled } = res;
             if (enabled) {
                 const id = ori.player?.uniqueId ?? ori.entity?.uniqueId;
-                Status$3.getOrCreate(id).componentManager.attachComponent(new HurtDisplay());
+                Status$1.getOrCreate(id).componentManager.attachComponent(new HurtDisplay());
             }
             else {
                 const id = ori.player?.uniqueId ?? ori.entity?.uniqueId;
-                Status$3.getOrCreate(id).componentManager.detachComponent(HurtDisplay);
+                Status$1.getOrCreate(id).componentManager.detachComponent(HurtDisplay);
             }
         });
     });
 }
 
-var command = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	registerHudCommands: registerHudCommands$1
-});
-
-var require$$22 = /*@__PURE__*/getAugmentedNamespace(command);
-
-const { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } = kinematics$1;
-const { combat: { damage: _damage, _damageLL } } = func;
-const { playAnim, playParticle } = require$$2$1;
-const { movement, camera, movementInput } = generic;
-const { selectFromSector } = range;
-const { Status, defaultAcceptableInputs } = require$$5;
-const { Task } = task;
-const {
-    lookAt, lookAtTarget, distanceToTarget, adsorbToTarget, adsorbTo,
-    onTick, toggleLock, hasLock, releaseTarget, adsorbOrSetVelocity
-} = lock;
-const { setVelocity } = kinematic;
-const { clearCamera } = camera_1;
-const { Tick } = require$$10;
-const { CameraFading } = require$$11;
-const { DamageModifier } = require$$12;
-const { registerCommand } = require$$13;
-const { antiTreeshaking } = require$$14;
-const { Stamina } = require$$15;
-const { input } = require$$16;
-const { Team } = require$$17;
-const { IncomingAttack } = require$$18;
-const { em, es } = require$$19;
-const { listenEntitiyWithAi, ai } = require$$20;
-const { setupAiCommands } = require$$21;
-const { registerHudCommands } = require$$22;
-const { yawToVec2 } = require$$23;
-
+const { damage: _damage, _damageLL } = func.combat;
 function isEntity(actor) {
-    return Boolean(actor?.type)
+    // @ts-ignore
+    return Boolean(actor?.type);
 }
-
-function damageWithCameraFading(victim, damage, cause, abuser, projectile, damageOpt) {
+function damageWithCameraFading(victim, damage, cause = 'entityAttack', abuser, projectile, damageOpt) {
     if (!isEntity(abuser)) {
         CameraFading.fadeFromAttackDirection(abuser, damageOpt);
     }
     // _damage(victim, damage, cause, abuser, projectile)
     _damageLL(victim, damage);
-
     const victimPos = victim.feetPos;
     const abuserPos = abuser.feetPos;
     const dpos = {
         x: 0.7 * victimPos.x + 0.3 * abuserPos.x,
         z: 0.7 * victimPos.z + 0.3 * abuserPos.z,
     };
-
     playParticle(`weapon:hit_${damageOpt.direction || 'left'}`, {
         x: dpos.x,
         y: abuserPos.y + 1.2,
@@ -12209,304 +11960,228 @@ function damageWithCameraFading(victim, damage, cause, abuser, projectile, damag
         dimid: victimPos.dimid
     });
 }
-
-function knockdown(abuser, victim, knockback=2) {
+function knockdown(abuser, victim, knockback = 2) {
     em.emitNone('knockdown', abuser, victim, knockback);
 }
-
 function trap(pl, data) {
     em.emitNone('trap', pl, data);
 }
-
 em.connectWatcher({
-    // add(...args) {
-    //     console.log(args)
-    // },
-    // emit(arg) {
-    //     console.log(arg.type)
-    // }
+// add(...args) {
+//     console.log(args)
+// },
+// emit(arg) {
+//     console.log(arg.type)
+// }
 });
-
-/**
- * @param {any} abuser 
- * @param {any} victim 
- * @param {DamageOption} damageOpt
- */
 function attack(abuser, victim, damageOpt) {
     em.emitNone('attack', abuser, victim, damageOpt);
 }
-
 const playerOverrideEvents = [
     'onUseItem',
     'onAttack',
     'onChangeSprinting',
 ];
 const mobEvents = [
-    // 'onMobHurt',
     'onProjectileHitEntity',
 ];
-// const customEvents = [
-//     'onParry', 'onParried', 'onEndOfLife', 'onHurt', 'onBlocked', 'onBlock', 'onHit'
-// ]
-
-/**@type {Map<string, Status>}*/
-
-/**@type {(pl: any) => Status}*/
-const _status = pl => Status.getOrCreate(pl.uniqueId);
-
+const _status = (pl) => Status$1.getOrCreate(pl.uniqueId);
 function freeze(pl) {
-    movement(pl, false);
-    camera(pl, false);
+    generic.movement(pl, false);
+    generic.camera(pl, false);
 }
-
 function unfreeze(pl) {
-    movement(pl);
+    generic.movement(pl);
     // movementInput(pl, true)
-    camera(pl);
+    generic.camera(pl);
 }
-
 function getMoveDir(pl) {
     // const previusPos = {
     //     x: pl.feetPos.x,
     //     z: pl.feetPos.z
     // }
     // const uniqueId = pl.uniqueId
-
     // return new Promise(res => {
     //     setTimeout(() => {
     //         const currentPos = mc.getPlayer(uniqueId).feetPos
     //         const movVec = vec2(currentPos.x, currentPos.z, previusPos.x, previusPos.z)
     //         let rot = vec2ToAngle(movVec) * 180 / Math.PI - pl.direction.yaw
-
     //         rot = rot < -180 ? rot + 360
     //             : rot > 190 ? rot - 360 : rot
-
     //         const direct = isNaN(rot) ? 0
     //             : rot < -135 ? 3
     //                 : rot < -45 ? 4
     //                     : rot < 45 ? 1
     //                         : rot < 135 ? 2 : 3
-            
     //         res(direct)
     //     }, 50);
     // })
-    return input.moveDir(pl)
+    return input.moveDir(pl);
 }
-
-/**
- * @param {MovementContext} mixins
- * @returns {MovementContext}
- */
-function _ctx(pl, mixins={}) {
+function _ctx(pl, mixins = {}) {
     const status = _status(pl);
     return {
-        camera,
-        movement,
-        movementInput,
-        selectFromSector,
-        knockback,
+        camera: generic.camera,
+        movement: generic.movement,
+        movementInput: generic.movementInput,
+        selectFromSector: range.selectFromSector,
+        knockback: kinematics$1.knockback,
         attack,
         freeze,
         unfreeze,
         status,
         components: status.componentManager,
-        clearVelocity,
-        impulse,
-        setVelocity,
+        clearVelocity: kinematics$1.clearVelocity,
+        impulse: kinematics$1.impulse,
+        setVelocity: kinematic.setVelocity,
         yawToVec2,
-        applyKnockbackAtVelocityDirection,
-        task: Task.get(pl.uniqueId),
-        lookAt,
-        lookAtTarget,
-        distanceToTarget,
-        adsorbToTarget,
-        adsorbTo,
+        applyKnockbackAtVelocityDirection: kinematics$1.applyKnockbackAtVelocityDirection,
+        task: task.Task.get(pl.uniqueId),
+        lookAt: lock.lookAt,
+        lookAtTarget: lock.lookAtTarget,
+        distanceToTarget: lock.distanceToTarget,
+        adsorbToTarget: lock.adsorbToTarget,
+        adsorbTo: lock.adsorbTo,
         knockdown,
-        releaseTarget,
-        adsorbOrSetVelocity,
+        releaseTarget: lock.releaseTarget,
+        adsorbOrSetVelocity: lock.adsorbOrSetVelocity,
         getMoveDir,
         trap,
         setSpeed: (pl, speed) => pl.setMovementSpeed(speed),
         ...mixins
-    }
+    };
 }
-
 function watchMainhandChange(pl) {
-    const status = Status.getOrCreate(pl.uniqueId);
-    const hand = pl.getHand()?.type ?? 'minecraft:air';
-    
+    const status = Status$1.getOrCreate(pl.uniqueId);
+    const hand = pl?.getHand()?.type ?? 'minecraft:air';
     status.hand = hand;
-    return status
+    return status;
 }
-
-const pick = (obj, arr) =>
-    arr.reduce((iter, val) => (val in obj && (iter[val] = obj[val]), iter), {});
-
+const pick = (obj, arr) => arr.reduce((iter, val) => (val in obj && (iter[val] = obj[val]), iter), {});
 const playerAttrPickList = [
     'inAir', 'inWater', 'inLava', 'inRain', 'inSnow', 'inWall', 'inWaterOrRain', 'isInvisible', 'isHungry',
     'isOnFire', 'isOnGround', 'isOnHotBlock', 'isGliding', 'isFlying', 'isMoving'
 ];
-
-/**
- * @param {Player} pl
- * @param {Status} status 
- * @returns 
- */
 const defaultPacker = (pl, bind, status) => {
     const allowedState = checkMoveState(bind, status);
     const picked = pick(pl, playerAttrPickList);
     const stamina = status.componentManager.getComponent(Stamina).unwrap();
-
-    /**@type {TransitionOptMixins}*/
     const mixins = {
         stamina: stamina.stamina,
-        hasTarget: hasLock(pl),
+        hasTarget: lock.hasLock(pl),
         repulsible: status.repulsible,
-        isCollide: false,//isCollide(pl),
-        preInput: status.preInput,
+        isCollide: false, //isCollide(pl),
         isSneaking: input.isPressing(pl, 'sneak'),
         isDodging: input.isPressing(pl, 'jump'),
     };
-
     return {
         prevent: false,
         allowedState,
+        preInput: status.preInput,
         ...picked,
         ...mixins,
-    }
+    };
 };
-
 const dataPackers = {
     onSneak(args) {
         return {
             isSneaking: args[1]
-        }
+        };
     },
     onChangeSprinting(args) {
         return {
             sprinting: args[1]
-        }
+        };
     },
     onEndOfLife(args) {
-        const status = Status.getOrCreate(args[0].uniqueId);
+        const status = Status$1.getOrCreate(args[0].uniqueId);
         return {
             preInput: status.preInput
-        }
+        };
     },
     onTrap([pl, data]) {
-        const status = Status.getOrCreate(pl.uniqueId);
+        const status = Status$1.getOrCreate(pl.uniqueId);
         return {
             preInput: status.preInput,
             ...data
-        }
+        };
     },
-    onDeflection([ _, __, { direction } ]) {
+    onDeflection([_, __, { direction }]) {
         return {
             direction: direction === 'middle' ? 'vertical' : direction
-        }
+        };
     },
-    onBlock([ _, __, { direction } ]) {
+    onBlock([_, __, { direction }]) {
         return {
             direction: direction === 'middle' ? 'vertical' : direction
-        }
+        };
     },
-    onHurt([ pl ]) {
+    onHurt([pl]) {
         return {
-            hegemony: Status.getOrCreate(pl.uniqueId).hegemony
-        }
+            hegemony: Status$1.getOrCreate(pl.uniqueId).hegemony
+        };
     }
 };
-
 function checkCondition(cond, data) {
-    for (const [ k, v ] of Object.entries(cond)) {
+    for (const [k, v] of Object.entries(cond)) {
         if (k === 'prevent') {
-            continue
+            continue;
         }
-
         if (k === 'allowedState') {
             const dataState = data[k];
             if (dataState === 'finish' || v === 'both' || v === dataState) {
-                continue
+                continue;
             }
-
-            return false
+            return false;
         }
-
         if (typeof v === 'function') {
             if (!v(data[k])) {
-                return false
+                return false;
             }
-
-            continue
+            continue;
         }
-
         if (k === 'stamina') {
             const val = data[k];
             if (val < v) {
-                return false
+                return false;
             }
-
-            continue
+            continue;
         }
-
         if (cond[k] !== data[k]) {
-            return false
+            return false;
         }
     }
-
-    return true
+    return true;
 }
-
 const defaultTransitionCondition = {
     prevent: false,
     allowedState: 'both',
 };
-
 function initCombatComponent(pl, bind, status) {
     if (!bind) {
-        return
+        return;
     }
-
     const { moves, entry } = bind;
-    const move = moves[entry];
-
+    const move = moves.getMove(entry);
     status.status = entry;
     status.duration = 0;
-
     if (move.onEnter) {
         move?.onEnter?.(pl, _ctx(pl));
     }
 }
-
-/**
- * @param {any} pl 
- * @param {TrickModule} bind 
- * @param {Status} status 
- * @param {string} eventName 
- * @param {() => void} prevent 
- * @param {any[]} args 
- * @returns 
- */
 function transition(pl, bind, status, eventName, prevent, args) {
     if (!bind) {
-        return
+        return;
     }
-
     if (status.status === 'unknown') {
         initCombatComponent(pl, bind, status);
     }
-
-    const currentMove = bind.moves[status.status];
+    const currentMove = bind.moves.getMove(status.status);
     if (!currentMove) {
-        return
+        return;
     }
-
     const transitions = currentMove.transitions;
-
-    let next,
-        cond,
-        candidates = [];
-
+    let next, cond, candidates = [];
     for (const [_next, _cond] of Object.entries(transitions)) {
         if (Object.keys(_cond).includes(eventName)) {
             const next = _next;
@@ -12514,52 +12189,43 @@ function transition(pl, bind, status, eventName, prevent, args) {
             candidates.push([next, cond]);
         }
     }
-
     if (!candidates.length) {
-        return
+        return;
     }
-
     let dataPacker, data = defaultPacker(pl, bind, status);
     if (dataPacker = dataPackers[eventName]) {
         data = Object.assign(data, dataPacker(args));
     }
-
-    for (const [ $next, $cond ] of candidates) {
+    for (const [$next, $cond] of candidates) {
         if (!checkCondition($cond, data)) {
-            continue
+            continue;
         }
-
         next = $next;
         cond = $cond;
     }
-
+    // @ts-ignore
     if (!next) {
-        return
+        return;
     }
-
     let previousStatus = status.status;
-
+    // @ts-ignore
     if (cond.prevent) {
         prevent();
     }
-
     status.status = next;
     status.duration = 0;
-    const nextMove = bind.moves[next] || bind.moves[bind.entry];
-
+    const nextMove = bind.moves.getMove(next) ?? bind.moves.getMove(bind.entry);
     if (nextMove.immediately) {
-        nextMove.onAct(pl, _ctx(pl, {
+        nextMove.onAct?.(pl, _ctx(pl, {
             rawArgs: args,
             prevent,
             previousStatus,
             previousMoveState: -1
         }));
-        
         // return em.once('onTick', () => transition(pl, bind, status, 'onEndOfLife', prevent, args))
         transition(pl, bind, status, 'onEndOfLife', prevent, args);
-        return
+        return;
     }
-
     if (currentMove.onLeave) {
         currentMove.onLeave(pl, _ctx(pl, {
             rawArgs: args,
@@ -12567,7 +12233,6 @@ function transition(pl, bind, status, eventName, prevent, args) {
             nextStatus: next
         }));
     }
-
     if (nextMove.onEnter) {
         nextMove.onEnter(pl, _ctx(pl, {
             rawArgs: args,
@@ -12577,169 +12242,128 @@ function transition(pl, bind, status, eventName, prevent, args) {
         }));
     }
 }
-
-/**
- * @param {TrickModule} mod 
- * @param {Status} _status 
- * @returns {'none'|'cast'|'backswing'|'finish'}
- */
 function checkMoveState(mod, _status) {
     const { status, duration } = _status;
-    const move = mod.moves[status];
-
+    const move = mod.moves.getMove(status);
     if (move.immediately) {
-        return 'none'
+        return 'none';
     }
-
     return duration <= (move.cast || 0) ? 'cast' :
-        duration <= (move.cast || 0) + (move.backswing || 0) ? 'backswing' : 'finish'
+        duration <= (move.cast || 0) + (move.backswing || 0) ? 'backswing' : 'finish';
 }
-
 function clearStatus(pl, s, hand, hasBind) {
     s.reset();
     s.hand = hand;
     if (!hasBind) {
-        playAnim(pl, 'animation.general.stand');
+        playAnim$4(pl, 'animation.general.stand');
     }
 }
-
 function listenPlayerItemChange(mods) {
     const playerMainhanded = new Map();
     const playerOffhanded = new Map();
-
     function getMod(hand) {
-        return mods.get(hand) ?? mods.get('*')
+        return mods.get(hand) ?? mods.get('*');
     }
-
     em.on('onTick', () => {
         mc.getOnlinePlayers().forEach(pl => {
             const mainhand = pl.getHand().type;
             const offhand = pl.getOffHand().type;
             const previousMainhand = playerMainhanded.get(pl.uniqueId);
             const previousOffhand = playerOffhanded.get(pl.uniqueId);
-
             if (mainhand !== previousMainhand) {
                 em.emitNone('onChangeMainhand', pl, mainhand, previousMainhand);
                 playerMainhanded.set(pl.uniqueId, mainhand);
             }
-
             if (offhand !== previousOffhand) {
                 em.emitNone('onChangeOffhand', pl, offhand, previousOffhand);
                 playerOffhanded.set(pl.uniqueId, offhand);
             }
         });
     });
-
     em.on('onChangeMainhand', (pl, hand, old) => {
-        const status = Status.getOrCreate(pl.uniqueId);
+        const status = Status$1.getOrCreate(pl.uniqueId);
         const oldBind = getMod(old);
-
         if (!status) {
-            return
+            return;
         }
-
-        releaseTarget(pl.uniqueId);
-
+        lock.releaseTarget(pl.uniqueId);
         if (oldBind) {
-            const move = oldBind.moves[status.status];
+            const move = oldBind.moves.getMove(status.status);
             if (move?.onLeave) {
                 move.onLeave(pl, _ctx(pl));
             }
         }
-        
         const bind = getMod(hand);
         clearStatus(pl, status, hand, bind);
         if (!bind) {
-            return
+            return;
         }
-
         initCombatComponent(pl, bind, status);
     });
 }
-
 function listenAllCustomEvents(mods) {
     function getMod(hand) {
-        return mods.get(hand) ?? mods.get('*')
+        return mods.get(hand) ?? mods.get('*');
     }
-
     function getModCompatibility(actor) {
         if (!isEntity(actor)) {
-            return getMod(getHandedItemType(actor))
+            return getMod(getHandedItemType(actor));
         }
-
-        return ai.getRegistration(actor.type).tricks
+        return ai.getRegistration(actor.type).tricks;
     }
-
-    em.on('onTick', onTick(em));
+    em.on('onTick', lock.onTick(em));
     em.on('onTick', () => {
         Tick.tick++;
-
-        for (const [uniqueId, status] of Status.status.entries()) {
+        for (const [uniqueId, status] of Status$1.status.entries()) {
             if (typeof uniqueId !== 'string') {
-                return
+                return;
             }
-
             if (uniqueId === 'global_status') {
-                continue
+                continue;
             }
-
             let pl = mc.getPlayer(uniqueId);
             let bind = getMod(status.hand);
             if (!pl) {
                 pl = mc.getEntity(+uniqueId);
                 if (!pl) {
-                    continue
+                    continue;
                 }
                 bind = ai.getRegistration(pl.type).tricks;
             }
-
-            if (!pl ||!bind) {
-                continue
+            if (!pl || !bind) {
+                continue;
             }
-
-            const currentMove = bind.moves[status.status];
+            const currentMove = bind.moves.getMove(status.status);
             const duration = status.duration++;
-
             if (!currentMove) {
                 status.status = 'unknown';
-                return transition(pl, bind, status, '', Function.prototype, [ pl ])
+                return transition(pl, bind, status, '', Function.prototype, [pl]);
             }
-
             const _context = _ctx(pl);
-
             if (currentMove.timeline) {
                 const handler = currentMove.timeline[duration];
                 if (handler?.call) {
                     handler.call(null, pl, _context);
                 }
             }
-
             if (currentMove.onTick) {
-                currentMove.onTick(
-                    pl,
-                    _context,
-                    duration/((currentMove.cast || 0) + (currentMove.backswing || 0))
-                );
+                currentMove.onTick(pl, _context);
             }
-
             status.componentManager.handleTicks(pl);
-
             if (duration >= (currentMove.cast || 0) + (currentMove.backswing || 0)) {
                 if (currentMove.onLeave) {
                     currentMove.onLeave(pl, _context);
                 }
-                return transition(pl, bind, status, 'onEndOfLife', Function.prototype, [ pl ])
+                return transition(pl, bind, status, 'onEndOfLife', Function.prototype, [pl]);
             }
-
             if (duration == currentMove.cast) {
                 if (currentMove.onAct) {
                     currentMove.onAct(pl, _context);
                 }
-                return
+                return;
             }
         }
     });
-
     /**@type {DamageOption}*/
     const defaultDamageOpt = {
         damage: 0,
@@ -12753,544 +12377,366 @@ function listenAllCustomEvents(mods) {
         stiffness: 500,
         trace: false,
     };
-
-    em.on('attack', (abuser, victim, /**@type {DamageOption}*/ damageOpt) => {
+    em.on('attack', (abuser, victim, damageOpt) => {
         damageOpt = Object.assign({}, defaultDamageOpt, damageOpt);
-        const {
-            damage,
-            damageType,
-            damagingProjectile,
-            permeable,
-            parryable,
-            knockback: _k,
-            shock,
-            powerful,
-            trace,
-            direction,
-        } = damageOpt;
-
+        const { damage, damageType, damagingProjectile, permeable, parryable, knockback: _k, shock, powerful, trace, direction, } = damageOpt;
         const victimIsEntity = !victim.xuid;
-        const abuserStatus = Status.getOrCreate(abuser.uniqueId);
-
+        const abuserStatus = Status$1.getOrCreate(abuser.uniqueId);
         if (victimIsEntity && !ai.isRegistered(victim)) {
-            transition(
-                abuser,
-                getModCompatibility(abuser),
-                abuserStatus,
-                'onHit',
-                Function.prototype,
-                [ abuser, victim, damageOpt ]
-            );
-
-            return damageWithCameraFading(
-                victim,
-                damage,
-                damageType,
-                abuser,
-                damagingProjectile,
-                damageOpt,
-            )
+            const mod = getModCompatibility(abuser);
+            if (!mod) {
+                return;
+            }
+            transition(abuser, mod, abuserStatus, 'onHit', Function.prototype, [abuser, victim, damageOpt]);
+            return damageWithCameraFading(victim, damage, damageType, abuser, damagingProjectile, damageOpt);
         }
-
-        const victimStatus = Status.getOrCreate(victim.uniqueId);
-
+        const victimStatus = Status$1.getOrCreate(victim.uniqueId);
         const _knockback = (h, repulsible) => {
             if (powerful || repulsible) {
                 const abuserPos = abuser.pos;
                 const victimPos = victim.pos;
-                knockback(victim, victimPos.x - abuserPos.x, victimPos.z - abuserPos.z, h, -2);
-                return
+                kinematics$1.knockback(victim, victimPos.x - abuserPos.x, victimPos.z - abuserPos.z, h, -2);
+                return;
             }
-
             if (!victimIsEntity && victim?.toPlayer?.()?.gameMode === 1) {
-                return
+                return;
             }
-
-            knockback(victim, 0, 0, 0, -2);
+            kinematics$1.knockback(victim, 0, 0, 0, -2);
         };
-        const doDamage = incomingAttack => {
+        const doDamage = (incomingAttack) => {
             if (incomingAttack.cancel) {
-                return
+                return;
             }
-
             _knockback(_k, victimStatus.repulsible);
             victimStatus.shocked = shock;
-
             const modifier = victimStatus.componentManager
                 .getComponent(DamageModifier)
                 .orElse(DamageModifier.defaultModifierOpt).modifier;
             const actualDamage = damage * modifier;
-
             em.emitNone('hurt', abuser, victim, {
                 ...damageOpt,
-                damage: actualDamage, 
+                damage: actualDamage,
                 damageType: 'override',
             });
         };
-
         if (!victimStatus) {
-            return doDamage()
+            return doDamage();
         }
-
-        const incomingAttack = new IncomingAttack(
-            damage,
-            abuser,
-            direction,
-            permeable,
-            parryable,
-            powerful,
-            trace,
-        );
+        const incomingAttack = new IncomingAttack(damage, abuser, direction, permeable, parryable, powerful, trace);
         victimStatus.componentManager.attachComponent(incomingAttack);
-
         if (victimStatus.isInvulnerable) {
-            transition(
-                victim,
-                getModCompatibility(victim),
-                victimStatus,
-                'onNotHurt',
-                Function.prototype,
-                [victim, abuser, damageOpt]
-            );
-            return
+            const mod = getModCompatibility(victim);
+            if (!mod) {
+                return;
+            }
+            transition(victim, mod, victimStatus, 'onNotHurt', Function.prototype, [victim, abuser, damageOpt]);
+            return;
         }
-
         const victimTeam = victimStatus.componentManager.getComponent(Team);
         const abuserTeam = abuserStatus.componentManager.getComponent(Team);
         if (!victimTeam.isEmpty() && !abuserTeam.isEmpty() && victimTeam.unwrap().name === abuserTeam.unwrap().name) {
-            return
+            return;
         }
-
         if (victimStatus.isWaitingDeflection && !permeable && !powerful) {
-            return em.emitNone('deflect', abuser, victim, damageOpt)
+            return em.emitNone('deflect', abuser, victim, damageOpt);
         }
-
         if (victimStatus.isDodging && !trace) {
-            return em.emitNone('dodge', abuser, victim, damageOpt)
+            return em.emitNone('dodge', abuser, victim, damageOpt);
         }
-
         if (victimStatus.isWaitingParry && parryable) {
-            return em.emitNone('parried', abuser, victim, damageOpt)
+            return em.emitNone('parried', abuser, victim, damageOpt);
         }
-
         if (victimStatus.isBlocking && !permeable) {
             _knockback(_k * 0.4, victimStatus.repulsible);
-            return em.emitNone('block', abuser, victim, damageOpt)
+            return em.emitNone('block', abuser, victim, damageOpt);
         }
-
         doDamage(incomingAttack);
     });
-
     em.on('deflect', (abuser, victim, damageOpt) => {
-        const aStatus = Status.getOrCreate(abuser.uniqueId);
-        transition(
-            abuser,
-            getModCompatibility(abuser),
-            aStatus,
-            'onMissAttack',
-            Function.prototype,
-            [abuser, victim, damageOpt]
-        );
-
-        const vStatus = Status.getOrCreate(victim.uniqueId);
-        transition(
-            victim,
-            getModCompatibility(victim),
-            vStatus,
-            'onDeflection',
-            Function.prototype,
-            [victim, abuser, damageOpt]
-        );
+        const aStatus = Status$1.getOrCreate(abuser.uniqueId);
+        const abuserMod = getModCompatibility(abuser);
+        if (!abuserMod) {
+            return;
+        }
+        transition(abuser, abuserMod, aStatus, 'onMissAttack', Function.prototype, [abuser, victim, damageOpt]);
+        const vStatus = Status$1.getOrCreate(victim.uniqueId);
+        const vMod = getModCompatibility(victim);
+        if (!vMod) {
+            return;
+        }
+        transition(victim, vMod, vStatus, 'onDeflection', Function.prototype, [victim, abuser, damageOpt]);
     });
-
     em.on('dodge', (abuser, victim, damageOpt) => {
-        const aStatus = Status.getOrCreate(abuser.uniqueId);
-        transition(
-            abuser,
-            getModCompatibility(abuser),
-            aStatus,
-            'onMissAttack',
-            Function.prototype,
-            [abuser, victim, damageOpt]
-        );
-
-        const vStatus = Status.getOrCreate(victim.uniqueId);
-        transition(
-            victim,
-            getModCompatibility(victim),
-            vStatus,
-            'onDodge',
-            Function.prototype,
-            [victim, abuser, damageOpt]
-        );
+        const aStatus = Status$1.getOrCreate(abuser.uniqueId);
+        const abuserMod = getModCompatibility(abuser);
+        if (!abuserMod) {
+            return;
+        }
+        transition(abuser, abuserMod, aStatus, 'onMissAttack', Function.prototype, [abuser, victim, damageOpt]);
+        const vStatus = Status$1.getOrCreate(victim.uniqueId);
+        const vMod = getModCompatibility(victim);
+        if (!vMod) {
+            return;
+        }
+        transition(victim, vMod, vStatus, 'onDodge', Function.prototype, [victim, abuser, damageOpt]);
     });
-
     em.on('parried', (abuser, victim, damageOpt) => {
-        const aStatus = Status.getOrCreate(abuser.uniqueId);
-        transition(
-            abuser,
-            getModCompatibility(abuser),
-            aStatus,
-            'onParried',
-            Function.prototype,
-            [abuser, victim, damageOpt]
-        );
-
-        const vStatus = Status.getOrCreate(victim.uniqueId);
-        transition(
-            victim,
-            getModCompatibility(victim),
-            vStatus,
-            'onParry',
-            Function.prototype,
-            [victim, abuser, damageOpt]
-        );
+        const aStatus = Status$1.getOrCreate(abuser.uniqueId);
+        const abuserMod = getModCompatibility(abuser);
+        if (!abuserMod) {
+            return;
+        }
+        transition(abuser, abuserMod, aStatus, 'onParried', Function.prototype, [abuser, victim, damageOpt]);
+        const vStatus = Status$1.getOrCreate(victim.uniqueId);
+        const vMod = getModCompatibility(victim);
+        if (!vMod) {
+            return;
+        }
+        transition(victim, vMod, vStatus, 'onParry', Function.prototype, [victim, abuser, damageOpt]);
     });
-
     em.on('block', (abuser, victim, damageOpt) => {
-        transition(
-            abuser,
-            getModCompatibility(abuser),
-            Status.getOrCreate(abuser.uniqueId),
-            'onBlocked',
-            Function.prototype,
-            [abuser, victim, damageOpt]
-        );
-
-        transition(
-            victim,
-            getModCompatibility(victim),
-            Status.getOrCreate(victim.uniqueId),
-            'onBlock',
-            Function.prototype,
-            [victim, abuser, damageOpt]
-        );
-    });
-
-    em.on('hurt', (abuser, victim, damageOpt) => {
-        const {
-            damage, damageType, damagingProjectile
-        } = damageOpt;
-
-        if (!abuser.health) {
-            return
-        }
-
-        transition(
-            abuser,
-            getModCompatibility(abuser),
-            Status.getOrCreate(abuser.uniqueId),
-            'onHit',
-            Function.prototype,
-            [abuser, victim, damageOpt]
-        );
-
-        let flag = true,
-            prevent = () => flag = false;
-
-        const victimStatus = Status.getOrCreate(victim.uniqueId);
+        const abuserMod = getModCompatibility(abuser);
         const victimMod = getModCompatibility(victim);
-
+        if (!abuserMod || !victimMod) {
+            return;
+        }
+        transition(abuser, abuserMod, Status$1.getOrCreate(abuser.uniqueId), 'onBlocked', Function.prototype, [abuser, victim, damageOpt]);
+        transition(victim, victimMod, Status$1.getOrCreate(victim.uniqueId), 'onBlock', Function.prototype, [victim, abuser, damageOpt]);
+    });
+    em.on('hurt', (abuser, victim, damageOpt) => {
+        const { damage, damageType, damagingProjectile } = damageOpt;
+        if (!abuser.health) {
+            return;
+        }
+        const abuserMod = getModCompatibility(abuser);
+        if (!abuserMod) {
+            return;
+        }
+        transition(abuser, abuserMod, Status$1.getOrCreate(abuser.uniqueId), 'onHit', Function.prototype, [abuser, victim, damageOpt]);
+        let flag = true, prevent = () => flag = false;
+        const victimStatus = Status$1.getOrCreate(victim.uniqueId);
+        const victimMod = getModCompatibility(victim);
+        if (!victimMod) {
+            return;
+        }
         if (!victimStatus.hegemony) {
-            transition(
-                victim,
-                victimMod,
-                victimStatus,
-                'onHurt',
-                prevent,
-                [victim, abuser, damageOpt]
-            );
+            transition(victim, victimMod, victimStatus, 'onHurt', prevent, [victim, abuser, damageOpt]);
         }
-
         if (damageOpt.powerful) {
-            transition(
-                victim,
-                victimMod,
-                victimStatus,
-                'onInterrupted',
-                prevent,
-                [victim, abuser, damageOpt]
-            );
+            transition(victim, victimMod, victimStatus, 'onInterrupted', prevent, [victim, abuser, damageOpt]);
         }
-
         if (flag) {
             damageWithCameraFading(victim, damage, damageType, abuser, damagingProjectile, damageOpt);
         }
     });
-
     em.on('onHurtByEntity', (victim, abuser, damageOpt, prevent) => {
-        transition(
-            victim,
-            getModCompatibility(victim),
-            Status.getOrCreate(victim.uniqueId),
-            'onHurtByMob',
-            prevent,
-            [ victim, abuser, damageOpt ]
-        );
+        const abuserMod = getModCompatibility(abuser);
+        if (!abuserMod) {
+            return;
+        }
+        transition(victim, abuserMod, Status$1.getOrCreate(victim.uniqueId), 'onHurtByMob', prevent, [victim, abuser, damageOpt]);
     });
-
-    em.on('knockdown', (abuser, victim, knockbackStrength, time=30) => {
-        const aStatus = Status.getOrCreate(abuser.uniqueId);
+    em.on('knockdown', (abuser, victim, knockbackStrength, time = 30) => {
+        const aStatus = Status$1.getOrCreate(abuser.uniqueId);
         const aMod = getMod(aStatus.hand);
-
-        const vStatus = Status.getOrCreate(victim.uniqueId);
+        const vStatus = Status$1.getOrCreate(victim.uniqueId);
         const vMod = getMod(vStatus.hand);
-
         if (vStatus && !vStatus.repulsible) {
-            return
+            return;
         }
-
         if (aStatus && aMod) {
-            transition(abuser, aMod, aStatus, 'onKnockdownOther', Function.prototype, [ abuser, victim, time ]);
+            transition(abuser, aMod, aStatus, 'onKnockdownOther', Function.prototype, [abuser, victim, time]);
         }
-
         if (vStatus && vMod) {
             const aPos = abuser.pos;
             const vPos = victim.pos;
-
-            transition(victim, vMod, vStatus, 'onKnockdown', Function.prototype, [ victim, abuser, time ]);            
-            knockback(victim, vPos.x - aPos.x, vPos.z - aPos.z, knockbackStrength, 0);
+            transition(victim, vMod, vStatus, 'onKnockdown', Function.prototype, [victim, abuser, time]);
+            kinematics$1.knockback(victim, vPos.x - aPos.x, vPos.z - aPos.z, knockbackStrength, 0);
         }
     });
-
     // TODO
     em.on('onReleaseLock', (pl) => {
         const bind = getModCompatibility(pl);
-        const status = Status.getOrCreate(pl.uniqueId);
-
+        const status = Status$1.getOrCreate(pl.uniqueId);
         if (!bind || !status) {
-            return
+            return;
         }
-
-        transition(pl, bind, status, 'onReleaseLock', Function.prototype, [ pl ]);
+        transition(pl, bind, status, 'onReleaseLock', Function.prototype, [pl]);
     });
-
     em.on('onLock', (pl, hand, target) => {
         const bind = getModCompatibility(pl);
-        const status = Status.getOrCreate(pl.uniqueId);
-
+        const status = Status$1.getOrCreate(pl.uniqueId);
         if (!bind || !status) {
-            return
+            return;
         }
-
-        transition(pl, bind, status, 'onLock', Function.prototype, [ pl, target ]);
+        transition(pl, bind, status, 'onLock', Function.prototype, [pl, target]);
     });
-
     em.on('onFeint', (pl, hand, prevent) => {
         const bind = getModCompatibility(pl);
-        const status = Status.getOrCreate(pl.uniqueId);
-
+        const status = Status$1.getOrCreate(pl.uniqueId);
         if (!bind || !status) {
-            return
+            return;
         }
-
-        transition(pl, bind, status, 'onFeint', prevent, [ pl ]);
+        transition(pl, bind, status, 'onFeint', prevent, [pl]);
     });
-
     em.on('trap', (pl, data) => {
-        const status = Status.getOrCreate(pl.uniqueId);
+        const status = Status$1.getOrCreate(pl.uniqueId);
         const bind = getModCompatibility(pl);
-
         if (!bind || !status) {
-            return
+            return;
         }
-
-        transition(pl, bind, status, 'onTrap', Function.prototype, [ pl, data ]);
+        transition(pl, bind, status, 'onTrap', Function.prototype, [pl, data]);
     });
 }
-
 function listenAllMcEvents(collection) {
     const mods = new Map();
-
     function getMod(hand) {
-        return mods.get(hand) ?? mods.get('*')
+        return mods.get(hand) ?? mods.get('*');
     }
-
     function getModCompatibility(actor) {
         if (!isEntity(actor)) {
-            return getMod(getHandedItemType(actor))
+            return getMod(getHandedItemType(actor));
         }
-
-        return ai.getRegistration(actor.type).tricks
+        return ai.getRegistration(actor.type).tricks;
     }
-
-    collection.forEach(mod => {
+    collection.forEach((mod) => {
         const binding = mod.bind;
         const bind = !Array.isArray(binding)
-            ? [ binding ]
+            ? [binding]
             : binding;
-
         bind.forEach(itemType => {
             mods.set(itemType, mod);
         });
     });
-
     listenPlayerItemChange(mods);
-    
     es.addFilter(({ type, args }) => {
         if (!defaultAcceptableInputs.includes(type)) {
-            return true
+            return true;
         }
-
-        const status = Status.getOrCreate(args[0].uniqueId);
+        const status = Status$1.getOrCreate(args[0].uniqueId);
         const inputable = status.acceptableInput(type);
-
         if (inputable) {
             status.setPreInput(type);
         }
-
-        return inputable
+        return inputable;
     });
-
-    const acceptableStreamHandler = n =>
-        (pl, prevent, args) => {
-            if (!isEntity(pl)) {
-                const status = watchMainhandChange(pl);
-        
-                if (!mods.has(status.hand)) {
-                    return
-                }
-
-                transition(pl, getMod(status.hand), status, n, prevent, args);
-                return
+    const acceptableStreamHandler = (n) => (pl, prevent, args) => {
+        if (!isEntity(pl)) {
+            const status = watchMainhandChange(pl);
+            if (!mods.has(status.hand)) {
+                return;
             }
-
-            const status = Status.getOrCreate(pl.uniqueId);
-            const mod = ai.getRegistration(pl.type).tricks;
-
+            const mod = mods.get(status.hand);
             if (!mod) {
-                return
+                return;
             }
-
             transition(pl, mod, status, n, prevent, args);
-        };
-
+            return;
+        }
+        const status = Status$1.getOrCreate(pl.uniqueId);
+        const mod = ai.getRegistration(pl.type).tricks;
+        if (!mod) {
+            return;
+        }
+        transition(pl, mod, status, n, prevent, args);
+    };
     em.on('input.sneak', (pl, isSneaking) => {
-        es.put(isSneaking ? 'onSneak' : 'onReleaseSneak', [pl, Function.prototype, [ pl, isSneaking ]]);
+        es.put(isSneaking ? 'onSneak' : 'onReleaseSneak', [pl, Function.prototype, [pl, isSneaking]]);
     });
     em.on('onSneak', acceptableStreamHandler('onSneak'));
     em.on('onReleaseSneak', acceptableStreamHandler('onReleaseSneak'));
-
     mc.listen('onUseItem', (...args) => {
-        const [ pl, item ] = args;
-
+        const [pl, item] = args;
         if (!mods.has(item.type)) {
-            return true
+            return true;
         }
-
-        if (!hasLock(pl)) {
-            const val = toggleLock(pl.uniqueId);
+        if (!lock.hasLock(pl)) {
+            const val = lock.toggleLock(pl.uniqueId);
             pl.setSprinting(false);
             if (val) {
                 em.emitNone('onLock', pl, item.type, val);
             }
-
-            return false
+            return false;
         }
-
-        let cancelEvent = false,
-        prevent = () => cancelEvent = true;
+        let cancelEvent = false, prevent = () => cancelEvent = true;
         es.put('onUseItem', [pl, prevent, args]);
-
-        return !cancelEvent
+        return !cancelEvent;
     });
-
     mc.listen('onChangeSprinting', (...args) => {
         const pl = args[0];
-        if (hasLock(pl)) {
-            if (toggleLock(pl.uniqueId) === null) {
+        if (lock.hasLock(pl)) {
+            if (lock.toggleLock(pl.uniqueId) === null) {
                 const mod = getModCompatibility(pl);
-                const status = Status.getOrCreate(pl.uniqueId);
-
-                clearCamera(pl);
+                if (!mod) {
+                    return false;
+                }
+                const status = Status$1.getOrCreate(pl.uniqueId);
+                clearCamera$1(pl);
                 initCombatComponent(pl, mod, status);
                 transition(pl, mod, status, 'onChangeSprinting', Function.prototype, args);
             }
-
-            return false
+            return false;
         }
-
-        let cancelEvent = false,
-        prevent = () => cancelEvent = true;
+        let cancelEvent = false, prevent = () => cancelEvent = true;
         es.put('onChangeSprinting', [pl, prevent, args]);
-
-        return !cancelEvent
+        return !cancelEvent;
     });
-
     mc.listen('onScoreChanged', (pl, val, obj) => {
         if (obj !== 'attack_time') {
-            return
+            return;
         }
-
         if (val) {
-            es.put('onAttack', [pl, Function.prototype, [ pl ]]);
+            es.put('onAttack', [pl, Function.prototype, [pl]]);
         }
     });
-    
     em.on('input.jump', (pl, press) => {
         if (press) {
-            es.put('onDodge', [ pl, Function.prototype, [ pl ] ]);
-            em.emitNone(hasLock(pl) ? 'onDodge' : 'onJump', pl, Function.prototype, [ pl ]);
+            es.put('onDodge', [pl, Function.prototype, [pl]]);
+            em.emitNone(lock.hasLock(pl) ? 'onDodge' : 'onJump', pl, Function.prototype, [pl]);
         }
     });
-
     em.on('onDodge', acceptableStreamHandler('onDodge'));
-
     playerOverrideEvents.forEach(n => em.on(n, acceptableStreamHandler(n)));
-
     mobEvents.forEach(n => {
         mc.listen(n, (...args) => {
-            let cancelEvent = false,
-                prevent = () => cancelEvent = true;
-            
+            let cancelEvent = false, prevent = () => cancelEvent = true;
             let pl = args[0];
-
             if (mobEvents.includes(n)) {
                 if (!pl.isPlayer()) {
-                    return true
+                    return true;
                 }
-
                 pl = pl.toPlayer();
             }
-
             const status = watchMainhandChange(pl);
-            
             if (!mods.has(status.hand)) {
-                return
+                return;
             }
-
             transition(pl, getMod(status.hand), status, n, prevent, args);
-
-            return !cancelEvent
+            return !cancelEvent;
         });
     });
-
     mc.listen('onOpenContainer', () => {
         // console.log(pl)
     });
-
     mc.listen('onOpenContainerScreen', pl => {
-        if (hasLock(pl)) {
+        if (lock.hasLock(pl)) {
             let cancel = true;
-            es.put('onFeint', [ pl, Function.prototype, [ pl ] ]);
-
-            return !cancel
+            es.put('onFeint', [pl, Function.prototype, [pl]]);
+            return !cancel;
         }
     });
-
     mc.listen('onRide', rider => {
         if (!rider.isPlayer()) {
-            return true
+            return true;
         }
-
         const pl = rider.toPlayer();
-
+        if (!pl) {
+            return;
+        }
         if (mods.has(pl.getHand().type) && !input.isPressing(pl, 'sneak')) {
-            return false
+            return false;
         }
     });
-
-
     /**@type {EntityDamageCause[]}*/
     const causeList = [
         'override', 'contact', 'entityAttack', 'projectile', 'suffocation', 'fall', 'fire',
@@ -13299,118 +12745,91 @@ function listenAllMcEvents(collection) {
         'magma', 'fireworks', 'lightning', 'charging', 'temperature', 'freezing', 'stalactite',
         'stalagmite'
     ];
-
     causeList[-1] = 'none';
-
     mc.listen('onMobHurt', (victim, abuser, damage, cause) => {
         const damageType = causeList[cause];
-
         if (damageType === 'override') {
-            return true
+            return true;
         }
-
-        let flag = true,
-            prevent = () => {
-                flag = false;
-            };
-        
+        let flag = true, prevent = () => {
+            flag = false;
+        };
         const damageOpt = {
             damage,
             damageType
         };
-
         if (!victim.isPlayer()) {
-            return true
+            return true;
         }
-
-        victim = victim.toPlayer();
-
+        const victimPlayer = victim.toPlayer();
         if (!abuser) {
-            return true
+            return true;
         }
-
         if (!abuser.isPlayer()) {
-            em.emitNone('onHurtByEntity', victim, abuser, damageOpt, prevent);
-            return flag
+            em.emitNone('onHurtByEntity', victimPlayer, abuser, damageOpt, prevent);
+            return flag;
         }
-
-        return false
+        return false;
     });
-
     mc.listen('onAttackEntity', pl => {
-        es.put('onAttack', [pl, Function.prototype, [ pl ]]);
-        const status = Status.getOrCreate(pl.uniqueId);
-
+        es.put('onAttack', [pl, Function.prototype, [pl]]);
+        const status = Status$1.getOrCreate(pl.uniqueId);
         status.acceptableInput('onAttack', false);
         setTimeout(() => {
             status.acceptableInput('onAttack', true);
         }, 300);
-        return false
+        return false;
     });
-
     mc.listen('onAttackBlock', pl => {
-        es.put('onAttack', [pl, Function.prototype, [ pl ]]);
-        const status = Status.getOrCreate(pl.uniqueId);
-
+        es.put('onAttack', [pl, Function.prototype, [pl]]);
+        const status = Status$1.getOrCreate(pl.uniqueId);
         status.acceptableInput('onAttack', false);
         setTimeout(() => {
             status.acceptableInput('onAttack', true);
         }, 300);
-        return false
+        return false;
     });
-
     mc.listen('onTick', () => em.emitNone('onTick'));
-
     mc.listen('onRespawn', pl => {
+        const mod = getModCompatibility(pl);
+        if (!mod) {
+            return;
+        }
         setTimeout(() => {
             unfreeze(pl);
-            clearCamera(pl);
-            initCombatComponent(pl, getModCompatibility(pl), Status.getOrCreate(pl.uniqueId));
+            clearCamera$1(pl);
+            initCombatComponent(pl, mod, Status$1.getOrCreate(pl.uniqueId));
         }, 300);
     });
-
     mc.listen('onLeft', pl => {
-        Status.status.delete(pl.uniqueId);
+        Status$1.status.delete(pl.uniqueId);
     });
-
     mc.listen('onPlayerDie', pl => {
-        releaseTarget(pl.uniqueId);
+        lock.releaseTarget(pl.uniqueId);
         mc.runcmdEx(`/inputpermission set "${pl.name}" jump enabled`);
         mc.runcmdEx(`/inputpermission set "${pl.name}" sneak enabled`);
     });
-
     mc.listen('onMobDie', en => {
-        Status.status.delete(en.uniqueId);
+        Status$1.status.delete(en.uniqueId);
     });
-
     mc.listen('onServerStarted', () => {
         mc.getScoreObjective('attack_time') ?? mc.newScoreObjective('attack_time', 'attack_time');
-
         listenAllCustomEvents(mods);
         listenEntitiyWithAi();
     });
-
     registerHudCommands();
     registerCommand();
     setupAiCommands();
 }
-
 function getHandedItemType(pl) {
-    return pl.getHand()?.type
+    return pl.getHand()?.type;
 }
-
-antiTreeshaking();
-
-var core = {
-    emitter: em, listenAllMcEvents,
-    initCombatComponent, transition,
-};
 
 async function loadAll() {
     //@ts-ignore
     const mods = Array.from(collection$1).map(({ tricks }) => tricks);
     const result = [0, 0];
-    core.listenAllMcEvents(mods);
+    listenAllMcEvents(mods);
     mods.forEach(mod => loadModule(mod, result));
     console.log(`加载了 ${mods.length} 个模块，成功 ${result[1]} 个，失败 ${result[0]}`);
 }

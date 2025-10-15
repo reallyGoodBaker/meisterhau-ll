@@ -13,8 +13,8 @@ export interface BasicComponent extends Component {
     onDetach(manager: ComponentManager): void | Promise<void>
 }
 
-const REFLECT_MANAGER = Symbol('reflect-manager')
-const REFLECT_ENTITY = Symbol('reflect-entity')
+export const REFLECT_MANAGER: unique symbol = Symbol('reflect-manager')
+export const REFLECT_ENTITY: unique symbol = Symbol('reflect-entity')
 
 export class CustomComponent implements Component {
     [REFLECT_MANAGER]?: ComponentManager
@@ -208,18 +208,24 @@ export class ComponentManager {
 }
 
 type RequireComponentsParam = ComponentCtor | [ComponentCtor, ...any[]]
-const REQUIRED_COMPONENTS = Symbol('REQUIRED_COMPONENTS')
+export const REQUIRED_COMPONENTS: unique symbol = Symbol('REQUIRED_COMPONENTS')
 
 export interface RequiredComponent extends BasicComponent {
     getComponent<T extends Component>(ctor: ComponentCtor): T
 }
 
+export type RequiredComponentCtor = ConstructorOf<RequiredComponent>
+
 export function RequireComponents(...params: RequireComponentsParam[]) {
     return class CRequiredComponent extends BaseComponent implements RequiredComponent {
         [REQUIRED_COMPONENTS] = new Map<ComponentCtor, Component>()
-        
+
         constructor() {
             super()
+            this._init()
+        }
+
+        _init() {
             for (const param of params) {
                 if (Array.isArray(param)) {
                     const [ Ctor, ...args ] = param
@@ -234,6 +240,7 @@ export function RequireComponents(...params: RequireComponentsParam[]) {
         getComponent<T extends Component>(ctor: ComponentCtor): T {
             return this[REQUIRED_COMPONENTS].get(ctor) as T
         }
-    }
+
+    } as RequiredComponentCtor
     
 }

@@ -239,7 +239,7 @@ const serverStarted = (function () {
         return promise;
     });
 })();
-function cmd$6(head, desc, perm = CommandPermission.OP) {
+function cmd$5(head, desc, perm = CommandPermission.OP) {
     const command = mc.newCommand(head, desc, perm);
     const registry = new Registry(command);
     const register = (...args) => { registry.register.apply(registry, args); };
@@ -281,7 +281,7 @@ var command = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	get CommandPermission () { return CommandPermission; },
 	Registry: Registry,
-	cmd: cmd$6,
+	cmd: cmd$5,
 	serverStarted: serverStarted
 });
 
@@ -481,7 +481,7 @@ var ui = {
     StepSlider: basicBuilder('StepSlider'),
 };
 
-const { cmd: cmd$5 } = require$$0;
+const { cmd: cmd$4 } = require$$0;
 const { alert: alert$5 } = ui;
 
 function distStr(entity, dest, showDiff=true) {
@@ -494,7 +494,7 @@ function distStr(entity, dest, showDiff=true) {
 }
 
 function setup$b() {
-    cmd$5('whoami', '我是谁？', 0)
+    cmd$4('whoami', '我是谁？', 0)
     .setup(register => {
         register('name', (cmd, ori, out) => {
             out.success(ori.entity.name);
@@ -1182,7 +1182,7 @@ function listenMobEvent(type) {
     mc.listen(type, buildCallListener(type));
 }
 function setup$a() {
-    cmd$6('simplayer', '假人', 1)
+    cmd$5('simplayer', '假人', 1)
         .setup(register => {
         register('<pos:pos> <name:string>', (_, ori, out, { pos, name }) => {
             spawn(pos, name);
@@ -1207,36 +1207,69 @@ var simulatePlayer = /*#__PURE__*/Object.freeze({
 
 var require$$3 = /*@__PURE__*/getAugmentedNamespace(simulatePlayer);
 
-const { cmd: cmd$4 } = require$$0;
+class Optional {
+    value;
+    static none() {
+        return new Optional(null);
+    }
+    static some(value) {
+        if (value instanceof Optional) {
+            return value;
+        }
+        return new Optional(value);
+    }
+    constructor(value) {
+        this.value = value;
+    }
+    unwrap() {
+        if (!this.isEmpty()) {
+            return this.value;
+        }
+        throw new Error(`Optional is empty\n${new Error().stack}`);
+    }
+    isEmpty() {
+        return this.value === void 0 || this.value === null;
+    }
+    orElse(other) {
+        return this.value ?? other;
+    }
+    use(fn, self) {
+        if (!this.isEmpty()) {
+            fn.call(self, this.value);
+            return true;
+        }
+        return false;
+    }
+    match(none, some) {
+        if (this.isEmpty()) {
+            // @ts-ignore
+            return none.call ? none() : none;
+        }
+        return some(this.value);
+    }
+}
 
 const camera = (pl, easeTime, easeType, dPos, rot) => {
     mc.runcmdEx(`execute as "${pl.name}" at @s run camera @s set minecraft:free ease ${easeTime} ${easeType} pos ^${dPos.x} ^${dPos.y} ^${dPos.z} rot ${rot.pitch} ${rot.yaw}`);
     // mc.runcmdEx(`execute as "${pl.name}" at @s run camera @s set minecraft:free ease ${easeTime} ${easeType} rot ${rot.pitch} ${rot.yaw}`)
     // mc.runcmdEx(`execute as "${pl.name}" at @s run camera @s set minecraft:free ease ${easeTime} ${easeType} pos ^${dPos.x} ^${dPos.y} ^${dPos.z}`)
 };
-
 const trackingPlayers = new Map();
-
 function clearCamera(pl) {
     trackingPlayers.delete(pl.uniqueId);
     mc.runcmdEx(`camera "${pl.name}" clear`);
 }
-
-function setOnShoulderCamera(uniqueId, left=false) {
+function setOnShoulderCamera(uniqueId, left = false) {
     trackingPlayers.set(uniqueId, left);
 }
-
 function setup$9() {
     mc.listen('onTick', () => {
         trackingPlayers.forEach((left, uniqueId) => {
             const pl = mc.getPlayer(uniqueId);
-
             if (!pl) {
-                return
+                return;
             }
-
             const { yaw, pitch } = pl.direction;
-
             camera(pl, 0.1, 'linear', {
                 x: left ? 1 : -1,
                 y: 1.5,
@@ -1244,24 +1277,34 @@ function setup$9() {
             }, { yaw, pitch });
         });
     });
-
-    cmd$4('overshoulder', '过肩视角', 0).setup(register => {
+    cmd$5('overshoulder', '过肩视角', 0).setup(register => {
         register('clear', (_, ori) => {
-            clearCamera(ori.player);
+            Optional.some(ori.player).use(pl => {
+                clearCamera(pl);
+            });
         });
         register('right', (_, ori) => {
-            setOnShoulderCamera(ori.player.uniqueId);
+            Optional.some(ori.player).use(pl => {
+                setOnShoulderCamera(pl.uniqueId);
+            });
         });
         register('left', (_, ori) => {
-            setOnShoulderCamera(ori.player.uniqueId, true);
+            Optional.some(ori.player).use(pl => {
+                setOnShoulderCamera(pl.uniqueId, true);
+            });
         });
     });
 }
-
-var overShoulder = {
+module.exports = {
     setup: setup$9,
     camera, clearCamera, setOnShoulderCamera
 };
+
+var overShoulder = /*#__PURE__*/Object.freeze({
+	__proto__: null
+});
+
+var require$$4 = /*@__PURE__*/getAugmentedNamespace(overShoulder);
 
 const {action: action$5, alert: alert$4, widget: widget$5, Switch: Switch$4, StepSlider: StepSlider$1, Input: Input$6, Dropdown: Dropdown$4} = ui;
 
@@ -3933,7 +3976,7 @@ MyWidget = MyWidget_1 = __decorate([
 // mc.listen('onJump', pl => {
 //     Alert.start(MyWidget, pl)
 // })
-cmd$6('testui', '测试ui').setup(register => {
+cmd$5('testui', '测试ui').setup(register => {
     register('test1', (cmd, ori, out, res) => {
         Alert.start(MyWidget, ori.player);
     });
@@ -3946,7 +3989,7 @@ var testui = /*#__PURE__*/Object.freeze({
 var require$$13 = /*@__PURE__*/getAugmentedNamespace(testui);
 
 function setup$1() {
-    cmd$6('marriage', '结婚', CommandPermission.Everyone).setup(register => {
+    cmd$5('marriage', '结婚', CommandPermission.Everyone).setup(register => {
         register('marry <pl:player>', (cmd, ori, out, { pl }) => {
             const player = pl[0];
             if (!player) {
@@ -4464,13 +4507,13 @@ function selectAccount(opt) {
 function selectAccountUi(operator) {
 }
 function setup() {
-    cmd$6('account', '账户操作', CommandPermission.Everyone).setup(register => {
+    cmd$5('account', '账户操作', CommandPermission.Everyone).setup(register => {
         register('register', (cmd, { player }) => registerUi(player));
         register('login', (cmd, { player }) => loginUi(player));
         register('persistent', (cmd, { player }) => persistentUi(player));
         register('resetpwd <pwd:text> <verify_pwd:text>', (cmd, { player }, out, args) => setPlayerPasswd(player, player.xuid, args.pwd, args.verify_pwd));
     });
-    cmd$6('account_op', '管理员账户操作', CommandPermission.OP).setup(register => {
+    cmd$5('account_op', '管理员账户操作', CommandPermission.OP).setup(register => {
         register('ban', (cmd, { player }) => banUi(player));
         register('remove', (cmd, { player }) => removeUi(player));
         register('listinfo', (cmd, { player }) => getAllPlayerInfo(player));
@@ -4560,7 +4603,7 @@ const modules = [
     whoami,
     speed,
     require$$3,
-    overShoulder,
+    require$$4,
     notification,
     motd,
     setup$8,

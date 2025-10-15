@@ -29,6 +29,109 @@
         }
     },
 
+    "input_key": {
+        "type": "stack_panel",
+        "orientation": "horizontal",
+        "size": [
+            "100%c",
+            "100%c"
+        ],
+        "$icon_touch": "",
+        "$icon_keyboard": "",
+        "$controller|xbox": "",
+        "$controller|ps4": "",
+        "controls": [
+            {
+                "touch": {
+                    "type": "label",
+                    "text": "$icon_touch",
+                    "bindings": [
+                        {
+                            "binding_type": "view",
+                            "source_property_name": "$touch",
+                            "target_property_name": "#visible"
+                        }
+                    ]
+                },
+                "keyboard": {
+                    "type": "label",
+                    "text": "$icon_keyboard",
+                    "bindings": [
+                        {
+                            "binding_type": "view",
+                            "source_property_name": "$mouse",
+                            "target_property_name": "#visible"
+                        }
+                    ]
+                },
+                "controller_xbox": {
+                    "type": "label",
+                    "text": "$controller|xbox",
+                    "bindings": [
+                        {
+                            "binding_type": "view",
+                            "source_property_name": "($game_pad and not $is_ps4)",
+                            "target_property_name": "#visible"
+                        }
+                    ]
+                },
+                "controller_ps4": {
+                    "type": "label",
+                    "text": "$controller|ps4",
+                    "bindings": [
+                        {
+                            "binding_type": "view",
+                            "source_property_name": "($game_pad and $is_ps4)",
+                            "target_property_name": "#visible"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+
+    "light_input@input_key": {
+        "$icon_keyboard": "",
+        "$icon_touch": "",
+        "$controller|xbox": "",
+        "$controller|ps4": ""
+    },
+
+    "heavy_input@input_key": {
+        "$icon_keyboard": "",
+        "$icon_touch": "",
+        "$controller|xbox": "",
+        "$controller|ps4": ""
+    },
+
+    "posture_input@input_key": {
+        "$icon_keyboard": "Shift",
+        "$icon_touch": "",
+        "$controller|xbox": "",
+        "$controller|ps4": ""
+    },
+
+    "running_input@input_key": {
+        "$icon_keyboard": "Ctrl",
+        "$icon_touch": "",
+        "$controller|xbox": "",
+        "$controller|ps4": ""
+    },
+
+    "feint_input@input_key": {
+        "$icon_keyboard": "E",
+        "$icon_touch": "",
+        "$controller|xbox": "",
+        "$controller|ps4": ""
+    },
+
+    "dodge_input@input_key": {
+        "$icon_keyboard": "Space",
+        "$icon_touch": "",
+        "$controller|xbox": "",
+        "$controller|ps4": ""
+    },
+
     "key_binding_info": {
         "type": "stack_panel",
         "orientation": "horizontal",
@@ -251,7 +354,7 @@
         "orientation": "vertical",
         "size": [
             "100%",
-            48
+            "100%c"
         ],
         "anchor_from": "top_left",
         "anchor_to": "top_left",
@@ -264,25 +367,53 @@
         ],
         "controls": [
             {
+                "divider_container": {
+                    "type": "panel",
+                    "size": [
+                        "100%",
+                        "16px"
+                    ],
+                    "controls": [
+                        {
+                            "divider": {
+                                "type": "image",
+                                "size": [
+                                    "100%",
+                                    "1px"
+                                ],
+                                "anchor_from": "bottom",
+                                "anchor_to": "bottom",
+                                "texture": "textures/ui/sidebar_icons/side_panel_divider"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
                 "noun": {
-                    "type": "label",
-                    "color": "$color",
+                    "type": "panel",
                     "size": [
                         "default",
-                        "30%"
+                        "24px"
                     ],
-                    "layer": 1,
-                    "text": "$noun"
+                    "controls": [
+                        {
+                            "label": {
+                                "type": "label",
+                                "color": "$color",
+                                "anchor_from": "left_middle",
+                                "anchor_to": "top_left",
+                                "layer": 1,
+                                "text": "$noun"
+                            }
+                        }
+                    ]
                 }
             },
             {
                 "desc": {
                     "type": "label",
                     "color": "$generic_button_text_color",
-                    "size": [
-                        "default",
-                        "70%"
-                    ],
                     "text_alignment": "center",
                     "layer": 1,
                     "text": "$desc"

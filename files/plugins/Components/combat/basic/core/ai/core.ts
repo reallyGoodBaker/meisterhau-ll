@@ -1,8 +1,8 @@
-import { Actor } from '@core/inputSimulator'
 import { Status } from '@core/status'
 import { serverStarted } from '@utils/command'
 import { Component, ComponentManager, CustomComponent } from '../component'
 import { Optional } from '@utils/optional'
+import { Actor } from '@utils/actor'
 
 export interface MeisterhauAITask {
     (ai: MeisterhauAI): Promise<void>

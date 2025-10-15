@@ -1,9 +1,9 @@
 import { CustomComponent } from "@combat/basic/core/component"
 import { Tick } from "../tick"
-import { Actor } from "@combat/basic/core/inputSimulator"
 import { yawToVec2 } from "@utils/math"
 import { vec2 } from "@combat/basic/generic/vec"
 import { Delegate } from "@utils/events"
+import { Actor } from "@utils/actor"
 
 export interface AiVisionConfig {
     fov: number

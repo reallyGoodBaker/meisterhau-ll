@@ -12,7 +12,9 @@ export class Guard extends MeisterhauAI {
     readonly sensing = new EasyAISensing(this)
 
     async onStart() {
-        initCombatComponent(this.actor, tricks, this.status)
+        this.actor.use(actor => {
+            initCombatComponent(actor, tricks, this.status)
+        })
     }
 
     getStrategy(strategy: string) {

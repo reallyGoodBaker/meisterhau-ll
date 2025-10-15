@@ -1,6 +1,8 @@
-const { cmd } = require('./utils/command')
+import { Rotation, Vector } from '@utils/math'
+import { cmd } from './utils/command'
+import { Optional } from '@utils/optional'
 
-const camera = (pl, easeTime, easeType, dPos, rot) => {
+const camera = (pl: Player, easeTime: number, easeType: string, dPos: Vector, rot: Rotation) => {
     mc.runcmdEx(`execute as "${pl.name}" at @s run camera @s set minecraft:free ease ${easeTime} ${easeType} pos ^${dPos.x} ^${dPos.y} ^${dPos.z} rot ${rot.pitch} ${rot.yaw}`)
     // mc.runcmdEx(`execute as "${pl.name}" at @s run camera @s set minecraft:free ease ${easeTime} ${easeType} rot ${rot.pitch} ${rot.yaw}`)
     // mc.runcmdEx(`execute as "${pl.name}" at @s run camera @s set minecraft:free ease ${easeTime} ${easeType} pos ^${dPos.x} ^${dPos.y} ^${dPos.z}`)
@@ -8,12 +10,12 @@ const camera = (pl, easeTime, easeType, dPos, rot) => {
 
 const trackingPlayers = new Map()
 
-function clearCamera(pl) {
+function clearCamera(pl: Player) {
     trackingPlayers.delete(pl.uniqueId)
     mc.runcmdEx(`camera "${pl.name}" clear`)
 }
 
-function setOnShoulderCamera(uniqueId, left=false) {
+function setOnShoulderCamera(uniqueId: string, left=false) {
     trackingPlayers.set(uniqueId, left)
 }
 
@@ -38,13 +40,19 @@ function setup() {
 
     cmd('overshoulder', '过肩视角', 0).setup(register => {
         register('clear', (_, ori) => {
-            clearCamera(ori.player)
+            Optional.some(ori.player).use(pl => {
+                clearCamera(pl)
+            })
         })
         register('right', (_, ori) => {
-            setOnShoulderCamera(ori.player.uniqueId)
+            Optional.some(ori.player).use(pl => {
+                setOnShoulderCamera(pl.uniqueId)
+            })
         })
         register('left', (_, ori) => {
-            setOnShoulderCamera(ori.player.uniqueId, true)
+            Optional.some(ori.player).use(pl => {
+                setOnShoulderCamera(pl.uniqueId, true)  
+            })
         })
     })
 }

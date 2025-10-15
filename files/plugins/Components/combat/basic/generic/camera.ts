@@ -1,27 +1,28 @@
-const { CameraComponent } = require('../components/camera')
-const { Status } = require('../core/status')
-const { rotate2, vec2, multiply2 } = require('./vec')
+import { Vector } from "@utils/math"
+import { CameraComponent } from '../components/camera'
+import { Status } from '../core/status'
+import { rotate2, vec2, multiply2 } from './vec'
 
-const cameraInput = (pl, enabled=true) => {
+export const cameraInput = (pl: Player, enabled=true) => {
     mc.runcmdEx(`inputpermission set "${pl.name}" camera ${enabled ? 'enabled' : 'disabled'}`)
 }
 
-const camera = (pl, easeTime, easeType, pos, lookAt) => {
+const camera = (pl: Player, easeTime: number, easeType: string, pos: Vector, lookAt: Vector) => {
     mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} facing ${lookAt.x} ${lookAt.y} ${lookAt.z}`)
 }
 
-const cameraRot = (pl, easeTime, easeType, pos, rotX, rotY) => {
+const cameraRot = (pl: Player, easeTime: number, easeType: string, pos: Vector, rotX: number, rotY: number) => {
     mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} rot ${rotX} ${rotY}`) 
 }
 
-function clearCamera(pl) {
+export function clearCamera(pl: Player) {
     mc.runcmdEx(`camera "${pl.name}" set meisterhau:battle`)
 }
 
 const ROT = Math.PI * 1
 const ANGLE = 180 / Math.PI
 
-const battleCameraMiddlePoint = (pl, en) => {
+export const battleCameraMiddlePoint = (pl: Player, en: Entity) => {
     const plPos = pl.pos
     const enPos = en.pos
     const initVec = vec2(plPos.x, plPos.z, enPos.x, enPos.z)
@@ -71,13 +72,13 @@ const battleCameraMiddlePoint = (pl, en) => {
     camera(pl, 0.1, 'linear', cameraPos, { ...middlePoint, y: cameraPos.y })
 }
 
-const battleCamera = (pl, en) => {
+export const battleCamera = (pl: Player, en: Entity) => {
     if (!pl) {
         return
     }
 
     const plPos = pl.pos
-    let enPos = en.pos
+    let enPos: Vector = en.pos
     let initVec = vec2(plPos.x, plPos.z, enPos.x, enPos.z)
     const dist = initVec.m
 
@@ -153,8 +154,4 @@ const battleCamera = (pl, en) => {
     const pitch = (Math.atan2(Math.sqrt(cameraEntityVec.x * cameraEntityVec.x + cameraEntityVec.z * cameraEntityVec.z), cameraEntityVec.y)) * ANGLE
     const [ dYaw, dPitch ] = cameraComponent.rot
     cameraRot(pl, 0.1, 'linear', cameraPos, dPitch, yaw + dYaw)
-}
-
-module.exports = {
-    battleCamera, battleCameraMiddlePoint, cameraInput, clearCamera
 }

@@ -1,10 +1,10 @@
 import { TargetLock } from "@combat/basic/components/core/target-lock"
 import { MeisterhauAI } from "./core"
-import { Actor } from "../inputSimulator"
 import { Optional } from "@utils/optional"
 import { Status } from "../status"
 import { AiHearing } from "@combat/basic/components/ai/hearing"
 import { AiVision } from "@combat/basic/components/ai/vision"
+import { Actor } from "@utils/actor"
 
 export class EasyAISensing {
     constructor(

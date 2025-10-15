@@ -3,7 +3,7 @@ export function checkCompleteness(mod: TrickModule) {
         return '缺少必要的属性: sid | bind | entry | moves'
     }
 
-    if (!Object.keys(mod.moves).includes(mod.entry)) {
+    if (!mod.moves.hasMove(mod.entry)) {
         return `无效的 entry: '${mod.entry}'`
     }
 

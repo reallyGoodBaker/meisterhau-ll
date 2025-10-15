@@ -1,8 +1,9 @@
 import { TargetLock } from "@combat/basic/components/core/target-lock"
-import { Actor, InputSimulator } from "../inputSimulator"
+import { InputSimulator } from "../inputSimulator"
 import { Optional } from "@utils/optional"
 import { Status } from "../status"
 import { actorSelector } from "@combat/basic"
+import { Actor } from "@utils/actor"
 
 export class AiActions extends InputSimulator {
 
@@ -20,6 +21,7 @@ export class AiActions extends InputSimulator {
 
     lookAtNearest(radius = 10, family: string[] = [ 'mob' ]) {
         this.actor.use(actor => {
+            console.log(actor)
             const selector = actorSelector(actor)
             const typeFamiliy = family.map(t => `family=${t}`).join(",")
             mc.runcmdEx(`execute at ${selector} as ${selector} run tp @s ~~~ facing @e[c=1,r=${radius}${typeFamiliy ? `,${typeFamiliy}` : ''}]`)

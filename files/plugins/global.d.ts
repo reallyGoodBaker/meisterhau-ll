@@ -8,6 +8,11 @@ declare global {
 
 type ModuleInitializer = () => TrickModule
 
+interface Moves {
+    getMove(name: string): Move
+    hasMove(name: string): boolean
+}
+
 interface TrickModule {
     /**
      * 模组的名字
@@ -19,9 +24,7 @@ interface TrickModule {
      */
     bind: string[] | string
 
-    moves: {
-        [key: string]: any
-    }
+    moves: Moves
 
     /**
      * 初始动作的名字，应为`moves`中的一个键名
@@ -29,7 +32,7 @@ interface TrickModule {
     entry: string
 }
 
-interface Move<Ctx=any> {
+interface Move {
     /**
      * 前摇时间，默认`0`tick
      * @example
@@ -217,6 +220,8 @@ type TransitionTypeOption = {
     [p in keyof TransitionTypeOptionMap]?: null
         | (TransitionTypeOptionMap[p] & DefaultTransitionOption & TransitionOptMixins & { tag?: string })
 }
+
+type TransitionCondition = Omit<TransitionTypeOption[keyof TransitionTypeOption], null | undefined>
 
 type MovementCallback = (source: Player|Entity, context: MovementContext) => any | Promise<any>
 
