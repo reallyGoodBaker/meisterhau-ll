@@ -42,10 +42,7 @@ export class Shinobu extends MeisterhauAI {
         }
     }
 
-    async combo1() {
-        // 等待所有任务完成
-        await this.waitExecutingTasks()
-
+    combo1 = async () => {
         this.actions.attack()
         await this.wait(600)
         if (this.sensing.actorIterapted()) {
@@ -62,8 +59,26 @@ export class Shinobu extends MeisterhauAI {
         await this.wait(1600)
     }
 
-    onAttack(incomingAttack: IncomingAttack) {
+    combo2 = async () => {
+        this.actions.useItem()
+        await this.wait(600)
+        if (this.sensing.actorIterapted()) {
+            return
+        }
         this.actions.attack()
+        await this.wait(600)
+    }
+
+    async onAttack(incomingAttack: IncomingAttack) {
+        this.actions.attack()
+
+        if (this.strategy === 'default') {
+            this.actions.useItem()
+            this.executeTask(async () => {
+                await this.wait(400)
+                this.actions.attack()
+            })
+        }
     }
 
     async *mildStrategy() {
@@ -75,15 +90,38 @@ export class Shinobu extends MeisterhauAI {
             await this.waitTick()
             await this.tryAcquireOrReleaseTarget()
 
+            if (this.hasAnyExecutingTasks()) {
+                continue
+            }
+
             // 如果没有目标，则跳过
             if (!this.sensing.hasTarget()) {
                 continue   
             }
 
-            // 如果目标在3格内，则执行连招1
-            if (this.sensing.targetInRange(3)) {
-                // 执行第一个连招
-                yield () => this.combo1()
+            // 如果目标尝试格挡，则使用剑柄打击
+            if (this.sensing.targetIsBlocking()) {
+                yield this.combo2
+                continue
+            }
+
+            // 如果目标在2格内，则更多尝试执行连招2
+            if (this.sensing.targetInRange(2) && Math.random() < 0.15) {
+                // 随机挑选连招
+                yield this.randomActions(
+                    [1, this.combo1],
+                    [2, this.combo2],
+                )
+                continue
+            }
+
+            // 如果目标在3格内，则更多尝试执行连招1
+            if (this.sensing.targetInRange(3) && Math.random() < 0.15) {
+                // 随机挑选连招
+                yield this.randomActions(
+                    [2, this.combo1],
+                    [1, this.combo2],
+                )
             }
         }
     }
@@ -101,9 +139,6 @@ export class Shinobu extends MeisterhauAI {
             if (!this.sensing.hasTarget()) {
                 continue
             }
-
-            // 等待所有任务完成（从executeTask提交的任务）
-            await this.waitExecutingTasks()
         }
     }
 

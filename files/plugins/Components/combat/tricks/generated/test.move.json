@@ -1,7 +1,7 @@
 {
     "type": "fsm",
     "selected": [
-        "e1"
+        "e2"
     ],
     "nodes": [
         {
@@ -22,16 +22,7 @@
             "endpoint": 3
         }
     ],
-    "edges": [
-        {
-            "ids": [
-                "e1",
-                "e2"
-            ],
-            "id": "eNaN",
-            "conditions": []
-        }
-    ],
+    "edges": [],
     "transform": [
         294.89826839826844,
         103.27272727272727,

@@ -306,22 +306,24 @@ export abstract class MeisterhauAI {
         return false
     }
 
-    randomActions(conf: Record<number, MeisterhauAITask>) {
-        const keys = Object.keys(conf)
-        const sum = keys.reduce((a, b) => a + Number(b), 0)
-        const rands = keys.map(v => Number(v) / sum)
+    randomActions(...conf: [number, MeisterhauAITask][]) {
+        const sum = conf.reduce((a, [ b ]) => a + Number(b), 0)
+        const rands = conf.map(([ v ]) => Number(v) / sum)
 
         let rand = Math.random()
+        let index = 0
 
         for (const reduce of rands) {
             rand -= reduce
             if (rand < 0) {
-                const index = keys[rands.indexOf(reduce)]
-                return conf[index as any]
+                const [ _, task ] = conf[index]
+                return task
             }
+
+            index++
         }
 
-        return conf[0]
+        return conf[0][1]
     }
 }
 

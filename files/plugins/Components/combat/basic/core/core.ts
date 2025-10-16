@@ -316,6 +316,7 @@ export function transition(pl: Actor, bind: TrickModule, status: Status, eventNa
 
     if (status.status === 'unknown') {
         initCombatComponent(pl, bind, status)
+        return
     }
 
     const currentMove = bind.moves.getMove(status.status)
@@ -356,7 +357,7 @@ export function transition(pl: Actor, bind: TrickModule, status: Status, eventNa
     }
 
     // @ts-ignore
-    if (!next) {
+    if (!next || next === 'unknown') {
         return
     }
 
@@ -454,7 +455,7 @@ function listenPlayerItemChange(mods: Map<string, TrickModule>) {
         const status = Status.getOrCreate(pl.uniqueId)
         const oldBind = getMod(old)
 
-        if (!status) {
+        if (!status || status.status == 'unknown') {
             return
         }
 
@@ -510,11 +511,15 @@ function listenAllCustomEvents(mods: Map<string, TrickModule>) {
                 if (!pl) {
                     continue
                 }
-                bind = ai.getRegistration(pl.type).tricks
+                bind = ai.getRegistration(pl.type)?.tricks
             }
 
             if (!pl ||!bind) {
                 continue
+            }
+
+            if (!bind.moves.hasMove(status.status)) {
+                return
             }
 
             const currentMove = bind.moves.getMove(status.status)
@@ -1261,7 +1266,7 @@ export function listenAllMcEvents(collection: TrickModule[]) {
             unfreeze(pl)
             clearCamera(pl)
             initCombatComponent(pl, mod, Status.getOrCreate(pl.uniqueId))
-        }, 300)
+        })
     })
 
     mc.listen('onLeft', pl => {

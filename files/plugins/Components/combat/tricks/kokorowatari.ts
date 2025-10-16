@@ -10,6 +10,13 @@ class KokorowatariMoves extends DefaultMoves {
         this.setup<KokorowatariMoves>('idle')
 
         this.animations.block.left = 'animation.shinobu.ai.block'
+
+        this.setTransition<KokorowatariMoves>('block', 'blockHilt', {
+            onTrap: {
+                tag: 'blockCounter',
+                preInput: 'onUseItem',
+            }
+        })
     }
 
     // 定义idle状态
@@ -33,6 +40,9 @@ class KokorowatariMoves extends DefaultMoves {
             },
             attack1: {
                 onAttack: null
+            },
+            hilt: {
+                onUseItem: null
             }
         }
     }
@@ -50,7 +60,7 @@ class KokorowatariMoves extends DefaultMoves {
         },
         timeline: {
             5: actor => playSoundAll('weapon.whoosh.thick.2', actor.pos),
-            9: (actor, ctx) => ctx.selectFromSector(actor, {
+            8: (actor, ctx) => ctx.selectFromSector(actor, {
                 radius: 4,
             }).forEach(en => {
                 ctx.attack(actor, en, {
@@ -160,6 +170,119 @@ class KokorowatariMoves extends DefaultMoves {
             idle: {
                 onEndOfLife: null
             },
+        }
+    }
+
+    hilt: Move = {
+        cast: 7,
+        backswing: 17,
+        onEnter(actor, ctx) {
+            playAnimCompatibility(actor, 'animation.shinobu.ai.hilt', 'animation.shinobu.ai.hold')
+            ctx.lookAtTarget(actor)
+        },
+        timeline: {
+            5: (actor, ctx) => ctx.adsorbOrSetVelocity(actor, 1.2),
+            10: (actor, ctx) => ctx.selectFromSector(actor, {
+                radius: 2.5,
+                angle: 30,
+                rotation: 15
+            }).forEach(en => ctx.attack(actor, en, {
+                damage: 2,
+                direction: 'middle',
+                permeable: true,
+                parryable: false,
+                knockback: 0.2,
+            })),
+            12: (actor, ctx) => ctx.adsorbOrSetVelocity(actor, 1.2),
+            18: (actor, ctx) => ctx.trap(actor),
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            idle: {
+                onEndOfLife: null
+            },
+            hiltCounter: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            }
+        }
+    }
+
+    blockHilt: Move = {
+        cast: 21,
+        onEnter(actor, ctx) {
+            playAnimCompatibility(actor, 'animation.shinobu.ai.counter.hilt', 'animation.shinobu.ai.hold')
+            ctx.lookAtTarget(actor)
+        },
+        timeline: {
+            2: (actor, ctx) => ctx.adsorbOrSetVelocity(actor, 1.2),
+            7: (actor, ctx) => ctx.selectFromSector(actor, {
+                radius: 2.5,
+                angle: 30,
+                rotation: 15
+            }).forEach(en => ctx.attack(actor, en, {
+                damage: 2,
+                direction: 'middle',
+                permeable: true,
+                parryable: false,
+                knockback: 0.2,
+            })),
+            9: (actor, ctx) => ctx.adsorbOrSetVelocity(actor, 1.2),
+            15: (actor, ctx) => ctx.trap(actor),
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            idle: {
+                onEndOfLife: null
+            },
+            hiltCounter: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            }
+        }
+    }
+
+    hiltCounter: Move = {
+        cast: 16,
+        onEnter(actor, ctx) {
+            playAnimCompatibility(actor, 'animation.shinobu.ai.hilt.counter', 'animation.shinobu.ai.hold')
+            ctx.lookAtTarget(actor)
+        },
+        timeline: {
+            1: (actor, ctx) => {
+                ctx.adsorbOrSetVelocity(actor, 1.2)
+                playSoundAll('weapon.whoosh.thick.1', actor.pos)
+            },
+            3: (actor, ctx) => ctx.selectFromSector(actor, {
+                radius: 3.2,
+                angle: 60,
+                rotation: 30
+            }).forEach(en => ctx.attack(
+                actor, en, {
+                    damage: 16,
+                    direction: 'vertical',
+                }
+            )),
+            9: (actor, ctx) => ctx.trap(actor),
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            idle: {
+                onEndOfLife: null
+            },
+            attack2: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            }
         }
     }
 }

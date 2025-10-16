@@ -6,7 +6,7 @@ const inputStates = new Map()
 
 export function syncInputButtons() {
     world.getAllPlayers().forEach(cur => {
-        if (!cur.isValid) {
+        if (!cur || !cur.isValid) {
             return
         }
 

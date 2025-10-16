@@ -17,6 +17,10 @@ class EmptyHandMoves extends DefaultMoves {
         }
     }
 
+    hold = {
+        cast: Infinity,
+    }
+
     constructor() {
         super()
 

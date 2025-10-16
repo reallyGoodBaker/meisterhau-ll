@@ -4,8 +4,7 @@
         "description": {
             "identifier": "weapon:shield_with_sword",
             "menu_category": {
-                "category": "equipment",
-                "group": "itemGroup.name.sword"
+                "category": "equipment"
             }
         },
         "components": {

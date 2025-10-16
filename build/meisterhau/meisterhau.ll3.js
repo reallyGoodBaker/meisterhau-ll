@@ -2006,7 +2006,8 @@ function setVelocityByOrientation(pl, ctx, max, offset) {
 }
 let DefaultMoves$4 = class DefaultMoves {
     getMove(name) {
-        if (!(name in this)) {
+        if (!this.hasMove(name)) {
+            console.log(Error().stack);
             throw new Error(`Move ${name} not found`);
         }
         return this[name];
@@ -2121,7 +2122,8 @@ let DefaultMoves$4 = class DefaultMoves {
             ctx.status.isBlocking = false;
         },
         timeline: {
-            9: (pl, ctx) => ctx.trap(pl, { tag: 'blockCounter' })
+            5: (pl, ctx) => ctx.trap(pl, { tag: 'blockCounter' }),
+            9: (pl, ctx) => ctx.trap(pl, { tag: 'blockFinish' }),
         },
         transitions: {}
     };
@@ -3128,6 +3130,10 @@ class EmptyHandMoves extends DefaultMoves$2 {
                 onEndOfLife: null
             }
         }
+    }
+
+    hold = {
+        cast: Infinity,
     }
 
     constructor() {
@@ -10781,19 +10787,20 @@ class MeisterhauAI {
         }
         return false;
     }
-    randomActions(conf) {
-        const keys = Object.keys(conf);
-        const sum = keys.reduce((a, b) => a + Number(b), 0);
-        const rands = keys.map(v => Number(v) / sum);
+    randomActions(...conf) {
+        const sum = conf.reduce((a, [b]) => a + Number(b), 0);
+        const rands = conf.map(([v]) => Number(v) / sum);
         let rand = Math.random();
+        let index = 0;
         for (const reduce of rands) {
             rand -= reduce;
             if (rand < 0) {
-                const index = keys[rands.indexOf(reduce)];
-                return conf[index];
+                const [_, task] = conf[index];
+                return task;
             }
+            index++;
         }
-        return conf[0];
+        return conf[0][1];
     }
 }
 const ais = {};
@@ -11203,7 +11210,11 @@ class EasyAISensing {
         return this.ai.status.componentManager;
     }
     hasTarget() {
-        return !this.components.getComponent(TargetLock$1).isEmpty();
+        const target = this.components.getComponent(TargetLock$1);
+        if (target.isEmpty()) {
+            return false;
+        }
+        return target.match(false, targetLock => targetLock.target.match(false, target => target.health > 0));
     }
     getTarget() {
         return this.components.getComponent(TargetLock$1).match(Optional$1.none(), targetLock => targetLock.target);
@@ -11360,7 +11371,6 @@ class AiActions extends InputSimulator {
     }
     lookAtNearest(radius = 10, family = ['mob']) {
         this.actor.use(actor => {
-            console.log(actor);
             const selector = actorSelector(actor);
             const typeFamiliy = family.map(t => `family=${t}`).join(",");
             mc.runcmdEx(`execute at ${selector} as ${selector} run tp @s ~~~ facing @e[c=1,r=${radius}${typeFamiliy ? `,${typeFamiliy}` : ''}]`);
@@ -11573,6 +11583,12 @@ class KokorowatariMoves extends DefaultMoves$4 {
         // 这个状态不是默认起始状态，注意
         this.setup('idle');
         this.animations.block.left = 'animation.shinobu.ai.block';
+        this.setTransition('block', 'blockHilt', {
+            onTrap: {
+                tag: 'blockCounter',
+                preInput: 'onUseItem',
+            }
+        });
     }
     // 定义idle状态
     idle = {
@@ -11595,6 +11611,9 @@ class KokorowatariMoves extends DefaultMoves$4 {
             },
             attack1: {
                 onAttack: null
+            },
+            hilt: {
+                onUseItem: null
             }
         }
     };
@@ -11611,7 +11630,7 @@ class KokorowatariMoves extends DefaultMoves$4 {
         },
         timeline: {
             5: actor => playSoundAll$4('weapon.whoosh.thick.2', actor.pos),
-            9: (actor, ctx) => ctx.selectFromSector(actor, {
+            8: (actor, ctx) => ctx.selectFromSector(actor, {
                 radius: 4,
             }).forEach(en => {
                 ctx.attack(actor, en, {
@@ -11721,6 +11740,114 @@ class KokorowatariMoves extends DefaultMoves$4 {
             },
         }
     };
+    hilt = {
+        cast: 7,
+        backswing: 17,
+        onEnter(actor, ctx) {
+            playAnimCompatibility(actor, 'animation.shinobu.ai.hilt', 'animation.shinobu.ai.hold');
+            ctx.lookAtTarget(actor);
+        },
+        timeline: {
+            5: (actor, ctx) => ctx.adsorbOrSetVelocity(actor, 1.2),
+            10: (actor, ctx) => ctx.selectFromSector(actor, {
+                radius: 2.5,
+                angle: 30,
+                rotation: 15
+            }).forEach(en => ctx.attack(actor, en, {
+                damage: 2,
+                direction: 'middle',
+                permeable: true,
+                parryable: false,
+                knockback: 0.2,
+            })),
+            12: (actor, ctx) => ctx.adsorbOrSetVelocity(actor, 1.2),
+            18: (actor, ctx) => ctx.trap(actor),
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            idle: {
+                onEndOfLife: null
+            },
+            hiltCounter: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            }
+        }
+    };
+    blockHilt = {
+        cast: 21,
+        onEnter(actor, ctx) {
+            playAnimCompatibility(actor, 'animation.shinobu.ai.counter.hilt', 'animation.shinobu.ai.hold');
+            ctx.lookAtTarget(actor);
+        },
+        timeline: {
+            2: (actor, ctx) => ctx.adsorbOrSetVelocity(actor, 1.2),
+            7: (actor, ctx) => ctx.selectFromSector(actor, {
+                radius: 2.5,
+                angle: 30,
+                rotation: 15
+            }).forEach(en => ctx.attack(actor, en, {
+                damage: 2,
+                direction: 'middle',
+                permeable: true,
+                parryable: false,
+                knockback: 0.2,
+            })),
+            9: (actor, ctx) => ctx.adsorbOrSetVelocity(actor, 1.2),
+            15: (actor, ctx) => ctx.trap(actor),
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            idle: {
+                onEndOfLife: null
+            },
+            hiltCounter: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            }
+        }
+    };
+    hiltCounter = {
+        cast: 16,
+        onEnter(actor, ctx) {
+            playAnimCompatibility(actor, 'animation.shinobu.ai.hilt.counter', 'animation.shinobu.ai.hold');
+            ctx.lookAtTarget(actor);
+        },
+        timeline: {
+            1: (actor, ctx) => {
+                ctx.adsorbOrSetVelocity(actor, 1.2);
+                playSoundAll$4('weapon.whoosh.thick.1', actor.pos);
+            },
+            3: (actor, ctx) => ctx.selectFromSector(actor, {
+                radius: 3.2,
+                angle: 60,
+                rotation: 30
+            }).forEach(en => ctx.attack(actor, en, {
+                damage: 16,
+                direction: 'vertical',
+            })),
+            9: (actor, ctx) => ctx.trap(actor),
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            idle: {
+                onEndOfLife: null
+            },
+            attack2: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            }
+        }
+    };
 }
 class Kokorowatari extends DefaultTrickModule$4 {
     constructor() {
@@ -11762,9 +11889,7 @@ class Shinobu extends MeisterhauAI {
             this.actions.removeTarget();
         }
     }
-    async combo1() {
-        // 等待所有任务完成
-        await this.waitExecutingTasks();
+    combo1 = async () => {
         this.actions.attack();
         await this.wait(600);
         if (this.sensing.actorIterapted()) {
@@ -11777,9 +11902,25 @@ class Shinobu extends MeisterhauAI {
         }
         this.actions.attack();
         await this.wait(1600);
-    }
-    onAttack(incomingAttack) {
+    };
+    combo2 = async () => {
+        this.actions.useItem();
+        await this.wait(600);
+        if (this.sensing.actorIterapted()) {
+            return;
+        }
         this.actions.attack();
+        await this.wait(600);
+    };
+    async onAttack(incomingAttack) {
+        this.actions.attack();
+        if (this.strategy === 'default') {
+            this.actions.useItem();
+            this.executeTask(async () => {
+                await this.wait(400);
+                this.actions.attack();
+            });
+        }
     }
     async *mildStrategy() {
         // 使用循环可以让 ai 一直执行
@@ -11789,14 +11930,28 @@ class Shinobu extends MeisterhauAI {
             // 等待 1 tick防止死循环
             await this.waitTick();
             await this.tryAcquireOrReleaseTarget();
+            if (this.hasAnyExecutingTasks()) {
+                continue;
+            }
             // 如果没有目标，则跳过
             if (!this.sensing.hasTarget()) {
                 continue;
             }
-            // 如果目标在3格内，则执行连招1
-            if (this.sensing.targetInRange(3)) {
-                // 执行第一个连招
-                yield () => this.combo1();
+            // 如果目标尝试格挡，则使用剑柄打击
+            if (this.sensing.targetIsBlocking()) {
+                yield this.combo2;
+                continue;
+            }
+            // 如果目标在2格内，则更多尝试执行连招2
+            if (this.sensing.targetInRange(2) && Math.random() < 0.15) {
+                // 随机挑选连招
+                yield this.randomActions([1, this.combo1], [2, this.combo2]);
+                continue;
+            }
+            // 如果目标在3格内，则更多尝试执行连招1
+            if (this.sensing.targetInRange(3) && Math.random() < 0.15) {
+                // 随机挑选连招
+                yield this.randomActions([2, this.combo1], [1, this.combo2]);
             }
         }
     }
@@ -11812,8 +11967,6 @@ class Shinobu extends MeisterhauAI {
             if (!this.sensing.hasTarget()) {
                 continue;
             }
-            // 等待所有任务完成（从executeTask提交的任务）
-            await this.waitExecutingTasks();
         }
     }
 }
@@ -12175,6 +12328,7 @@ function transition(pl, bind, status, eventName, prevent, args) {
     }
     if (status.status === 'unknown') {
         initCombatComponent(pl, bind, status);
+        return;
     }
     const currentMove = bind.moves.getMove(status.status);
     if (!currentMove) {
@@ -12204,7 +12358,7 @@ function transition(pl, bind, status, eventName, prevent, args) {
         cond = $cond;
     }
     // @ts-ignore
-    if (!next) {
+    if (!next || next === 'unknown') {
         return;
     }
     let previousStatus = status.status;
@@ -12283,7 +12437,7 @@ function listenPlayerItemChange(mods) {
     em.on('onChangeMainhand', (pl, hand, old) => {
         const status = Status$1.getOrCreate(pl.uniqueId);
         const oldBind = getMod(old);
-        if (!status) {
+        if (!status || status.status == 'unknown') {
             return;
         }
         lock.releaseTarget(pl.uniqueId);
@@ -12328,10 +12482,13 @@ function listenAllCustomEvents(mods) {
                 if (!pl) {
                     continue;
                 }
-                bind = ai.getRegistration(pl.type).tricks;
+                bind = ai.getRegistration(pl.type)?.tricks;
             }
             if (!pl || !bind) {
                 continue;
+            }
+            if (!bind.moves.hasMove(status.status)) {
+                return;
             }
             const currentMove = bind.moves.getMove(status.status);
             const duration = status.duration++;
@@ -12799,7 +12956,7 @@ function listenAllMcEvents(collection) {
             unfreeze(pl);
             clearCamera$1(pl);
             initCombatComponent(pl, mod, Status$1.getOrCreate(pl.uniqueId));
-        }, 300);
+        });
     });
     mc.listen('onLeft', pl => {
         Status$1.status.delete(pl.uniqueId);

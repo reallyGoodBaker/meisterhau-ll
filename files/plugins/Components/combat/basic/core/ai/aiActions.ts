@@ -21,7 +21,6 @@ export class AiActions extends InputSimulator {
 
     lookAtNearest(radius = 10, family: string[] = [ 'mob' ]) {
         this.actor.use(actor => {
-            console.log(actor)
             const selector = actorSelector(actor)
             const typeFamiliy = family.map(t => `family=${t}`).join(",")
             mc.runcmdEx(`execute at ${selector} as ${selector} run tp @s ~~~ facing @e[c=1,r=${radius}${typeFamiliy ? `,${typeFamiliy}` : ''}]`)
