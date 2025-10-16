@@ -110,7 +110,8 @@ export function setVelocityByOrientation(pl: Player, ctx: MovementContext, max: 
 
 export class DefaultMoves implements Moves {
     getMove(name: string): Move {
-        if (!(name in this)) {
+        if (!this.hasMove(name)) {
+            console.log(Error().stack)
             throw new Error(`Move ${name} not found`)
         }
 
@@ -232,7 +233,8 @@ export class DefaultMoves implements Moves {
             ctx.status.isBlocking = false
         },
         timeline: {
-            9: (pl, ctx) => ctx.trap(pl, { tag: 'blockCounter' })
+            5: (pl, ctx) => ctx.trap(pl, { tag: 'blockCounter' }),
+            9: (pl, ctx) => ctx.trap(pl, { tag: 'blockFinish' }),
         },
         transitions: {}
     }

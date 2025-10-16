@@ -16,7 +16,18 @@ export class EasyAISensing {
     }
 
     hasTarget(): boolean {
-        return !this.components.getComponent(TargetLock).isEmpty()
+        const target = this.components.getComponent(TargetLock)
+        if (target.isEmpty()) {
+            return false
+        }
+
+        return target.match(
+            false,
+            targetLock => targetLock.target.match(
+                false,
+                target => target.health > 0
+            )
+        )
     }
 
     getTarget(): Optional<Actor> {

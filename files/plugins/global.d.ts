@@ -3,6 +3,7 @@
 import { DefaultMoves } from '@combat/basic/default'
 import { Status } from './Components/combat/basic/core/status'
 import { ComponentManager } from '@combat/basic/core/component'
+import { Actor } from '@utils/actor'
 
 declare global {
 
@@ -342,7 +343,7 @@ interface MovementContext<RawArgs = Array> {
     /**
      * 从范围中选择目标
      */
-    selectFromSector(pl: any, range?: AttackRange): Entity[]
+    selectFromSector(pl: Actor, range?: AttackRange): Entity[]
     /**
      * 回调函数接受的参数
      * 详情参照liteloader文档
