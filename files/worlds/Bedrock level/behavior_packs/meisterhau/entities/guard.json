@@ -9,8 +9,8 @@
         },
         "components": {
             "minecraft:health": {
-                "value": 10000,
-                "max": 10000
+                "value": 500,
+                "max": 500
             },
             "minecraft:physics": {
                 "has_collision": true,

@@ -2,6 +2,7 @@ import { Vector } from "@utils/math"
 import { CameraComponent } from '../components/camera'
 import { Status } from '../core/status'
 import { rotate2, vec2, multiply2 } from './vec'
+import { Actor } from "@utils/actor"
 
 export const cameraInput = (pl: Player, enabled=true) => {
     mc.runcmdEx(`inputpermission set "${pl.name}" camera ${enabled ? 'enabled' : 'disabled'}`)
@@ -22,7 +23,7 @@ export function clearCamera(pl: Player) {
 const ROT = Math.PI * 1
 const ANGLE = 180 / Math.PI
 
-export const battleCameraMiddlePoint = (pl: Player, en: Entity) => {
+export const battleCameraMiddlePoint = (pl: Player, en: Actor) => {
     const plPos = pl.pos
     const enPos = en.pos
     const initVec = vec2(plPos.x, plPos.z, enPos.x, enPos.z)
@@ -72,7 +73,7 @@ export const battleCameraMiddlePoint = (pl: Player, en: Entity) => {
     camera(pl, 0.1, 'linear', cameraPos, { ...middlePoint, y: cameraPos.y })
 }
 
-export const battleCamera = (pl: Player, en: Entity) => {
+export const battleCamera = (pl: Player, en: Actor) => {
     if (!pl) {
         return
     }

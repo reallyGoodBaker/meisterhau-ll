@@ -30,9 +30,9 @@ function replaceInlines(code, name, argstr, body) {
                 continue
             } else if (char === ')') {
                 exprStack--
-                args.push(arg)
-                arg = ''
                 if (exprStack === 0) {
+                    args.push(arg)
+                    arg = ''
                     exprFinish = true
                 }
                 continue

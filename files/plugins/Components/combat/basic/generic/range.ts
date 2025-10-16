@@ -1,17 +1,17 @@
-const { ActorHelper } = require('@utils/actor')
-const { vec2, getAngleFromVector2 } = require('./vec')
+import { Actor, ActorHelper } from '@utils/actor'
+import { vec2, getAngleFromVector2 } from './vec'
 
-const defaultRange = {
+export const defaultRange = {
     angle: 60,
     rotation: -30,
     radius: 2.5
 }
 
-function selectFromSector(pl, range) {
+export function selectFromSector(pl: Actor, range: AttackRange=defaultRange) {
     const {
         angle, rotation, radius
     } = Object.assign({}, defaultRange, range)
-    const pos = pl.pos
+    const pos = ActorHelper.position(pl)
     const startAngle = pl.direction.yaw + rotation + 90
     const endAngle = startAngle + angle
     const RAD = Math.PI / 180
@@ -26,13 +26,13 @@ function selectFromSector(pl, range) {
         ,v2 = vec2(sx, sz, Tx, Tz)
         ,rangeAngle = getAngleFromVector2(v1, v2)
 
-    const result = []
+    const result: Actor[] = []
     const distSqr = radius * radius
 
-    const playersShouldBeSelected = mc.getOnlinePlayers()
+    const playersShouldBeSelected = (mc.getOnlinePlayers() as Actor[])
         .filter(p => p.uniqueId !== pl.uniqueId && p.health > 0 && pl.distanceToSqr(p) <= distSqr)
 
-    playersShouldBeSelected.concat(mc.getEntities(pl.pos, Math.max(1.5, radius - 1.5))).forEach(e => {
+    playersShouldBeSelected.concat(mc.getEntities(pl.pos, Math.max(1.5, radius - 1.5)) as Actor[]).forEach(e => {
         if (e.uniqueId === pl.uniqueId) {
             return
         }
@@ -45,10 +45,5 @@ function selectFromSector(pl, range) {
         }
     })
 
-    // console.log(result)
     return result
-}
-
-module.exports = {
-    selectFromSector, defaultRange,
 }

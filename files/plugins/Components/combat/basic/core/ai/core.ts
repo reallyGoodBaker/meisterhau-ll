@@ -356,6 +356,9 @@ export namespace ai {
     }
 }
 
+export class IsAI extends CustomComponent {}
+const isAI = new IsAI()
+
 function setupAIEntity(en?: Entity | null) {
     if (!en || !ais[en.type] || aiRunning.has(en.uniqueId)) {
         return
@@ -369,7 +372,7 @@ function setupAIEntity(en?: Entity | null) {
 
         if (components) {
             Status.getComponentManager(en.uniqueId).use(comps => {
-                comps.attachComponent(...components)
+                comps.attachComponent(isAI, ...components)
             })
         }
 

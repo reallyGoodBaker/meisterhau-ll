@@ -59,6 +59,12 @@ export interface Vector {
     z: number
 }
 
+export class VectorHelper {
+    static zero(): Vector {
+        return { x: 0, y: 0, z: 0 }
+    }
+}
+
 export interface Rotation {
     yaw: number
     pitch: number

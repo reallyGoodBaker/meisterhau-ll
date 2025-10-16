@@ -976,10 +976,10 @@ function requireSetup () {
 
 var double_dagger = {};
 
-let Optional$1 = class Optional {
+class Optional {
     value;
     static none() {
-        return new Optional(null);
+        return optionalNone;
     }
     static some(value) {
         if (value instanceof Optional) {
@@ -1016,12 +1016,8 @@ let Optional$1 = class Optional {
         }
         return some(this.value);
     }
-};
-
-var optional = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	Optional: Optional$1
-});
+}
+const optionalNone = new Optional(null);
 
 function playAnim$4(pl, anim, nextAnim, time, stopExp, controller) {
     mc.runcmdEx(`/playanimation "${pl.name}" ` + [anim, nextAnim, time, stopExp, controller].filter(x => x).join(' '));
@@ -1034,7 +1030,7 @@ function playAnimCompatibility(actor, anim, nextAnim, time, stopExp, controller)
     playAnimEntity(actor, anim, nextAnim, time, stopExp, controller);
 }
 function entitySelector(en) {
-    const pos = Optional$1.some(en?.pos);
+    const pos = Optional.some(en?.pos);
     return pos.match('@e[c=0]', pos => `@e[c=1,type=${en.type},x=${pos.x},y=${pos.y},z=${pos.z},r=1]`);
 }
 function actorSelector(actor) {
@@ -1063,13 +1059,13 @@ function playParticle(particle, pos) {
 }
 function movable() {
 }
-const DEFAULT_SPEED$2 = 0.1;
-const DEFAULT_POSTURE_SPEED$3 = 0.04;
+const DEFAULT_SPEED$1 = 0.1;
+const DEFAULT_POSTURE_SPEED$2 = 0.04;
 
 var basic = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	DEFAULT_POSTURE_SPEED: DEFAULT_POSTURE_SPEED$3,
-	DEFAULT_SPEED: DEFAULT_SPEED$2,
+	DEFAULT_POSTURE_SPEED: DEFAULT_POSTURE_SPEED$2,
+	DEFAULT_SPEED: DEFAULT_SPEED$1,
 	actorSelector: actorSelector,
 	entitySelector: entitySelector,
 	movable: movable,
@@ -1116,7 +1112,7 @@ const REFLECT_MANAGER = Symbol('reflect-manager');
 const REFLECT_ENTITY = Symbol('reflect-entity');
 class CustomComponent {
     [REFLECT_MANAGER];
-    [REFLECT_ENTITY] = Optional$1.none();
+    [REFLECT_ENTITY] = Optional.none();
     allowTick = false;
     onTick(manager, en) { }
     detach(manager) {
@@ -1126,7 +1122,7 @@ class CustomComponent {
     getManager() {
         return this[REFLECT_MANAGER];
     }
-    getEntity() {
+    getActor() {
         return this[REFLECT_ENTITY];
     }
 }
@@ -1140,12 +1136,12 @@ class ComponentManager {
         this.owner = owner;
     }
     static profilerEnable = false;
-    static global = new ComponentManager(Optional$1.none());
+    static global = new ComponentManager(Optional.none());
     #components = new Map();
     #prependTicks = [];
     #nextTicks = [];
     getComponent(ctor) {
-        return Optional$1.some(this.#components.get(ctor));
+        return Optional.some(this.#components.get(ctor));
     }
     getOwner() {
         return this.owner.match(null, owner => owner);
@@ -1173,7 +1169,7 @@ class ComponentManager {
             component.onAttach(this);
         }
         this.#components.set(ctor, component);
-        return Optional$1.some(component);
+        return Optional.some(component);
     }
     attachComponent(...component) {
         const components = [];
@@ -1185,7 +1181,7 @@ class ComponentManager {
     getOrCreate(ctor, ...args) {
         let component = this.#components.get(ctor);
         if (component) {
-            return Optional$1.some(component);
+            return Optional.some(component);
         }
         return this.#attachComponent(ctor, new ctor(...args));
     }
@@ -1213,19 +1209,19 @@ class ComponentManager {
     }
     handleTicks(en) {
         for (const prependTick of this.#prependTicks) {
-            this.profiler(() => prependTick.call(null, Optional$1.some(en)));
+            this.profiler(() => prependTick.call(null, Optional.some(en)));
             // prependTick.call(null, Optional.some(en))
         }
         this.#prependTicks.length = 0;
         for (const component of this.#components.values()) {
             const { onTick, allowTick } = component;
             if (allowTick && onTick) {
-                this.profiler(() => onTick.call(component, this, Optional$1.some(en)), component);
+                this.profiler(() => onTick.call(component, this, Optional.some(en)), component);
                 // onTick.call(component, this, Optional.some(en))
             }
         }
         for (const afterTick of this.#nextTicks) {
-            this.profiler(() => afterTick.call(null, Optional$1.some(en)));
+            this.profiler(() => afterTick.call(null, Optional.some(en)));
             // afterTick.call(null, Optional.some(en))
         }
         this.#nextTicks.length = 0;
@@ -1356,6 +1352,11 @@ const alerpn = (from, to, progress) => {
     }
     return res;
 };
+class VectorHelper {
+    static zero() {
+        return { x: 0, y: 0, z: 0 };
+    }
+}
 const PiDiv180 = Math.PI / 180.0;
 function yawToVec2(yaw) {
     const rad = yaw * PiDiv180;
@@ -1367,6 +1368,7 @@ function yawToVec2(yaw) {
 
 var math = /*#__PURE__*/Object.freeze({
 	__proto__: null,
+	VectorHelper: VectorHelper,
 	alerpn: alerpn,
 	constrictCalc: constrictCalc$1,
 	lerpn: lerpn,
@@ -1404,7 +1406,7 @@ let Stamina = class Stamina extends CustomComponent {
     maxStamina;
     restorePerTick;
     restoreCooldown;
-    cooldown = Optional$1.none();
+    cooldown = Optional.none();
     prevStamina;
     get stamina() {
         return this.$stamina;
@@ -1422,7 +1424,7 @@ let Stamina = class Stamina extends CustomComponent {
         this.allowTick = true;
     }
     async resetRestore(manager) {
-        this.cooldown = await manager.getOrCreate(Timer, this.restoreCooldown);
+        this.cooldown = manager.getOrCreate(Timer, this.restoreCooldown);
         const cooldown = this.cooldown.unwrap();
         cooldown.rest = this.restoreCooldown;
         this.prevStamina = this.stamina;
@@ -1449,18 +1451,71 @@ Stamina = __decorate([
     Fields(['stamina', 'maxStamina', 'restorePerTick', 'restoreCooldown'])
 ], Stamina);
 
+class ActorHelper {
+    static toEntity(actor) {
+        // @ts-ignore
+        if (actor.xuid) {
+            // @ts-ignore
+            return mc.getEntity(+actor.uniqueId);
+        }
+        return actor;
+    }
+    static toPlayer(actor) {
+        // @ts-ignore
+        if (actor.xuid) {
+            return actor;
+        }
+        // @ts-ignore
+        if (actor.isPlayer()) {
+            // @ts-ignore
+            return actor.toPlayer();
+        }
+    }
+    static getPlayer(info) {
+        return Optional.some(mc.getPlayer(info));
+    }
+    static getEntity(info) {
+        // @ts-ignore
+        return Optional.some(mc.getEntity(+info));
+    }
+    static players = new Set();
+    static isPlayer(actor) {
+        return this.players.has(actor.uniqueId);
+    }
+    static getActor(info) {
+        return this.getPlayer(String(info)).match(() => {
+            if (ActorHelper.players.has(String(info))) {
+                ActorHelper.players.delete(String(info));
+            }
+            return this.getEntity(info);
+        }, actor => {
+            ActorHelper.players.add(String(info));
+            return Optional.some(actor);
+        });
+    }
+    static getComponent(actor, ctor) {
+        return Status.getComponentManager(actor.uniqueId).match(Optional.none(), manager => manager.getComponent(ctor));
+    }
+    static pos(actor) {
+        return Optional.some(actor?.pos);
+    }
+    static position(actor) {
+        return actor?.pos ?? VectorHelper.zero();
+    }
+}
+
 const defaultAcceptableInputs = [
     'onJump', 'onSneak', 'onAttack', 'onUseItem',
     'onChangeSprinting', 'onFeint', 'onDodge',
 ];
-let Status$1 = class Status {
+class Status {
     uniqueId;
     static status = new Map();
     static get(uniqueId) {
         return this.status.get(uniqueId);
     }
     static getComponentManager(uniqueId) {
-        return Optional$1.some(this.get(uniqueId)?.componentManager);
+        return Optional.some(this.get(uniqueId)?.componentManager);
     }
     static getOrCreate(uniqueId) {
         return this.status.get(uniqueId) || new Status(uniqueId);
@@ -1537,9 +1592,7 @@ let Status$1 = class Status {
     constructor(uniqueId) {
         this.uniqueId = uniqueId;
         Status.status.set(uniqueId, this);
-        this.componentManager = new ComponentManager(
-        // @ts-ignore
-        Optional$1.some(mc.getEntity(+uniqueId)));
+        this.componentManager = new ComponentManager(ActorHelper.getActor(uniqueId));
         this.reset();
     }
     reset() {
@@ -1588,13 +1641,7 @@ let Status$1 = class Status {
             this.preInput = null;
         }, 500);
     }
-};
-
-var status = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	Status: Status$1,
-	defaultAcceptableInputs: defaultAcceptableInputs
-});
+}
 
 class Tick extends CustomComponent {
     static tick = 0;
@@ -1710,7 +1757,7 @@ let CameraFading = CameraFading_1 = class CameraFading extends BaseComponent {
                 to = [1.5, 0, 0.5, 0, 0];
                 break;
         }
-        const manager = Status$1.getOrCreate(abuser.uniqueId).componentManager;
+        const manager = Status.getOrCreate(abuser.uniqueId).componentManager;
         manager.beforeTick(() => {
             manager.attachComponent(new CameraFading_1([
                 {
@@ -1859,12 +1906,15 @@ var input;
 })(input || (input = {}));
 
 class Delegate {
-    _listener = Function.prototype;
+    _listener;
     bind(listener) {
         this._listener = listener;
     }
+    unbind() {
+        this._listener = undefined;
+    }
     call(...args) {
-        this._listener(...args);
+        this._listener?.(...args);
     }
 }
 
@@ -1894,14 +1944,14 @@ let Team = class Team extends BaseComponent {
         return new Team_1(name);
     }
     onAttach() {
-        this.getEntity().use(pl => {
+        this.getActor().use(pl => {
             const players = Team_1.players.get(this) || new Set();
             players.add(pl);
             Team_1.players.set(this, players);
         });
     }
     onDetach() {
-        this.getEntity().use(pl => {
+        this.getActor().use(pl => {
             const players = Team_1.players.get(this);
             if (players) {
                 players.delete(pl);
@@ -1958,8 +2008,8 @@ class IncomingAttack extends BaseComponent {
     }
     // 添加此组件时候，通知 AttackSensor
     onAttach() {
-        this.getEntity().use(actor => {
-            Status$1.getComponentManager(actor.uniqueId).use(comps => {
+        this.getActor().use(actor => {
+            Status.getComponentManager(actor.uniqueId).use(comps => {
                 comps.getComponent(AttackSensor).use(sensor => {
                     // 只关注自己
                     if (sensor.onlySelf) {
@@ -1975,7 +2025,7 @@ class IncomingAttack extends BaseComponent {
                             const distance = teammate.distanceTo(actor.pos);
                             if (distance > range)
                                 return;
-                            Status$1.getComponentManager(teammate.uniqueId).use(comps => {
+                            Status.getComponentManager(teammate.uniqueId).use(comps => {
                                 comps.getComponent(AttackSensor).use(sensor => {
                                     sensor.onWillAttack.call(this, actor);
                                 });
@@ -1984,7 +2034,7 @@ class IncomingAttack extends BaseComponent {
                         return;
                     }
                     mc.getEntities(actor.pos, range).forEach(entity => {
-                        Status$1.getComponentManager(entity.uniqueId).use(comps => {
+                        Status.getComponentManager(entity.uniqueId).use(comps => {
                             comps.getComponent(AttackSensor).use(sensor => {
                                 sensor.onWillAttack.call(this, actor);
                             });
@@ -3768,7 +3818,7 @@ lightSaber.tricks = new LightSaberTrick();
 
 var moon_glaive = {};
 
-const { playAnim, playSoundAll, DEFAULT_POSTURE_SPEED: DEFAULT_POSTURE_SPEED$2 } = require$$0;
+const { playAnim, playSoundAll, DEFAULT_POSTURE_SPEED: DEFAULT_POSTURE_SPEED$1 } = require$$0;
 const { DefaultMoves, DefaultTrickModule } = require$$1$2;
 
 class MoonGlaiveTricks extends DefaultTrickModule {
@@ -3885,7 +3935,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
-            ctx.setSpeed(pl, DEFAULT_POSTURE_SPEED$2);
+            ctx.setSpeed(pl, DEFAULT_POSTURE_SPEED$1);
         },
         timeline: {
             4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
@@ -4089,7 +4139,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
-            ctx.setSpeed(pl, DEFAULT_POSTURE_SPEED$2);
+            ctx.setSpeed(pl, DEFAULT_POSTURE_SPEED$1);
         },
         timeline: {
             4: (pl, ctx) => ctx.status.isDodging = false,
@@ -5960,7 +6010,7 @@ var shield_with_sword = /*#__PURE__*/Object.freeze({
 	tricks: tricks$8
 });
 
-var require$$5$1 = /*@__PURE__*/getAugmentedNamespace(shield_with_sword);
+var require$$5 = /*@__PURE__*/getAugmentedNamespace(shield_with_sword);
 
 class UchigatanaMoves extends DefaultMoves$4 {
     constructor() {
@@ -7017,7 +7067,7 @@ var uchigatana = /*#__PURE__*/Object.freeze({
 	tricks: tricks$7
 });
 
-var require$$6$1 = /*@__PURE__*/getAugmentedNamespace(uchigatana);
+var require$$6 = /*@__PURE__*/getAugmentedNamespace(uchigatana);
 
 class DoubleBladeMoves extends DefaultMoves$4 {
     constructor() {
@@ -7962,7 +8012,7 @@ var double_blade = /*#__PURE__*/Object.freeze({
 	tricks: tricks$6
 });
 
-var require$$7$1 = /*@__PURE__*/getAugmentedNamespace(double_blade);
+var require$$7 = /*@__PURE__*/getAugmentedNamespace(double_blade);
 
 class StaffMoves extends DefaultMoves$4 {
     constructor() {
@@ -8083,7 +8133,7 @@ var staff = /*#__PURE__*/Object.freeze({
 	tricks: tricks$5
 });
 
-var require$$8$1 = /*@__PURE__*/getAugmentedNamespace(staff);
+var require$$8 = /*@__PURE__*/getAugmentedNamespace(staff);
 
 class FantasyDoubleTachi extends DefaultMoves$4 {
     constructor() {
@@ -9183,10 +9233,10 @@ var collection = [
     moon_glaive,
     require$$4,
     // require('./tricks/sheathed_katana'),
-    require$$5$1,
-    require$$6$1,
-    require$$7$1,
-    require$$8$1,
+    require$$5,
+    require$$6,
+    require$$7,
+    require$$8,
     require$$9,
     require$$10,
     require$$11,
@@ -9206,7 +9256,7 @@ function checkCompleteness(mod) {
 
 const { remote } = requireSetup();
 
-async function knockback$2(en, x, z, h, v) {
+async function knockback$1(en, x, z, h, v) {
     const m = Math.sqrt(x * x + z * z);
     const nx = x / m;
     const nz = z / m;
@@ -9234,7 +9284,7 @@ async function faceTo(src, t) {
 }
 
 var kinematics$1 = {
-    knockback: knockback$2, impulse, clearVelocity, applyKnockbackAtVelocityDirection, rotate, faceTo
+    knockback: knockback$1, impulse, clearVelocity, applyKnockbackAtVelocityDirection, rotate, faceTo
 };
 
 async function damage(victim, damage, cause, abuser, projectile) {
@@ -9264,7 +9314,7 @@ var func = {
     kinematics, combat,
 };
 
-function vec2$1(x1, y1, x2, y2) {
+function vec2(x1, y1, x2, y2) {
     const dx = x2 - x1,
         dy = y2 - y1;
     return {
@@ -9273,7 +9323,7 @@ function vec2$1(x1, y1, x2, y2) {
     }
 }
 
-function getAngleFromVector2$1(v1, v2) {
+function getAngleFromVector2(v1, v2) {
     const dotProduct = v1.dx * v2.dx + v1.dy * v2.dy;
     const angle = dotProduct / (v1.m * v2.m);
 
@@ -9291,11 +9341,11 @@ function rotate2(v, rad) {
 
 function multiply2(v, factor) {
     const { dx, dy } = v;
-    return vec2$1(0, 0, dx*factor, dy*factor)
+    return vec2(0, 0, dx*factor, dy*factor)
 }
 
 function minus(a, b) {
-    return vec2$1(
+    return vec2(
         0, 0,
         a.dx - b.dx,
         a.dy - b.dy
@@ -9303,7 +9353,7 @@ function minus(a, b) {
 }
 
 function vec2ToAngle(v) {
-    let angle = getAngleFromVector2$1(v, vec2$1(0, 0, 0, -1));
+    let angle = getAngleFromVector2(v, vec2(0, 0, 0, -1));
 
     if (v.dx < 0) {
         angle = -angle;
@@ -9313,106 +9363,52 @@ function vec2ToAngle(v) {
 }
 
 var vec = {
-    vec2: vec2$1, getAngleFromVector2: getAngleFromVector2$1, rotate2, multiply2, minus,
+    vec2, getAngleFromVector2, rotate2, multiply2, minus,
     vec2ToAngle, 
 };
-
-const { vec2, getAngleFromVector2 } = vec;
 
 const defaultRange = {
     angle: 60,
     rotation: -30,
     radius: 2.5
 };
-
-function selectFromSector$1(pl, range) {
-    const {
-        angle, rotation, radius
-    } = Object.assign({}, defaultRange, range);
-    const pos = pl.pos;
+function selectFromSector(pl, range = defaultRange) {
+    const { angle, rotation, radius } = Object.assign({}, defaultRange, range);
+    const pos = ActorHelper.position(pl);
     const startAngle = pl.direction.yaw + rotation + 90;
     const endAngle = startAngle + angle;
     const RAD = Math.PI / 180;
-    const sx = pos.x
-        ,sz = pos.z
-        ,tx = sx + Math.cos(startAngle * RAD) * radius
-        ,tz = sz + Math.sin(startAngle * RAD) * radius
-        ,Tx = sx + Math.cos(endAngle * RAD) * radius
-        ,Tz = sz + Math.sin(endAngle * RAD) * radius;
-
-    const v1 = vec2(sx, sz, tx, tz)
-        ,v2 = vec2(sx, sz, Tx, Tz)
-        ,rangeAngle = getAngleFromVector2(v1, v2);
-
+    const sx = pos.x, sz = pos.z, tx = sx + Math.cos(startAngle * RAD) * radius, tz = sz + Math.sin(startAngle * RAD) * radius, Tx = sx + Math.cos(endAngle * RAD) * radius, Tz = sz + Math.sin(endAngle * RAD) * radius;
+    const v1 = vec.vec2(sx, sz, tx, tz), v2 = vec.vec2(sx, sz, Tx, Tz), rangeAngle = vec.getAngleFromVector2(v1, v2);
     const result = [];
     const distSqr = radius * radius;
-
     const playersShouldBeSelected = mc.getOnlinePlayers()
         .filter(p => p.uniqueId !== pl.uniqueId && p.health > 0 && pl.distanceToSqr(p) <= distSqr);
-
     playersShouldBeSelected.concat(mc.getEntities(pl.pos, Math.max(1.5, radius - 1.5))).forEach(e => {
         if (e.uniqueId === pl.uniqueId) {
-            return
+            return;
         }
-
-        const v = vec2(sx, sz, e.pos.x, e.pos.z);
-        const angle = getAngleFromVector2(v1, v);
-
+        const v = vec.vec2(sx, sz, e.pos.x, e.pos.z);
+        const angle = vec.getAngleFromVector2(v1, v);
         if (!isNaN(angle) && angle <= rangeAngle) {
             result.push(e);
         }
     });
-
-    // console.log(result)
-    return result
+    return result;
 }
 
-var range = {
-    selectFromSector: selectFromSector$1, defaultRange,
-};
-
-const cameraInput$1 = (pl, enabled = true) => {
+const cameraInput = (pl, enabled = true) => {
     mc.runcmdEx(`inputpermission set "${pl.name}" camera ${enabled ? 'enabled' : 'disabled'}`);
-};
-const camera$1 = (pl, easeTime, easeType, pos, lookAt) => {
-    mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} facing ${lookAt.x} ${lookAt.y} ${lookAt.z}`);
 };
 const cameraRot = (pl, easeTime, easeType, pos, rotX, rotY) => {
     mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} rot ${rotX} ${rotY}`);
 };
-function clearCamera$1(pl) {
+function clearCamera(pl) {
     mc.runcmdEx(`camera "${pl.name}" set meisterhau:battle`);
 }
 const ROT = Math.PI * 1;
 const ANGLE = 180 / Math.PI;
-const battleCameraMiddlePoint = (pl, en) => {
-    const plPos = pl.pos;
-    const enPos = en.pos;
-    const initVec = vec.vec2(plPos.x, plPos.z, enPos.x, enPos.z);
-    const dist = initVec.m;
-    const offsetZ = 1.5;
-    const offsetX = 5;
-    const moduloScale = offsetZ / initVec.m;
-    const middlePoint = {
-        x: (plPos.x + enPos.x) / 2,
-        y: (plPos.y + enPos.y) / 2,
-        z: (plPos.z + enPos.z) / 2,
-    };
-    const cameraVec = vec.multiply2(vec.rotate2(initVec, Math.acos(Math.max(0, Math.min(offsetZ / dist, 1))) - ROT), moduloScale);
-    const crossPos = {
-        x: plPos.x - cameraVec.dx,
-        z: plPos.z - cameraVec.dy,
-    };
-    const cameraTargetVec = vec.vec2(crossPos.x, crossPos.z, enPos.x, enPos.z);
-    const cameraPosVec = vec.multiply2(vec.rotate2(cameraTargetVec, Math.PI), offsetX / cameraTargetVec.m);
-    const cameraPos = {
-        x: crossPos.x + cameraPosVec.dx,
-        z: crossPos.z + cameraPosVec.dy,
-        y: plPos.y - 0.4,
-    };
-    camera$1(pl, 0.1, 'linear', cameraPos, { ...middlePoint, y: cameraPos.y });
-};
-const battleCamera$1 = (pl, en) => {
+const battleCamera = (pl, en) => {
     if (!pl) {
         return;
     }
@@ -9434,7 +9430,7 @@ const battleCamera$1 = (pl, en) => {
             z: plPos.z + dyn * 3,
         };
     }
-    const manager = Status$1.getOrCreate(pl.uniqueId).componentManager;
+    const manager = Status.getOrCreate(pl.uniqueId).componentManager;
     const cameraComponentOpt = manager.getComponent(CameraComponent);
     if (cameraComponentOpt.isEmpty()) {
         return;
@@ -9469,23 +9465,13 @@ const battleCamera$1 = (pl, en) => {
     cameraRot(pl, 0.1, 'linear', cameraPos, dPitch, yaw + dYaw);
 };
 
-var camera$2 = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	battleCamera: battleCamera$1,
-	battleCameraMiddlePoint: battleCameraMiddlePoint,
-	cameraInput: cameraInput$1,
-	clearCamera: clearCamera$1
-});
-
-var require$$1 = /*@__PURE__*/getAugmentedNamespace(camera$2);
-
-const { knockback: knockback$1 } = kinematics$1;
+const { knockback } = kinematics$1;
 
 
-const setVelocity$1 = (pl, rotation, h, v) => {
+const setVelocity = (pl, rotation, h, v) => {
     const { yaw } = pl.direction;
     const rad = (yaw + rotation) * Math.PI / 180.0;
-    knockback$1(pl, Math.cos(rad), Math.sin(rad), h, v);
+    knockback(pl, Math.cos(rad), Math.sin(rad), h, v);
 };
 
 function isCollide(pl) {
@@ -9523,1033 +9509,8 @@ function isCollide(pl) {
 }
 
 var kinematic = {
-    setVelocity: setVelocity$1, isCollide
+    setVelocity, isCollide
 };
-
-var require$$5 = /*@__PURE__*/getAugmentedNamespace(status);
-
-let TargetLock$1 = class TargetLock extends BaseComponent {
-    source;
-    target;
-    get sourceIsPlayer() {
-        return !this.source.isEmpty() && ('xuid' in this.source.unwrap());
-    }
-    get targetIsPlayer() {
-        return !this.target.isEmpty() && ('xuid' in this.target.unwrap());
-    }
-    constructor(source = Optional$1.none(), target = Optional$1.none()) {
-        super();
-        this.source = source;
-        this.target = target;
-    }
-    onAttach() {
-        if (this.sourceIsPlayer) {
-            this.source.use(p => {
-                mc.runcmdEx(`/inputpermission set ${p.name} jump disabled`);
-                mc.runcmdEx(`/inputpermission set ${p.name} sneak disabled`);
-            });
-        }
-    }
-    onDetach() {
-        if (this.sourceIsPlayer) {
-            this.source.use(p => {
-                mc.runcmdEx(`/inputpermission set ${p.name} jump enabled`);
-                mc.runcmdEx(`/inputpermission set ${p.name} sneak enabled`);
-            });
-        }
-    }
-};
-
-var targetLock = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	TargetLock: TargetLock$1
-});
-
-var require$$6 = /*@__PURE__*/getAugmentedNamespace(targetLock);
-
-var require$$7 = /*@__PURE__*/getAugmentedNamespace(optional);
-
-var HudComponent_1;
-let HudComponent = class HudComponent extends BaseComponent {
-    static { HudComponent_1 = this; }
-    content;
-    type;
-    fadeIn;
-    fadeOut;
-    stay;
-    static symbols = {
-        sword: '⚔',
-        bodyTech: '✴',
-        trace: '↪',
-    };
-    static id = 0;
-    static create({ content, type, fadeIn, fadeOut, stay } = {}) {
-        return new HudComponent_1(content, type, fadeIn, fadeOut, stay);
-    }
-    id = HudComponent_1.id++;
-    constructor(content = '', type = 4, fadeIn = 10, fadeOut = 10, stay = 50) {
-        super();
-        this.content = content;
-        this.type = type;
-        this.fadeIn = fadeIn;
-        this.fadeOut = fadeOut;
-        this.stay = stay;
-    }
-    onTick(manager, pl) {
-        this.renderHud(pl);
-    }
-    renderHud(pl) {
-        pl.unwrap()
-            .setTitle(this.content, this.type, this.fadeIn, this.fadeOut, this.stay);
-        // .tell(this.content, 5)
-    }
-};
-HudComponent = HudComponent_1 = __decorate([
-    PublicComponent('hud'),
-    Fields(['content', 'type', 'fadeIn', 'fadeOut', 'stay'])
-], HudComponent);
-
-var DamageModifier_1;
-let DamageModifier = class DamageModifier extends BaseComponent {
-    static { DamageModifier_1 = this; }
-    static defaultModifier = 0.2;
-    static defaultModifierOpt = new DamageModifier_1(DamageModifier_1.defaultModifier);
-    static create({ modifier }) {
-        return new DamageModifier_1(modifier);
-    }
-    #modifier = DamageModifier_1.defaultModifier;
-    get modifier() {
-        return this.#modifier;
-    }
-    constructor(modifier = DamageModifier_1.defaultModifier) {
-        super();
-        this.#modifier = modifier;
-    }
-};
-DamageModifier = DamageModifier_1 = __decorate([
-    PublicComponent('damage-modifier'),
-    Fields(['modifier'])
-], DamageModifier);
-
-var HardmodeComponent_1, RaidomodComponent_1;
-let HardmodeComponent = class HardmodeComponent extends BaseComponent {
-    static { HardmodeComponent_1 = this; }
-    static damageModifier = 0.6;
-    static create() {
-        return new HardmodeComponent_1();
-    }
-    shouldRemoveDamageModifier = false;
-    onAttach(manager) {
-        if (manager.getComponent(DamageModifier).isEmpty()) {
-            this.shouldRemoveDamageModifier = true;
-            manager.attachComponent(new DamageModifier(HardmodeComponent_1.damageModifier));
-        }
-    }
-    onDetach(manager) {
-        if (this.shouldRemoveDamageModifier) {
-            manager.detachComponent(DamageModifier);
-        }
-    }
-};
-HardmodeComponent = HardmodeComponent_1 = __decorate([
-    PublicComponent('hardmode')
-], HardmodeComponent);
-let RaidomodComponent = class RaidomodComponent extends BaseComponent {
-    static { RaidomodComponent_1 = this; }
-    static damageModifier = 2;
-    static create() {
-        return new RaidomodComponent_1();
-    }
-    shouldRemoveDamageModifier = false;
-    timer = Optional$1.none();
-    stage = 0;
-    async onAttach(manager) {
-        if (manager.getComponent(DamageModifier).isEmpty()) {
-            this.shouldRemoveDamageModifier = true;
-            manager.attachComponent(new DamageModifier(RaidomodComponent_1.damageModifier));
-        }
-        const [timer] = await manager.attachComponent(new Timer(100));
-        this.timer = timer;
-    }
-    // onTick(manager: ComponentManager, en: Optional<Player>): void {
-    //     const timer = this.timer.unwrap()
-    //     if (timer.rest % 19 !== 0) {
-    //         return
-    //     }
-    //     en.use(pl => {
-    //         const status = Status.get(pl.uniqueId)
-    //         if (timer.done) {
-    //             timer.reset()
-    //             this.stage++
-    //         }
-    //         const countdown = Math.floor(timer.rest / 20)
-    //         if (this.stage === 0) {
-    //             if (status.status === 'raido') {
-    //                 pl.setTitle('你输了! 不要提前按下!')
-    //                 manager.detachComponent(RaidomodComponent)
-    //                 return
-    //             }
-    //             pl.setTitle(countdown + '', 2, 1)
-    //             pl.setTitle(`准备进入居合模式 (倒计时结束按住蹲下)`, 3, 1)
-    //         }
-    //         if (this.stage === 1) {
-    //             if (countdown <= 4 && status.status !== 'raido') {
-    //                 pl.setTitle('你输了! 请及时按下居合模式按钮!')
-    //                 manager.detachComponent(RaidomodComponent)
-    //                 return
-    //             }
-    //             if (status.preInput === 'onUseItem') {
-    //                 pl.setTitle('你输了! 不要提前按下攻击按钮!')
-    //                 manager.detachComponent(RaidomodComponent)
-    //                 return
-    //             }
-    //             pl.setTitle(countdown + '', 2, 1)
-    //             pl.setTitle('准备决斗! (倒计时结束按下使用物品按键)', 3, 1)
-    //         }
-    //         if (this.stage === 3) {
-    //             manager.detachComponent(RaidomodComponent)
-    //         }
-    //     })
-    // }
-    onDetach(manager) {
-        if (this.shouldRemoveDamageModifier) {
-            manager.detachComponent(DamageModifier);
-        }
-    }
-};
-RaidomodComponent = RaidomodComponent_1 = __decorate([
-    PublicComponent('raidomode')
-], RaidomodComponent);
-cmd('raidomode', '居合模式', CommandPermission.Everyone).setup(register => {
-    register('<pl:player> enable', (cmd, ori, out, res) => {
-        res.pl.forEach(pl => {
-            Status$1.getOrCreate(pl.uniqueId).componentManager.attachComponent(new RaidomodComponent());
-        });
-    });
-    register('<pl:player> disable', (cmd, ori, out, res) => {
-        res.pl.forEach(pl => {
-            Status$1.getOrCreate(pl.uniqueId).componentManager.detachComponent(RaidomodComponent);
-        });
-    });
-});
-
-var StatusHud_1;
-let StatusHud$1 = StatusHud_1 = class StatusHud extends HudComponent {
-    constructor(content = '', type = 4, fadeIn = 0, fadeOut = 0, stay = 2) {
-        super(content, type, fadeIn, fadeOut, stay);
-    }
-    static create({ content, type, fadeIn, fadeOut, stay } = {}) {
-        return new StatusHud_1(content, type, fadeIn, fadeOut, stay);
-    }
-    targetLock = Optional$1.none();
-    targetStamina = Optional$1.none();
-    stamina = Optional$1.none();
-    onAttach(manager) {
-        if ((this.targetLock = manager.getComponent(TargetLock$1)).isEmpty()) {
-            return true;
-        }
-        if ((this.stamina = manager.getComponent(Stamina)).isEmpty()) {
-            return true;
-        }
-        manager.beforeTick(() => {
-            const lock = this.targetLock.unwrap();
-            if (!lock.targetIsPlayer) {
-                return;
-            }
-            const target = lock.target.unwrap();
-            this.targetStamina = Status$1.getOrCreate(target.uniqueId).componentManager.getComponent(Stamina);
-        });
-    }
-    renderStatus() {
-        if (this.targetLock.isEmpty()) {
-            return;
-        }
-        const lock = this.targetLock.unwrap();
-        const target = lock.target.unwrap();
-        const isPlayer = lock.targetIsPlayer;
-        const { health, maxHealth, name } = target;
-        const contents = [];
-        const shortName = name.length > 13 ? name.substring(0, 13) + '…' : name;
-        contents.push(shortName);
-        contents.push(`§${health / maxHealth < 0.3 ? '4' : 'a'}❤ ${isPlayer
-            ? this.intProgress(health * 5, maxHealth * 5)
-            : this.intProgress(health, maxHealth)}§r`);
-        if (!this.targetStamina.isEmpty()) {
-            const { stamina, maxStamina } = this.targetStamina.unwrap();
-            contents.push(`§${stamina / maxStamina < 0.3 ? '6' : 'f'}⚡⚡ ${this.intProgress(stamina, maxStamina)}§r`);
-        }
-        else {
-            contents.push('');
-        }
-        if (!this.stamina.isEmpty()) {
-            const { stamina, maxStamina } = this.stamina.unwrap();
-            const repeatCount = Math.round(stamina / maxStamina * 20);
-            const progressbar = '▮'.repeat(repeatCount) + '§0' + '▮'.repeat(20 - repeatCount);
-            contents.push(`§${stamina / maxStamina < 0.3 ? '3' : '9'}${progressbar}§r`);
-        }
-        this.content = contents.join('\n');
-    }
-    intProgress(val, total) {
-        return String(Math.round(val)).padStart(3, ' ') + '/'
-            + String(Math.round(total)).padEnd(3, ' ');
-    }
-    onTick(manager, pl) {
-        if (!manager.has(HardmodeComponent)) {
-            this.renderStatus();
-            this.renderHud(pl);
-        }
-    }
-};
-StatusHud$1 = StatusHud_1 = __decorate([
-    PublicComponent('status-hud'),
-    Fields(['content', 'type', 'fadeIn', 'fadeOut', 'stay'])
-], StatusHud$1);
-
-var statushud = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	get StatusHud () { return StatusHud$1; }
-});
-
-var require$$8 = /*@__PURE__*/getAugmentedNamespace(statushud);
-
-const { selectFromSector } = range;
-const { battleCamera, cameraInput, clearCamera } = require$$1;
-const { knockback } = kinematics$1;
-const { setVelocity } = kinematic;
-const { DEFAULT_POSTURE_SPEED: DEFAULT_POSTURE_SPEED$1, DEFAULT_SPEED: DEFAULT_SPEED$1 } = require$$0;
-const { Status } = require$$5;
-const { TargetLock } = require$$6;
-const { Optional } = require$$7;
-const { StatusHud } = require$$8;
-
-const locks = new Map();
-const cooldowns = new Set();
-
-function lockTarget(src, target) {
-    const pl = mc.getPlayer(src);
-
-    if (cooldowns.has(pl.uniqueId)) {
-        return
-    }
-
-    if (target) {
-        // cameraInput(pl, false)
-        locks.set(src, target);
-        pl.setMovementSpeed(DEFAULT_POSTURE_SPEED$1);
-        Status.getOrCreate(src).componentManager.attachComponent(
-            new TargetLock(Optional.some(pl), Optional.some(target)),
-            new StatusHud(),
-        );
-    } else {
-        clearCamera(pl);
-    }
-}
-
-function releaseTarget(src) {
-    const pl = mc.getPlayer(src);
-    const manager = Status.getOrCreate(src).componentManager;
-    manager.detachComponent(StatusHud);
-    manager.detachComponent(TargetLock);
-    cameraInput(pl);
-    clearCamera(pl);
-    locks.delete(src);
-    pl.setMovementSpeed(DEFAULT_SPEED$1);
-    cooldowns.add(pl.uniqueId);
-    setTimeout(() => cooldowns.delete(pl.uniqueId), 500);
-}
-
-function toggleLock(src) {
-    if (locks.has(src)) {
-        releaseTarget(src);
-        return null
-    }
-
-    const pl = mc.getPlayer(src);
-    const target = getClosedEntity(pl);
-
-    if (!target) {
-        return false
-    }
-
-    lockTarget(src, target);
-    return target
-}
-
-function getAngle(a, b) {
-    a = a.pos;
-    b = b.pos;
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    const dz = b.z - a.z;
-    const angleXZ = Math.atan2(dz, dx) * 180 / Math.PI;
-    const angleY = Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)) * 180 / Math.PI;
-    return [angleXZ - 90, -angleY]
-}
-
-/**
- * @param {import('../core/inputSimulator').Actor} actor 
- * @param {import('../core/inputSimulator').Actor} target 
- * @returns 
- */
-function lookAt(actor, target) {
-    if (!target) {
-        return releaseTarget(actor)
-    }
-
-    const [ yaw, pitch ] = getAngle(actor, target);
-
-    actor.teleport(actor.feetPos, new DirectionAngle(0, yaw));
-
-    // setRotation(actor, yaw, pitch)
-
-    // const bs = new BinaryStream()
-    // bs.writeVarInt64(+pl.uniqueId)
-    // bs.writeVec3(pl.pos)
-    // bs.writeVec3(new FloatPos(
-    //     pitch, yaw, yaw,
-    //     pl.pos.dimid
-    // ))
-    // bs.writeByte(3)
-    // bs.writeBool(true)
-    // bs.writeFloat(0)
-    // bs.writeVarInt64(0)
-    // const pack = bs.createPacket(0x13)
-
-    // mc.getOnlinePlayers().forEach(pl => {
-    //     pl.sendPacket(pack)
-    // })
-    // mc.runcmdEx(`execute as "${pl.name}" at @s run tp @s ~~~ ${yaw} 0 false`)
-    // faceTo(actor, target)
-}
-
-function getTargetFromLock(actor) {
-    return Status.getComponentManager(actor.uniqueId).match(
-        Optional.none(),
-        comps => comps.getComponent(TargetLock).match(
-            Optional.none(),
-            lock => lock.target
-        )
-    )
-}
-
-function lookAtTarget(pl) {
-    // const en = locks.get(pl.uniqueId)
-    // if (!en) {
-    //     return
-    // }
-    const targetEntity = getTargetFromLock(pl);
-
-    if (targetEntity.isEmpty()) {
-        return
-    }
-
-    lookAt(pl, targetEntity.unwrap());
-}
-
-function hasLock$1(pl) {
-    // return locks.has(pl.uniqueId)
-    return !getTargetFromLock(pl).isEmpty()
-}
-
-function adsorbTo(pl, en, max, offset=2) {
-    const dist = en.distanceTo(pl.pos) - offset;
-
-    knockback(
-        pl,
-        en.pos.x - pl.pos.x,
-        en.pos.z - pl.pos.z,
-        Math.min(dist, max),
-        0
-    );
-}
-
-function adsorbToTarget(pl, max, offset) {
-    const en = getTargetFromLock(pl);
-    if (en.isEmpty()) {
-        return
-    }
-
-    adsorbTo(pl, en.unwrap(), max, offset);
-}
-
-function adsorbOrSetVelocity(pl, max, velocityRot=90, offset=1.5) {
-    const en = getTargetFromLock(pl);
-    if (!en.isEmpty()) {
-        // lookAtTarget(pl)
-        adsorbToTarget(pl, max, offset);
-        return
-    }
-
-    setVelocity(pl, velocityRot, max, -1);
-}
-
-function distanceToTarget(pl) {
-    // const en = locks.get(pl.uniqueId)
-    const en = getTargetFromLock(pl);
-
-    if (en.isEmpty()) {
-        return Infinity
-    }
-
-    return en.unwrap().distanceTo(pl.pos)
-}
-
-const onTick = em => () => {
-    locks.forEach(async (t, s) => {
-        const _s = mc.getPlayer(s);
-
-        if (t.health) {
-            battleCamera(_s, t);
-        } else if (_s) {
-            em.emitNone('onReleaseLock', _s, _s.getHand().type);
-            releaseTarget(s);
-        }
-    });
-};
-
-const ignoreEntities = [
-    'minecraft:item',
-    'minecraft:xp_orb',
-];
-
-function getClosedEntity(en) {
-    let closed = null
-        ,dist = Infinity;
-
-    selectFromSector(en, {
-        radius: 10,
-        angle: 46,
-        rotate: -23,
-    }).forEach(e => {
-        if (ignoreEntities.includes(e.type)) {
-            return
-        }
-
-        if (!closed) {
-            return closed = e
-        }
-
-        const _dist = e.distanceTo(en.pos);
-
-        if (_dist < dist) {
-            dist = _dist;
-            closed = e;
-        }
-    });
-
-    return closed
-}
-
-var lock = {
-    onTick, getClosedEntity, lockTarget, releaseTarget, toggleLock,
-    lookAt, lookAtTarget, distanceToTarget, hasLock: hasLock$1, adsorbToTarget,
-    adsorbTo, adsorbOrSetVelocity
-};
-
-const { DEFAULT_POSTURE_SPEED, DEFAULT_SPEED } = require$$0;
-const { hasLock } = lock;
-
-function movement(pl, enabled=true) {
-    if (!enabled) {
-        pl.setMovementSpeed(0);
-        return
-    }
-
-    pl.setMovementSpeed(
-        hasLock(pl) ? DEFAULT_POSTURE_SPEED : DEFAULT_SPEED
-    );
-}
-
-function movementInput(pl, enabled=true) {
-    mc.runcmdEx(`inputpermission set "${pl.name}" lateral_movement ${enabled ? 'enabled' : 'disabled'}`);
-}
-
-function camera(pl, enabled=true) {
-    mc.runcmdEx(`inputpermission set "${pl.name}" camera ${enabled ? 'enabled' : 'disabled'}`);
-}
-
-var generic = {
-    movement, camera, movementInput
-};
-
-const tasks = new Map();
-
-class Task {
-    constructor(uniqueId) {
-        if (!tasks.get(uniqueId)) {
-            tasks.set(uniqueId, this);
-        }
-    }
-
-    /**
-     * @param {string} uniqueId 
-     * @returns {Task}
-     */
-    static get(uniqueId) {
-        return tasks.get(uniqueId) || new Task(uniqueId)
-    }
-
-    _queue = []
-    _currentTimeStamp = null
-
-    /**
-     * @param {{handler: () => any, timeout: number}[]} taskList 
-     */
-    queueList(taskList) {
-        this._queue = this._queue.concat(taskList);
-        return this
-    }
-
-    queue(handler, timeout=5) {
-        this._queue.push({handler, timeout});
-        return this
-    }
-
-    skip() {
-        if (!this._currentTimeStamp) {
-            return
-        }
-
-        clearInterval(this._currentTimeStamp);
-        this._currentTimeStamp = null;
-    }
-
-    #next = () => {
-        const _task = this._queue.splice(0, 1)[0];
-
-        if (!_task) {
-            return
-        }
-
-        const { handler, timeout } = _task;
-
-        this._currentTimeStamp = setTimeout(() => {
-            handler.call(null);
-            this.#next();
-        }, timeout);
-    }
-
-    cancel() {
-        this.skip();
-        this._queue = [];
-    }
-
-    run() {
-        this.#next();
-    }
-}
-
-var task = {
-    Task
-};
-
-function registerCommand() {
-    cmd('components', '管理组件', 1).setup(register => {
-        register('add <pl:player> <name:string> [args:json]', (_, __, output, args) => {
-            const targets = args.pl;
-            const jsonArgs = args.args;
-            const componentCtor = getComponentCtor(args.name);
-            if (!componentCtor || !('create' in componentCtor)) {
-                return output.error('无效的组件名');
-            }
-            try {
-                const _args = jsonArgs ? JSON.parse(jsonArgs) : undefined;
-                const component = componentCtor.create(_args);
-                for (const target of targets) {
-                    Status$1.getOrCreate(target.uniqueId).componentManager.attachComponent(component);
-                }
-                output.success(`已为 ${targets.length} 个玩家添加组件 '${args.name}'`);
-            }
-            catch (_) {
-                output.error('无效的组件参数');
-            }
-        });
-        register('remove <pl:player> <name:string>', (_, __, output, args) => {
-            const targets = args.pl;
-            const componentCtor = getComponentCtor(args.name);
-            if (!componentCtor || !componentCtor.create) {
-                return output.error('无效的组件名');
-            }
-            for (const terget of targets) {
-                Status$1.get(terget.uniqueId)?.componentManager.detachComponent(componentCtor);
-            }
-            output.success(`已为 ${targets.length} 个玩家移除组件 '${args.name}'`);
-        });
-        register('list <pl:player> [detail:bool]', async (_, ori, output, args) => {
-            const pl = args.pl;
-            const useDetail = args.detail ?? false;
-            for (const p of pl) {
-                const status = Status$1.get(p.uniqueId);
-                if (!status) {
-                    continue;
-                }
-                const componentManager = status.componentManager;
-                const componentNames = Array.from(componentManager.getComponentKeys())
-                    .map(ctor => {
-                    const id = getComponentId(ctor);
-                    if (useDetail) {
-                        return id ? `${ctor.name} (${id})` : ctor.name;
-                    }
-                    return id;
-                })
-                    .filter(id => id);
-                if (componentNames.length === 0) {
-                    output.success('玩家没有组件');
-                    continue;
-                }
-                output.success(`玩家 ${p.name} 拥有组件:\n${componentNames.join('\n')}`);
-            }
-        });
-        register('check <pl:player> <name:string>', (_, __, output, args) => {
-            const componentCtor = getComponentCtor(args.name);
-            if (!componentCtor) {
-                return output.error('无效的组件名');
-            }
-            for (const pl of args.pl) {
-                const status = Status$1.get(pl.uniqueId);
-                if (!status) {
-                    continue;
-                }
-                const component = status.componentManager.getComponent(componentCtor);
-                if (component.isEmpty()) {
-                    output.success(`玩家 '${pl.name}' 没有此组件`);
-                    continue;
-                }
-                const checkableEntries = getFieldEntries(component.unwrap());
-                if (!checkableEntries) {
-                    output.success('此组件没有检查项');
-                    continue;
-                }
-                const entries = [];
-                for (const [k, v] of checkableEntries.muts) {
-                    entries.push(`  ${k} = ${JSON.stringify(v)}`);
-                }
-                for (const [k, v] of checkableEntries.lets) {
-                    entries.push(`  §9${k}§r = ${JSON.stringify(v)}`);
-                }
-                if (entries.length === 0) {
-                    output.success('此组件没有检查项');
-                }
-                else {
-                    output.success(`${pl.name} 的组件 ${args.name}:\n${entries.join('\n')}`);
-                }
-            }
-        });
-        register('update <pl:player> <name:string> <args:json>', (_, __, output, args) => {
-            const { pl, args: jsonArgs, name } = args;
-            const componentCtor = getComponentCtor(name);
-            if (!componentCtor) {
-                return output.error('无效的组件名');
-            }
-            for (const target of pl) {
-                const manager = Status$1.get(target.uniqueId)?.componentManager;
-                if (!manager) {
-                    continue;
-                }
-                manager.update(componentCtor, component => {
-                    const _args = jsonArgs ? JSON.parse(jsonArgs) : undefined;
-                    const { muts } = getFieldEntries(component) || {};
-                    if (muts) {
-                        muts.forEach(([k]) => {
-                            const newVal = _args[k];
-                            if (newVal) {
-                                component[k] = newVal;
-                            }
-                        });
-                    }
-                });
-            }
-        });
-    });
-    cmd('tools', '实用工具', CommandPermission.Everyone)
-        .setup(register => {
-        register('weapons basic', (_, ori, out) => {
-            const pl = ori.player;
-            const ootachi = mc.newItem('weapon:ootachi', 1);
-            const shieldSword = mc.newItem('weapon:shield_with_sword', 1);
-            pl.giveItem(ootachi);
-            pl.giveItem(shieldSword);
-            out.success('已给予玩家大太刀, 盾剑');
-        });
-    });
-}
-
-class Scheduler extends BaseComponent {
-    period;
-    offset = 0;
-    update = false;
-    constructor(period = 1) {
-        super();
-        this.period = period;
-        this.allowTick = true;
-    }
-    onAttach() {
-        this.offset = Tick.tick;
-    }
-    onTick() {
-        this.update = (Tick.tick - this.offset) % this.period === 0;
-    }
-}
-
-var HealthModifier_1;
-let HealthModifier = HealthModifier_1 = class HealthModifier extends RequireComponents([Scheduler, 20], Timer) {
-    delta;
-    duration;
-    scheduler;
-    timer;
-    deltaTick;
-    atom = 0;
-    remain;
-    constructor(delta, duration) {
-        super();
-        this.delta = delta;
-        this.duration = duration;
-        this.remain = delta;
-        this.deltaTick = delta / duration * 20;
-        this.scheduler = this.getComponent(Scheduler);
-        this.timer = this.getComponent(Timer);
-        this.timer.rest = duration;
-    }
-    onTick(manager, pl) {
-        if (!this.scheduler.update) {
-            return;
-        }
-        const player = pl.unwrap();
-        if (this.timer.done) {
-            player.setHealth(player.health + this.atom);
-            manager.beforeTick(() => {
-                this.scheduler.detach(manager);
-                this.detach(manager);
-            });
-            return;
-        }
-        this.remain += this.deltaTick;
-        if (this.deltaTick < 0) {
-            if (this.atom <= -1) {
-                this.atom += 1;
-                player.setHealth(player.health - 1);
-            }
-            else {
-                this.atom += this.deltaTick;
-            }
-        }
-        else {
-            if (this.atom >= 1) {
-                this.atom -= 1;
-                player.setHealth(player.health + 1);
-            }
-            else {
-                this.atom += this.deltaTick;
-            }
-        }
-    }
-    static create({ delta, duration }) {
-        return new HealthModifier_1(delta, duration);
-    }
-};
-HealthModifier = HealthModifier_1 = __decorate([
-    PublicComponent('health-modifier'),
-    Fields(['remain'], ['delta', 'duration'])
-], HealthModifier);
-
-var MatchRules;
-(function (MatchRules) {
-    MatchRules[MatchRules["BestOf"] = 0] = "BestOf";
-    MatchRules[MatchRules["FixedRounds"] = 1] = "FixedRounds";
-})(MatchRules || (MatchRules = {}));
-class Match {
-    team1;
-    team2;
-    rule;
-    rounds;
-    wins;
-    currentRound;
-    static matches = new Map();
-    constructor(team1, team2, rule = MatchRules.BestOf, rounds = 5, wins = [0, 0], currentRound = 1) {
-        this.team1 = team1;
-        this.team2 = team2;
-        this.rule = rule;
-        this.rounds = rounds;
-        this.wins = wins;
-        this.currentRound = currentRound;
-        Match.matches.set(team1, this);
-        Match.matches.set(team2, this);
-    }
-    static findMatch(team) {
-        return Match.matches.get(team);
-    }
-    destroy() {
-        Match.matches.delete(this.team1);
-        Match.matches.delete(this.team2);
-    }
-    lead() {
-        return Math.max(...this.wins);
-    }
-    finished() {
-        if (this.rule === MatchRules.BestOf) {
-            return this.lead() > Math.floor(this.rounds / 2);
-        }
-        if (this.rule === MatchRules.FixedRounds) {
-            return this.currentRound < this.rounds;
-        }
-        return false;
-    }
-    win(team) {
-        const won = this.team1 === team ? 0 :
-            this.team2 === team ? 1 : -1;
-        if (won === -1) {
-            return;
-        }
-        this.wins[won]++;
-        this.currentRound++;
-    }
-    lose(team) {
-        const won = this.team1 === team ? 1 :
-            this.team2 === team ? 0 : -1;
-        if (won === -1) {
-            return;
-        }
-        this.wins[won]++;
-        this.currentRound++;
-    }
-    result() {
-        if (this.wins[0] > this.wins[1]) {
-            return [this.team1, this.team2];
-        }
-        return [this.team2, this.team1];
-    }
-}
-mc.listen('onPlayerDie', pl => {
-    Status$1.getOrCreate(pl.uniqueId).componentManager.getComponent(Team).use(team => {
-        const match = Match.findMatch(team);
-        if (!match) {
-            return;
-        }
-        match.lose(team);
-        const [winner, loser] = match.result();
-        const winningPlayers = Team.players.get(winner);
-        const losingPlayers = Team.players.get(loser);
-        if (match.finished()) {
-            if (winningPlayers) {
-                winningPlayers.forEach(pl => {
-                    pl.setTitle(`获胜`);
-                });
-            }
-            if (losingPlayers) {
-                losingPlayers.forEach(pl => {
-                    pl.setTitle(`失败`);
-                });
-            }
-            return;
-        }
-        if (winningPlayers) {
-            winningPlayers.forEach(pl => {
-                pl.setTitle(`第 ${match.currentRound} 回合`);
-                pl.setTitle(`共 ${match.rounds} 回合`);
-            });
-        }
-        if (losingPlayers) {
-            losingPlayers.forEach(pl => {
-                pl.setTitle(`第 ${match.currentRound} 回合`);
-                pl.setTitle(`共 ${match.rounds} 回合`);
-            });
-        }
-    });
-});
-cmd('match', '开启对局', CommandPermission.Everyone).setup(register => {
-    register('<pl:player> best_of <rounds:int>', (cmd, ori, out, res) => {
-        const source = ori.player;
-        const { pl, rounds } = res;
-        const sourceTeamOpt = Status$1.getOrCreate(source.uniqueId).componentManager.getComponent(Team);
-        const targetTeamOpt = Status$1.getOrCreate(pl[0].uniqueId).componentManager.getComponent(Team);
-        if (sourceTeamOpt.isEmpty() || targetTeamOpt.isEmpty()) {
-            return out.error('必须在不同伍中才能进行对局');
-        }
-        const sourceTeam = sourceTeamOpt.unwrap();
-        const targetTeam = targetTeamOpt.unwrap();
-        if (Match.findMatch(sourceTeam)) {
-            return out.error('你已经在进行对局了');
-        }
-        if (Match.findMatch(targetTeam)) {
-            return out.error('对方已经在进行对局了');
-        }
-        new Match(sourceTeam, targetTeam, MatchRules.BestOf, rounds);
-    });
-});
-
-requireEvents();
-
-class EventInputStream {
-    static #ends = new Map()
-    /**@type {(em: EventEmitter) => EventInputStream}*/
-    static get(end) {
-        return this.#ends.get(end) || new EventInputStream(end)
-    }
-
-    #filters = new Set()
-    /**@type {EventEmitter}*/
-    #end = null
-
-    constructor(end) {
-        this.setEnd(end);
-    }
-
-    /**
-     * @param {(val: {type: string; args: any[]}) => boolean} filter 
-     */
-    addFilter(filter) {
-        this.#filters.add(filter);
-    }
-
-    /**
-     * @param {(val: {type: string; args: any[]}) => boolean} filter 
-     */
-    removeFilter(filter) {
-        this.#filters.delete(filter);
-    }
-
-    /**
-     * @param {{type: string; args: any[]}} input 
-     */
-    #filter(input) {
-        let nextVal = input;
-        for (const filter of this.#filters) {
-            try {
-                if ((nextVal = filter.call(null, nextVal)) === false) {
-                    return false
-                }
-            } catch (_) {
-                return false
-            }
-        }
-
-        return true
-    }
-
-    setEnd(end) {
-        this.#end = end;
-        EventInputStream.#ends.set(end, this);
-    }
-
-    put(type, args) {
-        if (!this.#filter({ type, args })) {
-            return
-        }
-
-        if (!this.#end) {
-            return
-        }
-
-        this.#end.emitNone(type, ...args);
-    }
-}
-
-var eventStream = {
-    EventInputStream
-};
-
-const em = eventCenter({ enableWatcher: true });
-const es = eventStream.EventInputStream.get(em);
 
 class SimpleAbortController {
     _aborted = false;
@@ -10622,7 +9583,7 @@ class MeisterhauAI {
     constructor(actor, strategy = 'default') {
         this.actor = actor;
         this.strategy = strategy;
-        this.status = Status$1.getOrCreate(actor.unwrap().uniqueId);
+        this.status = Status.getOrCreate(actor.unwrap().uniqueId);
         this.abortController = new SimpleAbortController();
         this.setStrategy(strategy);
     }
@@ -10824,18 +9785,21 @@ var ai;
     }
     ai.isRegistered = isRegistered;
 })(ai || (ai = {}));
+class IsAI extends CustomComponent {
+}
+const isAI = new IsAI();
 function setupAIEntity(en) {
     if (!en || !ais[en.type] || aiRunning.has(en.uniqueId)) {
         return;
     }
     const { ai: ctor, components, setup } = ais[en.type];
     if (ctor) {
-        const ai = Reflect.construct(ctor, [Optional$1.some(en)]);
+        const ai = Reflect.construct(ctor, [Optional.some(en)]);
         aiRunning.set(en.uniqueId, ai);
         ai.start();
         if (components) {
-            Status$1.getComponentManager(en.uniqueId).use(comps => {
-                comps.attachComponent(...components);
+            Status.getComponentManager(en.uniqueId).use(comps => {
+                comps.attachComponent(isAI, ...components);
             });
         }
         setup?.(ai, en);
@@ -10847,6 +9811,942 @@ async function listenEntitiyWithAi() {
         mc.getAllEntities().forEach(setupAIEntity);
     }, 5000);
 }
+
+class TargetLock extends BaseComponent {
+    source;
+    target;
+    sourceIsPlayer = false;
+    targetIsPlayer = false;
+    targetIsAI = false;
+    get targetIsActor() {
+        return this.targetIsAI || this.targetIsPlayer;
+    }
+    constructor(source = Optional.none(), target = Optional.none()) {
+        super();
+        this.source = source;
+        this.target = target;
+        this.resetAttrs();
+    }
+    resetAttrs() {
+        this.sourceIsPlayer = !this.source.isEmpty() && ('xuid' in this.source.unwrap());
+        this.targetIsPlayer = !this.target.isEmpty() && ('xuid' in this.target.unwrap());
+        this.targetIsAI = this.target.match(false, t => Status.getComponentManager(t.uniqueId).match(false, m => !m.getComponent(IsAI).isEmpty()));
+    }
+    onAttach() {
+        if (this.sourceIsPlayer) {
+            this.source.use(p => {
+                mc.runcmdEx(`/inputpermission set ${p.name} jump disabled`);
+                mc.runcmdEx(`/inputpermission set ${p.name} sneak disabled`);
+            });
+        }
+    }
+    selectTarget(target) {
+        this.target = Optional.some(target);
+        this.resetAttrs();
+    }
+    onLoseLock = new Delegate();
+    onDetach() {
+        if (this.sourceIsPlayer) {
+            this.source.use(p => {
+                this.onLoseLock.call();
+                mc.runcmdEx(`/inputpermission set ${p.name} jump enabled`);
+                mc.runcmdEx(`/inputpermission set ${p.name} sneak enabled`);
+            });
+        }
+    }
+}
+
+var HudComponent_1;
+let HudComponent = class HudComponent extends BaseComponent {
+    static { HudComponent_1 = this; }
+    content;
+    type;
+    fadeIn;
+    fadeOut;
+    stay;
+    static symbols = {
+        sword: '⚔',
+        bodyTech: '✴',
+        trace: '↪',
+    };
+    static id = 0;
+    static create({ content, type, fadeIn, fadeOut, stay } = {}) {
+        return new HudComponent_1(content, type, fadeIn, fadeOut, stay);
+    }
+    id = HudComponent_1.id++;
+    constructor(content = '', type = 4, fadeIn = 10, fadeOut = 10, stay = 50) {
+        super();
+        this.content = content;
+        this.type = type;
+        this.fadeIn = fadeIn;
+        this.fadeOut = fadeOut;
+        this.stay = stay;
+    }
+    onTick(manager, pl) {
+        this.renderHud(pl);
+    }
+    renderHud(pl) {
+        pl.unwrap()
+            .setTitle(this.content, this.type, this.fadeIn, this.fadeOut, this.stay);
+        // .tell(this.content, 5)
+    }
+};
+HudComponent = HudComponent_1 = __decorate([
+    PublicComponent('hud'),
+    Fields(['content', 'type', 'fadeIn', 'fadeOut', 'stay'])
+], HudComponent);
+
+var DamageModifier_1;
+let DamageModifier = class DamageModifier extends BaseComponent {
+    static { DamageModifier_1 = this; }
+    static defaultModifier = 0.2;
+    static defaultModifierOpt = new DamageModifier_1(DamageModifier_1.defaultModifier);
+    static create({ modifier }) {
+        return new DamageModifier_1(modifier);
+    }
+    #modifier = DamageModifier_1.defaultModifier;
+    get modifier() {
+        return this.#modifier;
+    }
+    constructor(modifier = DamageModifier_1.defaultModifier) {
+        super();
+        this.#modifier = modifier;
+    }
+};
+DamageModifier = DamageModifier_1 = __decorate([
+    PublicComponent('damage-modifier'),
+    Fields(['modifier'])
+], DamageModifier);
+
+var HardmodeComponent_1, RaidomodComponent_1;
+let HardmodeComponent = class HardmodeComponent extends BaseComponent {
+    static { HardmodeComponent_1 = this; }
+    static damageModifier = 0.6;
+    static create() {
+        return new HardmodeComponent_1();
+    }
+    shouldRemoveDamageModifier = false;
+    onAttach(manager) {
+        if (manager.getComponent(DamageModifier).isEmpty()) {
+            this.shouldRemoveDamageModifier = true;
+            manager.attachComponent(new DamageModifier(HardmodeComponent_1.damageModifier));
+        }
+    }
+    onDetach(manager) {
+        if (this.shouldRemoveDamageModifier) {
+            manager.detachComponent(DamageModifier);
+        }
+    }
+};
+HardmodeComponent = HardmodeComponent_1 = __decorate([
+    PublicComponent('hardmode')
+], HardmodeComponent);
+let RaidomodComponent = class RaidomodComponent extends BaseComponent {
+    static { RaidomodComponent_1 = this; }
+    static damageModifier = 2;
+    static create() {
+        return new RaidomodComponent_1();
+    }
+    shouldRemoveDamageModifier = false;
+    timer = Optional.none();
+    stage = 0;
+    async onAttach(manager) {
+        if (manager.getComponent(DamageModifier).isEmpty()) {
+            this.shouldRemoveDamageModifier = true;
+            manager.attachComponent(new DamageModifier(RaidomodComponent_1.damageModifier));
+        }
+        const [timer] = await manager.attachComponent(new Timer(100));
+        this.timer = timer;
+    }
+    // onTick(manager: ComponentManager, en: Optional<Player>): void {
+    //     const timer = this.timer.unwrap()
+    //     if (timer.rest % 19 !== 0) {
+    //         return
+    //     }
+    //     en.use(pl => {
+    //         const status = Status.get(pl.uniqueId)
+    //         if (timer.done) {
+    //             timer.reset()
+    //             this.stage++
+    //         }
+    //         const countdown = Math.floor(timer.rest / 20)
+    //         if (this.stage === 0) {
+    //             if (status.status === 'raido') {
+    //                 pl.setTitle('你输了! 不要提前按下!')
+    //                 manager.detachComponent(RaidomodComponent)
+    //                 return
+    //             }
+    //             pl.setTitle(countdown + '', 2, 1)
+    //             pl.setTitle(`准备进入居合模式 (倒计时结束按住蹲下)`, 3, 1)
+    //         }
+    //         if (this.stage === 1) {
+    //             if (countdown <= 4 && status.status !== 'raido') {
+    //                 pl.setTitle('你输了! 请及时按下居合模式按钮!')
+    //                 manager.detachComponent(RaidomodComponent)
+    //                 return
+    //             }
+    //             if (status.preInput === 'onUseItem') {
+    //                 pl.setTitle('你输了! 不要提前按下攻击按钮!')
+    //                 manager.detachComponent(RaidomodComponent)
+    //                 return
+    //             }
+    //             pl.setTitle(countdown + '', 2, 1)
+    //             pl.setTitle('准备决斗! (倒计时结束按下使用物品按键)', 3, 1)
+    //         }
+    //         if (this.stage === 3) {
+    //             manager.detachComponent(RaidomodComponent)
+    //         }
+    //     })
+    // }
+    onDetach(manager) {
+        if (this.shouldRemoveDamageModifier) {
+            manager.detachComponent(DamageModifier);
+        }
+    }
+};
+RaidomodComponent = RaidomodComponent_1 = __decorate([
+    PublicComponent('raidomode')
+], RaidomodComponent);
+cmd('raidomode', '居合模式', CommandPermission.Everyone).setup(register => {
+    register('<pl:player> enable', (cmd, ori, out, res) => {
+        res.pl.forEach(pl => {
+            Status.getOrCreate(pl.uniqueId).componentManager.attachComponent(new RaidomodComponent());
+        });
+    });
+    register('<pl:player> disable', (cmd, ori, out, res) => {
+        res.pl.forEach(pl => {
+            Status.getOrCreate(pl.uniqueId).componentManager.detachComponent(RaidomodComponent);
+        });
+    });
+});
+
+var StatusHud_1;
+let StatusHud = StatusHud_1 = class StatusHud extends HudComponent {
+    constructor(content = '', type = 4, fadeIn = 0, fadeOut = 0, stay = 2) {
+        super(content, type, fadeIn, fadeOut, stay);
+        this.allowTick = true;
+    }
+    static create({ content, type, fadeIn, fadeOut, stay } = {}) {
+        return new StatusHud_1(content, type, fadeIn, fadeOut, stay);
+    }
+    targetLock = Optional.none();
+    targetStamina = Optional.none();
+    stamina = Optional.none();
+    onAttach(manager) {
+        this.targetLock = manager.getComponent(TargetLock);
+        this.stamina = manager.getComponent(Stamina);
+        this.targetLock.use(lock => lock.target.use(target => Status.getComponentManager(target.uniqueId).use(comps => {
+            this.targetStamina = comps.getComponent(Stamina);
+            lock.onLoseLock.bind(() => {
+                this.targetStamina = Optional.none();
+                lock.onLoseLock.unbind();
+            });
+        })));
+    }
+    renderStatus() {
+        if (this.targetLock.isEmpty())
+            return;
+        const lock = this.targetLock.unwrap();
+        const target = lock.target.unwrap();
+        const isActor = lock.targetIsActor;
+        const { health, maxHealth, name } = target;
+        const contents = [];
+        if (ActorHelper.isPlayer(target)) {
+            contents.push(name.length > 13 ? name.substring(0, 13) + '…' : name);
+        }
+        contents.push(`§${health / maxHealth < 0.3 ? '4' : 'a'}❤ ${isActor
+            ? this.intProgress(health * 5, maxHealth * 5)
+            : this.intProgress(health, maxHealth)}§r`);
+        if (!this.targetStamina.isEmpty()) {
+            const { stamina, maxStamina } = this.targetStamina.unwrap();
+            contents.push(`§${stamina / maxStamina < 0.3 ? '6' : 'f'}⚡⚡ ${this.intProgress(stamina, maxStamina)}§r`);
+        }
+        else {
+            contents.push('');
+        }
+        if (!this.stamina.isEmpty()) {
+            const { stamina, maxStamina } = this.stamina.unwrap();
+            const repeatCount = Math.round(stamina / maxStamina * 20);
+            const progressbar = '▮'.repeat(repeatCount) + '§0' + '▮'.repeat(20 - repeatCount);
+            contents.push(`§${stamina / maxStamina < 0.3 ? '3' : '9'}${progressbar}§r`);
+        }
+        this.content = contents.join('\n');
+    }
+    intProgress(val, total) {
+        return String(Math.round(val)).padStart(3, ' ') + '/'
+            + String(Math.round(total)).padEnd(3, ' ');
+    }
+    onTick(manager, pl) {
+        if (!manager.has(HardmodeComponent)) {
+            this.renderStatus();
+            this.renderHud(pl);
+        }
+    }
+};
+StatusHud = StatusHud_1 = __decorate([
+    PublicComponent('status-hud'),
+    Fields(['content', 'type', 'fadeIn', 'fadeOut', 'stay'])
+], StatusHud);
+
+const locks = new Map();
+const cooldowns = new Set();
+function lockTarget(src, target) {
+    const pl = mc.getPlayer(src);
+    if (cooldowns.has(pl.uniqueId)) {
+        return;
+    }
+    if (target) {
+        locks.set(src, target);
+        pl.setMovementSpeed(DEFAULT_POSTURE_SPEED$2);
+        Status.getOrCreate(src).componentManager.attachComponent(new TargetLock(Optional.some(pl), Optional.some(target)), new StatusHud());
+    }
+    else {
+        clearCamera(pl);
+    }
+}
+function releaseTarget(src) {
+    const pl = mc.getPlayer(src);
+    const manager = Status.getOrCreate(src).componentManager;
+    manager.detachComponent(StatusHud);
+    manager.detachComponent(TargetLock);
+    cameraInput(pl);
+    clearCamera(pl);
+    locks.delete(src);
+    pl.setMovementSpeed(DEFAULT_SPEED$1);
+    cooldowns.add(pl.uniqueId);
+    setTimeout(() => cooldowns.delete(pl.uniqueId), 500);
+}
+function toggleLock(src) {
+    if (locks.has(src)) {
+        releaseTarget(src);
+        return null;
+    }
+    const pl = mc.getPlayer(src);
+    const target = getClosedEntity(pl);
+    if (!target) {
+        return false;
+    }
+    lockTarget(src, target);
+    return target;
+}
+function getAngle(actor, actor2) {
+    const a = actor.pos;
+    const b = actor2.pos;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const dz = b.z - a.z;
+    const angleXZ = Math.atan2(dz, dx) * 180 / Math.PI;
+    const angleY = Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)) * 180 / Math.PI;
+    return [angleXZ - 90, -angleY];
+}
+function lookAt(actor, target) {
+    if (!target) {
+        return releaseTarget(actor.uniqueId);
+    }
+    const [yaw, pitch] = getAngle(actor, target);
+    actor.teleport(actor.feetPos, new DirectionAngle(0, yaw));
+}
+function getTargetFromLock(actor) {
+    return Status.getComponentManager(actor.uniqueId).match(Optional.none(), comps => comps.getComponent(TargetLock).match(Optional.none(), lock => lock.target));
+}
+function lookAtTarget(pl) {
+    const targetEntity = getTargetFromLock(pl);
+    if (targetEntity.isEmpty()) {
+        return;
+    }
+    lookAt(pl, targetEntity.unwrap());
+}
+function hasLock$1(pl) {
+    return !getTargetFromLock(pl).isEmpty();
+}
+function adsorbTo(pl, en, max, offset = 2) {
+    const dist = en.distanceTo(pl.pos) - offset;
+    kinematics$1.knockback(pl, en.pos.x - pl.pos.x, en.pos.z - pl.pos.z, Math.min(dist, max), 0);
+}
+function adsorbToTarget(pl, max, offset) {
+    const en = getTargetFromLock(pl);
+    if (en.isEmpty()) {
+        return;
+    }
+    adsorbTo(pl, en.unwrap(), max, offset);
+}
+function adsorbOrSetVelocity(pl, max, velocityRot = 90, offset = 1.5) {
+    const en = getTargetFromLock(pl);
+    if (!en.isEmpty()) {
+        adsorbToTarget(pl, max, offset);
+        return;
+    }
+    kinematic.setVelocity(pl, velocityRot, max, -1);
+}
+function distanceToTarget(pl) {
+    const en = getTargetFromLock(pl);
+    if (en.isEmpty()) {
+        return Infinity;
+    }
+    return en.unwrap().distanceTo(pl.pos);
+}
+const onTick = (em) => () => {
+    locks.forEach(async (t, s) => {
+        const _s = mc.getPlayer(s);
+        if (t.health) {
+            battleCamera(_s, t);
+        }
+        else if (_s) {
+            em.emitNone('onReleaseLock', _s, _s.getHand().type);
+            releaseTarget(s);
+        }
+    });
+};
+const ignoreEntities = [
+    'minecraft:item',
+    'minecraft:xp_orb',
+];
+function getClosedEntity(en) {
+    let closed = null, dist = Infinity;
+    selectFromSector(en, {
+        radius: 10,
+        angle: 46,
+        rotation: -23,
+    }).forEach(e => {
+        if (ignoreEntities.includes(e.type)) {
+            return;
+        }
+        if (!closed) {
+            return closed = e;
+        }
+        const _dist = e.distanceTo(en.pos);
+        if (_dist < dist) {
+            dist = _dist;
+            closed = e;
+        }
+    });
+    return closed;
+}
+
+var lock = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	adsorbOrSetVelocity: adsorbOrSetVelocity,
+	adsorbTo: adsorbTo,
+	adsorbToTarget: adsorbToTarget,
+	distanceToTarget: distanceToTarget,
+	getAngle: getAngle,
+	getClosedEntity: getClosedEntity,
+	getTargetFromLock: getTargetFromLock,
+	hasLock: hasLock$1,
+	lockTarget: lockTarget,
+	lookAt: lookAt,
+	lookAtTarget: lookAtTarget,
+	onTick: onTick,
+	releaseTarget: releaseTarget,
+	toggleLock: toggleLock
+});
+
+var require$$1 = /*@__PURE__*/getAugmentedNamespace(lock);
+
+const { DEFAULT_POSTURE_SPEED, DEFAULT_SPEED } = require$$0;
+const { hasLock } = require$$1;
+
+function movement(pl, enabled=true) {
+    if (!enabled) {
+        pl.setMovementSpeed(0);
+        return
+    }
+
+    pl.setMovementSpeed(
+        hasLock(pl) ? DEFAULT_POSTURE_SPEED : DEFAULT_SPEED
+    );
+}
+
+function movementInput(pl, enabled=true) {
+    mc.runcmdEx(`inputpermission set "${pl.name}" lateral_movement ${enabled ? 'enabled' : 'disabled'}`);
+}
+
+function camera(pl, enabled=true) {
+    mc.runcmdEx(`inputpermission set "${pl.name}" camera ${enabled ? 'enabled' : 'disabled'}`);
+}
+
+var generic = {
+    movement, camera, movementInput
+};
+
+const tasks = new Map();
+
+class Task {
+    constructor(uniqueId) {
+        if (!tasks.get(uniqueId)) {
+            tasks.set(uniqueId, this);
+        }
+    }
+
+    /**
+     * @param {string} uniqueId 
+     * @returns {Task}
+     */
+    static get(uniqueId) {
+        return tasks.get(uniqueId) || new Task(uniqueId)
+    }
+
+    _queue = []
+    _currentTimeStamp = null
+
+    /**
+     * @param {{handler: () => any, timeout: number}[]} taskList 
+     */
+    queueList(taskList) {
+        this._queue = this._queue.concat(taskList);
+        return this
+    }
+
+    queue(handler, timeout=5) {
+        this._queue.push({handler, timeout});
+        return this
+    }
+
+    skip() {
+        if (!this._currentTimeStamp) {
+            return
+        }
+
+        clearInterval(this._currentTimeStamp);
+        this._currentTimeStamp = null;
+    }
+
+    #next = () => {
+        const _task = this._queue.splice(0, 1)[0];
+
+        if (!_task) {
+            return
+        }
+
+        const { handler, timeout } = _task;
+
+        this._currentTimeStamp = setTimeout(() => {
+            handler.call(null);
+            this.#next();
+        }, timeout);
+    }
+
+    cancel() {
+        this.skip();
+        this._queue = [];
+    }
+
+    run() {
+        this.#next();
+    }
+}
+
+var task = {
+    Task
+};
+
+function registerCommand() {
+    cmd('components', '管理组件', 1).setup(register => {
+        register('add <pl:player> <name:string> [args:json]', (_, __, output, args) => {
+            const targets = args.pl;
+            const jsonArgs = args.args;
+            const componentCtor = getComponentCtor(args.name);
+            if (!componentCtor || !('create' in componentCtor)) {
+                return output.error('无效的组件名');
+            }
+            try {
+                const _args = jsonArgs ? JSON.parse(jsonArgs) : undefined;
+                const component = componentCtor.create(_args);
+                for (const target of targets) {
+                    Status.getOrCreate(target.uniqueId).componentManager.attachComponent(component);
+                }
+                output.success(`已为 ${targets.length} 个玩家添加组件 '${args.name}'`);
+            }
+            catch (_) {
+                output.error('无效的组件参数');
+            }
+        });
+        register('remove <pl:player> <name:string>', (_, __, output, args) => {
+            const targets = args.pl;
+            const componentCtor = getComponentCtor(args.name);
+            if (!componentCtor || !componentCtor.create) {
+                return output.error('无效的组件名');
+            }
+            for (const terget of targets) {
+                Status.get(terget.uniqueId)?.componentManager.detachComponent(componentCtor);
+            }
+            output.success(`已为 ${targets.length} 个玩家移除组件 '${args.name}'`);
+        });
+        register('list <pl:player> [detail:bool]', async (_, ori, output, args) => {
+            const pl = args.pl;
+            const useDetail = args.detail ?? false;
+            for (const p of pl) {
+                const status = Status.get(p.uniqueId);
+                if (!status) {
+                    continue;
+                }
+                const componentManager = status.componentManager;
+                const componentNames = Array.from(componentManager.getComponentKeys())
+                    .map(ctor => {
+                    const id = getComponentId(ctor);
+                    if (useDetail) {
+                        return id ? `${ctor.name} (${id})` : ctor.name;
+                    }
+                    return id;
+                })
+                    .filter(id => id);
+                if (componentNames.length === 0) {
+                    output.success('玩家没有组件');
+                    continue;
+                }
+                output.success(`玩家 ${p.name} 拥有组件:\n${componentNames.join('\n')}`);
+            }
+        });
+        register('check <pl:player> <name:string>', (_, __, output, args) => {
+            const componentCtor = getComponentCtor(args.name);
+            if (!componentCtor) {
+                return output.error('无效的组件名');
+            }
+            for (const pl of args.pl) {
+                const status = Status.get(pl.uniqueId);
+                if (!status) {
+                    continue;
+                }
+                const component = status.componentManager.getComponent(componentCtor);
+                if (component.isEmpty()) {
+                    output.success(`玩家 '${pl.name}' 没有此组件`);
+                    continue;
+                }
+                const checkableEntries = getFieldEntries(component.unwrap());
+                if (!checkableEntries) {
+                    output.success('此组件没有检查项');
+                    continue;
+                }
+                const entries = [];
+                for (const [k, v] of checkableEntries.muts) {
+                    entries.push(`  ${k} = ${JSON.stringify(v)}`);
+                }
+                for (const [k, v] of checkableEntries.lets) {
+                    entries.push(`  §9${k}§r = ${JSON.stringify(v)}`);
+                }
+                if (entries.length === 0) {
+                    output.success('此组件没有检查项');
+                }
+                else {
+                    output.success(`${pl.name} 的组件 ${args.name}:\n${entries.join('\n')}`);
+                }
+            }
+        });
+        register('update <pl:player> <name:string> <args:json>', (_, __, output, args) => {
+            const { pl, args: jsonArgs, name } = args;
+            const componentCtor = getComponentCtor(name);
+            if (!componentCtor) {
+                return output.error('无效的组件名');
+            }
+            for (const target of pl) {
+                const manager = Status.get(target.uniqueId)?.componentManager;
+                if (!manager) {
+                    continue;
+                }
+                manager.update(componentCtor, component => {
+                    const _args = jsonArgs ? JSON.parse(jsonArgs) : undefined;
+                    const { muts } = getFieldEntries(component) || {};
+                    if (muts) {
+                        muts.forEach(([k]) => {
+                            const newVal = _args[k];
+                            if (newVal) {
+                                component[k] = newVal;
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    });
+    cmd('tools', '实用工具', CommandPermission.Everyone)
+        .setup(register => {
+        register('weapons basic', (_, ori, out) => {
+            const pl = ori.player;
+            const ootachi = mc.newItem('weapon:ootachi', 1);
+            const shieldSword = mc.newItem('weapon:shield_with_sword', 1);
+            pl.giveItem(ootachi);
+            pl.giveItem(shieldSword);
+            out.success('已给予玩家大太刀, 盾剑');
+        });
+    });
+}
+
+class Scheduler extends BaseComponent {
+    period;
+    offset = 0;
+    update = false;
+    constructor(period = 1) {
+        super();
+        this.period = period;
+        this.allowTick = true;
+    }
+    onAttach() {
+        this.offset = Tick.tick;
+    }
+    onTick() {
+        this.update = (Tick.tick - this.offset) % this.period === 0;
+    }
+}
+
+var HealthModifier_1;
+let HealthModifier = HealthModifier_1 = class HealthModifier extends RequireComponents([Scheduler, 20], Timer) {
+    delta;
+    duration;
+    scheduler;
+    timer;
+    deltaTick;
+    atom = 0;
+    remain;
+    constructor(delta, duration) {
+        super();
+        this.delta = delta;
+        this.duration = duration;
+        this.remain = delta;
+        this.deltaTick = delta / duration * 20;
+        this.scheduler = this.getComponent(Scheduler);
+        this.timer = this.getComponent(Timer);
+        this.timer.rest = duration;
+    }
+    onTick(manager, pl) {
+        if (!this.scheduler.update) {
+            return;
+        }
+        const player = pl.unwrap();
+        if (this.timer.done) {
+            player.setHealth(player.health + this.atom);
+            manager.beforeTick(() => {
+                this.scheduler.detach(manager);
+                this.detach(manager);
+            });
+            return;
+        }
+        this.remain += this.deltaTick;
+        if (this.deltaTick < 0) {
+            if (this.atom <= -1) {
+                this.atom += 1;
+                player.setHealth(player.health - 1);
+            }
+            else {
+                this.atom += this.deltaTick;
+            }
+        }
+        else {
+            if (this.atom >= 1) {
+                this.atom -= 1;
+                player.setHealth(player.health + 1);
+            }
+            else {
+                this.atom += this.deltaTick;
+            }
+        }
+    }
+    static create({ delta, duration }) {
+        return new HealthModifier_1(delta, duration);
+    }
+};
+HealthModifier = HealthModifier_1 = __decorate([
+    PublicComponent('health-modifier'),
+    Fields(['remain'], ['delta', 'duration'])
+], HealthModifier);
+
+var MatchRules;
+(function (MatchRules) {
+    MatchRules[MatchRules["BestOf"] = 0] = "BestOf";
+    MatchRules[MatchRules["FixedRounds"] = 1] = "FixedRounds";
+})(MatchRules || (MatchRules = {}));
+class Match {
+    team1;
+    team2;
+    rule;
+    rounds;
+    wins;
+    currentRound;
+    static matches = new Map();
+    constructor(team1, team2, rule = MatchRules.BestOf, rounds = 5, wins = [0, 0], currentRound = 1) {
+        this.team1 = team1;
+        this.team2 = team2;
+        this.rule = rule;
+        this.rounds = rounds;
+        this.wins = wins;
+        this.currentRound = currentRound;
+        Match.matches.set(team1, this);
+        Match.matches.set(team2, this);
+    }
+    static findMatch(team) {
+        return Match.matches.get(team);
+    }
+    destroy() {
+        Match.matches.delete(this.team1);
+        Match.matches.delete(this.team2);
+    }
+    lead() {
+        return Math.max(...this.wins);
+    }
+    finished() {
+        if (this.rule === MatchRules.BestOf) {
+            return this.lead() > Math.floor(this.rounds / 2);
+        }
+        if (this.rule === MatchRules.FixedRounds) {
+            return this.currentRound < this.rounds;
+        }
+        return false;
+    }
+    win(team) {
+        const won = this.team1 === team ? 0 :
+            this.team2 === team ? 1 : -1;
+        if (won === -1) {
+            return;
+        }
+        this.wins[won]++;
+        this.currentRound++;
+    }
+    lose(team) {
+        const won = this.team1 === team ? 1 :
+            this.team2 === team ? 0 : -1;
+        if (won === -1) {
+            return;
+        }
+        this.wins[won]++;
+        this.currentRound++;
+    }
+    result() {
+        if (this.wins[0] > this.wins[1]) {
+            return [this.team1, this.team2];
+        }
+        return [this.team2, this.team1];
+    }
+}
+mc.listen('onPlayerDie', pl => {
+    Status.getOrCreate(pl.uniqueId).componentManager.getComponent(Team).use(team => {
+        const match = Match.findMatch(team);
+        if (!match) {
+            return;
+        }
+        match.lose(team);
+        const [winner, loser] = match.result();
+        const winningPlayers = Team.players.get(winner);
+        const losingPlayers = Team.players.get(loser);
+        if (match.finished()) {
+            if (winningPlayers) {
+                winningPlayers.forEach(pl => {
+                    pl.setTitle(`获胜`);
+                });
+            }
+            if (losingPlayers) {
+                losingPlayers.forEach(pl => {
+                    pl.setTitle(`失败`);
+                });
+            }
+            return;
+        }
+        if (winningPlayers) {
+            winningPlayers.forEach(pl => {
+                pl.setTitle(`第 ${match.currentRound} 回合`);
+                pl.setTitle(`共 ${match.rounds} 回合`);
+            });
+        }
+        if (losingPlayers) {
+            losingPlayers.forEach(pl => {
+                pl.setTitle(`第 ${match.currentRound} 回合`);
+                pl.setTitle(`共 ${match.rounds} 回合`);
+            });
+        }
+    });
+});
+cmd('match', '开启对局', CommandPermission.Everyone).setup(register => {
+    register('<pl:player> best_of <rounds:int>', (cmd, ori, out, res) => {
+        const source = ori.player;
+        const { pl, rounds } = res;
+        const sourceTeamOpt = Status.getOrCreate(source.uniqueId).componentManager.getComponent(Team);
+        const targetTeamOpt = Status.getOrCreate(pl[0].uniqueId).componentManager.getComponent(Team);
+        if (sourceTeamOpt.isEmpty() || targetTeamOpt.isEmpty()) {
+            return out.error('必须在不同伍中才能进行对局');
+        }
+        const sourceTeam = sourceTeamOpt.unwrap();
+        const targetTeam = targetTeamOpt.unwrap();
+        if (Match.findMatch(sourceTeam)) {
+            return out.error('你已经在进行对局了');
+        }
+        if (Match.findMatch(targetTeam)) {
+            return out.error('对方已经在进行对局了');
+        }
+        new Match(sourceTeam, targetTeam, MatchRules.BestOf, rounds);
+    });
+});
+
+requireEvents();
+
+class EventInputStream {
+    static #ends = new Map()
+    /**@type {(em: EventEmitter) => EventInputStream}*/
+    static get(end) {
+        return this.#ends.get(end) || new EventInputStream(end)
+    }
+
+    #filters = new Set()
+    /**@type {EventEmitter}*/
+    #end = null
+
+    constructor(end) {
+        this.setEnd(end);
+    }
+
+    /**
+     * @param {(val: {type: string; args: any[]}) => boolean} filter 
+     */
+    addFilter(filter) {
+        this.#filters.add(filter);
+    }
+
+    /**
+     * @param {(val: {type: string; args: any[]}) => boolean} filter 
+     */
+    removeFilter(filter) {
+        this.#filters.delete(filter);
+    }
+
+    /**
+     * @param {{type: string; args: any[]}} input 
+     */
+    #filter(input) {
+        let nextVal = input;
+        for (const filter of this.#filters) {
+            try {
+                if ((nextVal = filter.call(null, nextVal)) === false) {
+                    return false
+                }
+            } catch (_) {
+                return false
+            }
+        }
+
+        return true
+    }
+
+    setEnd(end) {
+        this.#end = end;
+        EventInputStream.#ends.set(end, this);
+    }
+
+    put(type, args) {
+        if (!this.#filter({ type, args })) {
+            return
+        }
+
+        if (!this.#end) {
+            return
+        }
+
+        this.#end.emitNone(type, ...args);
+    }
+}
+
+var eventStream = {
+    EventInputStream
+};
+
+const em = eventCenter({ enableWatcher: true });
+const es = eventStream.EventInputStream.get(em);
 
 // 不继承自DefaultMoves也可以，但是会少很多预设的状态
 class OrnateTwoHanderMoves extends DefaultMoves$4 {
@@ -11148,7 +11048,7 @@ class AiHearing extends CustomComponent {
         const { pos, volumn, sourceActor, channel } = source;
         const spreadRadius = Math.min(32, Math.max(volumn * 16, 16));
         const entities = mc.getEntities(pos, spreadRadius);
-        entities.forEach(entity => Optional$1.some(Status$1.get(entity.uniqueId)?.componentManager.getComponent(AiHearing)).use(hearing => {
+        entities.forEach(entity => Optional.some(Status.get(entity.uniqueId)?.componentManager.getComponent(AiHearing)).use(hearing => {
             const dist = sourceActor.match(Infinity, actor => actor.distanceTo(entity));
             const minVolumn = hearing.conf.minVolumn ?? 0;
             const maxVolumn = hearing.conf.maxVolumn ?? 2;
@@ -11190,7 +11090,7 @@ class AiVision extends CustomComponent {
     seenActors = new Set();
     onTick() {
         if ((Tick.tick - this.#attachTime) % this.config.interval === 0) {
-            this.getEntity().use(actor => {
+            this.getActor().use(actor => {
                 const actorsInSight = new Set(AiVision.getActorsInSight(this.config, actor));
                 const unseenActors = this.seenActors.difference(actorsInSight);
                 const seenActors = actorsInSight.difference(this.seenActors);
@@ -11210,20 +11110,20 @@ class EasyAISensing {
         return this.ai.status.componentManager;
     }
     hasTarget() {
-        const target = this.components.getComponent(TargetLock$1);
+        const target = this.components.getComponent(TargetLock);
         if (target.isEmpty()) {
             return false;
         }
         return target.match(false, targetLock => targetLock.target.match(false, target => target.health > 0));
     }
     getTarget() {
-        return this.components.getComponent(TargetLock$1).match(Optional$1.none(), targetLock => targetLock.target);
+        return this.components.getComponent(TargetLock).match(Optional.none(), targetLock => targetLock.target);
     }
     targetInRange(range) {
         return this.getTarget().match(false, actor => this.ai.actor.match(false, aiActor => actor.distanceTo(aiActor) <= range));
     }
     targetStatus() {
-        return this.getTarget().match(Optional$1.none(), actor => Optional$1.some(Status$1.getOrCreate(actor.uniqueId)));
+        return this.getTarget().match(Optional.none(), actor => Optional.some(Status.getOrCreate(actor.uniqueId)));
     }
     hasTargetInputed(...inputTypes) {
         return this.targetStatus().match(false, status => {
@@ -11361,13 +11261,13 @@ class InputSimulator {
 class AiActions extends InputSimulator {
     setTarget(target) {
         this.actor.use(actor => {
-            const targetLock = new TargetLock$1(this.actor, Optional$1.some(target));
-            const components = Status$1.get(actor.uniqueId)?.componentManager;
+            const targetLock = new TargetLock(this.actor, Optional.some(target));
+            const components = Status.get(actor.uniqueId)?.componentManager;
             components?.attachComponent(targetLock);
         });
     }
     removeTarget() {
-        this.actor.use(actor => Status$1.get(actor.uniqueId)?.componentManager?.detachComponent(TargetLock$1));
+        this.actor.use(actor => Status.get(actor.uniqueId)?.componentManager?.detachComponent(TargetLock));
     }
     lookAtNearest(radius = 10, family = ['mob']) {
         this.actor.use(actor => {
@@ -11681,7 +11581,7 @@ class KokorowatariMoves extends DefaultMoves$4 {
                 rotation: 15
             }).forEach(en => {
                 ctx.attack(actor, en, {
-                    damage: 18,
+                    damage: 14,
                     direction: 'middle',
                     knockback: 1,
                 });
@@ -11703,6 +11603,9 @@ class KokorowatariMoves extends DefaultMoves$4 {
                     preInput: 'onAttack'
                 }
             },
+            blocked: {
+                onBlocked: null
+            },
         }
     };
     attack3 = {
@@ -11720,7 +11623,7 @@ class KokorowatariMoves extends DefaultMoves$4 {
                 rotation: 15
             }).forEach(en => {
                 ctx.attack(actor, en, {
-                    damage: 16,
+                    damage: 25,
                     direction: 'vertical',
                     permeable: true,
                     knockback: 2,
@@ -11995,7 +11898,7 @@ function setupAiCommands() {
                 const registration = ai.getRegistration(e.type);
                 if (!registration)
                     continue;
-                transition(e, registration.tricks, Status$1.getOrCreate(e.uniqueId), event_name, Function.prototype, [e]);
+                transition(e, registration.tricks, Status.getOrCreate(e.uniqueId), event_name, Function.prototype, [e]);
             }
         });
         register('<en:entity> perform attack', (_, ori, out, args) => {
@@ -12053,23 +11956,87 @@ function setupAiCommands() {
     });
 }
 
+var r;
+(function (r) {
+    function score(name, objective) {
+        return {
+            score: {
+                name,
+                objective,
+            },
+        };
+    }
+    r.score = score;
+    function translate(key) {
+        return {
+            translate: key,
+        };
+    }
+    r.translate = translate;
+    r.t = translate;
+    function selector(expr) {
+        return {
+            selector: expr,
+        };
+    }
+    r.selector = selector;
+})(r || (r = {}));
+function rawtext(seqs, ...args) {
+    const rawtextArr = [];
+    for (let i = 0; i < seqs.length; i++) {
+        rawtextArr.push({
+            text: seqs[i],
+        });
+        const val = args[i];
+        if (val) {
+            if (typeof val === 'string') {
+                rawtextArr.push({
+                    text: val,
+                });
+                continue;
+            }
+            rawtextArr.push(args[i]);
+        }
+    }
+    return JSON.stringify({
+        rawtext: rawtextArr,
+    });
+}
+
 const lang = {
     left: '左侧',
     right: '右侧',
     middle: '刺击',
     vertical: '上侧',
 };
-class HurtDisplay extends BaseComponent {
-    constructor() {
-        super();
-        this.allowTick = true;
+class HurtDisplay extends CustomComponent {
+    static notifyHurt(instigator, victim, damageOpt) {
+        ActorHelper.getComponent(instigator, HurtDisplay).use(display => display.onDamage(instigator, victim, damageOpt));
+        ActorHelper.getComponent(victim, HurtDisplay).use(display => display.onHurt(instigator, victim, damageOpt));
     }
-    onTick(manager) {
-        manager.getComponent(IncomingAttack).use(incoming => {
-            const dirText = lang[incoming.direction];
-            const text = `受到来自 ${dirText} 的 ${incoming.damage} 点伤害`;
-            this.getEntity().use(player => player.tell(text));
-        });
+    onHurt(instigator, victim, damageOpt) {
+        if (!ActorHelper.isPlayer(victim)) {
+            return;
+        }
+        const targetLock = this.getManager().getComponent(TargetLock);
+        if (targetLock.isEmpty()) {
+            return;
+        }
+        const self = victim;
+        const damage = targetLock.unwrap().targetIsActor ? damageOpt.damage * 5 : damageOpt.damage;
+        self.sendText(rawtext `受到来自 ${r.t(instigator.name)} 的 ${lang[damageOpt.direction]} §c${damage.toFixed(1)}§r 点伤害`, 9);
+    }
+    onDamage(instigator, victim, damageOpt) {
+        if (!ActorHelper.isPlayer(instigator)) {
+            return;
+        }
+        const targetLock = this.getManager().getComponent(TargetLock);
+        if (targetLock.isEmpty()) {
+            return;
+        }
+        const self = instigator;
+        const damage = targetLock.unwrap().targetIsActor ? damageOpt.damage * 5 : damageOpt.damage;
+        self.sendText(rawtext `对 ${r.t(victim.name)} 造成了 ${lang[damageOpt.direction]} §a${damage.toFixed(1)}§r 点伤害`, 9);
     }
 }
 
@@ -12077,13 +12044,12 @@ function registerHudCommands() {
     cmd('display', '切换 HUD 显示状态').setup(register => {
         register('hurt [enabled:bool]', (cmd, ori, out, res) => {
             const { enabled } = res;
+            const id = ori.player?.uniqueId ?? ori.entity?.uniqueId;
             if (enabled) {
-                const id = ori.player?.uniqueId ?? ori.entity?.uniqueId;
-                Status$1.getOrCreate(id).componentManager.attachComponent(new HurtDisplay());
+                Status.getOrCreate(id).componentManager.attachComponent(new HurtDisplay());
             }
             else {
-                const id = ori.player?.uniqueId ?? ori.entity?.uniqueId;
-                Status$1.getOrCreate(id).componentManager.detachComponent(HurtDisplay);
+                Status.getOrCreate(id).componentManager.detachComponent(HurtDisplay);
             }
         });
     });
@@ -12095,6 +12061,7 @@ function isEntity(actor) {
     return Boolean(actor?.type);
 }
 function damageWithCameraFading(victim, damage, cause = 'entityAttack', abuser, projectile, damageOpt) {
+    HurtDisplay.notifyHurt(abuser, victim, damageOpt);
     if (!isEntity(abuser)) {
         CameraFading.fadeFromAttackDirection(abuser, damageOpt);
     }
@@ -12138,7 +12105,7 @@ const playerOverrideEvents = [
 const mobEvents = [
     'onProjectileHitEntity',
 ];
-const _status = (pl) => Status$1.getOrCreate(pl.uniqueId);
+const _status = (pl) => Status.getOrCreate(pl.uniqueId);
 function freeze(pl) {
     generic.movement(pl, false);
     generic.camera(pl, false);
@@ -12177,7 +12144,7 @@ function _ctx(pl, mixins = {}) {
         camera: generic.camera,
         movement: generic.movement,
         movementInput: generic.movementInput,
-        selectFromSector: range.selectFromSector,
+        selectFromSector,
         knockback: kinematics$1.knockback,
         attack,
         freeze,
@@ -12190,14 +12157,14 @@ function _ctx(pl, mixins = {}) {
         yawToVec2,
         applyKnockbackAtVelocityDirection: kinematics$1.applyKnockbackAtVelocityDirection,
         task: task.Task.get(pl.uniqueId),
-        lookAt: lock.lookAt,
-        lookAtTarget: lock.lookAtTarget,
-        distanceToTarget: lock.distanceToTarget,
-        adsorbToTarget: lock.adsorbToTarget,
-        adsorbTo: lock.adsorbTo,
+        lookAt,
+        lookAtTarget,
+        distanceToTarget,
+        adsorbToTarget,
+        adsorbTo,
         knockdown,
-        releaseTarget: lock.releaseTarget,
-        adsorbOrSetVelocity: lock.adsorbOrSetVelocity,
+        releaseTarget,
+        adsorbOrSetVelocity,
         getMoveDir,
         trap,
         setSpeed: (pl, speed) => pl.setMovementSpeed(speed),
@@ -12205,7 +12172,7 @@ function _ctx(pl, mixins = {}) {
     };
 }
 function watchMainhandChange(pl) {
-    const status = Status$1.getOrCreate(pl.uniqueId);
+    const status = Status.getOrCreate(pl.uniqueId);
     const hand = pl?.getHand()?.type ?? 'minecraft:air';
     status.hand = hand;
     return status;
@@ -12221,7 +12188,7 @@ const defaultPacker = (pl, bind, status) => {
     const stamina = status.componentManager.getComponent(Stamina).unwrap();
     const mixins = {
         stamina: stamina.stamina,
-        hasTarget: lock.hasLock(pl),
+        hasTarget: hasLock$1(pl),
         repulsible: status.repulsible,
         isCollide: false, //isCollide(pl),
         isSneaking: input.isPressing(pl, 'sneak'),
@@ -12247,13 +12214,13 @@ const dataPackers = {
         };
     },
     onEndOfLife(args) {
-        const status = Status$1.getOrCreate(args[0].uniqueId);
+        const status = Status.getOrCreate(args[0].uniqueId);
         return {
             preInput: status.preInput
         };
     },
     onTrap([pl, data]) {
-        const status = Status$1.getOrCreate(pl.uniqueId);
+        const status = Status.getOrCreate(pl.uniqueId);
         return {
             preInput: status.preInput,
             ...data
@@ -12271,7 +12238,7 @@ const dataPackers = {
     },
     onHurt([pl]) {
         return {
-            hegemony: Status$1.getOrCreate(pl.uniqueId).hegemony
+            hegemony: Status.getOrCreate(pl.uniqueId).hegemony
         };
     }
 };
@@ -12435,12 +12402,12 @@ function listenPlayerItemChange(mods) {
         });
     });
     em.on('onChangeMainhand', (pl, hand, old) => {
-        const status = Status$1.getOrCreate(pl.uniqueId);
+        const status = Status.getOrCreate(pl.uniqueId);
         const oldBind = getMod(old);
         if (!status || status.status == 'unknown') {
             return;
         }
-        lock.releaseTarget(pl.uniqueId);
+        releaseTarget(pl.uniqueId);
         if (oldBind) {
             const move = oldBind.moves.getMove(status.status);
             if (move?.onLeave) {
@@ -12465,10 +12432,10 @@ function listenAllCustomEvents(mods) {
         }
         return ai.getRegistration(actor.type).tricks;
     }
-    em.on('onTick', lock.onTick(em));
+    em.on('onTick', onTick(em));
     em.on('onTick', () => {
         Tick.tick++;
-        for (const [uniqueId, status] of Status$1.status.entries()) {
+        for (const [uniqueId, status] of Status.status.entries()) {
             if (typeof uniqueId !== 'string') {
                 return;
             }
@@ -12538,7 +12505,7 @@ function listenAllCustomEvents(mods) {
         damageOpt = Object.assign({}, defaultDamageOpt, damageOpt);
         const { damage, damageType, damagingProjectile, permeable, parryable, knockback: _k, shock, powerful, trace, direction, } = damageOpt;
         const victimIsEntity = !victim.xuid;
-        const abuserStatus = Status$1.getOrCreate(abuser.uniqueId);
+        const abuserStatus = Status.getOrCreate(abuser.uniqueId);
         if (victimIsEntity && !ai.isRegistered(victim)) {
             const mod = getModCompatibility(abuser);
             if (!mod) {
@@ -12547,7 +12514,7 @@ function listenAllCustomEvents(mods) {
             transition(abuser, mod, abuserStatus, 'onHit', Function.prototype, [abuser, victim, damageOpt]);
             return damageWithCameraFading(victim, damage, damageType, abuser, damagingProjectile, damageOpt);
         }
-        const victimStatus = Status$1.getOrCreate(victim.uniqueId);
+        const victimStatus = Status.getOrCreate(victim.uniqueId);
         const _knockback = (h, repulsible) => {
             if (powerful || repulsible) {
                 const abuserPos = abuser.pos;
@@ -12610,13 +12577,13 @@ function listenAllCustomEvents(mods) {
         doDamage(incomingAttack);
     });
     em.on('deflect', (abuser, victim, damageOpt) => {
-        const aStatus = Status$1.getOrCreate(abuser.uniqueId);
+        const aStatus = Status.getOrCreate(abuser.uniqueId);
         const abuserMod = getModCompatibility(abuser);
         if (!abuserMod) {
             return;
         }
         transition(abuser, abuserMod, aStatus, 'onMissAttack', Function.prototype, [abuser, victim, damageOpt]);
-        const vStatus = Status$1.getOrCreate(victim.uniqueId);
+        const vStatus = Status.getOrCreate(victim.uniqueId);
         const vMod = getModCompatibility(victim);
         if (!vMod) {
             return;
@@ -12624,13 +12591,13 @@ function listenAllCustomEvents(mods) {
         transition(victim, vMod, vStatus, 'onDeflection', Function.prototype, [victim, abuser, damageOpt]);
     });
     em.on('dodge', (abuser, victim, damageOpt) => {
-        const aStatus = Status$1.getOrCreate(abuser.uniqueId);
+        const aStatus = Status.getOrCreate(abuser.uniqueId);
         const abuserMod = getModCompatibility(abuser);
         if (!abuserMod) {
             return;
         }
         transition(abuser, abuserMod, aStatus, 'onMissAttack', Function.prototype, [abuser, victim, damageOpt]);
-        const vStatus = Status$1.getOrCreate(victim.uniqueId);
+        const vStatus = Status.getOrCreate(victim.uniqueId);
         const vMod = getModCompatibility(victim);
         if (!vMod) {
             return;
@@ -12638,13 +12605,13 @@ function listenAllCustomEvents(mods) {
         transition(victim, vMod, vStatus, 'onDodge', Function.prototype, [victim, abuser, damageOpt]);
     });
     em.on('parried', (abuser, victim, damageOpt) => {
-        const aStatus = Status$1.getOrCreate(abuser.uniqueId);
+        const aStatus = Status.getOrCreate(abuser.uniqueId);
         const abuserMod = getModCompatibility(abuser);
         if (!abuserMod) {
             return;
         }
         transition(abuser, abuserMod, aStatus, 'onParried', Function.prototype, [abuser, victim, damageOpt]);
-        const vStatus = Status$1.getOrCreate(victim.uniqueId);
+        const vStatus = Status.getOrCreate(victim.uniqueId);
         const vMod = getModCompatibility(victim);
         if (!vMod) {
             return;
@@ -12657,8 +12624,8 @@ function listenAllCustomEvents(mods) {
         if (!abuserMod || !victimMod) {
             return;
         }
-        transition(abuser, abuserMod, Status$1.getOrCreate(abuser.uniqueId), 'onBlocked', Function.prototype, [abuser, victim, damageOpt]);
-        transition(victim, victimMod, Status$1.getOrCreate(victim.uniqueId), 'onBlock', Function.prototype, [victim, abuser, damageOpt]);
+        transition(abuser, abuserMod, Status.getOrCreate(abuser.uniqueId), 'onBlocked', Function.prototype, [abuser, victim, damageOpt]);
+        transition(victim, victimMod, Status.getOrCreate(victim.uniqueId), 'onBlock', Function.prototype, [victim, abuser, damageOpt]);
     });
     em.on('hurt', (abuser, victim, damageOpt) => {
         const { damage, damageType, damagingProjectile } = damageOpt;
@@ -12669,9 +12636,9 @@ function listenAllCustomEvents(mods) {
         if (!abuserMod) {
             return;
         }
-        transition(abuser, abuserMod, Status$1.getOrCreate(abuser.uniqueId), 'onHit', Function.prototype, [abuser, victim, damageOpt]);
+        transition(abuser, abuserMod, Status.getOrCreate(abuser.uniqueId), 'onHit', Function.prototype, [abuser, victim, damageOpt]);
         let flag = true, prevent = () => flag = false;
-        const victimStatus = Status$1.getOrCreate(victim.uniqueId);
+        const victimStatus = Status.getOrCreate(victim.uniqueId);
         const victimMod = getModCompatibility(victim);
         if (!victimMod) {
             return;
@@ -12691,12 +12658,12 @@ function listenAllCustomEvents(mods) {
         if (!abuserMod) {
             return;
         }
-        transition(victim, abuserMod, Status$1.getOrCreate(victim.uniqueId), 'onHurtByMob', prevent, [victim, abuser, damageOpt]);
+        transition(victim, abuserMod, Status.getOrCreate(victim.uniqueId), 'onHurtByMob', prevent, [victim, abuser, damageOpt]);
     });
     em.on('knockdown', (abuser, victim, knockbackStrength, time = 30) => {
-        const aStatus = Status$1.getOrCreate(abuser.uniqueId);
+        const aStatus = Status.getOrCreate(abuser.uniqueId);
         const aMod = getMod(aStatus.hand);
-        const vStatus = Status$1.getOrCreate(victim.uniqueId);
+        const vStatus = Status.getOrCreate(victim.uniqueId);
         const vMod = getMod(vStatus.hand);
         if (vStatus && !vStatus.repulsible) {
             return;
@@ -12714,7 +12681,7 @@ function listenAllCustomEvents(mods) {
     // TODO
     em.on('onReleaseLock', (pl) => {
         const bind = getModCompatibility(pl);
-        const status = Status$1.getOrCreate(pl.uniqueId);
+        const status = Status.getOrCreate(pl.uniqueId);
         if (!bind || !status) {
             return;
         }
@@ -12722,7 +12689,7 @@ function listenAllCustomEvents(mods) {
     });
     em.on('onLock', (pl, hand, target) => {
         const bind = getModCompatibility(pl);
-        const status = Status$1.getOrCreate(pl.uniqueId);
+        const status = Status.getOrCreate(pl.uniqueId);
         if (!bind || !status) {
             return;
         }
@@ -12730,14 +12697,14 @@ function listenAllCustomEvents(mods) {
     });
     em.on('onFeint', (pl, hand, prevent) => {
         const bind = getModCompatibility(pl);
-        const status = Status$1.getOrCreate(pl.uniqueId);
+        const status = Status.getOrCreate(pl.uniqueId);
         if (!bind || !status) {
             return;
         }
         transition(pl, bind, status, 'onFeint', prevent, [pl]);
     });
     em.on('trap', (pl, data) => {
-        const status = Status$1.getOrCreate(pl.uniqueId);
+        const status = Status.getOrCreate(pl.uniqueId);
         const bind = getModCompatibility(pl);
         if (!bind || !status) {
             return;
@@ -12770,7 +12737,7 @@ function listenAllMcEvents(collection) {
         if (!defaultAcceptableInputs.includes(type)) {
             return true;
         }
-        const status = Status$1.getOrCreate(args[0].uniqueId);
+        const status = Status.getOrCreate(args[0].uniqueId);
         const inputable = status.acceptableInput(type);
         if (inputable) {
             status.setPreInput(type);
@@ -12790,7 +12757,7 @@ function listenAllMcEvents(collection) {
             transition(pl, mod, status, n, prevent, args);
             return;
         }
-        const status = Status$1.getOrCreate(pl.uniqueId);
+        const status = Status.getOrCreate(pl.uniqueId);
         const mod = ai.getRegistration(pl.type).tricks;
         if (!mod) {
             return;
@@ -12807,8 +12774,8 @@ function listenAllMcEvents(collection) {
         if (!mods.has(item.type)) {
             return true;
         }
-        if (!lock.hasLock(pl)) {
-            const val = lock.toggleLock(pl.uniqueId);
+        if (!hasLock$1(pl)) {
+            const val = toggleLock(pl.uniqueId);
             pl.setSprinting(false);
             if (val) {
                 em.emitNone('onLock', pl, item.type, val);
@@ -12821,14 +12788,14 @@ function listenAllMcEvents(collection) {
     });
     mc.listen('onChangeSprinting', (...args) => {
         const pl = args[0];
-        if (lock.hasLock(pl)) {
-            if (lock.toggleLock(pl.uniqueId) === null) {
+        if (hasLock$1(pl)) {
+            if (toggleLock(pl.uniqueId) === null) {
                 const mod = getModCompatibility(pl);
                 if (!mod) {
                     return false;
                 }
-                const status = Status$1.getOrCreate(pl.uniqueId);
-                clearCamera$1(pl);
+                const status = Status.getOrCreate(pl.uniqueId);
+                clearCamera(pl);
                 initCombatComponent(pl, mod, status);
                 transition(pl, mod, status, 'onChangeSprinting', Function.prototype, args);
             }
@@ -12849,7 +12816,7 @@ function listenAllMcEvents(collection) {
     em.on('input.jump', (pl, press) => {
         if (press) {
             es.put('onDodge', [pl, Function.prototype, [pl]]);
-            em.emitNone(lock.hasLock(pl) ? 'onDodge' : 'onJump', pl, Function.prototype, [pl]);
+            em.emitNone(hasLock$1(pl) ? 'onDodge' : 'onJump', pl, Function.prototype, [pl]);
         }
     });
     em.on('onDodge', acceptableStreamHandler('onDodge'));
@@ -12876,7 +12843,7 @@ function listenAllMcEvents(collection) {
         // console.log(pl)
     });
     mc.listen('onOpenContainerScreen', pl => {
-        if (lock.hasLock(pl)) {
+        if (hasLock$1(pl)) {
             let cancel = true;
             es.put('onFeint', [pl, Function.prototype, [pl]]);
             return !cancel;
@@ -12930,7 +12897,7 @@ function listenAllMcEvents(collection) {
     });
     mc.listen('onAttackEntity', pl => {
         es.put('onAttack', [pl, Function.prototype, [pl]]);
-        const status = Status$1.getOrCreate(pl.uniqueId);
+        const status = Status.getOrCreate(pl.uniqueId);
         status.acceptableInput('onAttack', false);
         setTimeout(() => {
             status.acceptableInput('onAttack', true);
@@ -12939,7 +12906,7 @@ function listenAllMcEvents(collection) {
     });
     mc.listen('onAttackBlock', pl => {
         es.put('onAttack', [pl, Function.prototype, [pl]]);
-        const status = Status$1.getOrCreate(pl.uniqueId);
+        const status = Status.getOrCreate(pl.uniqueId);
         status.acceptableInput('onAttack', false);
         setTimeout(() => {
             status.acceptableInput('onAttack', true);
@@ -12954,20 +12921,20 @@ function listenAllMcEvents(collection) {
         }
         setTimeout(() => {
             unfreeze(pl);
-            clearCamera$1(pl);
-            initCombatComponent(pl, mod, Status$1.getOrCreate(pl.uniqueId));
+            clearCamera(pl);
+            initCombatComponent(pl, mod, Status.getOrCreate(pl.uniqueId));
         });
     });
     mc.listen('onLeft', pl => {
-        Status$1.status.delete(pl.uniqueId);
+        Status.status.delete(pl.uniqueId);
     });
     mc.listen('onPlayerDie', pl => {
-        lock.releaseTarget(pl.uniqueId);
+        releaseTarget(pl.uniqueId);
         mc.runcmdEx(`/inputpermission set "${pl.name}" jump enabled`);
         mc.runcmdEx(`/inputpermission set "${pl.name}" sneak enabled`);
     });
     mc.listen('onMobDie', en => {
-        Status$1.status.delete(en.uniqueId);
+        Status.status.delete(en.uniqueId);
     });
     mc.listen('onServerStarted', () => {
         mc.getScoreObjective('attack_time') ?? mc.newScoreObjective('attack_time', 'attack_time');

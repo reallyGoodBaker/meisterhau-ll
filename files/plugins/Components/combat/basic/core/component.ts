@@ -1,11 +1,12 @@
+import { Actor } from '@utils/actor'
 import { Optional } from '@utils/optional'
 
 export interface Component {
     allowTick: boolean
-    onTick(manager: ComponentManager, en: Optional<Player|Entity>): void
+    onTick(manager: ComponentManager, en: Optional<Actor>): void
     detach(manager: ComponentManager): void
     getManager(): ComponentManager
-    getEntity(): Optional<Player|Entity>
+    getActor(): Optional<Actor>
 }
 
 export interface BasicComponent extends Component {
@@ -18,11 +19,11 @@ export const REFLECT_ENTITY: unique symbol = Symbol('reflect-entity')
 
 export class CustomComponent implements Component {
     [REFLECT_MANAGER]?: ComponentManager
-    [REFLECT_ENTITY]: Optional<Player|Entity> = Optional.none()
+    [REFLECT_ENTITY]: Optional<Actor> = Optional.none()
 
     allowTick: boolean = false
 
-    onTick(manager: ComponentManager, en: Optional<Player|Entity>): void {}
+    onTick(manager: ComponentManager, en: Optional<Actor>): void {}
 
     detach(manager: ComponentManager) {
         const ctor = Object.getPrototypeOf(this).constructor
@@ -33,7 +34,7 @@ export class CustomComponent implements Component {
         return this[REFLECT_MANAGER] as ComponentManager
     }
 
-    getEntity(): Optional<Player|Entity> {
+    getActor(): Optional<Actor> {
         return this[REFLECT_ENTITY]
     }
 }
@@ -49,7 +50,7 @@ export interface ComponentCtor<T extends Component | BasicComponent = Component>
 
 export class ComponentManager {
     constructor(
-        readonly owner: Optional<Entity>
+        readonly owner: Optional<Actor>
     ) {}
 
     static profilerEnable = false
@@ -145,15 +146,15 @@ export class ComponentManager {
         return this.#components.has(ctor)
     }
 
-    afterTick(fn: (en: Optional<Player|Entity>) => void) {
+    afterTick(fn: (en: Optional<Actor>) => void) {
         this.#nextTicks.push(fn)
     }
 
-    beforeTick(fn: (en: Optional<Player|Entity>) => void) {
+    beforeTick(fn: (en: Optional<Actor>) => void) {
         this.#prependTicks.unshift(fn)
     }
 
-    handleTicks(en: Player|Entity) {
+    handleTicks(en: Actor) {
         for (const prependTick of this.#prependTicks) {
             this.profiler(() => prependTick.call(null, Optional.some(en)))
             // prependTick.call(null, Optional.some(en))

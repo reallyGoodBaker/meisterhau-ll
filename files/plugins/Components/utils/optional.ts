@@ -1,7 +1,7 @@
 export class Optional<T = any> {
 
     static none<T>(): Optional<T> {
-        return new Optional(null as T)
+        return optionalNone as any
     }
 
     static some<T>(value: T | Optional<T> | null | undefined): Optional<T> {
@@ -53,3 +53,5 @@ export class Optional<T = any> {
         return some(this.value)
     }
 }
+
+const optionalNone = new Optional(null)

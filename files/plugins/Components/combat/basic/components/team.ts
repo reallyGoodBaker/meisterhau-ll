@@ -17,7 +17,7 @@ export class Team extends BaseComponent {
     }
 
     onAttach(): boolean | void | Promise<boolean | void> {
-        this.getEntity().use(pl => {
+        this.getActor().use(pl => {
             const players = Team.players.get(this) || new Set()
             players.add(pl as Player)
             Team.players.set(this, players)
@@ -25,7 +25,7 @@ export class Team extends BaseComponent {
     }
 
     onDetach(): void | Promise<void> {
-        this.getEntity().use(pl => {
+        this.getActor().use(pl => {
             const players = Team.players.get(this)
             if (players) {
                 players.delete(pl as Player)

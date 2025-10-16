@@ -1210,7 +1210,7 @@ var require$$3 = /*@__PURE__*/getAugmentedNamespace(simulatePlayer);
 class Optional {
     value;
     static none() {
-        return new Optional(null);
+        return optionalNone;
     }
     static some(value) {
         if (value instanceof Optional) {
@@ -1248,6 +1248,7 @@ class Optional {
         return some(this.value);
     }
 }
+const optionalNone = new Optional(null);
 
 const camera = (pl, easeTime, easeType, dPos, rot) => {
     mc.runcmdEx(`execute as "${pl.name}" at @s run camera @s set minecraft:free ease ${easeTime} ${easeType} pos ^${dPos.x} ^${dPos.y} ^${dPos.z} rot ${rot.pitch} ${rot.yaw}`);

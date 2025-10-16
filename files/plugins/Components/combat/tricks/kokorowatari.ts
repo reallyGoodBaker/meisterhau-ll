@@ -112,7 +112,7 @@ class KokorowatariMoves extends DefaultMoves {
                 rotation: 15
             }).forEach(en => {
                 ctx.attack(actor, en, {
-                    damage: 18,
+                    damage: 14,
                     direction: 'middle',
                     knockback: 1,
                 })
@@ -134,6 +134,9 @@ class KokorowatariMoves extends DefaultMoves {
                     preInput: 'onAttack'
                 }
             },
+            blocked: {
+                onBlocked: null
+            },
         }
     }
 
@@ -152,7 +155,7 @@ class KokorowatariMoves extends DefaultMoves {
                 rotation: 15
             }).forEach(en => {
                 ctx.attack(actor, en, {
-                    damage: 16,
+                    damage: 25,
                     direction: 'vertical',
                     permeable: true,
                     knockback: 2,

@@ -32,7 +32,7 @@ export class TrickComponent extends CustomComponent {
 
             if (this.move.onEnter) {
                 this.move.onEnter(
-                    this.getEntity().unwrap(),
+                    this.getActor().unwrap(),
                     {} as any
                 )
             }
