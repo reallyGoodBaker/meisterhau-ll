@@ -1,6 +1,6 @@
 {
-    "entry": "yuumo.ll3.js",
-    "name": "yuumo.ll3",
+    "entry": "pled.ll3.js",
+    "name": "pled",
     "type": "lse-nodejs",
     "dependencies": [
         {

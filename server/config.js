@@ -10,7 +10,6 @@ module.exports = {
         'lib/*',
     ],
     builds: [
-        'meisterhau',
-        '-yuumo.ll3',
+        'pled',
     ]
 }

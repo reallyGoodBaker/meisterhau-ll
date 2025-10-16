@@ -6,23 +6,9 @@ import json from '@rollup/plugin-json'
 
 export default [
     {
-        input: './files/plugins/yuumo.js',
+        input: './files/plugins/pled.js',
         output: {
-            file: './build/yuumo.ll3/yuumo.ll3.js',
-            format: 'cjs',
-        },
-        plugins: [
-            commonjs(),
-            nodeResolve(),
-            ts(),
-            paths(),
-            json(),
-        ]
-    },
-    {
-        input: './files/plugins/meisterhau.js',
-        output: {
-            file: './build/meisterhau/meisterhau.ll3.js',
+            file: './build/pled/pled.ll3.js',
             format: 'cjs',
         },
         plugins: [
