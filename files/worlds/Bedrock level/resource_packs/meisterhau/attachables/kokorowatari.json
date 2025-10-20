@@ -1,0 +1,29 @@
+{
+    "format_version": "1.21.90",
+    "minecraft:attachable": {
+        "description": {
+            "identifier": "monogatari:kokorowatari",
+            "materials": {
+                "default": "entity_nocull",
+                "enchanted": "entity_alphatest_glint"
+            },
+            "textures": {
+                "default": "textures/entity/kokorowatari/kkrwtr",
+                "white": "textures/misc/white_overlay",
+                "orange": "textures/misc/orange_overlay",
+                "blue": "textures/misc/blue_overlay"
+            },
+            "geometry": {
+                "default": "geometry.monogatari.kokorowatari"
+            },
+            "scripts": {
+                "initialize": [
+                    "v.item_status = 0;"
+                ]
+            },
+            "render_controllers": [
+                "controller.render.weapon"
+            ]
+        }
+    }
+}

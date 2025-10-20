@@ -5399,7 +5399,7 @@ class OotachiMoves extends DefaultMoves$4 {
 }
 class OotachiTricks extends DefaultTrickModule$4 {
     constructor() {
-        super('rgb39.weapon.ootachi', 'idle', ['weapon:ootachi', 'weapon:ootachi_akaoni', 'weapon:ootachi_dragon'], new OotachiMoves());
+        super('rgb39.weapon.ootachi', 'idle', ['weapon:ootachi', 'weapon:ootachi_akaoni', 'weapon:ootachi_dragon', 'monogatari:kokorowatari'], new OotachiMoves());
     }
 }
 const tricks$9 = new OotachiTricks();

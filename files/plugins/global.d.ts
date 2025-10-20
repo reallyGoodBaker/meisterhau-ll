@@ -72,7 +72,7 @@ interface Move {
      * @example
      * ```js
      * function killAllInRange(pl, ctx) {
-     *      const mobs = ctx.selectFromRange(pl, {
+     *      const mobs = ctx.selectFromSector(pl, {
      *          radius: 5,     //半径
      *          angle: 90,     //扇形区域角度
      *          rotation: -45  //扇形区域相对目标视线旋转角进行旋转的角度
@@ -93,7 +93,7 @@ interface Move {
      * @example
      * ```js
      * function flyup(pl, ctx) {
-     *      const mobs = ctx.selectFromRange(pl, {
+     *      const mobs = ctx.selectFromSector(pl, {
      *          radius: 5,     //半径
      *          angle: 90,     //扇形区域角度
      *          rotation: -45  //扇形区域相对目标视线旋转角进行旋转的角度

@@ -14,7 +14,7 @@
             },
             "textures": {
                 "default": "textures/entity/shinobu",
-                "weapon": "textures/entity/fantasy_double_tachi",
+                "weapon": "textures/entity/kokorowatari/kkrwtr",
                 "unstoppable": "textures/entity/unstoppable",
                 "trace": "textures/entity/trace",
                 "block": "textures/entity/block",

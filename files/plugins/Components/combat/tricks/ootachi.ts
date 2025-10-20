@@ -818,7 +818,7 @@ class OotachiTricks extends DefaultTrickModule {
         super(
             'rgb39.weapon.ootachi',
             'idle',
-            [ 'weapon:ootachi', 'weapon:ootachi_akaoni', 'weapon:ootachi_dragon' ],
+            [ 'weapon:ootachi', 'weapon:ootachi_akaoni', 'weapon:ootachi_dragon', 'monogatari:kokorowatari' ],
             new OotachiMoves()
         )
     }
