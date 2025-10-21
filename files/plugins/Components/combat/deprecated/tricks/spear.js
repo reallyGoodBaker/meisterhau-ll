@@ -1,4 +1,4 @@
-const { playAnim } = require('../../basic')
+const { playAnim, playAnimCompatibility } = require('../../basic')
 
 /**
  * @type {TrickModule}

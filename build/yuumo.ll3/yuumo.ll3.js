@@ -1143,37 +1143,26 @@ var speed = {
     tick, setVelocity: setVelocity$1
 };
 
-
-
+//#define __comment__end */
+//#define __comment__start /*
 //@ts-ignore
-/*;
-const 
+__comment__start;
+const interruptExcept = (cond) => {
+    //#inline interruptExcept (cond)
     if (!(cond)) {
-        return;
-    }
-    => {
-    //#inline 
-    if (!(cond)) {
-        return;
-    }
-        if (!(cond)) {
         return;
     }
     //!inline
 };
 //@ts-ignore
-*/;
+__comment__end;
 
 const _listeners = new WeakMap();
 function spawn(pos, name) {
     return mc.spawnSimulatedPlayer(name, pos);
 }
 function despawn(pl) {
-    
-    if (!(pl.isSimulatedPlayer)) {
-        return;
-    }
-    
+    interruptExcept(pl.isSimulatedPlayer());
     pl.simulateDisconnect();
 }
 function listener(pl, listeners) {

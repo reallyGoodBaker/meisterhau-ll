@@ -2309,7 +2309,7 @@ let DefaultMoves$4 = class DefaultMoves {
     getMove(name) {
         if (!this.hasMove(name)) {
             console.log(Error().stack);
-            throw new Error(`Move ${name} not found`);
+            throw new Error(`Move ${name} not found in ${this.constructor.name}`);
         }
         return this[name];
     }
@@ -13218,6 +13218,7 @@ function transition(pl, bind, status, eventName, prevent, args) {
         initCombatComponent(pl, bind, status);
         return;
     }
+    console.log(status);
     const currentMove = bind.moves.getMove(status.status);
     if (!currentMove) {
         return;

@@ -119,7 +119,7 @@ export class DefaultMoves implements Moves {
     getMove(name: string): Move {
         if (!this.hasMove(name)) {
             console.log(Error().stack)
-            throw new Error(`Move ${name} not found`)
+            throw new Error(`Move ${name} not found in ${this.constructor.name}`)
         }
 
         return this[name as keyof this] as Move

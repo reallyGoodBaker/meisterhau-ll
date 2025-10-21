@@ -1,4 +1,4 @@
-const { playAnim, playSoundAll } = require("../basic/index")
+const { playAnim, playSoundAll, playAnimCompatibility } = require("../basic/index")
 const { DefaultMoves, DefaultTrickModule } = require("../basic/default")
 
 class DoubleDaggerMoves extends DefaultMoves {

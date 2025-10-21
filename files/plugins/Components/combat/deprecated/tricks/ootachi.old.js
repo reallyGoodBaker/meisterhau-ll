@@ -1,5 +1,6 @@
 const { playAnim, playSoundAll } = require('../basic')
 const { randomRange } = require('../../../utils/math')
+const { playAnimCompatibility } = require('@combat/basic')
 
 /**
  * @type {TrickModule}

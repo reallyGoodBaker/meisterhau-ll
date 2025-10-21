@@ -1,6 +1,6 @@
 const { hud } = require('../../basic/hud')
 const ps = mc.newParticleSpawner()
-const { playAnim } = require('../../basic')
+const { playAnim, playAnimCompatibility } = require('../../basic')
 
 function stabbingParticle(from, to) {
     ps.drawOrientedLine(from, to, 2)

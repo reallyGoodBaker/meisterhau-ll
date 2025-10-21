@@ -1,13 +1,13 @@
-const { playAnim, playSoundAll } = require("../basic/index")
-const { DefaultMoves, DefaultTrickModule } = require('../basic/default')
+import { Actor } from "@utils/actor"
+
+import { playAnimCompatibility } from "../basic/index"
+import { DefaultMoves, DefaultTrickModule } from '../basic/default'
 
 class EmptyHandMoves extends DefaultMoves {
-    /**
-     * @type {Move}
-     */
-    blocking = {
+
+    blocking: Move = {
         cast: Infinity,
-        onEnter(pl) {
+        onEnter(pl: Actor) {
             playAnimCompatibility(pl, 'animation.general.empty_hand')
         },
         transitions: {
@@ -24,7 +24,7 @@ class EmptyHandMoves extends DefaultMoves {
     constructor() {
         super()
 
-        this.setup('blocking')
+        this.setup<EmptyHandMoves>('blocking')
     }
 }
 
