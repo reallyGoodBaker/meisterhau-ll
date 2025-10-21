@@ -40,7 +40,7 @@ export function eventCenter(opt: any) {
     remote.expose('input.release.sneak', (name: string) => {
         const player = mc.getPlayer(name)
         if (player) {
-            em.emit('input.sneak', mc.getPlayer(name), false)
+            em.emit('input.sneak', mc.getPlayer(String(name)), false)
         }
     })
 

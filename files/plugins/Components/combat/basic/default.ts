@@ -7,7 +7,7 @@ import { input } from "scripts-rpc/func/input"
 import { Status } from "./core/status"
 import { AttackSensor } from "./components/attackSensor"
 import { Team } from "./components/team"
-import { Actor } from "@utils/actor"
+import { Actor, ActorHelper } from "@utils/actor"
 
 /** 获取近似攻击方向 */
 export function getApproximatelyDir(direction: AttackDirection) {
@@ -22,7 +22,7 @@ function getAnim(animCategory: any, direction: string) {
     if (!anim) {
         switch (direction) {
             case 'middle':
-                return animCategory.right ?? animCategory.left
+                return animCategory.right || animCategory.left
 
             default:
                 return animCategory.left
@@ -270,9 +270,12 @@ export class DefaultMoves implements Moves {
             }
 
             playAnimCompatibility(pl, hurtAnim)
-            ctx.task.queue(() => {
-                ctx.trap(pl, { tag: 'recover' })
-            }, stiffness).run()
+            const uid = pl.uniqueId
+            ctx.task.queue(
+                () => ActorHelper.getActor(uid)
+                    .use(actor => ctx.trap(actor, { tag: 'recover' })),
+                stiffness
+            ).run()
         },
         onLeave(pl, ctx) {
             ctx.task.cancel()

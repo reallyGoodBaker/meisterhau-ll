@@ -39,4 +39,4 @@ class EmptyHandTricks extends DefaultTrickModule {
     }
 }
 
-exports.tricks = new EmptyHandTricks()
+export const tricks = new EmptyHandTricks()

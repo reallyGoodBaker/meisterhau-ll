@@ -48,7 +48,7 @@ export class ActorHelper {
      * @returns 
      */
     static getPlayer(info: string): Optional<Actor> {
-        return Optional.some(mc.getPlayer(info))
+        return Optional.some(mc.getPlayer(String(info)))
     }
 
     /**

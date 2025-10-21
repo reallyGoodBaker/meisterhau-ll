@@ -1,6 +1,6 @@
 import { Optional } from "@utils/optional"
 import { AiHearing } from "./components/ai/hearing"
-import { Actor } from "@utils/actor"
+import { Actor, ActorHelper } from "@utils/actor"
 
 /**
  * 播放动画
@@ -25,12 +25,12 @@ export function playAnim(pl: Player, anim: string, nextAnim?: string, time?: num
  * @param controller - 控制器名称（可选）
  */
 export function playAnimCompatibility(actor: Actor, anim: string, nextAnim?: string, time?: number, stopExp?: string, controller?: string) {
-    if ('xuid' in actor) {
-        playAnim(actor, anim, nextAnim, time, stopExp, controller)
+    if (ActorHelper.isPlayer(actor)) {
+        playAnim(actor as Player, anim, nextAnim, time, stopExp, controller)
         return
     }
 
-    playAnimEntity(actor, anim, nextAnim, time, stopExp, controller)
+    playAnimEntity(actor as Entity, anim, nextAnim, time, stopExp, controller)
 }
 
 /**
