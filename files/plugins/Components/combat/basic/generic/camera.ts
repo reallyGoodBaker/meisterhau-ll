@@ -4,18 +4,44 @@ import { Status } from '../core/status'
 import { rotate2, vec2, multiply2 } from './vec'
 import { Actor } from "@utils/actor"
 
+/**
+ * 设置相机输入权限
+ * @param pl 玩家对象
+ * @param enabled 是否启用相机输入
+ */
 export const cameraInput = (pl: Player, enabled=true) => {
     mc.runcmdEx(`inputpermission set "${pl.name}" camera ${enabled ? 'enabled' : 'disabled'}`)
 }
 
+/**
+ * 设置相机位置和朝向
+ * @param pl 玩家对象
+ * @param easeTime 缓动时间
+ * @param easeType 缓动类型
+ * @param pos 相机位置
+ * @param lookAt 相机朝向位置
+ */
 const camera = (pl: Player, easeTime: number, easeType: string, pos: Vector, lookAt: Vector) => {
     mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} facing ${lookAt.x} ${lookAt.y} ${lookAt.z}`)
 }
 
+/**
+ * 设置相机位置和旋转角度
+ * @param pl 玩家对象
+ * @param easeTime 缓动时间
+ * @param easeType 缓动类型
+ * @param pos 相机位置
+ * @param rotX X轴旋转角度
+ * @param rotY Y轴旋转角度
+ */
 const cameraRot = (pl: Player, easeTime: number, easeType: string, pos: Vector, rotX: number, rotY: number) => {
     mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} rot ${rotX} ${rotY}`) 
 }
 
+/**
+ * 清除相机设置，恢复默认相机
+ * @param pl 玩家对象
+ */
 export function clearCamera(pl: Player) {
     mc.runcmdEx(`camera "${pl.name}" set meisterhau:battle`)
 }
@@ -23,6 +49,11 @@ export function clearCamera(pl: Player) {
 const ROT = Math.PI * 1
 const ANGLE = 180 / Math.PI
 
+/**
+ * 设置战斗相机到中间点位置
+ * @param pl 玩家对象
+ * @param en 目标角色
+ */
 export const battleCameraMiddlePoint = (pl: Player, en: Actor) => {
     const plPos = pl.pos
     const enPos = en.pos
@@ -73,6 +104,11 @@ export const battleCameraMiddlePoint = (pl: Player, en: Actor) => {
     camera(pl, 0.1, 'linear', cameraPos, { ...middlePoint, y: cameraPos.y })
 }
 
+/**
+ * 设置战斗相机
+ * @param pl 玩家对象
+ * @param en 目标角色
+ */
 export const battleCamera = (pl: Player, en: Actor) => {
     if (!pl) {
         return

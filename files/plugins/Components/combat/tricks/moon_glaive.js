@@ -46,7 +46,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.releaseTarget(pl.uniqueId)
-            playAnim(pl, 'animation.weapon.moon_glaive.hold', 'animation.weapon.moon_glaive.hold')
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.hold', 'animation.weapon.moon_glaive.hold')
         },
         transitions: {
             hurt: {
@@ -72,7 +72,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.releaseTarget(pl.uniqueId)
-            playAnim(pl, 'animation.weapon.moon_glaive.running', 'animation.weapon.moon_glaive.running')
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.running', 'animation.weapon.moon_glaive.running')
         },
         transitions: {
             hurt: {
@@ -100,7 +100,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.setSpeed(pl, 0)
             ctx.camera(pl, false)
-            playAnim(pl, 'animation.weapon.moon_glaive.retention.negative_spinning')
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.retention.negative_spinning')
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1)
         },
         onAct(pl, ctx) {
@@ -156,7 +156,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
-            playAnim(pl, 'animation.weapon.moon_glaive.retention', 'animation.weapon.moon_glaive.retention')
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.retention', 'animation.weapon.moon_glaive.retention')
         },
         onTick(pl, ctx) {
             ctx.lookAtTarget(pl)
@@ -194,7 +194,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         cast: 5,
         onEnter(pl, ctx) {
             ctx.camera(pl, false)
-            playAnim(pl, 'animation.weapon.moon_glaive.to_retention')
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.to_retention')
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
@@ -231,7 +231,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         cast: 5,
         onEnter(pl, ctx) {
             ctx.camera(pl, false)
-            playAnim(pl, 'animation.weapon.moon_glaive.from_retention')
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.from_retention')
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
@@ -253,7 +253,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         cast: Infinity,
         onEnter(pl, ctx) {
             pl.setSprinting(false)
-            playAnim(pl, 'animation.weapon.moon_glaive.hold_locked', 'animation.weapon.moon_glaive.hold_locked')
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.hold_locked', 'animation.weapon.moon_glaive.hold_locked')
             ctx.trap(pl)
         },
         transitions: {
@@ -316,7 +316,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             ctx.status.isDodging = true
             ctx.setSpeed(pl, 0)
             ctx.camera(pl)
-            playAnim(pl, 'animation.weapon.moon_glaive.dodge')
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.dodge')
             ctx.setVelocity(pl, -90, 2.5, 0)
         },
         onLeave(pl, ctx) {
@@ -360,7 +360,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
-            playAnim(pl, 'animation.weapon.moon_glaive.push')
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.push')
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
@@ -426,7 +426,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
-            playAnim(pl, 'animation.weapon.moon_glaive.chop')
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.chop')
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
@@ -474,7 +474,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
             ctx.status.repulsible = false
-            playAnim(pl, 'animation.weapon.moon_glaive.vertical_chop')
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.vertical_chop')
         },
         onLeave(pl, ctx) {
             ctx.status.hegemony = true
@@ -531,7 +531,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
-            playAnim(pl, 'animation.weapon.moon_glaive.heavy_sweap')
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.heavy_sweap')
             ctx.status.isWaitingParry = true
         },
         onLeave(pl, ctx) {
@@ -612,7 +612,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
-            playAnim(pl, 'animation.weapon.moon_glaive.chop.combo')
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.chop.combo')
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
@@ -659,7 +659,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             ctx.status.hegemony = true
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
-            playAnim(pl, 'animation.weapon.moon_glaive.positive_spinning')
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.positive_spinning')
         },
         onLeave(pl, ctx) {
             ctx.status.hegemony = false
@@ -713,7 +713,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
-            playAnim(pl, 'animation.weapon.moon_glaive.parry.knock')
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.parry.knock')
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
@@ -754,7 +754,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
             ctx.status.repulsible = false
-            playAnim(pl, 'animation.weapon.moon_glaive.parry.chop')
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.parry.chop')
         },
         onLeave(pl, ctx) {
             ctx.status.repulsible = true

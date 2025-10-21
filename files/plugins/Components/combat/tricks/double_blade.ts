@@ -1,4 +1,4 @@
-import { playAnim, playSoundAll } from "../basic/index"
+import { playAnim, playAnimCompatibility, playSoundAll } from "../basic/index"
 import { DefaultMoves, DefaultTrickModule, setVelocityByOrientation } from "../basic/default"
 import { Stamina } from "@combat/basic/components/core/stamina"
 
@@ -31,7 +31,7 @@ class DoubleBladeMoves extends DefaultMoves {
     idle: Move = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim(pl, 'animation.double_blade.idle', 'animation.double_blade.idle')
+            playAnimCompatibility(pl, 'animation.double_blade.idle', 'animation.double_blade.idle')
         },
         transitions: {
             i2r: {
@@ -51,7 +51,7 @@ class DoubleBladeMoves extends DefaultMoves {
     running: Move = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim(pl, 'animation.double_blade.running', 'animation.double_blade.running')
+            playAnimCompatibility(pl, 'animation.double_blade.running', 'animation.double_blade.running')
         },
         transitions: {
             r2i: {
@@ -68,7 +68,7 @@ class DoubleBladeMoves extends DefaultMoves {
     i2r: Move = {
         cast: 5,
         onEnter(pl) {
-            playAnim(pl, 'animation.double_blade.i2r')
+            playAnimCompatibility(pl, 'animation.double_blade.i2r')
         },
         transitions: {
             running: {
@@ -85,7 +85,7 @@ class DoubleBladeMoves extends DefaultMoves {
     r2i: Move = {
         cast: 5,
         onEnter(pl) {
-            playAnim(pl, 'animation.double_blade.r2i')
+            playAnimCompatibility(pl, 'animation.double_blade.r2i')
         },
         transitions: {
             idle: {
@@ -102,7 +102,7 @@ class DoubleBladeMoves extends DefaultMoves {
     hold: Move = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim(pl, 'animation.double_blade.hold', 'animation.double_blade.hold')
+            playAnimCompatibility(pl, 'animation.double_blade.hold', 'animation.double_blade.hold')
         },
         transitions: {
             hurt: {
@@ -138,7 +138,7 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 22
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
-            playAnim(pl, ctx.previousStatus === 'shieldKick' ? 'animation.double_blade.skl' : 'animation.double_blade.start_left')
+            playAnimCompatibility(pl, ctx.previousStatus === 'shieldKick' ? 'animation.double_blade.skl' : 'animation.double_blade.start_left')
             setVelocityByOrientation(pl as Player, ctx, 0.5, 1)
         },
         onLeave(pl, ctx) {
@@ -226,7 +226,7 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 22
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
-            playAnim(pl, 'animation.double_blade.start_right')
+            playAnimCompatibility(pl, 'animation.double_blade.start_right')
             setVelocityByOrientation(pl as Player, ctx, 0.5, 1)
         },
         onLeave(pl, ctx) {
@@ -309,7 +309,7 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 22
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
-            playAnim(pl, 'animation.double_blade.lr')
+            playAnimCompatibility(pl, 'animation.double_blade.lr')
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1)
         },
         onLeave(pl, ctx) { 
@@ -388,7 +388,7 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 22
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
-            playAnim(pl, 'animation.double_blade.rl')
+            playAnimCompatibility(pl, 'animation.double_blade.rl')
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1)
         },
         onLeave(pl, ctx) { 
@@ -466,7 +466,7 @@ class DoubleBladeMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().setCooldown(10)
             ctx.freeze(pl)
-            playAnim(pl, 'animation.double_blade.dodge')
+            playAnimCompatibility(pl, 'animation.double_blade.dodge')
             ctx.setVelocity(pl, 180, 1)
         },
         onAct(_, ctx) {
@@ -495,7 +495,7 @@ class DoubleBladeMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10
             ctx.freeze(pl)
-            playAnim(pl, 'animation.double_blade.ll')
+            playAnimCompatibility(pl, 'animation.double_blade.ll')
             ctx.lookAtTarget(pl)
         },
         onLeave(pl, ctx) {
@@ -561,7 +561,7 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
-            playAnim(pl, 'animation.double_blade.rr')
+            playAnimCompatibility(pl, 'animation.double_blade.rr')
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
@@ -607,7 +607,7 @@ class DoubleBladeMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 25
             ctx.freeze(pl)
-            playAnim(pl, ctx.previousStatus === 'shieldKick' ? 'animation.double_blade.skh' : 'animation.double_blade.rrl')
+            playAnimCompatibility(pl, ctx.previousStatus === 'shieldKick' ? 'animation.double_blade.skh' : 'animation.double_blade.rrl')
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1)
         },
         onLeave(pl, ctx) {
@@ -653,15 +653,15 @@ class DoubleBladeMoves extends DefaultMoves {
 
             const prevStatus = ctx.previousStatus
             if (prevStatus === 'shieldCounter') {
-                playAnim(pl, 'animation.double_blade.counter_shield')
+                playAnimCompatibility(pl, 'animation.double_blade.counter_shield')
                 ctx.adsorbOrSetVelocity(pl, 1, 90, 1)
             } else if (prevStatus.includes('RL') || prevStatus === 'startLeft') {
-                playAnim(pl, 'animation.double_blade.shield_left')
+                playAnimCompatibility(pl, 'animation.double_blade.shield_left')
             } else if (prevStatus.includes('LR') || prevStatus === 'startRight') {
-                playAnim(pl, 'animation.double_blade.shield_right')
+                playAnimCompatibility(pl, 'animation.double_blade.shield_right')
                 ctx.adsorbOrSetVelocity(pl, 0.5, 90, 1)
             } else {
-                playAnim(pl, 'animation.double_blade.shield')
+                playAnimCompatibility(pl, 'animation.double_blade.shield')
             }
         },
         onLeave(pl, ctx) {
@@ -692,7 +692,7 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.components.getComponent(Stamina).unwrap().stamina += 30
             ctx.freeze(pl)
             playSoundAll('weapon.sword.hit2', pl.pos)
-            playAnim(pl, 'animation.double_blade.shield_success')
+            playAnimCompatibility(pl, 'animation.double_blade.shield_success')
             ctx.lookAtTarget(pl)
         },
         onLeave(pl, ctx) {
@@ -742,7 +742,7 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.status.repulsible = false
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10
             ctx.freeze(pl)
-            playAnim(pl, 'animation.double_blade.shield.kick')
+            playAnimCompatibility(pl, 'animation.double_blade.shield.kick')
             ctx.lookAtTarget(pl)
         },
         onLeave(pl, ctx) {
@@ -797,7 +797,7 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 15
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
-            playAnim(pl, 'animation.double_blade.skl')
+            playAnimCompatibility(pl, 'animation.double_blade.skl')
             setVelocityByOrientation(pl as Player, ctx, 1, 1.5)
         },
         onLeave(pl, ctx) {
@@ -876,7 +876,7 @@ class DoubleBladeMoves extends DefaultMoves {
             ctx.status.repulsible = false
             ctx.components.getComponent(Stamina).unwrap().stamina -= 25
             ctx.freeze(pl)
-            playAnim(pl, 'animation.double_blade.shield_counter')
+            playAnimCompatibility(pl, 'animation.double_blade.shield_counter')
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
@@ -930,7 +930,7 @@ class DoubleBladeMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10
             ctx.freeze(pl)
-            playAnim(pl, 'animation.double_blade.shield')
+            playAnimCompatibility(pl, 'animation.double_blade.shield')
         },
         onLeave(pl, ctx) {
             ctx.status.isBlocking = false

@@ -12,7 +12,7 @@ exports.tricks = {
             cast: Infinity,
             onEnter(pl, ctx) {
                 ctx.status.isBlocking = true
-                playAnim(pl, 'animation.general.stand')
+                playAnimCompatibility(pl, 'animation.general.stand')
             },
             transitions: {
                 blocking: {
@@ -28,7 +28,7 @@ exports.tricks = {
             cast: 5,
             onEnter(pl) {
                 const side = Math.random() > 0.5 ? 'left' : 'right'
-                playAnim(pl, 'animation.twohanded.block.' + side, 'animation.twohanded.block.' + side)
+                playAnimCompatibility(pl, 'animation.twohanded.block.' + side, 'animation.twohanded.block.' + side)
             },
             transitions: {
                 default: { onEndOfLife: null },
@@ -47,11 +47,11 @@ exports.tricks = {
                     'onAttack',
                     'onUseItem'
                 ])
-                playAnim(pl, 'animation.general.fell')
+                playAnimCompatibility(pl, 'animation.general.fell')
             },
             onLeave(pl, ctx) {
                 ctx.unfreeze(pl)
-                playAnim(pl, 'animation.general.stand')
+                playAnimCompatibility(pl, 'animation.general.stand')
                 ctx.status.enableInputs([
                     'onAttack',
                     'onUseItem'

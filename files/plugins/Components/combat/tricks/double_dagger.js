@@ -43,7 +43,7 @@ class DoubleDaggerMoves extends DefaultMoves {
     init = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim(pl, 'animation.posture.clear')
+            playAnimCompatibility(pl, 'animation.posture.clear')
         },
         transitions: {
             hold: {
@@ -61,7 +61,7 @@ class DoubleDaggerMoves extends DefaultMoves {
     hold = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim(pl, 'animation.double_dagger.hold', 'animation.double_dagger.hold')
+            playAnimCompatibility(pl, 'animation.double_dagger.hold', 'animation.double_dagger.hold')
         },
         transitions: {
             init: {
@@ -93,7 +93,7 @@ class DoubleDaggerMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.status.isBlocking = true
             ctx.freeze(pl)
-            playAnim(pl, 'animation.double_dagger.horizontal_swing')
+            playAnimCompatibility(pl, 'animation.double_dagger.horizontal_swing')
             ctx.lookAtTarget(pl)
         },
         onAct(pl, ctx) {
@@ -170,7 +170,7 @@ class DoubleDaggerMoves extends DefaultMoves {
         backswing: 10,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
-            playAnim(pl, 'animation.double_dagger.horizontal_swing.to.vertical_chop')
+            playAnimCompatibility(pl, 'animation.double_dagger.horizontal_swing.to.vertical_chop')
             ctx.lookAtTarget(pl)
         },
         onAct(pl, ctx) {
@@ -233,7 +233,7 @@ class DoubleDaggerMoves extends DefaultMoves {
             ctx.status.isWaitingParry = true
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
-            playAnim(pl, 'animation.double_dagger.stab')
+            playAnimCompatibility(pl, 'animation.double_dagger.stab')
         },
         onAct(pl, ctx) {
             ctx.selectFromSector(pl, {
@@ -301,7 +301,7 @@ class DoubleDaggerMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.status.isWaitingDeflection = true
             ctx.freeze(pl)
-            playAnim(pl, 'animation.double_dagger.dodge.front')
+            playAnimCompatibility(pl, 'animation.double_dagger.dodge.front')
             ctx.lookAtTarget(pl)
         },
         onAct(_, ctx) {
@@ -351,7 +351,7 @@ class DoubleDaggerMoves extends DefaultMoves {
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
             playSoundAll('weapon.deflection', pl.pos, 1)
-            playAnim(pl, 'animation.double_dagger.deflection')
+            playAnimCompatibility(pl, 'animation.double_dagger.deflection')
         },
         onAct(_, ctx) {
             ctx.status.isDodging = false
@@ -407,7 +407,7 @@ class DoubleDaggerMoves extends DefaultMoves {
         backswing: 8,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
-            playAnim(pl, 'animation.double_dagger.deflection.stab')
+            playAnimCompatibility(pl, 'animation.double_dagger.deflection.stab')
         },
         onAct(pl, ctx) {
             ctx.lookAtTarget(pl)
@@ -456,7 +456,7 @@ class DoubleDaggerMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.freeze(pl)
             ctx.adsorbOrSetVelocity(pl, 1.5, 90, 0.8)
-            playAnim(pl, 'animation.double_dagger.deflection.punch')
+            playAnimCompatibility(pl, 'animation.double_dagger.deflection.punch')
         },
         onAct(pl, ctx) {
             ctx.lookAtTarget(pl)
@@ -497,7 +497,7 @@ class DoubleDaggerMoves extends DefaultMoves {
         backswing: 14,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
-            playAnim(pl, 'animation.double_dagger.dodge.catch')
+            playAnimCompatibility(pl, 'animation.double_dagger.dodge.catch')
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.8)
         },
         onAct(pl, ctx) {
@@ -583,7 +583,7 @@ class DoubleDaggerMoves extends DefaultMoves {
         backswing: 11,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
-            playAnim(pl, 'animation.double_dagger.catch.stab')
+            playAnimCompatibility(pl, 'animation.double_dagger.catch.stab')
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.8)
         },
         onAct(pl, ctx) {
@@ -624,7 +624,7 @@ class DoubleDaggerMoves extends DefaultMoves {
         backswing: 10,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
-            playAnim(pl, 'animation.double_dagger.catch.kick')
+            playAnimCompatibility(pl, 'animation.double_dagger.catch.kick')
             ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8)
         },
         onAct(pl, ctx) {

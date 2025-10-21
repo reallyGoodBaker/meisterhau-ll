@@ -10,7 +10,7 @@ class LightSaberMoves extends DefaultMoves {
     hold = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim(pl, 'animation.weapon.light_saber.hold', 'animation.weapon.light_saber.hold')
+            playAnimCompatibility(pl, 'animation.weapon.light_saber.hold', 'animation.weapon.light_saber.hold')
         },
         onTick(pl, ctx) {
             const { status } = ctx
@@ -58,7 +58,7 @@ class LightSaberMoves extends DefaultMoves {
     dodge = {
         cast: 15,
         onEnter(pl, ctx) {
-            playAnim(pl, 'animation.weapon.light_saber.dodge')
+            playAnimCompatibility(pl, 'animation.weapon.light_saber.dodge')
             ctx.movement(pl, false)
             ctx.setVelocity(pl, -90, 2, 0)
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 10)
@@ -113,7 +113,7 @@ class LightSaberMoves extends DefaultMoves {
         backswing: 10,
         onEnter(pl, ctx) {
             pl.setSprinting(false)
-            playAnim(pl, 'animation.weapon.light_saber.jump_attack')
+            playAnimCompatibility(pl, 'animation.weapon.light_saber.jump_attack')
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 15)
             ctx.freeze(pl)
         },
@@ -167,7 +167,7 @@ class LightSaberMoves extends DefaultMoves {
     beforeBlocking = {
         cast: 4,
         onEnter(pl, ctx) {
-            playAnim(pl, 'animation.weapon.light_saber.blocking', 'animation.weapon.light_saber.blocking')
+            playAnimCompatibility(pl, 'animation.weapon.light_saber.blocking', 'animation.weapon.light_saber.blocking')
             ctx.status.isWaitingParry = true
         },
         onLeave(pl, ctx) {
@@ -274,7 +274,7 @@ class LightSaberMoves extends DefaultMoves {
     running = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim(pl, 'animation.weapon.light_saber.run', 'animation.weapon.light_saber.run')
+            playAnimCompatibility(pl, 'animation.weapon.light_saber.run', 'animation.weapon.light_saber.run')
         },
         onTick(pl, ctx) {
             pl.tell(hud(ctx.status.stamina/100, 20), 5)
@@ -322,7 +322,7 @@ class LightSaberMoves extends DefaultMoves {
             ctx.movement(pl, false)
             ctx.setVelocity(pl, 90, 3, 0)
             pl.setSprinting(false)
-            playAnim(pl, 'animation.weapon.light_saber.dash')
+            playAnimCompatibility(pl, 'animation.weapon.light_saber.dash')
         },
         onTick(pl, ctx) {
             pl.tell(hud(ctx.status.stamina/100, 20), 5)
@@ -398,7 +398,7 @@ class LightSaberMoves extends DefaultMoves {
         cast: 10,
         backswing: 10,
         onEnter(pl, ctx) {
-            playAnim(pl, 'animation.weapon.light_saber.strike')
+            playAnimCompatibility(pl, 'animation.weapon.light_saber.strike')
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 20)
             ctx.freeze(pl)
             ctx.adsorbOrSetVelocity(pl, 1, 90)
@@ -451,7 +451,7 @@ class LightSaberMoves extends DefaultMoves {
         backswing: 11,
         onEnter(pl, ctx) {
             ctx.movement(pl, false)
-            playAnim(pl, 'animation.weapon.light_saber.attack1')
+            playAnimCompatibility(pl, 'animation.weapon.light_saber.attack1')
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 10)
         },
         onTick(pl, ctx) {
@@ -513,7 +513,7 @@ class LightSaberMoves extends DefaultMoves {
         backswing: 12,
         onEnter(pl, ctx) {
             ctx.movement(pl, false)
-            playAnim(pl, 'animation.weapon.light_saber.attack2')
+            playAnimCompatibility(pl, 'animation.weapon.light_saber.attack2')
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 12)
         },
         onAct(pl, ctx) {

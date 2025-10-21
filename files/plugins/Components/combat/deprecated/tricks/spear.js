@@ -1,5 +1,3 @@
-/// <reference path="../../basic/types.d.ts"/>
-
 const { playAnim } = require('../../basic')
 
 /**
@@ -13,7 +11,7 @@ module.exports = {
         default: {
             cast: Infinity,
             onEnter(pl,ctx) {
-                playAnim(pl, 'animation.weapon.spear.hold', 'animation.weapon.spear.hold')
+                playAnimCompatibility(pl, 'animation.weapon.spear.hold', 'animation.weapon.spear.hold')
                 pl.setSprinting(false)
             },
             transitions: {
@@ -35,7 +33,7 @@ module.exports = {
         run: {
             cast: Infinity,
             onEnter(pl) {
-                playAnim(pl, 'animation.weapon.spear.run','animation.weapon.spear.run')
+                playAnimCompatibility(pl, 'animation.weapon.spear.run','animation.weapon.spear.run')
 
             },
             transitions: {
@@ -66,7 +64,7 @@ module.exports = {
                 },
             },
             onEnter(pl,ctx) {
-                playAnim(pl, 'animation.weapon.spear.stab')
+                playAnimCompatibility(pl, 'animation.weapon.spear.stab')
                 ctx.freeze(pl,false)
                 ctx.setVelocity(pl,90,2,0)
             },
@@ -98,7 +96,7 @@ module.exports = {
                 },
             },
             onEnter(pl,ctx) {
-                playAnim(pl, 'animation.weapon.spear.attack')
+                playAnimCompatibility(pl, 'animation.weapon.spear.attack')
                 pl.setSprinting(false)
                 ctx.freeze(pl,false)
                 ctx.setVelocity(pl,90,1,0)
@@ -129,11 +127,11 @@ module.exports = {
                     'onAttack',
                     'onUseItem'
                 ])
-                playAnim(pl, 'animation.general.fell')
+                playAnimCompatibility(pl, 'animation.general.fell')
             },
             onLeave(pl, ctx) {
                 ctx.unfreeze(pl)
-                playAnim(pl, 'animation.general.stand')
+                playAnimCompatibility(pl, 'animation.general.stand')
                 ctx.status.enableInputs([
                     'onAttack',
                     'onUseItem'

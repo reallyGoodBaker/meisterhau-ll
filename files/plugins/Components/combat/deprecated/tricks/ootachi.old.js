@@ -16,10 +16,10 @@ module.exports = {
                 ctx.releaseTarget(pl.uniqueId)
                 if (ctx.previousStatus === 'running') {
                     ctx.task
-                        .queue(() => playAnim(pl, 'animation.weapon.ootachi.trans.running.idle'), 0)
-                        .queue(() => playAnim(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle'), 80)
+                        .queue(() => playAnimCompatibility(pl, 'animation.weapon.ootachi.trans.running.idle'), 0)
+                        .queue(() => playAnimCompatibility(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle'), 80)
                         .run()
-                } else playAnim(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle')
+                } else playAnimCompatibility(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle')
             },
             onLeave(_, ctx) {
                 ctx.task.cancel()
@@ -54,7 +54,7 @@ module.exports = {
             onEnter(pl, ctx) {
                 ctx.movement(pl)
                 ctx.camera(pl, false)
-                playAnim(pl, 'animation.weapon.ootachi.kamae.inno', 'animation.weapon.ootachi.kamae.inno')
+                playAnimCompatibility(pl, 'animation.weapon.ootachi.kamae.inno', 'animation.weapon.ootachi.kamae.inno')
             },
             onTick(pl, ctx) {
                 ctx.lookAtTarget(pl)
@@ -104,8 +104,8 @@ module.exports = {
             onEnter(pl, ctx) {
                 ctx.releaseTarget(pl.uniqueId)
                 ctx.task
-                    .queue(() => playAnim(pl, 'animation.weapon.ootachi.trans.idle.running'), 0)
-                    .queue(() => playAnim(pl, 'animation.weapon.ootachi.running', 'animation.weapon.ootachi.running'), 80)
+                    .queue(() => playAnimCompatibility(pl, 'animation.weapon.ootachi.trans.idle.running'), 0)
+                    .queue(() => playAnimCompatibility(pl, 'animation.weapon.ootachi.running', 'animation.weapon.ootachi.running'), 80)
                     .run()
                 
             },
@@ -136,7 +136,7 @@ module.exports = {
                     { handler: () => ctx.adsorbOrSetVelocity(pl, 1, 90), timeout: 100 },
                     { handler: () => ctx.adsorbOrSetVelocity(pl, 0.8, 90), timeout: 300 },
                 ]).run()
-                playAnim(pl, 'animation.weapon.ootachi.combo1.attack')
+                playAnimCompatibility(pl, 'animation.weapon.ootachi.combo1.attack')
             },
             onAct(pl, ctx) {
                 playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1)
@@ -187,7 +187,7 @@ module.exports = {
                     { handler: () => ctx.adsorbOrSetVelocity(pl, 1, 90), timeout: 200 },
                     { handler: () => ctx.adsorbOrSetVelocity(pl, 0.8, 90), timeout: 550 },
                 ]).run()
-                playAnim(pl, 'animation.weapon.ootachi.combo1.chop')
+                playAnimCompatibility(pl, 'animation.weapon.ootachi.combo1.chop')
             },
             onAct(pl, ctx) {
                 playSoundAll(`weapon.woosh.${randomRange(2, 4, true)}`, pl.pos, 1)
@@ -275,7 +275,7 @@ module.exports = {
             backswing: 4,
             onEnter(pl, ctx) {
                 ctx.task.queue(() => {
-                    playAnim(pl, 'animation.weapon.ootachi.combo2.cut')
+                    playAnimCompatibility(pl, 'animation.weapon.ootachi.combo2.cut')
                     ctx.adsorbOrSetVelocity(pl, 0.2, 90)
                 }, 100)
                     .queue(() => ctx.adsorbOrSetVelocity(pl, 1.2, 90), 350)
@@ -321,7 +321,7 @@ module.exports = {
             backswing: 2,
             onEnter(pl, ctx) {
                 ctx.task.queue(() => {
-                    playAnim(pl, 'animation.weapon.ootachi.combo2.sweap')
+                    playAnimCompatibility(pl, 'animation.weapon.ootachi.combo2.sweap')
                     ctx.adsorbOrSetVelocity(pl, 0.2, 90)
                 }, 100)
                     .queue(() => ctx.adsorbOrSetVelocity(pl, 1.2, 90), 200)
@@ -395,7 +395,7 @@ module.exports = {
             cast: 8,
             backswing: 6,
             onEnter(pl, ctx) {
-                playAnim(pl, 'animation.weapon.ootachi.combo3.stab')
+                playAnimCompatibility(pl, 'animation.weapon.ootachi.combo3.stab')
                 ctx.task
                     .queue(() => ctx.adsorbOrSetVelocity(pl, 0.5, 90), 0)
                     .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 200)
@@ -440,7 +440,7 @@ module.exports = {
             cast: 17,
             backswing: 12,
             onEnter(pl, ctx) {
-                playAnim(pl, 'animation.weapon.ootachi.combo3.sweap')
+                playAnimCompatibility(pl, 'animation.weapon.ootachi.combo3.sweap')
                 ctx.task
                     .queue(() => ctx.adsorbOrSetVelocity(pl, 2.5, 90), 700)
                     .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 280)
@@ -502,9 +502,9 @@ module.exports = {
                     direct !== 3 && ctx.adsorbToTarget(pl, 0.3)
 
                     if (direct !== 3) {
-                        playAnim(pl, 'animation.weapon.ootachi.dodge.front')
+                        playAnimCompatibility(pl, 'animation.weapon.ootachi.dodge.front')
                     } else {
-                        playAnim(pl, 'animation.weapon.ootachi.dodge.back')
+                        playAnimCompatibility(pl, 'animation.weapon.ootachi.dodge.back')
                     }
                 })
             },
@@ -567,7 +567,7 @@ module.exports = {
             cast: 6,
             backswing: 1,
             onEnter(pl, ctx) {
-                playAnim(pl, 'animation.weapon.ootachi.hlit')
+                playAnimCompatibility(pl, 'animation.weapon.ootachi.hlit')
                 ctx.adsorbOrSetVelocity(pl, 3, 90)
             },
             onAct(pl, ctx) {
@@ -605,7 +605,7 @@ module.exports = {
             onEnter(pl, ctx) {
                 playSoundAll('weapon.parry', pl.pos, 1)
                 ctx.status.isWaitingParry = true
-                playAnim(pl, 'animation.weapon.ootachi.parry')
+                playAnimCompatibility(pl, 'animation.weapon.ootachi.parry')
                 ctx.adsorbOrSetVelocity(pl, 8, 90)
             },
             onLeave(pl, ctx) {
@@ -647,7 +647,7 @@ module.exports = {
                     'onAttack',
                     'onUseItem'
                 ])
-                playAnim(pl, 'animation.general.parried.right')
+                playAnimCompatibility(pl, 'animation.general.parried.right')
             },
             onLeave(pl, ctx) {
                 ctx.status.enableInputs([
@@ -676,7 +676,7 @@ module.exports = {
                     'onAttack',
                     'onUseItem',
                 ])
-                playAnim(pl, 'animation.general.hit', 'animation.general.hit')
+                playAnimCompatibility(pl, 'animation.general.hit', 'animation.general.hit')
             },
             onLeave(pl, ctx) {
                 ctx.status.enableInputs([
@@ -715,11 +715,11 @@ module.exports = {
                     'onAttack',
                     'onUseItem'
                 ])
-                playAnim(pl, 'animation.general.fell')
+                playAnimCompatibility(pl, 'animation.general.fell')
             },
             onLeave(pl, ctx) {
                 ctx.unfreeze(pl)
-                playAnim(pl, 'animation.general.stand')
+                playAnimCompatibility(pl, 'animation.general.stand')
                 ctx.status.enableInputs([
                     'onAttack',
                     'onUseItem'
@@ -740,7 +740,7 @@ module.exports = {
                     'onAttack',
                     'onUseItem',
                 ])
-                playAnim(pl, 'animation.general.hit_wall')
+                playAnimCompatibility(pl, 'animation.general.hit_wall')
             },
             onLeave(pl, ctx) {
                 ctx.unfreeze(pl)

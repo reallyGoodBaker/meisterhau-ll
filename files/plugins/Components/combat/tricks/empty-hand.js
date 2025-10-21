@@ -8,7 +8,7 @@ class EmptyHandMoves extends DefaultMoves {
     blocking = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim(pl, 'animation.general.empty_hand')
+            playAnimCompatibility(pl, 'animation.general.empty_hand')
         },
         transitions: {
             cast: {

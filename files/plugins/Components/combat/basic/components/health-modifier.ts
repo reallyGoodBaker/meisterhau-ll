@@ -5,6 +5,7 @@ import { Timer } from "./timer"
 import { Fields, PublicComponent } from "../core/config"
 import { Optional } from '@utils/optional'
 
+/** 生命值修正组件 - 随时间调整生命值 */
 @PublicComponent('health-modifier')
 @Fields([ 'remain' ], [ 'delta', 'duration' ])
 export class HealthModifier extends RequireComponents([Scheduler, 20], Timer) {
@@ -27,6 +28,7 @@ export class HealthModifier extends RequireComponents([Scheduler, 20], Timer) {
         this.timer.rest = duration
     }
 
+    /** 每tick更新生命值 */
     onTick(manager: ComponentManager, pl: Optional<Player>): void {
         if (!this.scheduler.update) {
             return
@@ -60,6 +62,7 @@ export class HealthModifier extends RequireComponents([Scheduler, 20], Timer) {
         }
     }
 
+    /** 创建生命值修正组件 */
     static create({ delta, duration }: { delta: number, duration: number }) {
         return new HealthModifier(delta, duration)
     }

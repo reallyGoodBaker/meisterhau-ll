@@ -2,6 +2,11 @@ import { cmd, CommandPermission } from "@utils/command"
 import { getComponentId, getComponentCtor, getFieldEntries } from './config';
 import { Status } from "./status"
 
+/**
+ * 注册组件管理命令和实用工具命令
+ * 包括组件添加、移除、列表、检查和更新功能
+ * 以及武器给予等实用工具
+ */
 export function registerCommand() {
     cmd('components', '管理组件', 1).setup(register => {
         register('add <pl:player> <name:string> [args:json]', (_, __, output, args) => {

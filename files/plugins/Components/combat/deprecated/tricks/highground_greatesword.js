@@ -11,7 +11,7 @@ module.exports = {
         blocking: {
             cast: Infinity,
             onEnter(pl) {
-                playAnim(pl, 'animation.highground.blocking.hold', 'animation.highground.blocking.hold')
+                playAnimCompatibility(pl, 'animation.highground.blocking.hold', 'animation.highground.blocking.hold')
             },
             transitions: {
                 // changePosture: {
@@ -58,7 +58,7 @@ module.exports = {
                         ctx.setVelocity(pl, 90, 0.8, 0)
                     }, 200)
                     .run()
-                playAnim(pl, 'animation.highground.blocking.hlit.strike')
+                playAnimCompatibility(pl, 'animation.highground.blocking.hlit.strike')
             },
             onAct(pl, ctx) {
                 ctx.selectFromSector(pl, {
@@ -108,7 +108,7 @@ module.exports = {
             onEnter(pl, ctx) {
                 playSoundAll('weapon.parry', pl.pos, 1)
                 ctx.freeze(pl)
-                playAnim(pl, 'animation.highground.blocking.parry')
+                playAnimCompatibility(pl, 'animation.highground.blocking.parry')
                 ctx.setVelocity(pl, 90, 0.5, 0)
                 const opponent = ctx.rawArgs[1]
                 ctx.adsorbTo(pl, opponent)
@@ -142,7 +142,7 @@ module.exports = {
             backswing: 15,
             onEnter(pl, ctx) {
                 ctx.setVelocity(pl, 90, 1, 0)
-                playAnim(pl, 'animation.highground.parry.counter.strong')
+                playAnimCompatibility(pl, 'animation.highground.parry.counter.strong')
                 ctx.adsorbToTarget(pl, 10)
             },
             onAct(pl, ctx) {
@@ -176,7 +176,7 @@ module.exports = {
         transFlexible: {
             cast: 8,
             onEnter(pl) {
-                playAnim(pl, 'animation.highground.parry.trans.flexible')
+                playAnimCompatibility(pl, 'animation.highground.parry.trans.flexible')
             },
             onLeave(pl, ctx) {
                 ctx.unfreeze(pl)
@@ -191,7 +191,7 @@ module.exports = {
         h2blocking: {
             cast: 3,
             onEnter(pl) {
-                playAnim(pl, 'animation.highground.hlit.strike.blocking')
+                playAnimCompatibility(pl, 'animation.highground.hlit.strike.blocking')
             },
             onLeave(pl, ctx) {
                 ctx.unfreeze(pl)
@@ -208,7 +208,7 @@ module.exports = {
             backswing: 3,
             onEnter(pl, ctx) {
                 ctx.status.isBlocking = true
-                playAnim(pl, 'animation.highground.blocking.attack1')
+                playAnimCompatibility(pl, 'animation.highground.blocking.attack1')
                 ctx.freeze(pl)
                 if (ctx.distanceToTarget(pl) > 2) {
                     ctx.setVelocity(pl, 90, 0.5, 0)
@@ -284,7 +284,7 @@ module.exports = {
             onEnter(pl, ctx) {
                 ctx.freeze(pl)
                 ctx.adsorbOrSetVelocity(pl, 2, 90)
-                playAnim(pl, 'animation.highground.blocking.strike_back')
+                playAnimCompatibility(pl, 'animation.highground.blocking.strike_back')
             },
             onAct(pl, ctx) {
                 ctx.selectFromSector(pl, {
@@ -314,7 +314,7 @@ module.exports = {
             cast: 6,
             onEnter(pl, ctx) {
                 ctx.lookAtTarget(pl)
-                playAnim(pl, 'animation.highground.blocking.attack1.back')
+                playAnimCompatibility(pl, 'animation.highground.blocking.attack1.back')
             },
             timeline: {
                 2: (pl, ctx) => ctx.trap(pl)
@@ -342,7 +342,7 @@ module.exports = {
             onEnter(pl, ctx) {
                 ctx.freeze(pl)
                 ctx.lookAtTarget(pl)
-                playAnim(pl, 'animation.highground.blocking.attack2')
+                playAnimCompatibility(pl, 'animation.highground.blocking.attack2')
                 if (ctx.distanceToTarget(pl) > 2) {
                     ctx.setVelocity(pl, 60, 0.8, 0)   
                 }
@@ -392,7 +392,7 @@ module.exports = {
         changePosture: {
             cast: Infinity,
             onEnter(pl) {
-                playAnim(pl, 'animation.highground.blocking.hold', 'animation.highground.blocking.hold')
+                playAnimCompatibility(pl, 'animation.highground.blocking.hold', 'animation.highground.blocking.hold')
             },
             transitions: {
                 blocking: {
@@ -413,7 +413,7 @@ module.exports = {
         changePostureFlexible: {
             cast: Infinity,
             onEnter(pl) {
-                playAnim(pl, 'animation.highground.flexible.hold', 'animation.highground.flexible.hold')
+                playAnimCompatibility(pl, 'animation.highground.flexible.hold', 'animation.highground.flexible.hold')
             },
             transitions: {
                 flexibleMode: {
@@ -433,7 +433,7 @@ module.exports = {
         changePostureStrong: {
             cast: Infinity,
             onEnter(pl) {
-                playAnim(pl, 'animation.highground.strong.hold', 'animation.highground.strong.hold')
+                playAnimCompatibility(pl, 'animation.highground.strong.hold', 'animation.highground.strong.hold')
             },
             transitions: {
                 strongMode: {
@@ -453,7 +453,7 @@ module.exports = {
         flexibleMode: {
             cast: Infinity,
             onEnter(pl, ctx) {
-                playAnim(pl, 'animation.highground.flexible.hold', 'animation.highground.flexible.hold')
+                playAnimCompatibility(pl, 'animation.highground.flexible.hold', 'animation.highground.flexible.hold')
             },
             transitions: {
                 changePosture: {
@@ -493,7 +493,7 @@ module.exports = {
                 ctx.lookAtTarget(pl)
                 ctx.movement(pl, false)
                 ctx.setVelocity(pl, 90, 1, 0)
-                playAnim(pl, 'animation.highground.sweap')
+                playAnimCompatibility(pl, 'animation.highground.sweap')
             },
             onAct(pl, ctx) {
                 ctx.camera(pl, false)
@@ -539,7 +539,7 @@ module.exports = {
             cast: 13,
             onEnter(pl, ctx) {
                 ctx.freeze(pl)
-                playAnim(pl, 'animation.highground.dodge.start.blocking')
+                playAnimCompatibility(pl, 'animation.highground.dodge.start.blocking')
                 ctx.applyKnockbackAtVelocityDirection(pl, 2.5, 0)
             },
             onLeave(pl, ctx) {
@@ -572,7 +572,7 @@ module.exports = {
             cast: 13,
             onEnter(pl, ctx) {
                 ctx.freeze(pl)
-                playAnim(pl, 'animation.highground.dodge.start.strong')
+                playAnimCompatibility(pl, 'animation.highground.dodge.start.strong')
                 ctx.applyKnockbackAtVelocityDirection(pl, 2.5, 0)
             },
             onLeave(pl, ctx) {
@@ -605,7 +605,7 @@ module.exports = {
             cast: 6,
             onEnter(pl, ctx) {
                 ctx.freeze(pl)
-                playAnim(pl, 'animation.highground.dodge.strong.to.blocking')
+                playAnimCompatibility(pl, 'animation.highground.dodge.strong.to.blocking')
                 ctx.applyKnockbackAtVelocityDirection(pl, 1, 0)
             },
             onLeave(pl, ctx) {
@@ -623,7 +623,7 @@ module.exports = {
             onEnter(pl, ctx) {
                 ctx.freeze(pl)
                 ctx.applyKnockbackAtVelocityDirection(pl, 1, 0)
-                playAnim(pl, 'animation.highground.dodge.blocking.to.strong')
+                playAnimCompatibility(pl, 'animation.highground.dodge.blocking.to.strong')
             },
             onLeave(pl, ctx) {
                 ctx.unfreeze(pl)
@@ -653,7 +653,7 @@ module.exports = {
         dodgeTransToFlexible: {
             cast: 5,
             onEnter(pl, ctx) {
-                playAnim(pl, 'animation.highground.dodge.trans.flexible')
+                playAnimCompatibility(pl, 'animation.highground.dodge.trans.flexible')
                 ctx.applyKnockbackAtVelocityDirection(pl, 2, 0.12)
             },
             onLeave(pl, ctx) {
@@ -669,7 +669,7 @@ module.exports = {
         dodgeTransToBlocking: {
             cast: 5,
             onEnter(pl, ctx) {
-                playAnim(pl, 'animation.highground.dodge.trans.blocking')
+                playAnimCompatibility(pl, 'animation.highground.dodge.trans.blocking')
                 ctx.applyKnockbackAtVelocityDirection(pl, 2, 0.12)
             },
             onLeave(pl, ctx) {
@@ -685,7 +685,7 @@ module.exports = {
         dodgeTransToStrong: {
             cast: 5,
             onEnter(pl, ctx) {
-                playAnim(pl, 'animation.highground.dodge.trans.strong')
+                playAnimCompatibility(pl, 'animation.highground.dodge.trans.strong')
                 ctx.applyKnockbackAtVelocityDirection(pl, 2, 0.12)
             },
             onLeave(pl, ctx) {
@@ -701,7 +701,7 @@ module.exports = {
         strongMode: {
             cast: Infinity,
             onEnter(pl) {
-                playAnim(pl, 'animation.highground.strong.hold', 'animation.highground.strong.hold')
+                playAnimCompatibility(pl, 'animation.highground.strong.hold', 'animation.highground.strong.hold')
             },
             transitions: {
                 dodgeStrong: {
@@ -734,7 +734,7 @@ module.exports = {
             onEnter(pl, ctx) {
                 ctx.lookAtTarget(pl)
                 ctx.movement(pl, false)
-                playAnim(pl, 'animation.highground.strong.attack')
+                playAnimCompatibility(pl, 'animation.highground.strong.attack')
                 if (pl.isOnGround && ctx.distanceToTarget(pl) > 2) {
                     ctx.setVelocity(pl, 90, 1, 0.1)
                 }
@@ -796,7 +796,7 @@ module.exports = {
             onEnter(pl, ctx) {
                 ctx.lookAtTarget(pl)
                 ctx.freeze(pl)
-                playAnim(pl, 'animation.highground.kick')
+                playAnimCompatibility(pl, 'animation.highground.kick')
                 ctx.task.queue(() => {
                     if (ctx.distanceToTarget(pl) > 1.5) {
                         ctx.setVelocity(pl, 90, 1.5, 0.1)   
@@ -853,7 +853,7 @@ module.exports = {
         hit: {
             cast: 6,
             onEnter(pl, ctx) {
-                playAnim(pl, 'animation.general.hit')
+                playAnimCompatibility(pl, 'animation.general.hit')
                 ctx.status.disableInputs([
                     'onAttack',
                     'onUseItem'
@@ -881,7 +881,7 @@ module.exports = {
         parried: {
             cast: 35,
             onEnter(pl, ctx) {
-                playAnim(pl, 'animation.general.parried.right')
+                playAnimCompatibility(pl, 'animation.general.parried.right')
                 ctx.setVelocity(pl, -90, 1.5)
                 ctx.freeze(pl)
             },
@@ -910,11 +910,11 @@ module.exports = {
                     'onAttack',
                     'onUseItem'
                 ])
-                playAnim(pl, 'animation.general.fell')
+                playAnimCompatibility(pl, 'animation.general.fell')
             },
             onLeave(pl, ctx) {
                 ctx.unfreeze(pl)
-                playAnim(pl, 'animation.general.stand')
+                playAnimCompatibility(pl, 'animation.general.stand')
                 ctx.status.enableInputs([
                     'onAttack',
                     'onUseItem'

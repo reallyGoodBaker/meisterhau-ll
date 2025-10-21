@@ -1,4 +1,4 @@
-import { playAnim, playSoundAll } from "../basic/index"
+import { playAnim, playAnimCompatibility, playSoundAll } from "../basic/index"
 import { DefaultMoves, DefaultTrickModule, IncomingAttack, setVelocityByOrientation } from '../basic/default'
 import { input } from "scripts-rpc/func/input"
 import { Stamina } from "@combat/basic/components/core/stamina"
@@ -25,7 +25,7 @@ class UchigatanaMoves extends DefaultMoves {
     hold: Move = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim(pl, 'animation.weapon.uchigatana.hold', 'animation.weapon.uchigatana.hold')
+            playAnimCompatibility(pl, 'animation.weapon.uchigatana.hold', 'animation.weapon.uchigatana.hold')
         },
         transitions: {
             kamae: {
@@ -45,7 +45,7 @@ class UchigatanaMoves extends DefaultMoves {
     kamae: Move = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim(pl, 'animation.weapon.uchigatana.kamae', 'animation.weapon.uchigatana.kamae')
+            playAnimCompatibility(pl, 'animation.weapon.uchigatana.kamae', 'animation.weapon.uchigatana.kamae')
         },
         transitions: {
             hold: {
@@ -82,7 +82,7 @@ class UchigatanaMoves extends DefaultMoves {
     running: Move = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim(pl, 'animation.weapon.uchigatana.running', 'animation.weapon.uchigatana.running')
+            playAnimCompatibility(pl, 'animation.weapon.uchigatana.running', 'animation.weapon.uchigatana.running')
         },
         transitions: {
             resume: {
@@ -123,7 +123,7 @@ class UchigatanaMoves extends DefaultMoves {
             ctx.status.isBlocking = true
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
-            playAnim(pl, 'animation.weapon.uchigatana.attack1')
+            playAnimCompatibility(pl, 'animation.weapon.uchigatana.attack1')
         },
         onAct(pl, ctx) {
             ctx.trap(pl)
@@ -192,7 +192,7 @@ class UchigatanaMoves extends DefaultMoves {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
-            playAnim(pl, 'animation.weapon.uchigatana.attack1.heavy')
+            playAnimCompatibility(pl, 'animation.weapon.uchigatana.attack1.heavy')
         },
         onAct(pl, ctx) {
             ctx.trap(pl, { tag: 'counter' })
@@ -269,7 +269,7 @@ class UchigatanaMoves extends DefaultMoves {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 18
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
-            playAnim(
+            playAnimCompatibility(
                 pl,
                 ctx.previousStatus === 'attack1'
                     ? 'animation.weapon.uchigatana.attack2.ll'
@@ -325,13 +325,13 @@ class UchigatanaMoves extends DefaultMoves {
             switch (prev) {
                 case 'attack1':
                 case 'dcLeftL':
-                    playAnim(pl, 'animation.weapon.uchigatana.attack2.lh')
+                    playAnimCompatibility(pl, 'animation.weapon.uchigatana.attack2.lh')
                     break
                 case 'dcRightL':
-                    playAnim(pl, 'animation.weapon.uchigatana.dc.llh')
+                    playAnimCompatibility(pl, 'animation.weapon.uchigatana.dc.llh')
                     break
                 default:
-                    playAnim(pl, 'animation.weapon.uchigatana.attack2.hh')
+                    playAnimCompatibility(pl, 'animation.weapon.uchigatana.attack2.hh')
             }
 
             ctx.lookAtTarget(pl)
@@ -394,22 +394,22 @@ class UchigatanaMoves extends DefaultMoves {
             const ori = input.approximateOrientation(pl as Player)
             switch (ori) {
                 case input.Orientation.Left:
-                    playAnim(pl, 'animation.weapon.uchigatana.dodge.left')
+                    playAnimCompatibility(pl, 'animation.weapon.uchigatana.dodge.left')
                     ctx.setVelocity(pl, 0, 1.8)
                     break
                 
                 case input.Orientation.Right:
-                    playAnim(pl, 'animation.weapon.uchigatana.dodge.right')
+                    playAnimCompatibility(pl, 'animation.weapon.uchigatana.dodge.right')
                     ctx.setVelocity(pl, 180, 1.8)
                     break
 
                 case input.Orientation.Forward:
-                    playAnim(pl, 'animation.weapon.uchigatana.dodge.front')
+                    playAnimCompatibility(pl, 'animation.weapon.uchigatana.dodge.front')
                     ctx.adsorbToTarget(pl, 2)
                     break
             
                 default:
-                    playAnim(pl, 'animation.weapon.uchigatana.dodge.back')
+                    playAnimCompatibility(pl, 'animation.weapon.uchigatana.dodge.back')
                     ctx.setVelocity(pl, -90, 1.5)
                     break
             }
@@ -480,7 +480,7 @@ class UchigatanaMoves extends DefaultMoves {
             ctx.lookAtTarget(pl)
             ctx.status.isWaitingDeflection = true
             playSoundAll('weapon.deflection', pl.pos, 1)
-            playAnim(pl, 'animation.weapon.uchigatana.deflect.front')
+            playAnimCompatibility(pl, 'animation.weapon.uchigatana.deflect.front')
             ctx.adsorbToTarget(pl, 0.2)
         },
         onAct(pl, ctx) {
@@ -520,7 +520,7 @@ class UchigatanaMoves extends DefaultMoves {
             ctx.lookAtTarget(pl)
             playSoundAll('weapon.deflection', pl.pos, 1)
             ctx.status.isWaitingDeflection = true
-            playAnim(pl, 'animation.weapon.uchigatana.deflect.left')
+            playAnimCompatibility(pl, 'animation.weapon.uchigatana.deflect.left')
             ctx.adsorbToTarget(pl, 0.2)
         },
         onAct(pl, ctx) {
@@ -560,7 +560,7 @@ class UchigatanaMoves extends DefaultMoves {
             ctx.lookAtTarget(pl)
             playSoundAll('weapon.deflection', pl.pos, 1)
             ctx.status.isWaitingDeflection = true
-            playAnim(pl, 'animation.weapon.uchigatana.deflect.right')
+            playAnimCompatibility(pl, 'animation.weapon.uchigatana.deflect.right')
             ctx.adsorbToTarget(pl, 0.2)
         },
         onAct(pl, ctx) {
@@ -596,7 +596,7 @@ class UchigatanaMoves extends DefaultMoves {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 20
             ctx.lookAtTarget(pl)
             ctx.freeze(pl)
-            playAnim(pl, 'animation.weapon.uchigatana.dc.fh')
+            playAnimCompatibility(pl, 'animation.weapon.uchigatana.dc.fh')
         },
         onLeave(pl, ctx) {
             ctx.status.repulsible = true
@@ -649,7 +649,7 @@ class UchigatanaMoves extends DefaultMoves {
             ctx.status.repulsible = false
             ctx.components.getComponent(Stamina).unwrap().stamina -= 12
             ctx.freeze(pl)
-            playAnim(pl, 'animation.weapon.uchigatana.dc.ll')
+            playAnimCompatibility(pl, 'animation.weapon.uchigatana.dc.ll')
             ctx.adsorbToTarget(pl, 1.5)
         },
         onLeave(pl, ctx) {
@@ -701,7 +701,7 @@ class UchigatanaMoves extends DefaultMoves {
             ctx.status.repulsible = false
             ctx.components.getComponent(Stamina).unwrap().stamina -= 12
             ctx.freeze(pl)
-            playAnim(pl, 'animation.weapon.uchigatana.dc.rl')
+            playAnimCompatibility(pl, 'animation.weapon.uchigatana.dc.rl')
             ctx.adsorbToTarget(pl, 1.5)
         },
         onLeave(pl, ctx) {
@@ -756,7 +756,7 @@ class UchigatanaMoves extends DefaultMoves {
             ctx.status.repulsible = false
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10
             ctx.freeze(pl)
-            playAnim(pl, 'animation.weapon.uchigatana.dc.lh')
+            playAnimCompatibility(pl, 'animation.weapon.uchigatana.dc.lh')
             ctx.adsorbToTarget(pl, 3, 1.5)
         },
         onLeave(pl, ctx) {
@@ -824,7 +824,7 @@ class UchigatanaMoves extends DefaultMoves {
             ctx.status.repulsible = false
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10
             ctx.freeze(pl)
-            playAnim(pl, 'animation.weapon.uchigatana.dc.rh')
+            playAnimCompatibility(pl, 'animation.weapon.uchigatana.dc.rh')
             ctx.adsorbToTarget(pl, 3, 1.6)
         },
         onLeave(pl, ctx) {
@@ -866,7 +866,7 @@ class UchigatanaMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 10
             ctx.freeze(pl)
-            playAnim(pl, 'animation.weapon.uchigatana.raido.enter')
+            playAnimCompatibility(pl, 'animation.weapon.uchigatana.raido.enter')
             ctx.lookAtTarget(pl)
             ctx.status.isDodging = true
         },
@@ -908,7 +908,7 @@ class UchigatanaMoves extends DefaultMoves {
     raido: Move = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim(pl, 'animation.weapon.uchigatana.raido', 'animation.weapon.uchigatana.raido')
+            playAnimCompatibility(pl, 'animation.weapon.uchigatana.raido', 'animation.weapon.uchigatana.raido')
             ctx.freeze(pl)
         },
         onLeave(pl, ctx) {
@@ -932,7 +932,7 @@ class UchigatanaMoves extends DefaultMoves {
     raidoExit: Move = {
         cast: 7,
         onEnter(pl, ctx) {
-            playAnim(pl, 'animation.weapon.uchigatana.raido.exit')
+            playAnimCompatibility(pl, 'animation.weapon.uchigatana.raido.exit')
             ctx.freeze(pl)
         },
         onLeave(pl, ctx) {
@@ -960,7 +960,7 @@ class UchigatanaMoves extends DefaultMoves {
         backswing: 4,
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 18
-            playAnim(pl, 'animation.weapon.uchigatana.raido.attack')
+            playAnimCompatibility(pl, 'animation.weapon.uchigatana.raido.attack')
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
             ctx.status.isBlocking = true
@@ -1017,7 +1017,7 @@ class UchigatanaMoves extends DefaultMoves {
             ctx.freeze(pl)
             ctx.lookAtTarget(pl)
             const parryDir = ctx.components.getComponent(IncomingAttack).unwrap().approximateAttackDirection()
-            playAnim(pl, `animation.weapon.uchigatana.parry_counter.${parryDir}`)
+            playAnimCompatibility(pl, `animation.weapon.uchigatana.parry_counter.${parryDir}`)
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)

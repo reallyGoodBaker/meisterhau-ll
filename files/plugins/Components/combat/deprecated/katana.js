@@ -17,7 +17,7 @@ module.exports = {
             cast: Infinity,
             onEnter(pl) {
                 pl.setSprinting(false)
-                playAnim(pl, 'animation.general.stand')
+                playAnimCompatibility(pl, 'animation.general.stand')
             },
             transitions: {
                 attack: {
@@ -49,7 +49,7 @@ module.exports = {
                     .run()
 
                 ctx.setVelocity(pl, 90, 0.8, 0)
-                playAnim(pl, 'animation.twohanded.chop.midline.cast', 'default', 1000)
+                playAnimCompatibility(pl, 'animation.twohanded.chop.midline.cast', 'default', 1000)
             },
             onAct(pl, ctx) {
                 ctx.setVelocity(pl, 90, 0.8, 0)
@@ -59,7 +59,7 @@ module.exports = {
                     rotation: -5,
                     radius: 5
                 })
-                playAnim(pl, 'animation.twohanded.chop.midline.draw')
+                playAnimCompatibility(pl, 'animation.twohanded.chop.midline.draw')
                 targets.forEach(e => {
                     if (e.uniqueId === pl.uniqueId) {
                         return
@@ -95,7 +95,7 @@ module.exports = {
         running: {
             cast: Infinity,
             onEnter(pl) {
-                playAnim(pl, 'animation.twohanded.run.onehanded', 'animation.twohanded.run.onehanded')
+                playAnimCompatibility(pl, 'animation.twohanded.run.onehanded', 'animation.twohanded.run.onehanded')
             },
             transitions: {
                 default: {
@@ -114,7 +114,7 @@ module.exports = {
             backswing: 10,
             onEnter(pl) {
                 pl.addEffect(1, 12, 1, false)
-                playAnim(pl, 'animation.twohanded.run.twohanded', 'animation.twohanded.run.twohanded')
+                playAnimCompatibility(pl, 'animation.twohanded.run.twohanded', 'animation.twohanded.run.twohanded')
             },
             onAct(pl, ctx) {
                 if (pl.isOnGround) {
@@ -122,7 +122,7 @@ module.exports = {
                 }
 
                 ctx.freeze(pl)
-                playAnim(pl, 'animation.twohanded.pry.draw')
+                playAnimCompatibility(pl, 'animation.twohanded.pry.draw')
 
                 const entities = ctx.selectFromSector(pl, {
                     radius: 4,
@@ -154,7 +154,7 @@ module.exports = {
                 ctx.freeze(pl)
                 pl.setSprinting(false)
                 ctx.setVelocity(pl, 90, 0.5, 0)
-                playAnim(pl, `animation.twohanded.chop.${Math.random() > 0.5? 'left': 'right'}`, 'animation.general.stand', 0.2)
+                playAnimCompatibility(pl, `animation.twohanded.chop.${Math.random() > 0.5? 'left': 'right'}`, 'animation.general.stand', 0.2)
             },
             onAct(pl, ctx) {
                 const { selectFromSector } = ctx
@@ -191,7 +191,7 @@ module.exports = {
                 const [ victim, abuser, damage ] = rawArgs
 
                 const side = Math.random() > 0.5 ? 'left' : 'right'
-                playAnim(pl, 'animation.twohanded.block.' + side, 'animation.twohanded.block.' + side)
+                playAnimCompatibility(pl, 'animation.twohanded.block.' + side, 'animation.twohanded.block.' + side)
 
                 if (damage < 2) {
                     return
@@ -221,11 +221,11 @@ module.exports = {
             cast: Infinity,
             onEnter(pl, ctx) {
                 ctx.status.isBlocking = true
-                playAnim(pl, 'animation.twohanded.hold', 'animation.twohanded.hold')
+                playAnimCompatibility(pl, 'animation.twohanded.hold', 'animation.twohanded.hold')
             },
             onLeave(pl, ctx) {
                 ctx.status.isBlocking = false
-                playAnim(pl, 'animation.twohanded.hold', 'default', 0)
+                playAnimCompatibility(pl, 'animation.twohanded.hold', 'default', 0)
             },
             transitions: {
                 default: {
@@ -257,12 +257,12 @@ module.exports = {
 
                 ctx.movement(pl, false)
                 ctx.setVelocity(pl, 90, 0.5, 0)
-                playAnim(pl, 'animation.twohanded.pry.cast', 'animation.twohanded.pry.draw', 1000)
+                playAnimCompatibility(pl, 'animation.twohanded.pry.cast', 'animation.twohanded.pry.draw', 1000)
             },
             onAct(pl, ctx) {
                 ctx.camera(pl, false)
                 ctx.setVelocity(pl, 90, 1, 0)
-                playAnim(pl, 'animation.twohanded.pry.draw')
+                playAnimCompatibility(pl, 'animation.twohanded.pry.draw')
                 
                 const entities = ctx.selectFromSector(pl, {
                     radius: 3.5,
@@ -307,7 +307,7 @@ module.exports = {
         parring: {
             cast: 10,
             onEnter(pl, ctx) {
-                playAnim(pl, 'animation.twohanded.parry.left')
+                playAnimCompatibility(pl, 'animation.twohanded.parry.left')
                 const { status, task } = ctx
                 status.isWaitingParry = true
                 task.queue(() => status.isWaitingParry = false, 200)
@@ -329,7 +329,7 @@ module.exports = {
         parried: {
             cast: 35,
             onEnter(pl, ctx) {
-                playAnim(pl, 'animation.general.parried.right')
+                playAnimCompatibility(pl, 'animation.general.parried.right')
                 ctx.setVelocity(pl, -90, 1.5)
                 ctx.freeze(pl)
             },
@@ -350,7 +350,7 @@ module.exports = {
             cast: 6,
             onEnter(pl, ctx) {
                 ctx.setVelocity(pl, -90, 1, 0)
-                playAnim(pl, 'animation.general.hit', 'default', 0.3)
+                playAnimCompatibility(pl, 'animation.general.hit', 'default', 0.3)
                 ctx.freeze(pl)
             },
             onLeave(pl, ctx) {

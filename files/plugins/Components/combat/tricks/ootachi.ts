@@ -1,4 +1,4 @@
-import { playAnim, playSoundAll } from '../basic/index';
+import { playAnim, playAnimCompatibility, playSoundAll } from '../basic/index';
 import { randomRange } from '../../utils/math'
 import { setVelocityByOrientation, DefaultMoves, DefaultTrickModule, IncomingAttack } from '../basic/default'
 import { Stamina } from '@combat/basic/components/core/stamina'
@@ -32,10 +32,10 @@ class OotachiMoves extends DefaultMoves {
             ctx.releaseTarget(pl.uniqueId)
             if (ctx.previousStatus === 'running') {
                 ctx.task
-                    .queue(() => playAnim(pl, 'animation.weapon.ootachi.trans.running.idle'), 0)
-                    .queue(() => playAnim(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle'), 210)
+                    .queue(() => playAnimCompatibility(pl, 'animation.weapon.ootachi.trans.running.idle'), 0)
+                    .queue(() => playAnimCompatibility(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle'), 210)
                     .run()
-            } else playAnim(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle')
+            } else playAnimCompatibility(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle')
         },
         onLeave(_, ctx) {
             ctx.task.cancel()
@@ -59,7 +59,7 @@ class OotachiMoves extends DefaultMoves {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.freeze(pl)
-            playAnim(pl, 'animation.weapon.ootachi.kamae.inno', 'animation.weapon.ootachi.kamae.inno')
+            playAnimCompatibility(pl, 'animation.weapon.ootachi.kamae.inno', 'animation.weapon.ootachi.kamae.inno')
         },
         onTick(pl, ctx) {
             ctx.lookAtTarget(pl)
@@ -134,8 +134,8 @@ class OotachiMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.releaseTarget(pl.uniqueId)
             ctx.task
-                .queue(() => playAnim(pl, 'animation.weapon.ootachi.trans.idle.running'), 0)
-                .queue(() => playAnim(pl, 'animation.weapon.ootachi.running', 'animation.weapon.ootachi.running'), 210)
+                .queue(() => playAnimCompatibility(pl, 'animation.weapon.ootachi.trans.idle.running'), 0)
+                .queue(() => playAnimCompatibility(pl, 'animation.weapon.ootachi.running', 'animation.weapon.ootachi.running'), 210)
                 .run()
             
         },
@@ -166,7 +166,7 @@ class OotachiMoves extends DefaultMoves {
             ctx.status.isBlocking = true
             ctx.freeze(pl)
             setVelocityByOrientation(pl as Player, ctx, 0.5, 1)
-            playAnim(pl, 'animation.weapon.ootachi.combo1.attack')
+            playAnimCompatibility(pl, 'animation.weapon.ootachi.combo1.attack')
         },
         onAct(pl, ctx) {
             ctx.selectFromSector(pl, {
@@ -234,7 +234,7 @@ class OotachiMoves extends DefaultMoves {
                 }, timeout: 200 },
                 { handler: () => ctx.adsorbOrSetVelocity(pl, 0.5, 90), timeout: 400 },
             ]).run()
-            playAnim(pl, 'animation.weapon.ootachi.combo1.chop')
+            playAnimCompatibility(pl, 'animation.weapon.ootachi.combo1.chop')
             ctx.lookAtTarget(pl)
         },
         onAct(pl, ctx) {
@@ -316,7 +316,7 @@ class OotachiMoves extends DefaultMoves {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 18
             ctx.lookAtTarget(pl)
             ctx.freeze(pl)
-            playAnim(pl, `animation.weapon.ootachi.combo2.cut.${
+            playAnimCompatibility(pl, `animation.weapon.ootachi.combo2.cut.${
                 ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'
             }`)
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1.5)
@@ -390,14 +390,14 @@ class OotachiMoves extends DefaultMoves {
             if (ctx.previousStatus === 'parry') {
                 const parryDir = ctx.components.getComponent(IncomingAttack).unwrap().approximateAttackDirection()
                 if (parryDir === 'left') {
-                    playAnim(pl, 'animation.weapon.ootachi.combo2.sweap.r2')
+                    playAnimCompatibility(pl, 'animation.weapon.ootachi.combo2.sweap.r2')
                     ctx.adsorbOrSetVelocity(pl, 1, 180)
                 } else {
-                    playAnim(pl, 'animation.weapon.ootachi.combo2.sweap.r')
+                    playAnimCompatibility(pl, 'animation.weapon.ootachi.combo2.sweap.r')
                     ctx.adsorbOrSetVelocity(pl, 0.2, 90)
                 }
             } else {
-                playAnim(pl, `animation.weapon.ootachi.combo2.sweap.${ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'}`)
+                playAnimCompatibility(pl, `animation.weapon.ootachi.combo2.sweap.${ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'}`)
                 ctx.adsorbOrSetVelocity(pl, 0.2, 90)
             }
             ctx.task
@@ -469,7 +469,7 @@ class OotachiMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 17
             ctx.freeze(pl)
-            playAnim(pl, `animation.weapon.ootachi.combo3.stab.${
+            playAnimCompatibility(pl, `animation.weapon.ootachi.combo3.stab.${
                 ctx.previousStatus === 'combo2Sweap' ? 'r' : 'l'
             }`)
             ctx.task
@@ -520,7 +520,7 @@ class OotachiMoves extends DefaultMoves {
             ctx.lookAtTarget(pl)
             ctx.freeze(pl)
             ctx.adsorbOrSetVelocity(pl, 1, 90)
-            playAnim(pl, `animation.weapon.ootachi.combo3.sweap.${
+            playAnimCompatibility(pl, `animation.weapon.ootachi.combo3.sweap.${
                 ctx.previousStatus === 'combo2Sweap' ? 'r' : 'l'
             }`)
             ctx.task
@@ -584,9 +584,9 @@ class OotachiMoves extends DefaultMoves {
             }
 
             if (direct !== 3) {
-                playAnim(pl, 'animation.weapon.ootachi.dodge.front')
+                playAnimCompatibility(pl, 'animation.weapon.ootachi.dodge.front')
             } else {
-                playAnim(pl, 'animation.weapon.ootachi.dodge.back')
+                playAnimCompatibility(pl, 'animation.weapon.ootachi.dodge.back')
             }
 
             ctx.trap(pl, { tag: direct === 1 ? 'front' : 'side' })
@@ -707,7 +707,7 @@ class OotachiMoves extends DefaultMoves {
             ctx.freeze(pl)
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 20
             ctx.lookAtTarget(pl)
-            playAnim(pl, 'animation.weapon.ootachi.dodge.heavy', 'animation.weapon.ootachi.dodge.heavy')
+            playAnimCompatibility(pl, 'animation.weapon.ootachi.dodge.heavy', 'animation.weapon.ootachi.dodge.heavy')
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl)
@@ -761,7 +761,7 @@ class OotachiMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.status.repulsible = false
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 12
-            playAnim(pl, 'animation.weapon.ootachi.hlit')
+            playAnimCompatibility(pl, 'animation.weapon.ootachi.hlit')
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.5)
         },
         onAct(pl, ctx) {

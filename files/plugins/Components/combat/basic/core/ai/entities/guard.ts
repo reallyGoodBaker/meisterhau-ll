@@ -5,18 +5,30 @@ import { tricks } from '../../../../tricks/ornateTwoHander'
 import { EasyAISensing } from '../easyAiSensing'
 import { AiActions } from '../aiActions'
 
+/**
+ * 守卫AI类 - 实现守卫角色的AI行为
+ * 包含多种策略：默认策略、疯狂策略、左连击策略
+ */
 export class Guard extends MeisterhauAI {
 
     target: Entity | null = null
     readonly actions = new AiActions(this)
     readonly sensing = new EasyAISensing(this)
 
+    /**
+     * AI启动时初始化战斗组件
+     */
     async onStart() {
         this.actor.use(actor => {
             initCombatComponent(actor, tricks, this.status)
         })
     }
 
+    /**
+     * 获取指定策略的状态机
+     * @param strategy 策略名称
+     * @returns 策略状态机生成器
+     */
     getStrategy(strategy: string) {
         switch (strategy) {
             case 'default':
@@ -33,6 +45,10 @@ export class Guard extends MeisterhauAI {
         }
     }
 
+    /**
+     * 尝试获取目标
+     * @returns 是否成功获取目标
+     */
     async tryAcquireTarget() {
         if (!this.sensing.hasTarget()) {
             this.actions.lookAtNearest(8, [ 'player' ])
@@ -43,12 +59,19 @@ export class Guard extends MeisterhauAI {
         return true
     }
 
+    /**
+     * 尝试释放目标（当目标离开范围时）
+     */
     async tryReleaseTarget() {
         if (this.sensing.hasTarget() && !this.sensing.targetInRange(10)) {
             this.actions.removeTarget()
         }
     }
 
+    /**
+     * 获取疯狂策略 - 随机执行攻击、使用物品、潜行动作
+     * @returns 疯狂策略状态机生成器
+     */
     getCrazyStrategy() {
         const self = this
 
@@ -92,6 +115,11 @@ export class Guard extends MeisterhauAI {
         return moves()
     }
 
+    /**
+     * 获取默认策略 - 根据玩家行为智能响应
+     * 包含闪避惩罚、攻击响应、格挡破防等逻辑
+     * @returns 默认策略状态机生成器
+     */
     getDefaultStrategy() {
         const self = this
 
@@ -193,6 +221,10 @@ export class Guard extends MeisterhauAI {
         return moves()
     }
 
+    /**
+     * 获取左连击策略 - 简单的两连击组合
+     * @returns 左连击策略状态机生成器
+     */
     getLeftComboStrategy() {
         const ai = this
         async function *moves() {

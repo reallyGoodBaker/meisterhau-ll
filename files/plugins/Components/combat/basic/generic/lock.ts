@@ -10,9 +10,16 @@ import { StatusHud } from '../components/hud/statushud'
 import { Actor } from '@utils/actor'
 import { EventEmitter } from '../../../events'
 
+/** 锁定目标映射表 - 存储玩家ID到目标角色的映射 */
 const locks = new Map<string, Actor>()
+/** 冷却集合 - 防止重复锁定操作 */
 const cooldowns = new Set<string>()
 
+/**
+ * 锁定目标
+ * @param src 源玩家ID
+ * @param target 目标角色
+ */
 export function lockTarget(src: string, target: Actor) {
     const pl = mc.getPlayer(src)
 
@@ -35,6 +42,10 @@ export function lockTarget(src: string, target: Actor) {
     }
 }
 
+/**
+ * 释放目标锁定
+ * @param src 源玩家ID
+ */
 export function releaseTarget(src: string) {
     const pl = mc.getPlayer(src)
     const manager = Status.getOrCreate(src).componentManager
@@ -48,6 +59,11 @@ export function releaseTarget(src: string) {
     setTimeout(() => cooldowns.delete(pl.uniqueId), 500)
 }
 
+/**
+ * 切换锁定状态
+ * @param src 源玩家ID
+ * @returns 目标角色或null/false
+ */
 export function toggleLock(src: string) {
     if (locks.has(src)) {
         releaseTarget(src)
@@ -65,6 +81,12 @@ export function toggleLock(src: string) {
     return target
 }
 
+/**
+ * 计算两个角色之间的角度
+ * @param actor 源角色
+ * @param actor2 目标角色
+ * @returns [水平角度, 垂直角度]
+ */
 export function getAngle(actor: Actor, actor2: Actor) {
     const a = actor.pos
     const b = actor2.pos
@@ -76,6 +98,11 @@ export function getAngle(actor: Actor, actor2: Actor) {
     return [angleXZ - 90, -angleY]
 }
 
+/**
+ * 让角色看向目标
+ * @param actor 源角色
+ * @param target 目标角色
+ */
 export function lookAt(actor: Actor, target: Actor) {
     if (!target) {
         return releaseTarget(actor.uniqueId)
@@ -86,6 +113,11 @@ export function lookAt(actor: Actor, target: Actor) {
     actor.teleport(actor.feetPos, new DirectionAngle(0, yaw))
 }
 
+/**
+ * 从锁定组件获取目标角色
+ * @param actor 源角色
+ * @returns 目标角色的Optional包装
+ */
 export function getTargetFromLock(actor: Actor): Optional<Actor> {
     return Status.getComponentManager(actor.uniqueId).match(
         Optional.none(),
@@ -96,6 +128,10 @@ export function getTargetFromLock(actor: Actor): Optional<Actor> {
     )
 }
 
+/**
+ * 让角色看向锁定的目标
+ * @param pl 源角色
+ */
 export function lookAtTarget(pl: Actor) {
     const targetEntity = getTargetFromLock(pl)
 
@@ -106,10 +142,22 @@ export function lookAtTarget(pl: Actor) {
     lookAt(pl, targetEntity.unwrap())
 }
 
+/**
+ * 检查角色是否有锁定目标
+ * @param pl 源角色
+ * @returns 是否有锁定目标
+ */
 export function hasLock(pl: Actor) {
     return !getTargetFromLock(pl).isEmpty()
 }
 
+/**
+ * 吸附到目标角色
+ * @param pl 源角色
+ * @param en 目标角色
+ * @param max 最大吸附距离
+ * @param offset 偏移距离
+ */
 export function adsorbTo(pl: Actor, en: Actor, max: number, offset=2) {
     const dist = en.distanceTo(pl.pos) - offset
 
@@ -122,6 +170,12 @@ export function adsorbTo(pl: Actor, en: Actor, max: number, offset=2) {
     )
 }
 
+/**
+ * 吸附到锁定的目标
+ * @param pl 源角色
+ * @param max 最大吸附距离
+ * @param offset 偏移距离
+ */
 export function adsorbToTarget(pl: Actor, max: number, offset: number) {
     const en = getTargetFromLock(pl)
     if (en.isEmpty()) {
@@ -131,6 +185,13 @@ export function adsorbToTarget(pl: Actor, max: number, offset: number) {
     adsorbTo(pl, en.unwrap(), max, offset)
 }
 
+/**
+ * 吸附到目标或设置速度
+ * @param pl 源角色
+ * @param max 最大距离/速度
+ * @param velocityRot 速度角度
+ * @param offset 偏移距离
+ */
 export function adsorbOrSetVelocity(pl: Actor, max: number, velocityRot=90, offset=1.5) {
     const en = getTargetFromLock(pl)
     if (!en.isEmpty()) {
@@ -141,6 +202,11 @@ export function adsorbOrSetVelocity(pl: Actor, max: number, velocityRot=90, offs
     setVelocity(pl, velocityRot, max, -1)
 }
 
+/**
+ * 计算到锁定目标的距离
+ * @param pl 源角色
+ * @returns 到目标的距离，无目标时返回Infinity
+ */
 export function distanceToTarget(pl: Actor) {
     const en = getTargetFromLock(pl)
 
@@ -151,6 +217,11 @@ export function distanceToTarget(pl: Actor) {
     return en.unwrap().distanceTo(pl.pos)
 }
 
+/**
+ * 每tick更新锁定状态
+ * @param em 事件发射器
+ * @returns 更新函数
+ */
 export const onTick = (em: EventEmitter) => () => {
     locks.forEach(async (t, s) => {
         const _s = mc.getPlayer(s)
@@ -169,6 +240,11 @@ const ignoreEntities = [
     'minecraft:xp_orb',
 ]
 
+/**
+ * 获取最近的实体
+ * @param en 源角色
+ * @returns 最近的实体或null
+ */
 export function getClosedEntity(en: Actor) {
     let closed: Actor | null = null
         ,dist = Infinity

@@ -1,5 +1,5 @@
 import { DefaultMoves, DefaultTrickModule } from "combat/basic/default"
-import { playAnim } from "combat/basic/index"
+import { playAnim, playAnimCompatibility } from "combat/basic/index"
 
 class StaffMoves extends DefaultMoves {
     constructor() {
@@ -26,7 +26,7 @@ class StaffMoves extends DefaultMoves {
     idle: Move = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim(pl, 'animation.weapon.staff.idle', 'animation.weapon.staff.idle')
+            playAnimCompatibility(pl, 'animation.weapon.staff.idle', 'animation.weapon.staff.idle')
         },
         transitions: {
             transI2R: {
@@ -46,7 +46,7 @@ class StaffMoves extends DefaultMoves {
     transI2R: Move = {
         cast: 4,
         onEnter(pl) {
-            playAnim(pl, 'animation.weapon.staff.trans.i2r')
+            playAnimCompatibility(pl, 'animation.weapon.staff.trans.i2r')
         },
         transitions: {
             running: {
@@ -66,7 +66,7 @@ class StaffMoves extends DefaultMoves {
     transR2I: Move = {
         cast: 4,
         onEnter(pl) {
-            playAnim(pl, 'animation.weapon.staff.trans.r2i')
+            playAnimCompatibility(pl, 'animation.weapon.staff.trans.r2i')
         },
         transitions: {
             idle: {
@@ -86,7 +86,7 @@ class StaffMoves extends DefaultMoves {
     running: Move = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim(pl, 'animation.weapon.staff.running', 'animation.weapon.staff.running')
+            playAnimCompatibility(pl, 'animation.weapon.staff.running', 'animation.weapon.staff.running')
         },
         transitions: {
             transR2I: {
@@ -103,7 +103,7 @@ class StaffMoves extends DefaultMoves {
     hold: Move = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim(pl, 'animation.weapon.staff.hold', 'animation.weapon.staff.hold')
+            playAnimCompatibility(pl, 'animation.weapon.staff.hold', 'animation.weapon.staff.hold')
         },
         transitions: {
             idle: {

@@ -39,19 +39,19 @@ export class NonNullMap<K, V> implements Map<K, V> {
         return this.map.size
     }
 
-    entries(): MapIterator<[K, V]> {
+    entries() {
         return this.map.entries()
     }
 
-    keys(): MapIterator<K> {
+    keys() {
         return this.map.keys()
     }
 
-    values(): MapIterator<V> {
+    values() {
         return this.map.values()
     }
 
-    [Symbol.iterator](): MapIterator<[K, V]> {
+    [Symbol.iterator]() {
         return this.map[Symbol.iterator]()
     }
 

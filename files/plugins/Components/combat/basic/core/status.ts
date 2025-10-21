@@ -10,19 +10,37 @@ export const defaultAcceptableInputs = [
 ]
 
 export class Status {
+    /** 存储所有状态的映射表 */
     static readonly status = new Map<string, Status>()
+    
+    /**
+     * 根据唯一ID获取状态
+     * @param uniqueId 实体的唯一ID
+     * @returns 状态对象，如果不存在则返回undefined
+     */
     static get(uniqueId: string) {
         return this.status.get(uniqueId)
     }
 
+    /**
+     * 获取实体的组件管理器
+     * @param uniqueId 实体的唯一ID
+     * @returns 包含组件管理器的Optional对象
+     */
     static getComponentManager(uniqueId: string) {
         return Optional.some(this.get(uniqueId)?.componentManager)
     }
 
+    /**
+     * 获取或创建状态对象
+     * @param uniqueId 实体的唯一ID
+     * @returns 状态对象
+     */
     static getOrCreate(uniqueId: string) {
         return this.status.get(uniqueId) || new Status(uniqueId)
     }
 
+    /** 全局状态实例 */
     static readonly global = this.get('global_status')
 
     /**
@@ -130,6 +148,12 @@ export class Status {
         }
     }
 
+    /**
+     * 设置或检查输入是否可接受
+     * @param name 输入名称
+     * @param accept 是否接受该输入，可选（不提供时返回当前状态）
+     * @returns 当不提供accept参数时返回该输入是否可接受
+     */
     acceptableInput(name: string, accept?: boolean) {
         if (accept !== undefined) {
             accept
@@ -142,19 +166,25 @@ export class Status {
     }
 
     /**
-     * @param {AcceptbleInputTypes[]} inputs 
+     * 启用指定的输入类型
+     * @param inputs 要启用的输入类型数组
      */
     enableInputs(inputs: string[]) {
         inputs.forEach(type => this.acceptableInputs.add(type))
     }
 
     /**
-     * @param {AcceptbleInputTypes[]} inputs 
+     * 禁用指定的输入类型
+     * @param inputs 要禁用的输入类型数组
      */
     disableInputs(inputs: string[]) {
         inputs.forEach(type => this.acceptableInputs.delete(type))
     }
 
+    /**
+     * 设置预输入，500ms后自动清除
+     * @param input 预输入类型
+     */
     setPreInput(input: AcceptbleInputTypes) {
         if (this.#preInputTimer) {
             clearInterval(this.#preInputTimer)

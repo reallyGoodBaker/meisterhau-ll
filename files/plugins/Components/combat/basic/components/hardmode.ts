@@ -6,10 +6,13 @@ import { Status } from "../core/status"
 import { Timer } from "./timer"
 import { Optional } from "@utils/optional"
 
+/** 困难模式组件 - 降低伤害输出 */
 @PublicComponent('hardmode')
 export class HardmodeComponent extends BaseComponent {
+    /** 困难模式伤害修正值 */
     static readonly damageModifier = 0.6
 
+    /** 创建困难模式组件 */
     static create() {
         return new HardmodeComponent()
     }
@@ -31,10 +34,13 @@ export class HardmodeComponent extends BaseComponent {
 
 }
 
+/** 居合模式组件 - 增加伤害输出 */
 @PublicComponent('raidomode')
 export class RaidomodComponent extends BaseComponent {
+    /** 居合模式伤害修正值 */
     static readonly damageModifier = 2
 
+    /** 创建居合模式组件 */
     static create() {
         return new RaidomodComponent()
     }

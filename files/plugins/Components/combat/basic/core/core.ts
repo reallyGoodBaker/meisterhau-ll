@@ -1,6 +1,6 @@
 import { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } from '../../../scripts-rpc/func/kinematics'
 import { combat } from '../../../scripts-rpc/func/index'
-import { playAnim, playParticle } from '../index'
+import { playAnim, playAnimCompatibility, playParticle } from '../index'
 import { movement, camera, movementInput } from '../generic/index'
 import { selectFromSector } from '../generic/range'
 import { Status, defaultAcceptableInputs } from './status'
@@ -28,16 +28,31 @@ import { yawToVec2 } from '../../../utils/math'
 import { Actor } from '@utils/actor'
 import { HurtDisplay } from '../components/hud/hurtDisplay'
 
+/** 事件发射器 */
 export const emitter = em
 
 const { damage: _damage, _damageLL } = combat
 
 
+/**
+ * 检查是否为实体（非玩家）
+ * @param actor 演员对象
+ * @returns 是否为实体
+ */
 function isEntity(actor: Actor) {
     // @ts-ignore
     return Boolean(actor?.type)
 }
 
+/**
+ * 造成伤害并触发相机淡入淡出效果
+ * @param victim 受害者
+ * @param damage 伤害值
+ * @param cause 伤害原因，默认为'entityAttack'
+ * @param abuser 攻击者
+ * @param projectile 投射物
+ * @param damageOpt 伤害选项
+ */
 function damageWithCameraFading(victim: Actor, damage: number, cause: EntityDamageCause = 'entityAttack', abuser: Actor, projectile: Actor, damageOpt: DamageOption) {
     HurtDisplay.notifyHurt(abuser, victim, damageOpt as any)
 
@@ -62,10 +77,21 @@ function damageWithCameraFading(victim: Actor, damage: number, cause: EntityDama
     })
 }
 
+/**
+ * 触发击倒事件
+ * @param abuser 攻击者
+ * @param victim 受害者
+ * @param knockback 击退强度，默认为2
+ */
 function knockdown(abuser: Actor, victim: Actor, knockback=2) {
     em.emitNone('knockdown', abuser, victim, knockback)
 }
 
+/**
+ * 触发陷阱事件
+ * @param pl 玩家
+ * @param data 陷阱数据
+ */
 function trap(pl: Actor, data: any) {
     em.emitNone('trap', pl, data)
 }
@@ -79,6 +105,12 @@ em.connectWatcher({
     // }
 })
 
+/**
+ * 触发攻击事件
+ * @param abuser 攻击者
+ * @param victim 受害者
+ * @param damageOpt 伤害选项
+ */
 function attack(abuser: Actor, victim: Actor, damageOpt: DamageOption) {
     em.emitNone('attack', abuser, victim, damageOpt)
 }
@@ -94,17 +126,30 @@ const mobEvents = [
 
 const _status = (pl: Actor) => Status.getOrCreate(pl.uniqueId)
 
+/**
+ * 冻结玩家 - 禁用移动和相机控制
+ * @param pl 玩家实体
+ */
 function freeze(pl: Actor) {
     movement(pl, false)
     camera(pl, false)
 }
 
+/**
+ * 解冻玩家 - 启用移动和相机控制
+ * @param pl 玩家实体
+ */
 function unfreeze(pl: Actor) {
     movement(pl)
     // movementInput(pl, true)
     camera(pl)
 }
 
+/**
+ * 获取玩家移动方向
+ * @param pl 玩家实体
+ * @returns 移动方向（1-前，2-右，3-后，4-左）
+ */
 function getMoveDir(pl: Player) {
     // const previusPos = {
     //     x: pl.feetPos.x,
@@ -134,6 +179,12 @@ function getMoveDir(pl: Player) {
 }
 
 
+/**
+ * 创建移动上下文对象
+ * @param pl 玩家实体
+ * @param mixins 额外的上下文属性
+ * @returns 移动上下文对象
+ */
 function _ctx(pl: Actor, mixins: Partial<MovementContext> = {}): MovementContext {
     const status = _status(pl)
     return {
@@ -168,6 +219,11 @@ function _ctx(pl: Actor, mixins: Partial<MovementContext> = {}): MovementContext
     } as any
 }
 
+/**
+ * 监听玩家主手物品变化并更新状态
+ * @param pl 玩家实体
+ * @returns 更新后的状态对象
+ */
 function watchMainhandChange(pl: Player) {
     const status = Status.getOrCreate(pl.uniqueId)
     const hand = pl?.getHand()?.type ?? 'minecraft:air'
@@ -176,6 +232,12 @@ function watchMainhandChange(pl: Player) {
     return status
 }
 
+/**
+ * 从对象中挑选指定属性
+ * @param obj 源对象
+ * @param arr 属性列表
+ * @returns 包含指定属性的新对象
+ */
 const pick = (obj: any, arr: typeof playerAttrPickList) =>
     arr.reduce((iter: any, val) => (val in obj && (iter[val] = obj[val]), iter), {})
 
@@ -295,6 +357,7 @@ const defaultTransitionCondition = {
     allowedState: 'both',
 }
 
+/** 初始化战斗组件 */
 export function initCombatComponent(pl: Actor, bind: TrickModule, status: Status) {
     if (!bind) {
         return
@@ -312,6 +375,7 @@ export function initCombatComponent(pl: Actor, bind: TrickModule, status: Status
 }
 
 
+/** 状态转换 - 处理战斗状态转换逻辑 */
 export function transition(pl: Actor, bind: TrickModule, status: Status, eventName: string, prevent: () => void, args: any[]) {
     if (!bind) {
         return
@@ -423,7 +487,7 @@ function clearStatus(pl: Actor, s: Status, hand: string, hasBind?: TrickModule) 
     s.reset()
     s.hand = hand
     if (!hasBind) {
-        playAnim(pl, 'animation.general.stand')
+        playAnimCompatibility(pl, 'animation.general.stand')
     }
 }
 
@@ -985,6 +1049,7 @@ function listenAllCustomEvents(mods: Map<string, TrickModule>) {
     })
 }
 
+/** 监听所有Minecraft事件 - 设置战斗系统的事件监听器 */
 export function listenAllMcEvents(collection: TrickModule[]) {
     const mods = new Map<string, TrickModule>()
 
