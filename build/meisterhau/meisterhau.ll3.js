@@ -1,6 +1,6 @@
 'use strict';
 
-var require$$0$1 = require('http');
+var require$$0$2 = require('http');
 
 function getDefaultExportFromCjs (x) {
 	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
@@ -47,23 +47,24 @@ var loaderConfig = {
     ]
 };
 
-const { loadEntries } = loaderConfig;
-
 function load$1(m) {
     if (typeof m === 'function') {
         return m()
     }
 
-    for (const k of loadEntries) {
+    for (const k of loaderConfig.loadEntries) {
         if (typeof m[k] === 'function') {
             return m[k]()
         }
     }
 }
 
-var loadModule$1 = {
-    load: load$1
-};
+var loadModule$1 = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	load: load$1
+});
+
+var require$$0$1 = /*@__PURE__*/getAugmentedNamespace(loadModule$1);
 
 var events = {};
 
@@ -560,6 +561,7 @@ function requireEvents () {
 	return events;
 }
 
+/** 字符串参数类型映射 */
 const stringParamTypeMap = {
     bool: ParamType.Bool,
     int: ParamType.Int,
@@ -584,15 +586,18 @@ const stringParamTypeMap = {
     command: ParamType.Command,
     selector: ParamType.WildcardSelector,
 };
+/** 命令参数匹配器 */
 const matchers = {
     required: /^<([\w:]+)>$/,
     optional: /^\[([\w:]+)\]$/,
 };
+/** 创建令牌对象 */
 function tk(index, type, id, isOptional = true) {
     return {
         index, type, id, isOptional
     };
 }
+/** 解析命令字符串 */
 function parseCmdStr(str) {
     const frags = str.trim().split(/ +/);
     const tokens = [];
@@ -614,6 +619,7 @@ function parseCmdStr(str) {
     });
     return tokens;
 }
+/** 解析命令数组 */
 function parseCmdArr(arr) {
     const tokens = [];
     arr.forEach((el, i) => {
@@ -627,6 +633,7 @@ function parseCmdArr(arr) {
     });
     return tokens;
 }
+/** 命令注册器 */
 class Registry {
     _cmd;
     _tokenListCollection = new Set();
@@ -634,9 +641,11 @@ class Registry {
     constructor(cmd) {
         this._cmd = cmd;
     }
+    /** 获取指定长度的处理器集合 */
     getCollection(len) {
         return this._handlerCollection[len] ?? (this._handlerCollection[len] = []);
     }
+    /** 注册命令 */
     register(cmd, handler) {
         if (!cmd || !handler) {
             return this;
@@ -657,12 +666,14 @@ class Registry {
             .push([finalList.map(l => l.id), handler]);
         return this;
     }
+    /** 比较两个数组是否相同 */
     sameArr(arr1, arr2) {
         if (arr1.length !== arr2.length) {
             return false;
         }
         return new Set(arr1.concat(arr2)).size === arr1.length;
     }
+    /** 设置命令回调 */
     setCallback() {
         this._cmd.setCallback((cmd, origin, out, args) => {
             const argv = Object
@@ -676,6 +687,7 @@ class Registry {
     }
     registeredArgs = new Set();
     static enumIndex = 0;
+    /** 创建命令参数 */
     createArg(name, type, isOptional) {
         let argId = name;
         if (this.registeredArgs.has(name)) {
@@ -695,6 +707,7 @@ class Registry {
         return argId;
     }
     _submitted = false;
+    /** 提交命令注册 */
     submit() {
         this._tokenListCollection.forEach(tokens => {
             let ids = [];
@@ -707,16 +720,19 @@ class Registry {
         this.setCallback();
         this._submitted = true;
     }
+    /** 检查是否已提交 */
     isSubmitted() {
         return this._submitted;
     }
 }
+/** 命令权限枚举 */
 var CommandPermission;
 (function (CommandPermission) {
     CommandPermission[CommandPermission["Everyone"] = 0] = "Everyone";
     CommandPermission[CommandPermission["OP"] = 1] = "OP";
     CommandPermission[CommandPermission["Console"] = 2] = "Console";
 })(CommandPermission || (CommandPermission = {}));
+/** 服务器启动状态检查 */
 const serverStarted = (function () {
     let serverRunning = false;
     return (() => {
@@ -731,6 +747,7 @@ const serverStarted = (function () {
         return promise;
     });
 })();
+/** 创建命令 */
 function cmd(head, desc, perm = CommandPermission.OP) {
     const command = mc.newCommand(head, desc, perm);
     const registry = new Registry(command);
@@ -785,7 +802,7 @@ var hasRequiredServer;
 function requireServer () {
 	if (hasRequiredServer) return server;
 	hasRequiredServer = 1;
-	const http = require$$0$1;
+	const http = require$$0$2;
 	/**@type {Map<string, {jump: boolean, sneak: boolean, x: number, y: number}>} */
 	const inputStates = new Map();
 
@@ -1019,47 +1036,112 @@ class Optional {
 }
 const optionalNone = new Optional(null);
 
-function playAnim$4(pl, anim, nextAnim, time, stopExp, controller) {
+/**
+ * 播放动画
+ * @param pl - 玩家
+ * @param anim - 动画名称
+ * @param nextAnim - 下一个动画名称（可选）
+ * @param time - 动画时间（可选）
+ * @param stopExp - 停止表达式（可选）
+ * @param controller - 控制器名称（可选）
+ */
+function playAnim$3(pl, anim, nextAnim, time, stopExp, controller) {
     mc.runcmdEx(`/playanimation "${pl.name}" ` + [anim, nextAnim, time, stopExp, controller].filter(x => x).join(' '));
 }
-function playAnimCompatibility(actor, anim, nextAnim, time, stopExp, controller) {
+/**
+ * 兼容性播放动画 - 根据actor类型自动选择播放方式
+ * @param actor - 演员对象（玩家或实体）
+ * @param anim - 动画名称
+ * @param nextAnim - 下一个动画名称（可选）
+ * @param time - 动画时间（可选）
+ * @param stopExp - 停止表达式（可选）
+ * @param controller - 控制器名称（可选）
+ */
+function playAnimCompatibility$1(actor, anim, nextAnim, time, stopExp, controller) {
     if ('xuid' in actor) {
-        playAnim$4(actor, anim, nextAnim, time, stopExp, controller);
+        playAnim$3(actor, anim, nextAnim, time, stopExp, controller);
         return;
     }
     playAnimEntity(actor, anim, nextAnim, time, stopExp, controller);
 }
+/**
+ * 生成实体选择器
+ * @param en - 实体对象
+ * @returns 实体选择器字符串
+ */
 function entitySelector(en) {
     const pos = Optional.some(en?.pos);
     return pos.match('@e[c=0]', pos => `@e[c=1,type=${en.type},x=${pos.x},y=${pos.y},z=${pos.z},r=1]`);
 }
+/**
+ * 生成演员选择器 - 根据演员类型返回对应的选择器
+ * @param actor - 演员对象（玩家或实体）
+ * @returns 玩家名称或实体选择器
+ */
 function actorSelector(actor) {
     if ('xuid' in actor) {
         return `"${actor.name}"`;
     }
     return entitySelector(actor);
 }
+/**
+ * 为实体播放动画
+ * @param en - 实体对象
+ * @param anim - 动画名称
+ * @param nextAnim - 下一个动画名称（可选）
+ * @param time - 动画时间（可选）
+ * @param stopExp - 停止表达式（可选）
+ * @param controller - 控制器名称（可选）
+ */
 function playAnimEntity(en, anim, nextAnim, time, stopExp, controller) {
     mc.runcmdEx(`/playanimation ${entitySelector(en)} ` + [anim, nextAnim, time, stopExp, controller].filter(x => x).join(' '));
 }
+/**
+ * 为指定玩家播放音效
+ * @param pl - 玩家对象
+ * @param sound - 音效名称
+ * @param pos - 音效位置
+ * @param volume - 音量（可选）
+ * @param pitch - 音调（可选）
+ * @param minVolume - 最小音量（可选）
+ */
 function playSound(pl, sound, pos, volume, pitch, minVolume) {
     mc.runcmdEx(`/playsound ${sound} ${pl.name} ` + [
         pos.x, pos.y, pos.z, volume, pitch, minVolume
     ].join(' '));
 }
-function playSoundAll$4(sound, pos, volume, pitch, minVolume) {
+/**
+ * 为所有玩家播放音效
+ * @param sound - 音效名称
+ * @param pos - 音效位置
+ * @param volume - 音量（可选）
+ * @param pitch - 音调（可选）
+ * @param minVolume - 最小音量（可选）
+ */
+function playSoundAll$3(sound, pos, volume, pitch, minVolume) {
     mc.runcmdEx(`/playsound ${sound} @a ` + [
         pos.x, pos.y, pos.z, volume, pitch, minVolume
     ].join(' '));
 }
+/**
+ * 在指定位置播放粒子效果
+ * @param particle - 粒子名称
+ * @param pos - 粒子位置
+ */
 function playParticle(particle, pos) {
     mc.runcmdEx(`/particle ${particle} ` + [
         pos.x, pos.y, pos.z
     ].join(' '));
 }
+/**
+ * 可移动性函数 - 检查角色是否可移动（待实现）
+ * @returns 总是返回undefined（函数待实现）
+ */
 function movable() {
 }
+/** 默认移动速度 */
 const DEFAULT_SPEED$1 = 0.1;
+/** 默认姿态速度 */
 const DEFAULT_POSTURE_SPEED$2 = 0.04;
 
 var basic = /*#__PURE__*/Object.freeze({
@@ -1069,12 +1151,12 @@ var basic = /*#__PURE__*/Object.freeze({
 	actorSelector: actorSelector,
 	entitySelector: entitySelector,
 	movable: movable,
-	playAnim: playAnim$4,
-	playAnimCompatibility: playAnimCompatibility,
+	playAnim: playAnim$3,
+	playAnimCompatibility: playAnimCompatibility$1,
 	playAnimEntity: playAnimEntity,
 	playParticle: playParticle,
 	playSound: playSound,
-	playSoundAll: playSoundAll$4
+	playSoundAll: playSoundAll$3
 });
 
 var require$$0 = /*@__PURE__*/getAugmentedNamespace(basic);
@@ -1108,8 +1190,11 @@ typeof SuppressedError === "function" ? SuppressedError : function (error, suppr
     return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
 };
 
+/** 反射管理器符号 */
 const REFLECT_MANAGER = Symbol('reflect-manager');
+/** 反射实体符号 */
 const REFLECT_ENTITY = Symbol('reflect-entity');
+/** 自定义组件基类 */
 class CustomComponent {
     [REFLECT_MANAGER];
     [REFLECT_ENTITY] = Optional.none();
@@ -1126,10 +1211,12 @@ class CustomComponent {
         return this[REFLECT_ENTITY];
     }
 }
+/** 基础组件实现类 */
 class BaseComponent extends CustomComponent {
     onAttach(manager) { }
     onDetach(manager) { }
 }
+/** 组件管理器 - 管理组件的生命周期和更新 */
 class ComponentManager {
     owner;
     constructor(owner) {
@@ -1140,12 +1227,26 @@ class ComponentManager {
     #components = new Map();
     #prependTicks = [];
     #nextTicks = [];
+    /**
+     * 获取指定类型的组件
+     * @param ctor 组件构造函数
+     * @returns 包含组件的Optional对象
+     */
     getComponent(ctor) {
         return Optional.some(this.#components.get(ctor));
     }
+    /**
+     * 获取组件管理器的所有者
+     * @returns 所有者实体
+     */
     getOwner() {
         return this.owner.match(null, owner => owner);
     }
+    /**
+     * 获取多个指定类型的组件
+     * @param ctor 组件构造函数数组
+     * @returns 组件数组，不存在的组件返回undefined
+     */
     getComponents(...ctor) {
         return ctor.map(c => this.#components.get(c));
     }
@@ -1240,7 +1341,9 @@ class ComponentManager {
         }
     }
 }
+/** 必需组件符号 */
 const REQUIRED_COMPONENTS = Symbol('REQUIRED_COMPONENTS');
+/** 创建必需组件装饰器 */
 function RequireComponents(...params) {
     return class CRequiredComponent extends BaseComponent {
         [REQUIRED_COMPONENTS] = new Map();
@@ -1264,23 +1367,31 @@ function RequireComponents(...params) {
     };
 }
 
+/** 公共组件注册表 */
 const publicComponentRegistry = new Map();
+/** 组件ID映射 */
 const componentIdMapping = new WeakMap();
+/** 根据组件ID获取组件构造函数 */
 const getComponentCtor = (id) => {
     return publicComponentRegistry.get(id);
 };
+/** 根据组件构造函数获取组件ID */
 const getComponentId = (t) => {
     return componentIdMapping.get(t);
 };
+/** 公共组件装饰器 - 注册组件到公共注册表 */
 const PublicComponent = name => target => {
     publicComponentRegistry.set(name, target);
     componentIdMapping.set(target, name);
 };
+/** 字段键映射 */
 const fieldKeys = new Map();
+/** 字段装饰器 - 定义组件的可变和只读字段 */
 const Fields = (muts, lets = []) => target => {
     //@ts-ignore
     fieldKeys.set(target, { muts, lets });
 };
+/** 获取组件的字段条目 */
 function getFieldEntries(t) {
     const keys = fieldKeys.get(Object.getPrototypeOf(t).constructor);
     if (!keys) {
@@ -1292,23 +1403,21 @@ function getFieldEntries(t) {
     };
 }
 
+/** 相机组件 - 控制相机位置和旋转 */
 class CameraComponent extends BaseComponent {
-    /**
-     * [ x, y, z ]
-     */
+    /** 默认相机偏移 [x, y, z] */
     static defaultOffset = [2.5, 0, 1];
-    /**
-     * [ yaw, pitch ]
-     */
+    /** 默认相机旋转 [yaw, pitch] */
     static defaultRot = [0, 0];
-    /**
-     * [ x, y, z, yaw, pitch ]
-     */
+    /** 默认相机状态 [x, y, z, yaw, pitch] */
     static defaultStatus = this.defaultOffset.concat(this.defaultRot);
+    /** 当前相机偏移 */
     offset = CameraComponent.defaultOffset.slice();
+    /** 当前相机旋转 */
     rot = [0, 0];
 }
 
+/** 限制计算函数结果在指定范围内 */
 function constrictCalc$1(start, end, calcFn) {
     try {
         return minmax(start, end, calcFn.call(null));
@@ -1317,16 +1426,19 @@ function constrictCalc$1(start, end, calcFn) {
         return start;
     }
 }
+/** 将数值限制在最小值和最大值之间 */
 function minmax(min, max, val) {
     if (isNaN(val)) {
         return min;
     }
     return Math.max(min, Math.min(max, val));
 }
+/** 生成指定范围内的随机数 */
 function randomRange$1(min = 0, max = 1, integer = false) {
     const num = Math.random() * (max - min) + min;
     return integer ? Math.round(num) : num;
 }
+/** 数值数组线性插值 */
 const lerpn = (from, to, progress) => {
     if (from.length !== to.length) {
         return from;
@@ -1339,6 +1451,7 @@ const lerpn = (from, to, progress) => {
     }
     return res;
 };
+/** 角度数组线性插值（处理360度循环） */
 const alerpn = (from, to, progress) => {
     if (from.length !== to.length) {
         return from;
@@ -1352,12 +1465,15 @@ const alerpn = (from, to, progress) => {
     }
     return res;
 };
+/** 向量工具类 */
 class VectorHelper {
+    /** 创建零向量 */
     static zero() {
         return { x: 0, y: 0, z: 0 };
     }
 }
 const PiDiv180 = Math.PI / 180.0;
+/** 将偏航角转换为二维向量 */
 function yawToVec2(yaw) {
     const rad = yaw * PiDiv180;
     return {
@@ -1377,21 +1493,28 @@ var math = /*#__PURE__*/Object.freeze({
 	yawToVec2: yawToVec2
 });
 
+/** 计时器组件 - 倒计时功能 */
 let Timer = class Timer extends BaseComponent {
     duration;
+    /** 剩余时间 */
     rest;
+    /** 是否完成计时 */
     get done() {
         return this.rest <= 0;
     }
-    constructor(duration = 0) {
+    constructor(
+    /** 计时器总时长 */
+    duration = 0) {
         super();
         this.duration = duration;
         this.allowTick = true;
         this.rest = this.duration;
     }
+    /** 每tick减少剩余时间 */
     onTick() {
         this.rest--;
     }
+    /** 重置计时器 */
     reset() {
         this.rest = this.duration;
     }
@@ -1401,20 +1524,33 @@ Timer = __decorate([
     Fields(['rest'], ['duration', 'done'])
 ], Timer);
 
+/** 体力组件 - 管理角色的体力系统 */
 let Stamina = class Stamina extends CustomComponent {
     $stamina;
     maxStamina;
     restorePerTick;
     restoreCooldown;
+    /** 冷却计时器 */
     cooldown = Optional.none();
+    /** 上一帧体力值 */
     prevStamina;
+    /** 当前体力值 */
     get stamina() {
         return this.$stamina;
     }
+    /** 设置体力值（自动限制范围） */
     set stamina(v) {
         this.$stamina = minmax(0, this.maxStamina, v);
     }
-    constructor($stamina = 100, maxStamina = 100, restorePerTick = 1.6, restoreCooldown = 20) {
+    constructor(
+    /** 内部体力值 */
+    $stamina = 100, 
+    /** 最大体力值 */
+    maxStamina = 100, 
+    /** 每tick恢复量 */
+    restorePerTick = 1.6, 
+    /** 恢复冷却时间 */
+    restoreCooldown = 20) {
         super();
         this.$stamina = $stamina;
         this.maxStamina = maxStamina;
@@ -1423,18 +1559,21 @@ let Stamina = class Stamina extends CustomComponent {
         this.prevStamina = this.stamina;
         this.allowTick = true;
     }
+    /** 重置恢复冷却 */
     async resetRestore(manager) {
         this.cooldown = manager.getOrCreate(Timer, this.restoreCooldown);
         const cooldown = this.cooldown.unwrap();
         cooldown.rest = this.restoreCooldown;
         this.prevStamina = this.stamina;
     }
+    /** 设置冷却时间 */
     setCooldown(cooldown) {
         if (this.cooldown.isEmpty()) {
             return;
         }
         this.cooldown.unwrap().rest = cooldown;
     }
+    /** 每tick更新体力状态 */
     onTick(manager) {
         if (this.prevStamina > this.stamina) {
             this.resetRestore(manager);
@@ -1451,7 +1590,13 @@ Stamina = __decorate([
     Fields(['stamina', 'maxStamina', 'restorePerTick', 'restoreCooldown'])
 ], Stamina);
 
+/** 演员助手类 - 提供对演员（玩家/实体）的各种操作 */
 class ActorHelper {
+    /**
+     * 将演员转换为实体
+     * @param actor - 演员对象
+     * @returns
+     */
     static toEntity(actor) {
         // @ts-ignore
         if (actor.xuid) {
@@ -1460,6 +1605,11 @@ class ActorHelper {
         }
         return actor;
     }
+    /**
+     * 将演员转换为玩家
+     * @param actor - 演员对象
+     * @returns
+     */
     static toPlayer(actor) {
         // @ts-ignore
         if (actor.xuid) {
@@ -1471,17 +1621,38 @@ class ActorHelper {
             return actor.toPlayer();
         }
     }
+    /**
+     * 根据信息获取玩家
+     * @param info - 玩家信息（名称或标识符）
+     * @returns
+     */
     static getPlayer(info) {
         return Optional.some(mc.getPlayer(info));
     }
+    /**
+     * 根据信息获取实体
+     * @param info - 实体信息（标识符）
+     * @returns
+     */
     static getEntity(info) {
         // @ts-ignore
         return Optional.some(mc.getEntity(+info));
     }
+    /** 玩家标识符集合 */
     static players = new Set();
+    /**
+     * 检查演员是否为玩家
+     * @param actor - 演员对象
+     * @returns
+     */
     static isPlayer(actor) {
         return this.players.has(actor.uniqueId);
     }
+    /**
+     * 根据信息获取演员（优先尝试获取玩家）
+     * @param info - 演员信息
+     * @returns
+     */
     static getActor(info) {
         return this.getPlayer(String(info)).match(() => {
             if (ActorHelper.players.has(String(info))) {
@@ -1493,12 +1664,28 @@ class ActorHelper {
             return Optional.some(actor);
         });
     }
+    /**
+     * 获取演员的组件
+     * @param actor - 演员对象
+     * @param ctor - 组件构造函数
+     * @returns
+     */
     static getComponent(actor, ctor) {
         return Status.getComponentManager(actor.uniqueId).match(Optional.none(), manager => manager.getComponent(ctor));
     }
+    /**
+     * 获取演员位置（Optional包装）
+     * @param actor - 演员对象
+     * @returns
+     */
     static pos(actor) {
         return Optional.some(actor?.pos);
     }
+    /**
+     * 获取演员位置（直接返回，如果不存在则返回零向量）
+     * @param actor - 演员对象
+     * @returns
+     */
     static position(actor) {
         return actor?.pos ?? VectorHelper.zero();
     }
@@ -1510,16 +1697,33 @@ const defaultAcceptableInputs = [
 ];
 class Status {
     uniqueId;
+    /** 存储所有状态的映射表 */
     static status = new Map();
+    /**
+     * 根据唯一ID获取状态
+     * @param uniqueId 实体的唯一ID
+     * @returns 状态对象，如果不存在则返回undefined
+     */
     static get(uniqueId) {
         return this.status.get(uniqueId);
     }
+    /**
+     * 获取实体的组件管理器
+     * @param uniqueId 实体的唯一ID
+     * @returns 包含组件管理器的Optional对象
+     */
     static getComponentManager(uniqueId) {
         return Optional.some(this.get(uniqueId)?.componentManager);
     }
+    /**
+     * 获取或创建状态对象
+     * @param uniqueId 实体的唯一ID
+     * @returns 状态对象
+     */
     static getOrCreate(uniqueId) {
         return this.status.get(uniqueId) || new Status(uniqueId);
     }
+    /** 全局状态实例 */
     static global = this.get('global_status');
     /**
      * 手上物品的type
@@ -1610,6 +1814,12 @@ class Status {
             this.componentManager.attachComponent(new CameraComponent());
         }
     }
+    /**
+     * 设置或检查输入是否可接受
+     * @param name 输入名称
+     * @param accept 是否接受该输入，可选（不提供时返回当前状态）
+     * @returns 当不提供accept参数时返回该输入是否可接受
+     */
     acceptableInput(name, accept) {
         if (accept !== undefined) {
             accept
@@ -1620,17 +1830,23 @@ class Status {
         return this.acceptableInputs.has(name);
     }
     /**
-     * @param {AcceptbleInputTypes[]} inputs
+     * 启用指定的输入类型
+     * @param inputs 要启用的输入类型数组
      */
     enableInputs(inputs) {
         inputs.forEach(type => this.acceptableInputs.add(type));
     }
     /**
-     * @param {AcceptbleInputTypes[]} inputs
+     * 禁用指定的输入类型
+     * @param inputs 要禁用的输入类型数组
      */
     disableInputs(inputs) {
         inputs.forEach(type => this.acceptableInputs.delete(type));
     }
+    /**
+     * 设置预输入，500ms后自动清除
+     * @param input 预输入类型
+     */
     setPreInput(input) {
         if (this.#preInputTimer) {
             clearInterval(this.#preInputTimer);
@@ -1643,7 +1859,9 @@ class Status {
     }
 }
 
+/** Tick组件 - 全局游戏tick计数器 */
 class Tick extends CustomComponent {
+    /** 当前游戏tick数 */
     static tick = 0;
 }
 
@@ -1669,11 +1887,19 @@ const
 */;
 
 var CameraFading_1;
+/** 相机淡入淡出组件 - 处理相机过渡效果 */
 let CameraFading = CameraFading_1 = class CameraFading extends BaseComponent {
     config;
+    /** 开始tick数 */
     tickOffset = 0;
+    /** 是否已完成过渡 */
     finished = false;
+    /** 最终过渡参数 */
     last;
+    /**
+     * 构造函数
+     * @param config 过渡配置数组
+     */
     constructor(config = []) {
         super();
         this.config = config;
@@ -1682,21 +1908,26 @@ let CameraFading = CameraFading_1 = class CameraFading extends BaseComponent {
         this.config = config;
         this.last = ['linear', lastTo, lastTo, 1];
     }
+    /** 创建相机淡入淡出组件 */
     static create({ config }) {
         return new CameraFading_1(config);
     }
+    /** 获取从开始到现在的tick数 */
     dt() {
         return Tick.tick - this.tickOffset;
     }
+    /** 组件附加时记录开始时间 */
     onAttach() {
         this.tickOffset = Tick.tick;
     }
+    /** 复制数组内容 */
     copy(from, to) {
         const len = Math.min(from.length, to.length);
         for (let i = 0; i < len; i++) {
             to[i] = from[i];
         }
     }
+    /** 获取当前过渡信息 */
     getTransInfo() {
         const len = this.config.length;
         let remain = this.dt();
@@ -1717,6 +1948,7 @@ let CameraFading = CameraFading_1 = class CameraFading extends BaseComponent {
         }
         return this.last;
     }
+    /** 每tick更新相机过渡效果 */
     onTick(manager) {
         const { offset, rot } = manager.getComponent(CameraComponent).unwrap();
         const info = this.getTransInfo();
@@ -1734,15 +1966,18 @@ let CameraFading = CameraFading_1 = class CameraFading extends BaseComponent {
             this.finished = true;
         }
     }
+    /** 线性偏移计算 */
     offsetLinear(from, to, progress, target, rotation) {
         const offset = lerpn(from.slice(0, 3), to.slice(0, 3), progress);
         const rot = alerpn(from.slice(3, 5), to.slice(3, 5), progress);
         this.copy(offset, target);
         this.copy(rot, rotation);
     }
+    /** 根据攻击方向创建淡入淡出效果 */
     static fadeFromAttackDirection(abuser, damageOpt) {
         const { direction } = damageOpt;
         let to = null;
+        // 根据攻击方向设置不同的相机偏移
         switch (direction) {
             case 'right':
                 to = [...CameraComponent.defaultOffset, -15, 0];
@@ -1918,6 +2153,7 @@ class Delegate {
     }
 }
 
+/** 攻击传感器组件 - 检测来袭攻击 */
 class AttackSensor extends CustomComponent {
     onlySelf;
     onlyTeammates;
@@ -1928,21 +2164,28 @@ class AttackSensor extends CustomComponent {
         this.onlyTeammates = onlyTeammates;
         this.range = range;
     }
+    /** 当有攻击来袭时触发的事件委托 */
     onWillAttack = new Delegate();
 }
 
 var Team_1;
+/** 队伍组件 - 管理玩家队伍 */
 let Team = class Team extends BaseComponent {
     static { Team_1 = this; }
     name;
+    /** 队伍玩家映射表 */
     static players = new Map();
-    constructor(name = 'default') {
+    constructor(
+    /** 队伍名称 */
+    name = 'default') {
         super();
         this.name = name;
     }
+    /** 创建队伍组件 */
     static create({ name }) {
         return new Team_1(name);
     }
+    /** 组件附加时添加玩家到队伍 */
     onAttach() {
         this.getActor().use(pl => {
             const players = Team_1.players.get(this) || new Set();
@@ -1950,6 +2193,7 @@ let Team = class Team extends BaseComponent {
             Team_1.players.set(this, players);
         });
     }
+    /** 组件分离时从队伍移除玩家 */
     onDetach() {
         this.getActor().use(pl => {
             const players = Team_1.players.get(this);
@@ -1958,6 +2202,7 @@ let Team = class Team extends BaseComponent {
             }
         });
     }
+    /** 获取队伍成员 */
     getTeamMembers() {
         return Team_1.players.get(this) || new Set();
     }
@@ -1967,6 +2212,7 @@ Team = Team_1 = __decorate([
     Fields(['name'])
 ], Team);
 
+/** 获取近似攻击方向 */
 function getApproximatelyDir(direction) {
     return direction === 'right' ? 'right'
         : direction === 'middle' ? 'right'
@@ -1984,6 +2230,7 @@ function getAnim(animCategory, direction) {
     }
     return anim;
 }
+/** 来袭攻击组件 */
 class IncomingAttack extends BaseComponent {
     damage;
     instigator;
@@ -2003,10 +2250,11 @@ class IncomingAttack extends BaseComponent {
         this.powerful = powerful;
         this.trace = trace;
     }
+    /** 获取近似攻击方向 */
     approximateAttackDirection() {
         return getApproximatelyDir(this.direction);
     }
-    // 添加此组件时候，通知 AttackSensor
+    /** 添加此组件时，通知 AttackSensor */
     onAttach() {
         this.getActor().use(actor => {
             Status.getComponentManager(actor.uniqueId).use(comps => {
@@ -2045,6 +2293,7 @@ class IncomingAttack extends BaseComponent {
         });
     }
 }
+/** 根据朝向设置速度 */
 function setVelocityByOrientation(pl, ctx, max, offset) {
     const ori = input.approximateOrientation(pl);
     if (ori === input.Orientation.Backward) {
@@ -2054,7 +2303,9 @@ function setVelocityByOrientation(pl, ctx, max, offset) {
         ctx.adsorbToTarget(pl, max, offset);
     }
 }
+/** 默认动作集合 */
 let DefaultMoves$4 = class DefaultMoves {
+    /** 获取指定名称的动作 */
     getMove(name) {
         if (!this.hasMove(name)) {
             console.log(Error().stack);
@@ -2062,6 +2313,7 @@ let DefaultMoves$4 = class DefaultMoves {
         }
         return this[name];
     }
+    /** 检查是否存在指定名称的动作 */
     hasMove(name) {
         return name in this;
     }
@@ -2138,8 +2390,8 @@ let DefaultMoves$4 = class DefaultMoves {
         onEnter: (pl, ctx) => {
             const { direction } = ctx.rawArgs[2];
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 10;
-            playAnimCompatibility(pl, getAnim(this.animations.blocked, direction));
-            playSoundAll$4(this.sounds.blocked, pl.pos, 1);
+            playAnimCompatibility$1(pl, getAnim(this.animations.blocked, direction));
+            playSoundAll$3(this.sounds.blocked, pl.pos, 1);
             ctx.movement(pl, false);
             ctx.freeze(pl);
             ctx.setVelocity(pl, -100, 0.8, -2);
@@ -2161,8 +2413,8 @@ let DefaultMoves$4 = class DefaultMoves {
             stamina.setCooldown(5);
             stamina.stamina += 15;
             ctx.status.isBlocking = true;
-            playAnimCompatibility(pl, getAnim(this.animations.block, direction));
-            playSoundAll$4(this.sounds.block, pl.pos, 1);
+            playAnimCompatibility$1(pl, getAnim(this.animations.block, direction));
+            playSoundAll$3(this.sounds.block, pl.pos, 1);
             ctx.movement(pl, false);
             ctx.freeze(pl);
         },
@@ -2196,7 +2448,7 @@ let DefaultMoves$4 = class DefaultMoves {
                 ctx.trap(pl, { tag: 'execution', execution });
                 return;
             }
-            playAnimCompatibility(pl, hurtAnim);
+            playAnimCompatibility$1(pl, hurtAnim);
             ctx.task.queue(() => {
                 ctx.trap(pl, { tag: 'recover' });
             }, stiffness).run();
@@ -2252,7 +2504,7 @@ let DefaultMoves$4 = class DefaultMoves {
                 'onAttack',
                 'onUseItem',
             ]);
-            playAnimCompatibility(pl, 'animation.general.hit_wall');
+            playAnimCompatibility$1(pl, 'animation.general.hit_wall');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -2273,7 +2525,7 @@ let DefaultMoves$4 = class DefaultMoves {
                 'onUseItem',
             ]);
             const { direction } = ctx.rawArgs[2];
-            playAnimCompatibility(pl, getAnim(this.animations.parried, direction));
+            playAnimCompatibility$1(pl, getAnim(this.animations.parried, direction));
             ctx.trap(pl, { tag: getApproximatelyDir(direction) });
         },
         transitions: {
@@ -2330,9 +2582,9 @@ let DefaultMoves$4 = class DefaultMoves {
             const { direction } = ctx.rawArgs[2];
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina += 10;
             ctx.movement(pl, false);
-            playSoundAll$4(this.sounds.parry, pl.pos, 1);
+            playSoundAll$3(this.sounds.parry, pl.pos, 1);
             ctx.status.isWaitingParry = true;
-            playAnimCompatibility(pl, getAnim(this.animations.parry, direction));
+            playAnimCompatibility$1(pl, getAnim(this.animations.parry, direction));
             ctx.lookAt(pl, target);
             ctx.status.componentManager.attachComponent(new CameraFading([
                 {
@@ -2364,11 +2616,11 @@ let DefaultMoves$4 = class DefaultMoves {
                 'onAttack',
                 'onUseItem'
             ]);
-            playAnimCompatibility(pl, this.animations.knockdown);
+            playAnimCompatibility$1(pl, this.animations.knockdown);
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
-            playAnimCompatibility(pl, 'animation.general.stand');
+            playAnimCompatibility$1(pl, 'animation.general.stand');
             ctx.status.enableInputs([
                 'onAttack',
                 'onUseItem'
@@ -2376,6 +2628,7 @@ let DefaultMoves$4 = class DefaultMoves {
         },
         transitions: {}
     };
+    /** 设置状态转换 */
     setup(init) {
         this.hitWall.transitions = {
             hurt: {
@@ -2454,10 +2707,12 @@ let DefaultMoves$4 = class DefaultMoves {
             }
         };
     }
+    /** 混合状态属性 */
     mixin(state, obj) {
         //@ts-ignore
         this[state] = Object.assign(this[state], obj);
     }
+    /** 设置状态转换 */
     setTransition(state, transitionName, transition) {
         //@ts-ignore
         const _state = this[state];
@@ -2467,6 +2722,7 @@ let DefaultMoves$4 = class DefaultMoves {
         _state.transitions[transitionName] = transition;
     }
 };
+/** 默认技巧模块 */
 let DefaultTrickModule$4 = class DefaultTrickModule {
     sid;
     entry;
@@ -2491,7 +2747,7 @@ var _default = /*#__PURE__*/Object.freeze({
 
 var require$$1$2 = /*@__PURE__*/getAugmentedNamespace(_default);
 
-const { playAnim: playAnim$3, playSoundAll: playSoundAll$3 } = require$$0;
+const { playAnim: playAnim$2, playSoundAll: playSoundAll$2 } = require$$0;
 const { DefaultMoves: DefaultMoves$3, DefaultTrickModule: DefaultTrickModule$3 } = require$$1$2;
 
 class DoubleDaggerMoves extends DefaultMoves$3 {
@@ -2536,7 +2792,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
     init = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$3(pl, 'animation.posture.clear');
+            playAnimCompatibility(pl, 'animation.posture.clear');
         },
         transitions: {
             hold: {
@@ -2554,7 +2810,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
     hold = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim$3(pl, 'animation.double_dagger.hold', 'animation.double_dagger.hold');
+            playAnimCompatibility(pl, 'animation.double_dagger.hold', 'animation.double_dagger.hold');
         },
         transitions: {
             init: {
@@ -2586,11 +2842,11 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         onEnter(pl, ctx) {
             ctx.status.isBlocking = true;
             ctx.freeze(pl);
-            playAnim$3(pl, 'animation.double_dagger.horizontal_swing');
+            playAnimCompatibility(pl, 'animation.double_dagger.horizontal_swing');
             ctx.lookAtTarget(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll$3('weapon.woosh.1', pl.pos, 1);
+            playSoundAll$2('weapon.woosh.1', pl.pos, 1);
             ctx.selectFromSector(pl, {
                 angle: 90,
                 radius: 2,
@@ -2663,7 +2919,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         backswing: 10,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$3(pl, 'animation.double_dagger.horizontal_swing.to.vertical_chop');
+            playAnimCompatibility(pl, 'animation.double_dagger.horizontal_swing.to.vertical_chop');
             ctx.lookAtTarget(pl);
         },
         onAct(pl, ctx) {
@@ -2685,7 +2941,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         timeline: {
             0: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
             4: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8),
-            9: pl => playSoundAll$3('weapon.woosh.3', pl.pos, 1),
+            9: pl => playSoundAll$2('weapon.woosh.3', pl.pos, 1),
             10: (pl, ctx) => ctx.trap(pl)
         },
         transitions: {
@@ -2726,7 +2982,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
             ctx.status.isWaitingParry = true;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$3(pl, 'animation.double_dagger.stab');
+            playAnimCompatibility(pl, 'animation.double_dagger.stab');
         },
         onAct(pl, ctx) {
             ctx.selectFromSector(pl, {
@@ -2750,7 +3006,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
             3: (_, ctx) => ctx.status.isWaitingParry = false,
             6: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8),
             8: (_, ctx) => ctx.status.isBlocking = true,
-            9: pl => playSoundAll$3('weapon.woosh.2', pl.pos, 1),
+            9: pl => playSoundAll$2('weapon.woosh.2', pl.pos, 1),
             12: (_, ctx) => ctx.status.isBlocking = false,
             14: (pl, ctx) => ctx.trap(pl)
         },
@@ -2794,7 +3050,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         onEnter(pl, ctx) {
             ctx.status.isWaitingDeflection = true;
             ctx.freeze(pl);
-            playAnim$3(pl, 'animation.double_dagger.dodge.front');
+            playAnimCompatibility(pl, 'animation.double_dagger.dodge.front');
             ctx.lookAtTarget(pl);
         },
         onAct(_, ctx) {
@@ -2843,8 +3099,8 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
             ctx.status.isDodging = true;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playSoundAll$3('weapon.deflection', pl.pos, 1);
-            playAnim$3(pl, 'animation.double_dagger.deflection');
+            playSoundAll$2('weapon.deflection', pl.pos, 1);
+            playAnimCompatibility(pl, 'animation.double_dagger.deflection');
         },
         onAct(_, ctx) {
             ctx.status.isDodging = false;
@@ -2900,7 +3156,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         backswing: 8,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$3(pl, 'animation.double_dagger.deflection.stab');
+            playAnimCompatibility(pl, 'animation.double_dagger.deflection.stab');
         },
         onAct(pl, ctx) {
             ctx.lookAtTarget(pl);
@@ -2921,7 +3177,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         },
         timeline: {
             5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 60, 0),
-            6: pl => playSoundAll$3('weapon.woosh.2', pl.pos, 1)
+            6: pl => playSoundAll$2('weapon.woosh.2', pl.pos, 1)
         },
         transitions: {
             hurt: {
@@ -2949,7 +3205,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.adsorbOrSetVelocity(pl, 1.5, 90, 0.8);
-            playAnim$3(pl, 'animation.double_dagger.deflection.punch');
+            playAnimCompatibility(pl, 'animation.double_dagger.deflection.punch');
         },
         onAct(pl, ctx) {
             ctx.lookAtTarget(pl);
@@ -2990,7 +3246,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         backswing: 14,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$3(pl, 'animation.double_dagger.dodge.catch');
+            playAnimCompatibility(pl, 'animation.double_dagger.dodge.catch');
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.8);
         },
         onAct(pl, ctx) {
@@ -3076,7 +3332,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         backswing: 11,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$3(pl, 'animation.double_dagger.catch.stab');
+            playAnimCompatibility(pl, 'animation.double_dagger.catch.stab');
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.8);
         },
         onAct(pl, ctx) {
@@ -3117,7 +3373,7 @@ class DoubleDaggerMoves extends DefaultMoves$3 {
         backswing: 10,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$3(pl, 'animation.double_dagger.catch.kick');
+            playAnimCompatibility(pl, 'animation.double_dagger.catch.kick');
             ctx.adsorbOrSetVelocity(pl, 2, 90, 0.8);
         },
         onAct(pl, ctx) {
@@ -3163,7 +3419,6 @@ double_dagger.tricks = new DoubleDaggerTricks();
 
 var emptyHand = {};
 
-const { playAnim: playAnim$2, playSoundAll: playSoundAll$2 } = require$$0;
 const { DefaultMoves: DefaultMoves$2, DefaultTrickModule: DefaultTrickModule$2 } = require$$1$2;
 
 class EmptyHandMoves extends DefaultMoves$2 {
@@ -3173,7 +3428,7 @@ class EmptyHandMoves extends DefaultMoves$2 {
     blocking = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$2(pl, 'animation.general.empty_hand');
+            playAnimCompatibility(pl, 'animation.general.empty_hand');
         },
         transitions: {
             cast: {
@@ -3210,6 +3465,7 @@ var lightSaber = {};
 
 var require$$2$1 = /*@__PURE__*/getAugmentedNamespace(math);
 
+/** 创建HUD进度条 */
 function hud$1(progress, size, style = ['', '§6▮', '§4▯', '']) {
     const duration = Math.ceil(size * progress);
     const [left, bar, empty, right] = style;
@@ -3237,7 +3493,7 @@ class LightSaberMoves extends DefaultMoves$1 {
     hold = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim$1(pl, 'animation.weapon.light_saber.hold', 'animation.weapon.light_saber.hold');
+            playAnimCompatibility(pl, 'animation.weapon.light_saber.hold', 'animation.weapon.light_saber.hold');
         },
         onTick(pl, ctx) {
             const { status } = ctx;
@@ -3285,7 +3541,7 @@ class LightSaberMoves extends DefaultMoves$1 {
     dodge = {
         cast: 15,
         onEnter(pl, ctx) {
-            playAnim$1(pl, 'animation.weapon.light_saber.dodge');
+            playAnimCompatibility(pl, 'animation.weapon.light_saber.dodge');
             ctx.movement(pl, false);
             ctx.setVelocity(pl, -90, 2, 0);
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 10);
@@ -3340,7 +3596,7 @@ class LightSaberMoves extends DefaultMoves$1 {
         backswing: 10,
         onEnter(pl, ctx) {
             pl.setSprinting(false);
-            playAnim$1(pl, 'animation.weapon.light_saber.jump_attack');
+            playAnimCompatibility(pl, 'animation.weapon.light_saber.jump_attack');
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 15);
             ctx.freeze(pl);
         },
@@ -3394,7 +3650,7 @@ class LightSaberMoves extends DefaultMoves$1 {
     beforeBlocking = {
         cast: 4,
         onEnter(pl, ctx) {
-            playAnim$1(pl, 'animation.weapon.light_saber.blocking', 'animation.weapon.light_saber.blocking');
+            playAnimCompatibility(pl, 'animation.weapon.light_saber.blocking', 'animation.weapon.light_saber.blocking');
             ctx.status.isWaitingParry = true;
         },
         onLeave(pl, ctx) {
@@ -3501,7 +3757,7 @@ class LightSaberMoves extends DefaultMoves$1 {
     running = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$1(pl, 'animation.weapon.light_saber.run', 'animation.weapon.light_saber.run');
+            playAnimCompatibility(pl, 'animation.weapon.light_saber.run', 'animation.weapon.light_saber.run');
         },
         onTick(pl, ctx) {
             pl.tell(hud(ctx.status.stamina/100, 20), 5);
@@ -3549,7 +3805,7 @@ class LightSaberMoves extends DefaultMoves$1 {
             ctx.movement(pl, false);
             ctx.setVelocity(pl, 90, 3, 0);
             pl.setSprinting(false);
-            playAnim$1(pl, 'animation.weapon.light_saber.dash');
+            playAnimCompatibility(pl, 'animation.weapon.light_saber.dash');
         },
         onTick(pl, ctx) {
             pl.tell(hud(ctx.status.stamina/100, 20), 5);
@@ -3625,7 +3881,7 @@ class LightSaberMoves extends DefaultMoves$1 {
         cast: 10,
         backswing: 10,
         onEnter(pl, ctx) {
-            playAnim$1(pl, 'animation.weapon.light_saber.strike');
+            playAnimCompatibility(pl, 'animation.weapon.light_saber.strike');
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 20);
             ctx.freeze(pl);
             ctx.adsorbOrSetVelocity(pl, 1, 90);
@@ -3678,7 +3934,7 @@ class LightSaberMoves extends DefaultMoves$1 {
         backswing: 11,
         onEnter(pl, ctx) {
             ctx.movement(pl, false);
-            playAnim$1(pl, 'animation.weapon.light_saber.attack1');
+            playAnimCompatibility(pl, 'animation.weapon.light_saber.attack1');
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 10);
         },
         onTick(pl, ctx) {
@@ -3740,7 +3996,7 @@ class LightSaberMoves extends DefaultMoves$1 {
         backswing: 12,
         onEnter(pl, ctx) {
             ctx.movement(pl, false);
-            playAnim$1(pl, 'animation.weapon.light_saber.attack2');
+            playAnimCompatibility(pl, 'animation.weapon.light_saber.attack2');
             ctx.status.stamina = constrictCalc(0, 100, () => ctx.status.stamina - 12);
         },
         onAct(pl, ctx) {
@@ -3864,7 +4120,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.releaseTarget(pl.uniqueId);
-            playAnim(pl, 'animation.weapon.moon_glaive.hold', 'animation.weapon.moon_glaive.hold');
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.hold', 'animation.weapon.moon_glaive.hold');
         },
         transitions: {
             hurt: {
@@ -3890,7 +4146,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.releaseTarget(pl.uniqueId);
-            playAnim(pl, 'animation.weapon.moon_glaive.running', 'animation.weapon.moon_glaive.running');
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.running', 'animation.weapon.moon_glaive.running');
         },
         transitions: {
             hurt: {
@@ -3918,7 +4174,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.setSpeed(pl, 0);
             ctx.camera(pl, false);
-            playAnim(pl, 'animation.weapon.moon_glaive.retention.negative_spinning');
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.retention.negative_spinning');
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1);
         },
         onAct(pl, ctx) {
@@ -3974,7 +4230,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim(pl, 'animation.weapon.moon_glaive.retention', 'animation.weapon.moon_glaive.retention');
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.retention', 'animation.weapon.moon_glaive.retention');
         },
         onTick(pl, ctx) {
             ctx.lookAtTarget(pl);
@@ -4012,7 +4268,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         cast: 5,
         onEnter(pl, ctx) {
             ctx.camera(pl, false);
-            playAnim(pl, 'animation.weapon.moon_glaive.to_retention');
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.to_retention');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -4049,7 +4305,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         cast: 5,
         onEnter(pl, ctx) {
             ctx.camera(pl, false);
-            playAnim(pl, 'animation.weapon.moon_glaive.from_retention');
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.from_retention');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -4071,7 +4327,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         cast: Infinity,
         onEnter(pl, ctx) {
             pl.setSprinting(false);
-            playAnim(pl, 'animation.weapon.moon_glaive.hold_locked', 'animation.weapon.moon_glaive.hold_locked');
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.hold_locked', 'animation.weapon.moon_glaive.hold_locked');
             ctx.trap(pl);
         },
         transitions: {
@@ -4134,7 +4390,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             ctx.status.isDodging = true;
             ctx.setSpeed(pl, 0);
             ctx.camera(pl);
-            playAnim(pl, 'animation.weapon.moon_glaive.dodge');
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.dodge');
             ctx.setVelocity(pl, -90, 2.5, 0);
         },
         onLeave(pl, ctx) {
@@ -4178,7 +4434,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim(pl, 'animation.weapon.moon_glaive.push');
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.push');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -4244,7 +4500,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim(pl, 'animation.weapon.moon_glaive.chop');
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.chop');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -4292,7 +4548,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
             ctx.status.repulsible = false;
-            playAnim(pl, 'animation.weapon.moon_glaive.vertical_chop');
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.vertical_chop');
         },
         onLeave(pl, ctx) {
             ctx.status.hegemony = true;
@@ -4349,7 +4605,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim(pl, 'animation.weapon.moon_glaive.heavy_sweap');
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.heavy_sweap');
             ctx.status.isWaitingParry = true;
         },
         onLeave(pl, ctx) {
@@ -4430,7 +4686,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim(pl, 'animation.weapon.moon_glaive.chop.combo');
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.chop.combo');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -4477,7 +4733,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             ctx.status.hegemony = true;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim(pl, 'animation.weapon.moon_glaive.positive_spinning');
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.positive_spinning');
         },
         onLeave(pl, ctx) {
             ctx.status.hegemony = false;
@@ -4531,7 +4787,7 @@ class MoonGlaiveMoves extends DefaultMoves {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim(pl, 'animation.weapon.moon_glaive.parry.knock');
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.parry.knock');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -4572,7 +4828,7 @@ class MoonGlaiveMoves extends DefaultMoves {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
             ctx.status.repulsible = false;
-            playAnim(pl, 'animation.weapon.moon_glaive.parry.chop');
+            playAnimCompatibility(pl, 'animation.weapon.moon_glaive.parry.chop');
         },
         onLeave(pl, ctx) {
             ctx.status.repulsible = true;
@@ -4636,12 +4892,12 @@ class OotachiMoves extends DefaultMoves$4 {
             ctx.releaseTarget(pl.uniqueId);
             if (ctx.previousStatus === 'running') {
                 ctx.task
-                    .queue(() => playAnim$4(pl, 'animation.weapon.ootachi.trans.running.idle'), 0)
-                    .queue(() => playAnim$4(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle'), 210)
+                    .queue(() => playAnimCompatibility$1(pl, 'animation.weapon.ootachi.trans.running.idle'), 0)
+                    .queue(() => playAnimCompatibility$1(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle'), 210)
                     .run();
             }
             else
-                playAnim$4(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle');
+                playAnimCompatibility$1(pl, 'animation.weapon.ootachi.idle', 'animation.weapon.ootachi.idle');
         },
         onLeave(_, ctx) {
             ctx.task.cancel();
@@ -4664,7 +4920,7 @@ class OotachiMoves extends DefaultMoves$4 {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.freeze(pl);
-            playAnim$4(pl, 'animation.weapon.ootachi.kamae.inno', 'animation.weapon.ootachi.kamae.inno');
+            playAnimCompatibility$1(pl, 'animation.weapon.ootachi.kamae.inno', 'animation.weapon.ootachi.kamae.inno');
         },
         onTick(pl, ctx) {
             ctx.lookAtTarget(pl);
@@ -4737,8 +4993,8 @@ class OotachiMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.releaseTarget(pl.uniqueId);
             ctx.task
-                .queue(() => playAnim$4(pl, 'animation.weapon.ootachi.trans.idle.running'), 0)
-                .queue(() => playAnim$4(pl, 'animation.weapon.ootachi.running', 'animation.weapon.ootachi.running'), 210)
+                .queue(() => playAnimCompatibility$1(pl, 'animation.weapon.ootachi.trans.idle.running'), 0)
+                .queue(() => playAnimCompatibility$1(pl, 'animation.weapon.ootachi.running', 'animation.weapon.ootachi.running'), 210)
                 .run();
         },
         onLeave(_, ctx) {
@@ -4759,7 +5015,7 @@ class OotachiMoves extends DefaultMoves$4 {
         timeline: {
             2: (pl, ctx) => setVelocityByOrientation(pl, ctx, 1.4, 1),
             4: (_, ctx) => ctx.status.isBlocking = false,
-            7: pl => playSoundAll$4(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1),
+            7: pl => playSoundAll$3(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1),
             14: (pl, ctx) => ctx.trap(pl, { tag: 'combo' })
         },
         onEnter(pl, ctx) {
@@ -4767,7 +5023,7 @@ class OotachiMoves extends DefaultMoves$4 {
             ctx.status.isBlocking = true;
             ctx.freeze(pl);
             setVelocityByOrientation(pl, ctx, 0.5, 1);
-            playAnim$4(pl, 'animation.weapon.ootachi.combo1.attack');
+            playAnimCompatibility$1(pl, 'animation.weapon.ootachi.combo1.attack');
         },
         onAct(pl, ctx) {
             ctx.selectFromSector(pl, {
@@ -4834,11 +5090,11 @@ class OotachiMoves extends DefaultMoves$4 {
                     }, timeout: 200 },
                 { handler: () => ctx.adsorbOrSetVelocity(pl, 0.5, 90), timeout: 400 },
             ]).run();
-            playAnim$4(pl, 'animation.weapon.ootachi.combo1.chop');
+            playAnimCompatibility$1(pl, 'animation.weapon.ootachi.combo1.chop');
             ctx.lookAtTarget(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll$4(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$3(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromSector(pl, {
                 radius: 3,
                 angle: 120,
@@ -4915,11 +5171,11 @@ class OotachiMoves extends DefaultMoves$4 {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 18;
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
-            playAnim$4(pl, `animation.weapon.ootachi.combo2.cut.${ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'}`);
+            playAnimCompatibility$1(pl, `animation.weapon.ootachi.combo2.cut.${ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'}`);
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1.5);
         },
         onAct(pl, ctx) {
-            playSoundAll$4(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$3(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromSector(pl, {
                 radius: 3.5,
                 angle: 50,
@@ -4985,16 +5241,16 @@ class OotachiMoves extends DefaultMoves$4 {
             if (ctx.previousStatus === 'parry') {
                 const parryDir = ctx.components.getComponent(IncomingAttack).unwrap().approximateAttackDirection();
                 if (parryDir === 'left') {
-                    playAnim$4(pl, 'animation.weapon.ootachi.combo2.sweap.r2');
+                    playAnimCompatibility$1(pl, 'animation.weapon.ootachi.combo2.sweap.r2');
                     ctx.adsorbOrSetVelocity(pl, 1, 180);
                 }
                 else {
-                    playAnim$4(pl, 'animation.weapon.ootachi.combo2.sweap.r');
+                    playAnimCompatibility$1(pl, 'animation.weapon.ootachi.combo2.sweap.r');
                     ctx.adsorbOrSetVelocity(pl, 0.2, 90);
                 }
             }
             else {
-                playAnim$4(pl, `animation.weapon.ootachi.combo2.sweap.${ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'}`);
+                playAnimCompatibility$1(pl, `animation.weapon.ootachi.combo2.sweap.${ctx.previousStatus === 'combo1Attack' ? 'l' : 'r'}`);
                 ctx.adsorbOrSetVelocity(pl, 0.2, 90);
             }
             ctx.task
@@ -5002,7 +5258,7 @@ class OotachiMoves extends DefaultMoves$4 {
                 .run();
         },
         onAct(pl, ctx) {
-            playSoundAll$4(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$3(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromSector(pl, {
                 radius: 3,
                 angle: 80,
@@ -5065,7 +5321,7 @@ class OotachiMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 17;
             ctx.freeze(pl);
-            playAnim$4(pl, `animation.weapon.ootachi.combo3.stab.${ctx.previousStatus === 'combo2Sweap' ? 'r' : 'l'}`);
+            playAnimCompatibility$1(pl, `animation.weapon.ootachi.combo3.stab.${ctx.previousStatus === 'combo2Sweap' ? 'r' : 'l'}`);
             ctx.task
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 0.5, 90), 0)
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 200)
@@ -5073,7 +5329,7 @@ class OotachiMoves extends DefaultMoves$4 {
         },
         onAct(pl, ctx) {
             ctx.lookAtTarget(pl);
-            playSoundAll$4(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$3(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromSector(pl, {
                 radius: 3.5,
                 angle: 30,
@@ -5113,14 +5369,14 @@ class OotachiMoves extends DefaultMoves$4 {
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
             ctx.adsorbOrSetVelocity(pl, 1, 90);
-            playAnim$4(pl, `animation.weapon.ootachi.combo3.sweap.${ctx.previousStatus === 'combo2Sweap' ? 'r' : 'l'}`);
+            playAnimCompatibility$1(pl, `animation.weapon.ootachi.combo3.sweap.${ctx.previousStatus === 'combo2Sweap' ? 'r' : 'l'}`);
             ctx.task
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 200)
                 .queue(() => ctx.adsorbOrSetVelocity(pl, 1, 90), 280)
                 .run();
         },
         onAct(pl, ctx) {
-            playSoundAll$4(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
+            playSoundAll$3(`weapon.woosh.${randomRange$1(2, 4, true)}`, pl.pos, 1);
             ctx.selectFromSector(pl, {
                 radius: 3.5,
                 angle: 90,
@@ -5174,10 +5430,10 @@ class OotachiMoves extends DefaultMoves$4 {
                 ctx.adsorbToTarget(pl, 2);
             }
             if (direct !== 3) {
-                playAnim$4(pl, 'animation.weapon.ootachi.dodge.front');
+                playAnimCompatibility$1(pl, 'animation.weapon.ootachi.dodge.front');
             }
             else {
-                playAnim$4(pl, 'animation.weapon.ootachi.dodge.back');
+                playAnimCompatibility$1(pl, 'animation.weapon.ootachi.dodge.back');
             }
             ctx.trap(pl, { tag: direct === 1 ? 'front' : 'side' });
         },
@@ -5294,14 +5550,14 @@ class OotachiMoves extends DefaultMoves$4 {
             ctx.freeze(pl);
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 20;
             ctx.lookAtTarget(pl);
-            playAnim$4(pl, 'animation.weapon.ootachi.dodge.heavy', 'animation.weapon.ootachi.dodge.heavy');
+            playAnimCompatibility$1(pl, 'animation.weapon.ootachi.dodge.heavy', 'animation.weapon.ootachi.dodge.heavy');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
         },
         timeline: {
             14: (pl, ctx) => ctx.trap(pl),
-            8: pl => playSoundAll$4('weapon.woosh.3', pl.pos, 1),
+            8: pl => playSoundAll$3('weapon.woosh.3', pl.pos, 1),
             10: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 40,
                 radius: 3,
@@ -5323,7 +5579,7 @@ class OotachiMoves extends DefaultMoves$4 {
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^^1^0.5`);
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^-0.1^1^0.5`);
             mc.runcmdEx(`execute as ${pl.name} at @s run particle minecraft:lava_particle ^0.1^1^0.5`);
-            playSoundAll$4('weapon.heavy', pl.pos, 1);
+            playSoundAll$3('weapon.heavy', pl.pos, 1);
         },
         onLeave(pl, ctx) {
             ctx.status.repulsible = true;
@@ -5346,7 +5602,7 @@ class OotachiMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.status.repulsible = false;
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 12;
-            playAnim$4(pl, 'animation.weapon.ootachi.hlit');
+            playAnimCompatibility$1(pl, 'animation.weapon.ootachi.hlit');
             ctx.adsorbOrSetVelocity(pl, 3, 90, 0.5);
         },
         onAct(pl, ctx) {
@@ -5429,11 +5685,11 @@ class ShieldSwordMoves extends DefaultMoves$4 {
                     ctx.trap(pl);
                     return;
                 }
-                playSoundAll$4(`weapon.sheild.hit${randomRange$1(1, 3, true)}`, pl.pos, 1);
+                playSoundAll$3(`weapon.sheild.hit${randomRange$1(1, 3, true)}`, pl.pos, 1);
                 ctx.status.isBlocking = true;
                 ctx.freeze(pl);
                 ctx.lookAtTarget(pl);
-                playAnim$4(pl, 'animation.weapon.shield_with_sword.block');
+                playAnimCompatibility$1(pl, 'animation.weapon.shield_with_sword.block');
             },
             onLeave(pl, ctx) {
                 ctx.status.isBlocking = false;
@@ -5475,7 +5731,7 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().setCooldown(0);
             ctx.unfreeze(pl);
-            playAnim$4(pl, 'animation.weapon.shield_with_sword.idle', 'animation.weapon.shield_with_sword.idle');
+            playAnimCompatibility$1(pl, 'animation.weapon.shield_with_sword.idle', 'animation.weapon.shield_with_sword.idle');
         },
         transitions: {
             hurt: {
@@ -5495,7 +5751,7 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         cast: Infinity,
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().setCooldown(0);
-            playAnim$4(pl, 'animation.weapon.shield_with_sword.hold', 'animation.weapon.shield_with_sword.hold');
+            playAnimCompatibility$1(pl, 'animation.weapon.shield_with_sword.hold', 'animation.weapon.shield_with_sword.hold');
         },
         transitions: {
             idle: {
@@ -5563,7 +5819,7 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 18;
             ctx.freeze(pl);
-            playAnim$4(pl, 'animation.weapon.shield_with_sword.draw');
+            playAnimCompatibility$1(pl, 'animation.weapon.shield_with_sword.draw');
             ctx.adsorbOrSetVelocity(pl, 1, 90);
             ctx.status.isBlocking = true;
         },
@@ -5572,7 +5828,7 @@ class ShieldSwordMoves extends DefaultMoves$4 {
             ctx.status.isBlocking = false;
         },
         onAct(pl, ctx) {
-            playSoundAll$4(`weapon.woosh.${randomRange$1(1, 3, true)}`, pl.pos, 1);
+            playSoundAll$3(`weapon.woosh.${randomRange$1(1, 3, true)}`, pl.pos, 1);
             ctx.selectFromSector(pl, {
                 radius: 2.8,
                 angle: 60,
@@ -5626,14 +5882,14 @@ class ShieldSwordMoves extends DefaultMoves$4 {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 15;
             ctx.freeze(pl);
             ctx.adsorbOrSetVelocity(pl, 2, 90);
-            playAnim$4(pl, 'animation.weapon.shield_with_sword.heavy_chop_act');
+            playAnimCompatibility$1(pl, 'animation.weapon.shield_with_sword.heavy_chop_act');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
-            playSoundAll$4(`weapon.woosh.${randomRange$1(3, 5, true)}`, pl.pos, 1);
+            playSoundAll$3(`weapon.woosh.${randomRange$1(3, 5, true)}`, pl.pos, 1);
             ctx.selectFromSector(pl, {
                 angle: 40,
                 rotation: -20,
@@ -5673,7 +5929,7 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 18;
             ctx.freeze(pl);
-            playAnim$4(pl, 'animation.weapon.shield_with_sword.punch');
+            playAnimCompatibility$1(pl, 'animation.weapon.shield_with_sword.punch');
             ctx.adsorbOrSetVelocity(pl, 2, 90, 0.5);
         },
         onLeave(pl, ctx) {
@@ -5710,7 +5966,7 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         cast: 2,
         backswing: 8,
         onEnter(pl) {
-            playSoundAll$4(`weapon.sheild.hit${randomRange$1(1, 3, true)}`, pl.pos, 0.5);
+            playSoundAll$3(`weapon.sheild.hit${randomRange$1(1, 3, true)}`, pl.pos, 0.5);
         },
         onAct(pl, ctx) {
             ctx.trap(pl);
@@ -5737,13 +5993,13 @@ class ShieldSwordMoves extends DefaultMoves$4 {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 18;
             ctx.freeze(pl);
             ctx.adsorbOrSetVelocity(pl, 2, 90);
-            playAnim$4(pl, 'animation.weapon.shield_with_sword.chop_combo');
+            playAnimCompatibility$1(pl, 'animation.weapon.shield_with_sword.chop_combo');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll$4(`weapon.woosh.${randomRange$1(1, 2, true)}`, pl.pos, 1);
+            playSoundAll$3(`weapon.woosh.${randomRange$1(1, 2, true)}`, pl.pos, 1);
             ctx.selectFromSector(pl, {
                 radius: 3,
                 angle: 46,
@@ -5775,7 +6031,7 @@ class ShieldSwordMoves extends DefaultMoves$4 {
     running = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim$4(pl, 'animation.weapon.shield_with_sword.running', 'animation.weapon.shield_with_sword.running');
+            playAnimCompatibility$1(pl, 'animation.weapon.shield_with_sword.running', 'animation.weapon.shield_with_sword.running');
             ctx.releaseTarget(pl.uniqueId);
         },
         transitions: {
@@ -5791,7 +6047,7 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         cast: 2,
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().setCooldown(Infinity);
-            playAnim$4(pl, 'animation.weapon.shield_with_sword.idle_to_blocking');
+            playAnimCompatibility$1(pl, 'animation.weapon.shield_with_sword.idle_to_blocking');
         },
         transitions: {
             hurt: {
@@ -5820,7 +6076,7 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().setCooldown(Infinity);
             ctx.status.isBlocking = true;
-            playAnim$4(pl, 'animation.weapon.shield_with_sword.blocking', 'animation.weapon.shield_with_sword.blocking');
+            playAnimCompatibility$1(pl, 'animation.weapon.shield_with_sword.blocking', 'animation.weapon.shield_with_sword.blocking');
         },
         onLeave(_, ctx) {
             ctx.status.isBlocking = false;
@@ -5854,7 +6110,7 @@ class ShieldSwordMoves extends DefaultMoves$4 {
             ctx.freeze(pl);
             ctx.status.repulsible = false;
             ctx.status.isInvulnerable = true;
-            playAnim$4(pl, 'animation.weapon.shield_with_sword.rock_solid');
+            playAnimCompatibility$1(pl, 'animation.weapon.shield_with_sword.rock_solid');
         },
         onAct(_, ctx) {
             ctx.status.repulsible = true;
@@ -5890,7 +6146,7 @@ class ShieldSwordMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.freeze(pl);
             ctx.adsorbToTarget(pl, 4, 0.5);
-            playAnim$4(pl, 'animation.weapon.shield_with_sword.sweap_counter');
+            playAnimCompatibility$1(pl, 'animation.weapon.shield_with_sword.sweap_counter');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -5939,7 +6195,7 @@ class ShieldSwordMoves extends DefaultMoves$4 {
     afterBlocking = {
         cast: 3,
         onEnter(pl) {
-            playAnim$4(pl, 'animation.weapon.shield_with_sword.blocking_to_idle');
+            playAnimCompatibility$1(pl, 'animation.weapon.shield_with_sword.blocking_to_idle');
         },
         onLeave(_, ctx) {
             ctx.components.getComponent(Stamina).unwrap().setCooldown(0);
@@ -5960,13 +6216,13 @@ class ShieldSwordMoves extends DefaultMoves$4 {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 20;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$4(pl, 'animation.weapon.shield_with_sword.sword_counter');
+            playAnimCompatibility$1(pl, 'animation.weapon.shield_with_sword.sword_counter');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
         },
         onAct(pl, ctx) {
-            playSoundAll$4(`weapon.woosh.${randomRange$1(1, 3, true)}`, pl.pos, 1);
+            playSoundAll$3(`weapon.woosh.${randomRange$1(1, 3, true)}`, pl.pos, 1);
             ctx.selectFromSector(pl, {
                 angle: 30,
                 rotation: -15,
@@ -6031,7 +6287,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
     hold = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim$4(pl, 'animation.weapon.uchigatana.hold', 'animation.weapon.uchigatana.hold');
+            playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.hold', 'animation.weapon.uchigatana.hold');
         },
         transitions: {
             kamae: {
@@ -6050,7 +6306,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
     kamae = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$4(pl, 'animation.weapon.uchigatana.kamae', 'animation.weapon.uchigatana.kamae');
+            playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.kamae', 'animation.weapon.uchigatana.kamae');
         },
         transitions: {
             hold: {
@@ -6086,7 +6342,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
     running = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$4(pl, 'animation.weapon.uchigatana.running', 'animation.weapon.uchigatana.running');
+            playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.running', 'animation.weapon.uchigatana.running');
         },
         transitions: {
             resume: {
@@ -6125,7 +6381,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             ctx.status.isBlocking = true;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$4(pl, 'animation.weapon.uchigatana.attack1');
+            playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.attack1');
         },
         onAct(pl, ctx) {
             ctx.trap(pl);
@@ -6141,7 +6397,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
                 ctx.status.isBlocking = false;
                 setVelocityByOrientation(pl, ctx, 1.5);
             },
-            6: pl => playSoundAll$4(`weapon.woosh.2`, pl.pos, 1),
+            6: pl => playSoundAll$3(`weapon.woosh.2`, pl.pos, 1),
             7: (pl, ctx) => ctx.selectFromSector(pl).forEach(en => {
                 ctx.attack(pl, en, {
                     damage: 12,
@@ -6193,7 +6449,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$4(pl, 'animation.weapon.uchigatana.attack1.heavy');
+            playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.attack1.heavy');
         },
         onAct(pl, ctx) {
             ctx.trap(pl, { tag: 'counter' });
@@ -6208,7 +6464,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             5: (_, ctx) => ctx.status.isWaitingParry = false,
             6: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             7: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
-            9: pl => playSoundAll$4(`weapon.woosh.2`, pl.pos, 1),
+            9: pl => playSoundAll$3(`weapon.woosh.2`, pl.pos, 1),
             11: (pl, ctx) => {
                 ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
                 ctx.selectFromSector(pl, {
@@ -6269,7 +6525,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 18;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$4(pl, ctx.previousStatus === 'attack1'
+            playAnimCompatibility$1(pl, ctx.previousStatus === 'attack1'
                 ? 'animation.weapon.uchigatana.attack2.ll'
                 : 'animation.weapon.uchigatana.attack2.hl');
         },
@@ -6297,7 +6553,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
         },
         timeline: {
             3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
-            9: pl => playSoundAll$4(`weapon.woosh.2`, pl.pos, 1),
+            9: pl => playSoundAll$3(`weapon.woosh.2`, pl.pos, 1),
             10: (pl, ctx) => ctx.selectFromSector(pl, {
                 radius: 2.6,
                 angle: 40,
@@ -6320,13 +6576,13 @@ class UchigatanaMoves extends DefaultMoves$4 {
             switch (prev) {
                 case 'attack1':
                 case 'dcLeftL':
-                    playAnim$4(pl, 'animation.weapon.uchigatana.attack2.lh');
+                    playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.attack2.lh');
                     break;
                 case 'dcRightL':
-                    playAnim$4(pl, 'animation.weapon.uchigatana.dc.llh');
+                    playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.dc.llh');
                     break;
                 default:
-                    playAnim$4(pl, 'animation.weapon.uchigatana.attack2.hh');
+                    playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.attack2.hh');
             }
             ctx.lookAtTarget(pl);
         },
@@ -6337,7 +6593,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
             8: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
             10: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
-            13: pl => playSoundAll$4('weapon.woosh.2', pl.pos),
+            13: pl => playSoundAll$3('weapon.woosh.2', pl.pos),
             7: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             14: (pl, ctx) => {
                 ctx.components.getComponent(Stamina).unwrap().stamina -= 15;
@@ -6387,19 +6643,19 @@ class UchigatanaMoves extends DefaultMoves$4 {
             const ori = input.approximateOrientation(pl);
             switch (ori) {
                 case input.Orientation.Left:
-                    playAnim$4(pl, 'animation.weapon.uchigatana.dodge.left');
+                    playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.dodge.left');
                     ctx.setVelocity(pl, 0, 1.8);
                     break;
                 case input.Orientation.Right:
-                    playAnim$4(pl, 'animation.weapon.uchigatana.dodge.right');
+                    playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.dodge.right');
                     ctx.setVelocity(pl, 180, 1.8);
                     break;
                 case input.Orientation.Forward:
-                    playAnim$4(pl, 'animation.weapon.uchigatana.dodge.front');
+                    playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.dodge.front');
                     ctx.adsorbToTarget(pl, 2);
                     break;
                 default:
-                    playAnim$4(pl, 'animation.weapon.uchigatana.dodge.back');
+                    playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.dodge.back');
                     ctx.setVelocity(pl, -90, 1.5);
                     break;
             }
@@ -6466,8 +6722,8 @@ class UchigatanaMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.lookAtTarget(pl);
             ctx.status.isWaitingDeflection = true;
-            playSoundAll$4('weapon.deflection', pl.pos, 1);
-            playAnim$4(pl, 'animation.weapon.uchigatana.deflect.front');
+            playSoundAll$3('weapon.deflection', pl.pos, 1);
+            playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.deflect.front');
             ctx.adsorbToTarget(pl, 0.2);
         },
         onAct(pl, ctx) {
@@ -6504,9 +6760,9 @@ class UchigatanaMoves extends DefaultMoves$4 {
         },
         onEnter(pl, ctx) {
             ctx.lookAtTarget(pl);
-            playSoundAll$4('weapon.deflection', pl.pos, 1);
+            playSoundAll$3('weapon.deflection', pl.pos, 1);
             ctx.status.isWaitingDeflection = true;
-            playAnim$4(pl, 'animation.weapon.uchigatana.deflect.left');
+            playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.deflect.left');
             ctx.adsorbToTarget(pl, 0.2);
         },
         onAct(pl, ctx) {
@@ -6543,9 +6799,9 @@ class UchigatanaMoves extends DefaultMoves$4 {
         },
         onEnter(pl, ctx) {
             ctx.lookAtTarget(pl);
-            playSoundAll$4('weapon.deflection', pl.pos, 1);
+            playSoundAll$3('weapon.deflection', pl.pos, 1);
             ctx.status.isWaitingDeflection = true;
-            playAnim$4(pl, 'animation.weapon.uchigatana.deflect.right');
+            playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.deflect.right');
             ctx.adsorbToTarget(pl, 0.2);
         },
         onAct(pl, ctx) {
@@ -6580,7 +6836,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 20;
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
-            playAnim$4(pl, 'animation.weapon.uchigatana.dc.fh');
+            playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.dc.fh');
         },
         onLeave(pl, ctx) {
             ctx.status.repulsible = true;
@@ -6588,7 +6844,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
         },
         timeline: {
             1: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
-            5: pl => playSoundAll$4(`weapon.woosh.3`, pl.pos, 1),
+            5: pl => playSoundAll$3(`weapon.woosh.3`, pl.pos, 1),
             6: (pl, ctx) => ctx.selectFromSector(pl, {
                 radius: 2.4,
                 angle: 40,
@@ -6632,7 +6888,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             ctx.status.repulsible = false;
             ctx.components.getComponent(Stamina).unwrap().stamina -= 12;
             ctx.freeze(pl);
-            playAnim$4(pl, 'animation.weapon.uchigatana.dc.ll');
+            playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.dc.ll');
             ctx.adsorbToTarget(pl, 1.5);
         },
         onLeave(pl, ctx) {
@@ -6640,7 +6896,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             ctx.unfreeze(pl);
         },
         timeline: {
-            3: pl => playSoundAll$4(`weapon.woosh.3`, pl.pos, 1),
+            3: pl => playSoundAll$3(`weapon.woosh.3`, pl.pos, 1),
             4: (pl, ctx) => ctx.selectFromSector(pl, {
                 radius: 2.4,
                 angle: 90,
@@ -6683,7 +6939,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             ctx.status.repulsible = false;
             ctx.components.getComponent(Stamina).unwrap().stamina -= 12;
             ctx.freeze(pl);
-            playAnim$4(pl, 'animation.weapon.uchigatana.dc.rl');
+            playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.dc.rl');
             ctx.adsorbToTarget(pl, 1.5);
         },
         onLeave(pl, ctx) {
@@ -6691,7 +6947,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             ctx.unfreeze(pl);
         },
         timeline: {
-            3: pl => playSoundAll$4(`weapon.woosh.3`, pl.pos, 1),
+            3: pl => playSoundAll$3(`weapon.woosh.3`, pl.pos, 1),
             4: (pl, ctx) => ctx.selectFromSector(pl, {
                 radius: 2.4,
                 angle: 90,
@@ -6737,7 +6993,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             ctx.status.repulsible = false;
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
             ctx.freeze(pl);
-            playAnim$4(pl, 'animation.weapon.uchigatana.dc.lh');
+            playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.dc.lh');
             ctx.adsorbToTarget(pl, 3, 1.5);
         },
         onLeave(pl, ctx) {
@@ -6804,7 +7060,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             ctx.status.repulsible = false;
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
             ctx.freeze(pl);
-            playAnim$4(pl, 'animation.weapon.uchigatana.dc.rh');
+            playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.dc.rh');
             ctx.adsorbToTarget(pl, 3, 1.6);
         },
         onLeave(pl, ctx) {
@@ -6845,7 +7101,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 10;
             ctx.freeze(pl);
-            playAnim$4(pl, 'animation.weapon.uchigatana.raido.enter');
+            playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.raido.enter');
             ctx.lookAtTarget(pl);
             ctx.status.isDodging = true;
         },
@@ -6877,7 +7133,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
         },
         timeline: {
             1: (pl, ctx) => ctx.setVelocity(pl, -90, 1),
-            3: pl => playSoundAll$4(`weapon.raido.1`, pl.pos),
+            3: pl => playSoundAll$3(`weapon.raido.1`, pl.pos),
             4: (_, ctx) => ctx.status.isDodging = false,
             5: (pl, ctx) => ctx.setVelocity(pl, -90, 1),
             7: (pl, ctx) => ctx.setVelocity(pl, -90, 0.2),
@@ -6886,7 +7142,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
     raido = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnim$4(pl, 'animation.weapon.uchigatana.raido', 'animation.weapon.uchigatana.raido');
+            playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.raido', 'animation.weapon.uchigatana.raido');
             ctx.freeze(pl);
         },
         onLeave(pl, ctx) {
@@ -6909,7 +7165,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
     raidoExit = {
         cast: 7,
         onEnter(pl, ctx) {
-            playAnim$4(pl, 'animation.weapon.uchigatana.raido.exit');
+            playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.raido.exit');
             ctx.freeze(pl);
         },
         onLeave(pl, ctx) {
@@ -6936,7 +7192,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
         backswing: 4,
         onEnter(pl, ctx) {
             ctx.status.componentManager.getComponent(Stamina).unwrap().stamina -= 18;
-            playAnim$4(pl, 'animation.weapon.uchigatana.raido.attack');
+            playAnimCompatibility$1(pl, 'animation.weapon.uchigatana.raido.attack');
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
             ctx.status.isBlocking = true;
@@ -6970,7 +7226,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             4: (_, ctx) => ctx.status.isBlocking = false,
             5: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 2, 90),
             8: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
-            9: pl => playSoundAll$4(`weapon.woosh.2`, pl.pos, 1),
+            9: pl => playSoundAll$3(`weapon.woosh.2`, pl.pos, 1),
             10: (pl, ctx) => ctx.selectFromSector(pl, {
                 radius: 2.5,
                 angle: 90,
@@ -6992,7 +7248,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
             const parryDir = ctx.components.getComponent(IncomingAttack).unwrap().approximateAttackDirection();
-            playAnim$4(pl, `animation.weapon.uchigatana.parry_counter.${parryDir}`);
+            playAnimCompatibility$1(pl, `animation.weapon.uchigatana.parry_counter.${parryDir}`);
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -7032,7 +7288,7 @@ class UchigatanaMoves extends DefaultMoves$4 {
             1: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90),
             7: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
             8: (pl, ctx) => {
-                playSoundAll$4(`weapon.woosh.2`, pl.pos, 1);
+                playSoundAll$3(`weapon.woosh.2`, pl.pos, 1);
                 ctx.adsorbOrSetVelocity(pl, 1, 90);
             },
             9: (pl, ctx) => {
@@ -7095,7 +7351,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
     idle = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$4(pl, 'animation.double_blade.idle', 'animation.double_blade.idle');
+            playAnimCompatibility$1(pl, 'animation.double_blade.idle', 'animation.double_blade.idle');
         },
         transitions: {
             i2r: {
@@ -7114,7 +7370,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
     running = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$4(pl, 'animation.double_blade.running', 'animation.double_blade.running');
+            playAnimCompatibility$1(pl, 'animation.double_blade.running', 'animation.double_blade.running');
         },
         transitions: {
             r2i: {
@@ -7130,7 +7386,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
     i2r = {
         cast: 5,
         onEnter(pl) {
-            playAnim$4(pl, 'animation.double_blade.i2r');
+            playAnimCompatibility$1(pl, 'animation.double_blade.i2r');
         },
         transitions: {
             running: {
@@ -7146,7 +7402,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
     r2i = {
         cast: 5,
         onEnter(pl) {
-            playAnim$4(pl, 'animation.double_blade.r2i');
+            playAnimCompatibility$1(pl, 'animation.double_blade.r2i');
         },
         transitions: {
             idle: {
@@ -7162,7 +7418,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
     hold = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$4(pl, 'animation.double_blade.hold', 'animation.double_blade.hold');
+            playAnimCompatibility$1(pl, 'animation.double_blade.hold', 'animation.double_blade.hold');
         },
         transitions: {
             hurt: {
@@ -7197,7 +7453,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 22;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$4(pl, ctx.previousStatus === 'shieldKick' ? 'animation.double_blade.skl' : 'animation.double_blade.start_left');
+            playAnimCompatibility$1(pl, ctx.previousStatus === 'shieldKick' ? 'animation.double_blade.skl' : 'animation.double_blade.start_left');
             setVelocityByOrientation(pl, ctx, 0.5, 1);
         },
         onLeave(pl, ctx) {
@@ -7211,7 +7467,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             4: (_, ctx) => {
                 ctx.status.isBlocking = false;
             },
-            6: pl => playSoundAll$4('weapon.woosh.2', pl.pos),
+            6: pl => playSoundAll$3('weapon.woosh.2', pl.pos),
             5: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             8: (pl, ctx) => {
                 ctx.selectFromSector(pl, {
@@ -7283,7 +7539,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 22;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$4(pl, 'animation.double_blade.start_right');
+            playAnimCompatibility$1(pl, 'animation.double_blade.start_right');
             setVelocityByOrientation(pl, ctx, 0.5, 1);
         },
         onLeave(pl, ctx) {
@@ -7296,7 +7552,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         timeline: {
             3: (_, ctx) => ctx.status.isWaitingParry = false,
             4: (pl, ctx) => setVelocityByOrientation(pl, ctx, 1.4, 1),
-            6: pl => playSoundAll$4('weapon.woosh.2', pl.pos),
+            6: pl => playSoundAll$3('weapon.woosh.2', pl.pos),
             5: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 40,
@@ -7365,7 +7621,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 22;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$4(pl, 'animation.double_blade.lr');
+            playAnimCompatibility$1(pl, 'animation.double_blade.lr');
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1);
         },
         onLeave(pl, ctx) {
@@ -7376,7 +7632,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         },
         timeline: {
             4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90, 1),
-            6: pl => playSoundAll$4('weapon.woosh.2', pl.pos),
+            6: pl => playSoundAll$3('weapon.woosh.2', pl.pos),
             5: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 40,
@@ -7442,7 +7698,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 22;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$4(pl, 'animation.double_blade.rl');
+            playAnimCompatibility$1(pl, 'animation.double_blade.rl');
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1);
         },
         onLeave(pl, ctx) {
@@ -7453,7 +7709,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         },
         timeline: {
             4: (_, ctx) => ctx.adsorbOrSetVelocity(_, 1.4, 90, 1),
-            6: pl => playSoundAll$4('weapon.woosh.2', pl.pos),
+            6: pl => playSoundAll$3('weapon.woosh.2', pl.pos),
             5: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 40,
@@ -7518,7 +7774,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().setCooldown(10);
             ctx.freeze(pl);
-            playAnim$4(pl, 'animation.double_blade.dodge');
+            playAnimCompatibility$1(pl, 'animation.double_blade.dodge');
             ctx.setVelocity(pl, 180, 1);
         },
         onAct(_, ctx) {
@@ -7546,7 +7802,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
             ctx.freeze(pl);
-            playAnim$4(pl, 'animation.double_blade.ll');
+            playAnimCompatibility$1(pl, 'animation.double_blade.ll');
             ctx.lookAtTarget(pl);
         },
         onLeave(pl, ctx) {
@@ -7573,7 +7829,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5, 90),
             11: (pl, ctx) => {
                 ctx.adsorbOrSetVelocity(pl, 2, 90);
-                playSoundAll$4('weapon.woosh.3', pl.pos);
+                playSoundAll$3('weapon.woosh.3', pl.pos);
             },
             10: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             17: (pl, ctx) => ctx.trap(pl, { tag: 'dodge' }),
@@ -7610,7 +7866,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$4(pl, 'animation.double_blade.rr');
+            playAnimCompatibility$1(pl, 'animation.double_blade.rr');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -7655,7 +7911,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 25;
             ctx.freeze(pl);
-            playAnim$4(pl, ctx.previousStatus === 'shieldKick' ? 'animation.double_blade.skh' : 'animation.double_blade.rrl');
+            playAnimCompatibility$1(pl, ctx.previousStatus === 'shieldKick' ? 'animation.double_blade.skh' : 'animation.double_blade.rrl');
             ctx.adsorbOrSetVelocity(pl, 1, 90, 1);
         },
         onLeave(pl, ctx) {
@@ -7676,7 +7932,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         timeline: {
             5: (pl, ctx) => {
                 ctx.adsorbOrSetVelocity(pl, 1.4);
-                playSoundAll$4('weapon.woosh.2', pl.pos);
+                playSoundAll$3('weapon.woosh.2', pl.pos);
             },
         },
         transitions: {
@@ -7699,18 +7955,18 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             ctx.freeze(pl);
             const prevStatus = ctx.previousStatus;
             if (prevStatus === 'shieldCounter') {
-                playAnim$4(pl, 'animation.double_blade.counter_shield');
+                playAnimCompatibility$1(pl, 'animation.double_blade.counter_shield');
                 ctx.adsorbOrSetVelocity(pl, 1, 90, 1);
             }
             else if (prevStatus.includes('RL') || prevStatus === 'startLeft') {
-                playAnim$4(pl, 'animation.double_blade.shield_left');
+                playAnimCompatibility$1(pl, 'animation.double_blade.shield_left');
             }
             else if (prevStatus.includes('LR') || prevStatus === 'startRight') {
-                playAnim$4(pl, 'animation.double_blade.shield_right');
+                playAnimCompatibility$1(pl, 'animation.double_blade.shield_right');
                 ctx.adsorbOrSetVelocity(pl, 0.5, 90, 1);
             }
             else {
-                playAnim$4(pl, 'animation.double_blade.shield');
+                playAnimCompatibility$1(pl, 'animation.double_blade.shield');
             }
         },
         onLeave(pl, ctx) {
@@ -7739,8 +7995,8 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             ctx.status.isBlocking = true,
                 ctx.components.getComponent(Stamina).unwrap().stamina += 30;
             ctx.freeze(pl);
-            playSoundAll$4('weapon.sword.hit2', pl.pos);
-            playAnim$4(pl, 'animation.double_blade.shield_success');
+            playSoundAll$3('weapon.sword.hit2', pl.pos);
+            playAnimCompatibility$1(pl, 'animation.double_blade.shield_success');
             ctx.lookAtTarget(pl);
         },
         onLeave(pl, ctx) {
@@ -7789,7 +8045,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             ctx.status.repulsible = false;
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
             ctx.freeze(pl);
-            playAnim$4(pl, 'animation.double_blade.shield.kick');
+            playAnimCompatibility$1(pl, 'animation.double_blade.shield.kick');
             ctx.lookAtTarget(pl);
         },
         onLeave(pl, ctx) {
@@ -7843,7 +8099,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 15;
             ctx.freeze(pl);
             ctx.lookAtTarget(pl);
-            playAnim$4(pl, 'animation.double_blade.skl');
+            playAnimCompatibility$1(pl, 'animation.double_blade.skl');
             setVelocityByOrientation(pl, ctx, 1, 1.5);
         },
         onLeave(pl, ctx) {
@@ -7854,7 +8110,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             ctx.trap(pl, { tag: 'after' });
         },
         timeline: {
-            6: pl => playSoundAll$4('weapon.woosh.2', pl.pos),
+            6: pl => playSoundAll$3('weapon.woosh.2', pl.pos),
             7: (pl, ctx) => {
                 ctx.selectFromSector(pl, {
                     angle: 40,
@@ -7921,7 +8177,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
             ctx.status.repulsible = false;
             ctx.components.getComponent(Stamina).unwrap().stamina -= 25;
             ctx.freeze(pl);
-            playAnim$4(pl, 'animation.double_blade.shield_counter');
+            playAnimCompatibility$1(pl, 'animation.double_blade.shield_counter');
         },
         onLeave(pl, ctx) {
             ctx.unfreeze(pl);
@@ -7942,7 +8198,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         },
         timeline: {
             3: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1, 90, 1),
-            5: pl => playSoundAll$4('weapon.woosh.3', pl.pos),
+            5: pl => playSoundAll$3('weapon.woosh.3', pl.pos),
             14: (pl, ctx) => ctx.trap(pl),
         },
         transitions: {
@@ -7974,7 +8230,7 @@ class DoubleBladeMoves extends DefaultMoves$4 {
         onEnter(pl, ctx) {
             ctx.components.getComponent(Stamina).unwrap().stamina -= 10;
             ctx.freeze(pl);
-            playAnim$4(pl, 'animation.double_blade.shield');
+            playAnimCompatibility$1(pl, 'animation.double_blade.shield');
         },
         onLeave(pl, ctx) {
             ctx.status.isBlocking = false;
@@ -8036,7 +8292,7 @@ class StaffMoves extends DefaultMoves$4 {
     idle = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$4(pl, 'animation.weapon.staff.idle', 'animation.weapon.staff.idle');
+            playAnimCompatibility$1(pl, 'animation.weapon.staff.idle', 'animation.weapon.staff.idle');
         },
         transitions: {
             transI2R: {
@@ -8055,7 +8311,7 @@ class StaffMoves extends DefaultMoves$4 {
     transI2R = {
         cast: 4,
         onEnter(pl) {
-            playAnim$4(pl, 'animation.weapon.staff.trans.i2r');
+            playAnimCompatibility$1(pl, 'animation.weapon.staff.trans.i2r');
         },
         transitions: {
             running: {
@@ -8074,7 +8330,7 @@ class StaffMoves extends DefaultMoves$4 {
     transR2I = {
         cast: 4,
         onEnter(pl) {
-            playAnim$4(pl, 'animation.weapon.staff.trans.r2i');
+            playAnimCompatibility$1(pl, 'animation.weapon.staff.trans.r2i');
         },
         transitions: {
             idle: {
@@ -8093,7 +8349,7 @@ class StaffMoves extends DefaultMoves$4 {
     running = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$4(pl, 'animation.weapon.staff.running', 'animation.weapon.staff.running');
+            playAnimCompatibility$1(pl, 'animation.weapon.staff.running', 'animation.weapon.staff.running');
         },
         transitions: {
             transR2I: {
@@ -8109,7 +8365,7 @@ class StaffMoves extends DefaultMoves$4 {
     hold = {
         cast: Infinity,
         onEnter(pl) {
-            playAnim$4(pl, 'animation.weapon.staff.hold', 'animation.weapon.staff.hold');
+            playAnimCompatibility$1(pl, 'animation.weapon.staff.hold', 'animation.weapon.staff.hold');
         },
         transitions: {
             idle: {
@@ -8143,7 +8399,7 @@ class FantasyDoubleTachi extends DefaultMoves$4 {
     hold = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.fantasy.double_tachi.hold', 'animation.fantasy.double_tachi.hold');
+            playAnimCompatibility$1(pl, 'animation.fantasy.double_tachi.hold', 'animation.fantasy.double_tachi.hold');
         },
         transitions: {
             hurt: {
@@ -8162,7 +8418,7 @@ class FantasyDoubleTachi extends DefaultMoves$4 {
     running = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.fantasy.double_tachi.running', 'animation.fantasy.double_tachi.running');
+            playAnimCompatibility$1(pl, 'animation.fantasy.double_tachi.running', 'animation.fantasy.double_tachi.running');
         },
         transitions: {
             hurt: {
@@ -8203,7 +8459,7 @@ class FantasyDoubleTachi extends DefaultMoves$4 {
     kamae = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.fantasy.double_tachi.kamae', 'animation.fantasy.double_tachi.kamae');
+            playAnimCompatibility$1(pl, 'animation.fantasy.double_tachi.kamae', 'animation.fantasy.double_tachi.kamae');
         },
         transitions: {
             hurt: {
@@ -8258,7 +8514,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
     idle = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.idle', 'animation.meisterhau.double_axe.idle');
+            playAnimCompatibility$1(pl, 'animation.meisterhau.double_axe.idle', 'animation.meisterhau.double_axe.idle');
         },
         transitions: {
             hurt: {
@@ -8272,7 +8528,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
     hold = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.hold', 'animation.meisterhau.double_axe.hold');
+            playAnimCompatibility$1(pl, 'animation.meisterhau.double_axe.hold', 'animation.meisterhau.double_axe.hold');
         },
         transitions: {
             hurt: {
@@ -8296,7 +8552,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         cast: 17,
         backswing: 7,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.light.start', 'animation.meisterhau.double_axe.light.start');
+            playAnimCompatibility$1(pl, 'animation.meisterhau.double_axe.light.start', 'animation.meisterhau.double_axe.light.start');
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
             ctx.status.isBlocking = true;
@@ -8340,7 +8596,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         timeline: {
             2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
             4: (_, ctx) => ctx.status.isBlocking = false,
-            6: (pl, ctx) => playSoundAll$4('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
+            6: (pl, ctx) => playSoundAll$3('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 90,
                 radius: 2.5,
@@ -8357,7 +8613,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         cast: 17,
         backswing: 7,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.light.1', 'animation.meisterhau.double_axe.light.1');
+            playAnimCompatibility$1(pl, 'animation.meisterhau.double_axe.light.1', 'animation.meisterhau.double_axe.light.1');
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
         },
@@ -8399,7 +8655,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
             5: (_, ctx) => ctx.status.hegemony = true,
             15: (_, ctx) => ctx.status.hegemony = false,
-            6: pl => playSoundAll$4('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
+            6: pl => playSoundAll$3('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 90,
                 radius: 2.5,
@@ -8416,7 +8672,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         cast: 17,
         backswing: 7,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.light.2', 'animation.meisterhau.double_axe.light.2');
+            playAnimCompatibility$1(pl, 'animation.meisterhau.double_axe.light.2', 'animation.meisterhau.double_axe.light.2');
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
         },
@@ -8458,7 +8714,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             2: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
             5: (_, ctx) => ctx.status.hegemony = true,
             15: (_, ctx) => ctx.status.hegemony = false,
-            6: pl => playSoundAll$4('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
+            6: pl => playSoundAll$3('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 90,
                 radius: 2.5,
@@ -8475,7 +8731,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         cast: 20,
         backswing: 10,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.heavy_start', 'animation.meisterhau.double_axe.heavy_start');
+            playAnimCompatibility$1(pl, 'animation.meisterhau.double_axe.heavy_start', 'animation.meisterhau.double_axe.heavy_start');
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
         },
@@ -8531,7 +8787,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             9: (_, ctx) => ctx.status.hegemony = true,
             7: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             19: (_, ctx) => ctx.status.hegemony = false,
-            10: pl => playSoundAll$4('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
+            10: pl => playSoundAll$3('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             12: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 120,
                 radius: 2.8,
@@ -8547,7 +8803,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         cast: 19,
         backswing: 10,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.heavy_left', 'animation.meisterhau.double_axe.heavy_left');
+            playAnimCompatibility$1(pl, 'animation.meisterhau.double_axe.heavy_left', 'animation.meisterhau.double_axe.heavy_left');
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
         },
@@ -8593,7 +8849,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             7: (_, ctx) => ctx.status.hegemony = true,
             6: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             19: (_, ctx) => ctx.status.hegemony = false,
-            10: pl => playSoundAll$4('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
+            10: pl => playSoundAll$3('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             12: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 120,
                 radius: 2.8,
@@ -8608,7 +8864,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
     finishLeft = {
         cast: 28,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.finish.left', 'animation.meisterhau.double_axe.finish.left');
+            playAnimCompatibility$1(pl, 'animation.meisterhau.double_axe.finish.left', 'animation.meisterhau.double_axe.finish.left');
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
         },
@@ -8637,7 +8893,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             11: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
             10: (_, ctx) => {
                 ctx.status.hegemony = true;
-                playSoundAll$4('weapon.whoosh.thick.' + randomRange$1(1, 4, true), _.pos);
+                playSoundAll$3('weapon.whoosh.thick.' + randomRange$1(1, 4, true), _.pos);
             },
             8: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             20: (_, ctx) => ctx.status.hegemony = false,
@@ -8656,7 +8912,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         cast: 19,
         backswing: 10,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.heavy_right', 'animation.meisterhau.double_axe.heavy_right');
+            playAnimCompatibility$1(pl, 'animation.meisterhau.double_axe.heavy_right', 'animation.meisterhau.double_axe.heavy_right');
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
         },
@@ -8702,7 +8958,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             7: (_, ctx) => ctx.status.hegemony = true,
             6: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             19: (_, ctx) => ctx.status.hegemony = false,
-            10: pl => playSoundAll$4('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
+            10: pl => playSoundAll$3('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             12: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 120,
                 radius: 2.8,
@@ -8717,7 +8973,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
     finishRight = {
         cast: 28,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.finish.right', 'animation.meisterhau.double_axe.finish.right');
+            playAnimCompatibility$1(pl, 'animation.meisterhau.double_axe.finish.right', 'animation.meisterhau.double_axe.finish.right');
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
         },
@@ -8746,7 +9002,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             11: (pl, ctx) => ctx.adsorbOrSetVelocity(pl, 1.5),
             10: (_, ctx) => {
                 ctx.status.hegemony = true;
-                playSoundAll$4('weapon.whoosh.thick.' + randomRange$1(1, 4, true), _.pos);
+                playSoundAll$3('weapon.whoosh.thick.' + randomRange$1(1, 4, true), _.pos);
             },
             8: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             20: (_, ctx) => ctx.status.hegemony = false,
@@ -8769,19 +9025,19 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             const ori = input.approximateOrientation(pl);
             switch (ori) {
                 case input.Orientation.Left:
-                    playAnimCompatibility(pl, 'animation.meisterhau.double_axe.dodge.left');
+                    playAnimCompatibility$1(pl, 'animation.meisterhau.double_axe.dodge.left');
                     ctx.setVelocity(pl, 0, 1.8);
                     break;
                 case input.Orientation.Right:
-                    playAnimCompatibility(pl, 'animation.meisterhau.double_axe.dodge.right');
+                    playAnimCompatibility$1(pl, 'animation.meisterhau.double_axe.dodge.right');
                     ctx.setVelocity(pl, 180, 1.8);
                     break;
                 case input.Orientation.Forward:
-                    playAnimCompatibility(pl, 'animation.meisterhau.double_axe.dodge.front');
+                    playAnimCompatibility$1(pl, 'animation.meisterhau.double_axe.dodge.front');
                     ctx.adsorbToTarget(pl, 2);
                     break;
                 default:
-                    playAnimCompatibility(pl, 'animation.meisterhau.double_axe.dodge.back');
+                    playAnimCompatibility$1(pl, 'animation.meisterhau.double_axe.dodge.back');
                     ctx.setVelocity(pl, -90, 1.5);
                     break;
             }
@@ -8818,8 +9074,8 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         cast: 5,
         backswing: 4,
         onEnter(pl, ctx) {
-            playSoundAll$4('weapon.deflection', pl.pos, 1);
-            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.deflect', 'animation.meisterhau.double_axe.deflect');
+            playSoundAll$3('weapon.deflection', pl.pos, 1);
+            playAnimCompatibility$1(pl, 'animation.meisterhau.double_axe.deflect', 'animation.meisterhau.double_axe.deflect');
             ctx.freeze(pl);
             ctx.adsorbToTarget(pl, 3);
             ctx.lookAtTarget(pl);
@@ -8849,7 +9105,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
     break = {
         cast: 20,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.break', 'animation.meisterhau.double_axe.break');
+            playAnimCompatibility$1(pl, 'animation.meisterhau.double_axe.break', 'animation.meisterhau.double_axe.break');
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
         },
@@ -8858,7 +9114,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
         },
         timeline: {
             2: (pl, ctx) => ctx.adsorbToTarget(pl, 3, 1),
-            3: pl => playSoundAll$4('weapon.whoosh.break_defense', pl.pos),
+            3: pl => playSoundAll$3('weapon.whoosh.break_defense', pl.pos),
             4: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 180,
                 radius: 2.8,
@@ -8897,7 +9153,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
     breakKick = {
         cast: 14,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.kick', 'animation.meisterhau.double_axe.kick');
+            playAnimCompatibility$1(pl, 'animation.meisterhau.double_axe.kick', 'animation.meisterhau.double_axe.kick');
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
         },
@@ -8932,7 +9188,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
     breakCounter = {
         cast: 26,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.meisterhau.double_axe.break_counter', 'animation.meisterhau.double_axe.break_counter');
+            playAnimCompatibility$1(pl, 'animation.meisterhau.double_axe.break_counter', 'animation.meisterhau.double_axe.break_counter');
             ctx.lookAtTarget(pl);
             ctx.freeze(pl);
         },
@@ -8976,7 +9232,7 @@ class DoubleAxeMoves extends DefaultMoves$4 {
             5: (_, ctx) => ctx.status.hegemony = true,
             3: (pl, ctx) => ctx.trap(pl, { tag: 'feint' }),
             15: (_, ctx) => ctx.status.hegemony = false,
-            6: pl => playSoundAll$4('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
+            6: pl => playSoundAll$3('weapon.whoosh.thick.' + randomRange$1(1, 4, true), pl.pos),
             8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 120,
                 radius: 2.8,
@@ -9026,7 +9282,7 @@ class OneHandedMoves extends DefaultMoves$4 {
     idle = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.onhanded.idle', 'animation.onhanded.idle');
+            playAnimCompatibility$1(pl, 'animation.onhanded.idle', 'animation.onhanded.idle');
         },
         transitions: {
             hurt: {
@@ -9045,7 +9301,7 @@ class OneHandedMoves extends DefaultMoves$4 {
     running = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.onhanded.running', 'animation.onhanded.running');
+            playAnimCompatibility$1(pl, 'animation.onhanded.running', 'animation.onhanded.running');
         },
         transitions: {
             r2i: {
@@ -9061,7 +9317,7 @@ class OneHandedMoves extends DefaultMoves$4 {
     i2r = {
         cast: 4,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.onhanded.i2r', 'animation.onhanded.i2r');
+            playAnimCompatibility$1(pl, 'animation.onhanded.i2r', 'animation.onhanded.i2r');
         },
         transitions: {
             hurt: {
@@ -9080,7 +9336,7 @@ class OneHandedMoves extends DefaultMoves$4 {
     r2i = {
         cast: 4,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.onhanded.r2i', 'animation.onhanded.r2i');
+            playAnimCompatibility$1(pl, 'animation.onhanded.r2i', 'animation.onhanded.r2i');
         },
         transitions: {
             hurt: {
@@ -9099,7 +9355,7 @@ class OneHandedMoves extends DefaultMoves$4 {
     holding = {
         cast: Infinity,
         onEnter(pl, ctx) {
-            playAnimCompatibility(pl, 'animation.onhanded.holding', 'animation.onhanded.holding');
+            playAnimCompatibility$1(pl, 'animation.onhanded.holding', 'animation.onhanded.holding');
         },
         transitions: {
             hurt: {
@@ -9125,7 +9381,7 @@ class OneHandedMoves extends DefaultMoves$4 {
         backswing: 6,
         onEnter(pl, ctx) {
             ctx.lookAtTarget(pl);
-            playAnimCompatibility(pl, 'animation.onhanded.attack1', 'animation.onhanded.attack1');
+            playAnimCompatibility$1(pl, 'animation.onhanded.attack1', 'animation.onhanded.attack1');
             ctx.freeze(pl);
             ctx.status.isBlocking = true;
         },
@@ -9176,7 +9432,7 @@ class OneHandedMoves extends DefaultMoves$4 {
         cast: 20,
         onEnter(pl, ctx) {
             ctx.lookAtTarget(pl);
-            playAnimCompatibility(pl, 'animation.onhanded.attack2', 'animation.onhanded.attack2');
+            playAnimCompatibility$1(pl, 'animation.onhanded.attack2', 'animation.onhanded.attack2');
             ctx.freeze(pl);
             ctx.adsorbOrSetVelocity(pl, 1);
         },
@@ -9244,6 +9500,7 @@ var collection = [
 
 var collection$1 = /*@__PURE__*/getDefaultExportFromCjs(collection);
 
+/** 检查技巧模块的完整性 */
 function checkCompleteness(mod) {
     if (!mod.sid || !mod.bind || !mod.entry || !mod.moves) {
         return '缺少必要的属性: sid | bind | entry | moves';
@@ -9314,6 +9571,14 @@ var func = {
     kinematics, combat,
 };
 
+/**
+ * 创建二维向量
+ * @param {number} x1 起点x坐标
+ * @param {number} y1 起点y坐标
+ * @param {number} x2 终点x坐标
+ * @param {number} y2 终点y坐标
+ * @returns {{dx: number, dy: number, m: number}} 向量对象
+ */
 function vec2(x1, y1, x2, y2) {
     const dx = x2 - x1,
         dy = y2 - y1;
@@ -9323,6 +9588,12 @@ function vec2(x1, y1, x2, y2) {
     }
 }
 
+/**
+ * 计算两个向量之间的夹角
+ * @param {{dx: number, dy: number, m: number}} v1 第一个向量
+ * @param {{dx: number, dy: number, m: number}} v2 第二个向量
+ * @returns {number} 夹角（弧度）
+ */
 function getAngleFromVector2(v1, v2) {
     const dotProduct = v1.dx * v2.dx + v1.dy * v2.dy;
     const angle = dotProduct / (v1.m * v2.m);
@@ -9330,6 +9601,12 @@ function getAngleFromVector2(v1, v2) {
     return Math.acos(angle)
 }
 
+/**
+ * 旋转二维向量
+ * @param {{dx: number, dy: number, m: number}} v 原始向量
+ * @param {number} rad 旋转角度（弧度）
+ * @returns {{dx: number, dy: number, m: number}} 旋转后的向量
+ */
 function rotate2(v, rad) {
     const { dx, dy, m } = v;
     const x = dx * Math.cos(rad) - dy * Math.sin(rad);
@@ -9339,11 +9616,23 @@ function rotate2(v, rad) {
     }
 }
 
+/**
+ * 缩放二维向量
+ * @param {{dx: number, dy: number, m: number}} v 原始向量
+ * @param {number} factor 缩放因子
+ * @returns {{dx: number, dy: number, m: number}} 缩放后的向量
+ */
 function multiply2(v, factor) {
     const { dx, dy } = v;
     return vec2(0, 0, dx*factor, dy*factor)
 }
 
+/**
+ * 向量减法
+ * @param {{dx: number, dy: number, m: number}} a 被减向量
+ * @param {{dx: number, dy: number, m: number}} b 减向量
+ * @returns {{dx: number, dy: number, m: number}} 差向量
+ */
 function minus(a, b) {
     return vec2(
         0, 0,
@@ -9352,6 +9641,11 @@ function minus(a, b) {
     )
 }
 
+/**
+ * 将向量转换为角度
+ * @param {{dx: number, dy: number, m: number}} v 向量
+ * @returns {number} 角度（弧度）
+ */
 function vec2ToAngle(v) {
     let angle = getAngleFromVector2(v, vec2(0, 0, 0, -1));
 
@@ -9367,11 +9661,18 @@ var vec = {
     vec2ToAngle, 
 };
 
+/** 默认攻击范围配置 */
 const defaultRange = {
-    angle: 60,
-    rotation: -30,
-    radius: 2.5
+    angle: 60, // 扇形角度
+    rotation: -30, // 旋转偏移角度
+    radius: 2.5 // 扇形半径
 };
+/**
+ * 从扇形区域选择目标
+ * @param pl 源角色
+ * @param range 攻击范围配置
+ * @returns 在扇形区域内的目标角色数组
+ */
 function selectFromSector(pl, range = defaultRange) {
     const { angle, rotation, radius } = Object.assign({}, defaultRange, range);
     const pos = ActorHelper.position(pl);
@@ -9379,11 +9680,14 @@ function selectFromSector(pl, range = defaultRange) {
     const endAngle = startAngle + angle;
     const RAD = Math.PI / 180;
     const sx = pos.x, sz = pos.z, tx = sx + Math.cos(startAngle * RAD) * radius, tz = sz + Math.sin(startAngle * RAD) * radius, Tx = sx + Math.cos(endAngle * RAD) * radius, Tz = sz + Math.sin(endAngle * RAD) * radius;
+    // 计算扇形边界向量
     const v1 = vec.vec2(sx, sz, tx, tz), v2 = vec.vec2(sx, sz, Tx, Tz), rangeAngle = vec.getAngleFromVector2(v1, v2);
     const result = [];
     const distSqr = radius * radius;
+    // 筛选在线玩家
     const playersShouldBeSelected = mc.getOnlinePlayers()
         .filter(p => p.uniqueId !== pl.uniqueId && p.health > 0 && pl.distanceToSqr(p) <= distSqr);
+    // 筛选实体并检查是否在扇形区域内
     playersShouldBeSelected.concat(mc.getEntities(pl.pos, Math.max(1.5, radius - 1.5))).forEach(e => {
         if (e.uniqueId === pl.uniqueId) {
             return;
@@ -9397,17 +9701,40 @@ function selectFromSector(pl, range = defaultRange) {
     return result;
 }
 
+/**
+ * 设置相机输入权限
+ * @param pl 玩家对象
+ * @param enabled 是否启用相机输入
+ */
 const cameraInput = (pl, enabled = true) => {
     mc.runcmdEx(`inputpermission set "${pl.name}" camera ${enabled ? 'enabled' : 'disabled'}`);
 };
+/**
+ * 设置相机位置和旋转角度
+ * @param pl 玩家对象
+ * @param easeTime 缓动时间
+ * @param easeType 缓动类型
+ * @param pos 相机位置
+ * @param rotX X轴旋转角度
+ * @param rotY Y轴旋转角度
+ */
 const cameraRot = (pl, easeTime, easeType, pos, rotX, rotY) => {
     mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} rot ${rotX} ${rotY}`);
 };
+/**
+ * 清除相机设置，恢复默认相机
+ * @param pl 玩家对象
+ */
 function clearCamera(pl) {
     mc.runcmdEx(`camera "${pl.name}" set meisterhau:battle`);
 }
 const ROT = Math.PI * 1;
 const ANGLE = 180 / Math.PI;
+/**
+ * 设置战斗相机
+ * @param pl 玩家对象
+ * @param en 目标角色
+ */
 const battleCamera = (pl, en) => {
     if (!pl) {
         return;
@@ -9467,18 +9794,30 @@ const battleCamera = (pl, en) => {
 
 const { knockback } = kinematics$1;
 
-
+/**
+ * 设置角色速度
+ * @param {Actor} pl 角色对象
+ * @param {number} rotation 旋转角度（相对于角色朝向）
+ * @param {number} h 水平速度
+ * @param {number} v 垂直速度
+ */
 const setVelocity = (pl, rotation, h, v) => {
     const { yaw } = pl.direction;
     const rad = (yaw + rotation) * Math.PI / 180.0;
     knockback(pl, Math.cos(rad), Math.sin(rad), h, v);
 };
 
+/**
+ * 检查角色是否与方块碰撞
+ * @param {Actor} pl 角色对象
+ * @returns {boolean} 是否发生碰撞
+ */
 function isCollide(pl) {
     const { x: _x, z: _z } = pl.pos;
     const x = Math.abs(_x);
     const z = Math.abs(_z);
 
+    // 检测角色是否靠近方块边界
     let mayCollide = x - Math.floor(x) < 0.301 ? 1
         : x - Math.floor(x) > 0.699 ? 2
             : z - Math.floor(z) < 0.301 ? 3
@@ -9490,19 +9829,19 @@ function isCollide(pl) {
         default:
             return false
     
-        case 1:
+        case 1: // 左侧碰撞检测
             const nx = mc.getBlock(bPos.x - 1, bPos.y, bPos.z, bPos.dimid);
             return !nx.isAir && !nx.thickness
 
-        case 2:
+        case 2: // 右侧碰撞检测
             const px = mc.getBlock(bPos.x + 1, bPos.y, bPos.z, bPos.dimid);
             return !px.isAir && !px.thickness
         
-        case 3:
+        case 3: // 前方碰撞检测
             const nz = mc.getBlock(bPos.x, bPos.y, bPos.z - 1, bPos.dimid);
             return !nz.isAir && !nz.thickness
         
-        case 4:
+        case 4: // 后方碰撞检测
             const pz = mc.getBlock(bPos.x, bPos.y, bPos.z + 1, bPos.dimid);
             return !pz.isAir && !pz.thickness 
     }
@@ -9512,9 +9851,11 @@ var kinematic = {
     setVelocity, isCollide
 };
 
+/** 简单中止控制器 */
 class SimpleAbortController {
     _aborted = false;
     _listeners = [];
+    /** 获取中止信号 */
     get signal() {
         return {
             aborted: this._aborted,
@@ -9533,6 +9874,7 @@ class SimpleAbortController {
             }
         };
     }
+    /** 中止所有任务 */
     abort() {
         if (!this._aborted) {
             this._aborted = true;
@@ -9575,6 +9917,7 @@ class MeisterhauAITicker extends CustomComponent {
         this.ctx.stopFlag = true;
     }
 }
+/** Meisterhau AI 基类 - 管理AI行为和状态机 */
 class MeisterhauAI {
     actor;
     strategy;
@@ -9589,16 +9932,31 @@ class MeisterhauAI {
     }
     _fsm;
     _waitExecuting = [];
+    /**
+     * 检查是否有正在执行的任务
+     * @returns 是否有正在执行的任务
+     */
     hasAnyExecutingTasks() {
         return this._waitExecuting.length > 0;
     }
+    /**
+     * 检查是否有待执行的任务
+     * @returns 是否有待执行的任务
+     */
     hasAnyTasks() {
         return this._tasks.length > 0;
     }
+    /**
+     * 提交执行完成，通知所有等待中的任务
+     */
     submitExecuting() {
         this._waitExecuting.forEach(resolver => resolver.resolve());
         this._waitExecuting.length = 0;
     }
+    /**
+     * 等待所有执行中的任务完成
+     * @returns Promise，在所有任务完成时解析
+     */
     async waitExecutingTasks() {
         if (!this.hasAnyTasks()) {
             return Promise.resolve();
@@ -9607,6 +9965,11 @@ class MeisterhauAI {
         this._waitExecuting.push(resolver);
         return resolver.promise;
     }
+    /**
+     * 等待指定毫秒数，可被中止
+     * @param ms 等待的毫秒数，默认为0
+     * @returns Promise，在等待时间结束或被中止时解析
+     */
     async wait(ms = 0) {
         return new Promise((resolve) => {
             if (this.abortController.signal.aborted) {
@@ -9636,6 +9999,11 @@ class MeisterhauAI {
      * @param task
      * @param force
      */
+    /**
+     * 执行AI任务
+     * @param task 要执行的AI任务
+     * @param force 是否强制执行，忽略当前是否有任务正在执行
+     */
     executeTask(task, force = false) {
         if (force || !this.hasAnyExecutingTasks()) {
             this._tasks.push(task);
@@ -9654,6 +10022,7 @@ class MeisterhauAI {
         }
         this._tasks.length = 0;
     }
+    /** AI tick更新方法 */
     async tick() {
         if (this._fsm && !this.abortController.signal.aborted) {
             const { value, done } = await this._fsm.next();
@@ -9665,10 +10034,14 @@ class MeisterhauAI {
             await this._executeTasks(value);
         }
     }
+    /** AI启动时调用 */
     onStart() { }
+    /** AI更新时调用 */
     onUpdate(breakVal) { }
+    /** AI停止时调用 */
     onStop(breakVal) { }
     aiTicker;
+    /** 创建AI循环，在每次tick时执行表达式 */
     loop(expr) {
         const context = {
             breakValue: undefined,
@@ -9684,6 +10057,7 @@ class MeisterhauAI {
         this.aiTicker = aiTicker;
         return resolvers.promise;
     }
+    /** 设置AI策略 */
     setStrategy(strategy) {
         this.strategy = strategy;
         const fsm = this.getStrategy(strategy);
@@ -9707,9 +10081,11 @@ class MeisterhauAI {
             this.onStop?.(v);
         }
     }
+    /** 启动AI */
     start() {
         this._start(true);
     }
+    /** 停止AI */
     stop(returnVal) {
         this.abortController.abort();
         this.aiTicker?.stop();
@@ -9717,6 +10093,7 @@ class MeisterhauAI {
         this.onStop?.(returnVal);
         this._fsm = undefined;
     }
+    /** 等待指定tick数 */
     waitTick(ticks = 1) {
         return new Promise((resolve) => {
             let count = 0;
@@ -9733,9 +10110,11 @@ class MeisterhauAI {
             this.status.componentManager.beforeTick(onTick);
         });
     }
+    /** 获取AI是否已停止 */
     get stopped() {
         return this.abortController.signal.aborted;
     }
+    /** 重启AI，可选择新策略 */
     async restart(strategy = 'default') {
         this.stop();
         await this.waitTick();
@@ -9748,6 +10127,7 @@ class MeisterhauAI {
         }
         return false;
     }
+    /** 根据权重随机选择动作 */
     randomActions(...conf) {
         const sum = conf.reduce((a, [b]) => a + Number(b), 0);
         const rands = conf.map(([v]) => Number(v) / sum);
@@ -9766,25 +10146,31 @@ class MeisterhauAI {
 }
 const ais = {};
 const aiRunning = new Map();
+/** AI管理器命名空间 */
 var ai;
 (function (ai) {
+    /** 注册AI类型 */
     function register(registration) {
         ais[registration.type] = registration;
     }
     ai.register = register;
+    /** 获取AI注册信息 */
     function getRegistration(type) {
         return ais[type];
     }
     ai.getRegistration = getRegistration;
+    /** 获取实体的AI实例 */
     function getAI(en) {
         return aiRunning.get(en.uniqueId);
     }
     ai.getAI = getAI;
+    /** 检查实体是否已注册AI */
     function isRegistered(en) {
         return en.type in ais;
     }
     ai.isRegistered = isRegistered;
 })(ai || (ai = {}));
+/** AI标识组件 */
 class IsAI extends CustomComponent {
 }
 const isAI = new IsAI();
@@ -9812,26 +10198,37 @@ async function listenEntitiyWithAi() {
     }, 5000);
 }
 
+/** 目标锁定组件 - 管理战斗中的目标锁定 */
 class TargetLock extends BaseComponent {
     source;
     target;
+    /** 源是否为玩家 */
     sourceIsPlayer = false;
+    /** 目标是否为玩家 */
     targetIsPlayer = false;
+    /** 目标是否为AI */
     targetIsAI = false;
+    /** 目标是否为角色 */
     get targetIsActor() {
         return this.targetIsAI || this.targetIsPlayer;
     }
-    constructor(source = Optional.none(), target = Optional.none()) {
+    constructor(
+    /** 源角色 */
+    source = Optional.none(), 
+    /** 目标角色 */
+    target = Optional.none()) {
         super();
         this.source = source;
         this.target = target;
         this.resetAttrs();
     }
+    /** 重置属性 */
     resetAttrs() {
         this.sourceIsPlayer = !this.source.isEmpty() && ('xuid' in this.source.unwrap());
         this.targetIsPlayer = !this.target.isEmpty() && ('xuid' in this.target.unwrap());
         this.targetIsAI = this.target.match(false, t => Status.getComponentManager(t.uniqueId).match(false, m => !m.getComponent(IsAI).isEmpty()));
     }
+    /** 组件附加时禁用跳跃和潜行 */
     onAttach() {
         if (this.sourceIsPlayer) {
             this.source.use(p => {
@@ -9840,11 +10237,14 @@ class TargetLock extends BaseComponent {
             });
         }
     }
+    /** 选择目标 */
     selectTarget(target) {
         this.target = Optional.some(target);
         this.resetAttrs();
     }
+    /** 失去锁定事件 */
     onLoseLock = new Delegate();
+    /** 组件分离时恢复跳跃和潜行 */
     onDetach() {
         if (this.sourceIsPlayer) {
             this.source.use(p => {
@@ -9857,6 +10257,7 @@ class TargetLock extends BaseComponent {
 }
 
 var HudComponent_1;
+/** HUD组件 - 显示屏幕提示信息 */
 let HudComponent = class HudComponent extends BaseComponent {
     static { HudComponent_1 = this; }
     content;
@@ -9864,12 +10265,14 @@ let HudComponent = class HudComponent extends BaseComponent {
     fadeIn;
     fadeOut;
     stay;
+    /** HUD符号定义 */
     static symbols = {
         sword: '⚔',
         bodyTech: '✴',
         trace: '↪',
     };
     static id = 0;
+    /** 创建HUD组件 */
     static create({ content, type, fadeIn, fadeOut, stay } = {}) {
         return new HudComponent_1(content, type, fadeIn, fadeOut, stay);
     }
@@ -9882,9 +10285,11 @@ let HudComponent = class HudComponent extends BaseComponent {
         this.fadeOut = fadeOut;
         this.stay = stay;
     }
+    /** 每tick渲染HUD */
     onTick(manager, pl) {
         this.renderHud(pl);
     }
+    /** 渲染HUD到玩家屏幕 */
     renderHud(pl) {
         pl.unwrap()
             .setTitle(this.content, this.type, this.fadeIn, this.fadeOut, this.stay);
@@ -9897,14 +10302,19 @@ HudComponent = HudComponent_1 = __decorate([
 ], HudComponent);
 
 var DamageModifier_1;
+/** 伤害修正组件 - 调整伤害值 */
 let DamageModifier = class DamageModifier extends BaseComponent {
     static { DamageModifier_1 = this; }
+    /** 默认伤害修正值 */
     static defaultModifier = 0.2;
+    /** 默认伤害修正选项 */
     static defaultModifierOpt = new DamageModifier_1(DamageModifier_1.defaultModifier);
+    /** 创建伤害修正组件 */
     static create({ modifier }) {
         return new DamageModifier_1(modifier);
     }
     #modifier = DamageModifier_1.defaultModifier;
+    /** 获取伤害修正值 */
     get modifier() {
         return this.#modifier;
     }
@@ -9919,9 +10329,12 @@ DamageModifier = DamageModifier_1 = __decorate([
 ], DamageModifier);
 
 var HardmodeComponent_1, RaidomodComponent_1;
+/** 困难模式组件 - 降低伤害输出 */
 let HardmodeComponent = class HardmodeComponent extends BaseComponent {
     static { HardmodeComponent_1 = this; }
+    /** 困难模式伤害修正值 */
     static damageModifier = 0.6;
+    /** 创建困难模式组件 */
     static create() {
         return new HardmodeComponent_1();
     }
@@ -9941,9 +10354,12 @@ let HardmodeComponent = class HardmodeComponent extends BaseComponent {
 HardmodeComponent = HardmodeComponent_1 = __decorate([
     PublicComponent('hardmode')
 ], HardmodeComponent);
+/** 居合模式组件 - 增加伤害输出 */
 let RaidomodComponent = class RaidomodComponent extends BaseComponent {
     static { RaidomodComponent_1 = this; }
+    /** 居合模式伤害修正值 */
     static damageModifier = 2;
+    /** 创建居合模式组件 */
     static create() {
         return new RaidomodComponent_1();
     }
@@ -10021,17 +10437,20 @@ cmd('raidomode', '居合模式', CommandPermission.Everyone).setup(register => {
 });
 
 var StatusHud_1;
+/** 状态HUD组件 - 显示目标状态信息 */
 let StatusHud = StatusHud_1 = class StatusHud extends HudComponent {
     constructor(content = '', type = 4, fadeIn = 0, fadeOut = 0, stay = 2) {
         super(content, type, fadeIn, fadeOut, stay);
         this.allowTick = true;
     }
+    /** 创建状态HUD组件 */
     static create({ content, type, fadeIn, fadeOut, stay } = {}) {
         return new StatusHud_1(content, type, fadeIn, fadeOut, stay);
     }
     targetLock = Optional.none();
     targetStamina = Optional.none();
     stamina = Optional.none();
+    /** 组件附加时初始化 */
     onAttach(manager) {
         this.targetLock = manager.getComponent(TargetLock);
         this.stamina = manager.getComponent(Stamina);
@@ -10043,6 +10462,7 @@ let StatusHud = StatusHud_1 = class StatusHud extends HudComponent {
             });
         })));
     }
+    /** 渲染状态信息 */
     renderStatus() {
         if (this.targetLock.isEmpty())
             return;
@@ -10072,10 +10492,12 @@ let StatusHud = StatusHud_1 = class StatusHud extends HudComponent {
         }
         this.content = contents.join('\n');
     }
+    /** 整数进度显示 */
     intProgress(val, total) {
         return String(Math.round(val)).padStart(3, ' ') + '/'
             + String(Math.round(total)).padEnd(3, ' ');
     }
+    /** 每tick更新状态HUD */
     onTick(manager, pl) {
         if (!manager.has(HardmodeComponent)) {
             this.renderStatus();
@@ -10088,8 +10510,15 @@ StatusHud = StatusHud_1 = __decorate([
     Fields(['content', 'type', 'fadeIn', 'fadeOut', 'stay'])
 ], StatusHud);
 
+/** 锁定目标映射表 - 存储玩家ID到目标角色的映射 */
 const locks = new Map();
+/** 冷却集合 - 防止重复锁定操作 */
 const cooldowns = new Set();
+/**
+ * 锁定目标
+ * @param src 源玩家ID
+ * @param target 目标角色
+ */
 function lockTarget(src, target) {
     const pl = mc.getPlayer(src);
     if (cooldowns.has(pl.uniqueId)) {
@@ -10104,6 +10533,10 @@ function lockTarget(src, target) {
         clearCamera(pl);
     }
 }
+/**
+ * 释放目标锁定
+ * @param src 源玩家ID
+ */
 function releaseTarget(src) {
     const pl = mc.getPlayer(src);
     const manager = Status.getOrCreate(src).componentManager;
@@ -10116,6 +10549,11 @@ function releaseTarget(src) {
     cooldowns.add(pl.uniqueId);
     setTimeout(() => cooldowns.delete(pl.uniqueId), 500);
 }
+/**
+ * 切换锁定状态
+ * @param src 源玩家ID
+ * @returns 目标角色或null/false
+ */
 function toggleLock(src) {
     if (locks.has(src)) {
         releaseTarget(src);
@@ -10129,6 +10567,12 @@ function toggleLock(src) {
     lockTarget(src, target);
     return target;
 }
+/**
+ * 计算两个角色之间的角度
+ * @param actor 源角色
+ * @param actor2 目标角色
+ * @returns [水平角度, 垂直角度]
+ */
 function getAngle(actor, actor2) {
     const a = actor.pos;
     const b = actor2.pos;
@@ -10139,6 +10583,11 @@ function getAngle(actor, actor2) {
     const angleY = Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)) * 180 / Math.PI;
     return [angleXZ - 90, -angleY];
 }
+/**
+ * 让角色看向目标
+ * @param actor 源角色
+ * @param target 目标角色
+ */
 function lookAt(actor, target) {
     if (!target) {
         return releaseTarget(actor.uniqueId);
@@ -10146,9 +10595,18 @@ function lookAt(actor, target) {
     const [yaw, pitch] = getAngle(actor, target);
     actor.teleport(actor.feetPos, new DirectionAngle(0, yaw));
 }
+/**
+ * 从锁定组件获取目标角色
+ * @param actor 源角色
+ * @returns 目标角色的Optional包装
+ */
 function getTargetFromLock(actor) {
     return Status.getComponentManager(actor.uniqueId).match(Optional.none(), comps => comps.getComponent(TargetLock).match(Optional.none(), lock => lock.target));
 }
+/**
+ * 让角色看向锁定的目标
+ * @param pl 源角色
+ */
 function lookAtTarget(pl) {
     const targetEntity = getTargetFromLock(pl);
     if (targetEntity.isEmpty()) {
@@ -10156,13 +10614,31 @@ function lookAtTarget(pl) {
     }
     lookAt(pl, targetEntity.unwrap());
 }
+/**
+ * 检查角色是否有锁定目标
+ * @param pl 源角色
+ * @returns 是否有锁定目标
+ */
 function hasLock$1(pl) {
     return !getTargetFromLock(pl).isEmpty();
 }
+/**
+ * 吸附到目标角色
+ * @param pl 源角色
+ * @param en 目标角色
+ * @param max 最大吸附距离
+ * @param offset 偏移距离
+ */
 function adsorbTo(pl, en, max, offset = 2) {
     const dist = en.distanceTo(pl.pos) - offset;
     kinematics$1.knockback(pl, en.pos.x - pl.pos.x, en.pos.z - pl.pos.z, Math.min(dist, max), 0);
 }
+/**
+ * 吸附到锁定的目标
+ * @param pl 源角色
+ * @param max 最大吸附距离
+ * @param offset 偏移距离
+ */
 function adsorbToTarget(pl, max, offset) {
     const en = getTargetFromLock(pl);
     if (en.isEmpty()) {
@@ -10170,6 +10646,13 @@ function adsorbToTarget(pl, max, offset) {
     }
     adsorbTo(pl, en.unwrap(), max, offset);
 }
+/**
+ * 吸附到目标或设置速度
+ * @param pl 源角色
+ * @param max 最大距离/速度
+ * @param velocityRot 速度角度
+ * @param offset 偏移距离
+ */
 function adsorbOrSetVelocity(pl, max, velocityRot = 90, offset = 1.5) {
     const en = getTargetFromLock(pl);
     if (!en.isEmpty()) {
@@ -10178,6 +10661,11 @@ function adsorbOrSetVelocity(pl, max, velocityRot = 90, offset = 1.5) {
     }
     kinematic.setVelocity(pl, velocityRot, max, -1);
 }
+/**
+ * 计算到锁定目标的距离
+ * @param pl 源角色
+ * @returns 到目标的距离，无目标时返回Infinity
+ */
 function distanceToTarget(pl) {
     const en = getTargetFromLock(pl);
     if (en.isEmpty()) {
@@ -10185,6 +10673,11 @@ function distanceToTarget(pl) {
     }
     return en.unwrap().distanceTo(pl.pos);
 }
+/**
+ * 每tick更新锁定状态
+ * @param em 事件发射器
+ * @returns 更新函数
+ */
 const onTick = (em) => () => {
     locks.forEach(async (t, s) => {
         const _s = mc.getPlayer(s);
@@ -10201,6 +10694,11 @@ const ignoreEntities = [
     'minecraft:item',
     'minecraft:xp_orb',
 ];
+/**
+ * 获取最近的实体
+ * @param en 源角色
+ * @returns 最近的实体或null
+ */
 function getClosedEntity(en) {
     let closed = null, dist = Infinity;
     selectFromSector(en, {
@@ -10269,9 +10767,18 @@ var generic = {
     movement, camera, movementInput
 };
 
+/** 任务管理器 - 管理异步任务的队列执行 */
+
 const tasks = new Map();
 
+/**
+ * 任务类 - 用于管理异步任务队列
+ */
 class Task {
+    /**
+     * 构造函数
+     * @param {string} uniqueId 唯一标识符
+     */
     constructor(uniqueId) {
         if (!tasks.get(uniqueId)) {
             tasks.set(uniqueId, this);
@@ -10279,29 +10786,43 @@ class Task {
     }
 
     /**
-     * @param {string} uniqueId 
-     * @returns {Task}
+     * 获取或创建任务实例
+     * @param {string} uniqueId 唯一标识符
+     * @returns {Task} 任务实例
      */
     static get(uniqueId) {
         return tasks.get(uniqueId) || new Task(uniqueId)
     }
 
+    /** 任务队列 */
     _queue = []
+    /** 当前任务的时间戳 */
     _currentTimeStamp = null
 
     /**
-     * @param {{handler: () => any, timeout: number}[]} taskList 
+     * 批量添加任务到队列
+     * @param {{handler: () => any, timeout: number}[]} taskList 任务列表
+     * @returns {Task} 当前任务实例（支持链式调用）
      */
     queueList(taskList) {
         this._queue = this._queue.concat(taskList);
         return this
     }
 
+    /**
+     * 添加单个任务到队列
+     * @param {() => any} handler 任务处理函数
+     * @param {number} timeout 任务延迟时间（毫秒）
+     * @returns {Task} 当前任务实例（支持链式调用）
+     */
     queue(handler, timeout=5) {
         this._queue.push({handler, timeout});
         return this
     }
 
+    /**
+     * 跳过当前正在执行的任务
+     */
     skip() {
         if (!this._currentTimeStamp) {
             return
@@ -10311,6 +10832,9 @@ class Task {
         this._currentTimeStamp = null;
     }
 
+    /**
+     * 执行下一个任务（私有方法）
+     */
     #next = () => {
         const _task = this._queue.splice(0, 1)[0];
 
@@ -10326,11 +10850,17 @@ class Task {
         }, timeout);
     }
 
+    /**
+     * 取消所有任务
+     */
     cancel() {
         this.skip();
         this._queue = [];
     }
 
+    /**
+     * 开始执行任务队列
+     */
     run() {
         this.#next();
     }
@@ -10340,6 +10870,11 @@ var task = {
     Task
 };
 
+/**
+ * 注册组件管理命令和实用工具命令
+ * 包括组件添加、移除、列表、检查和更新功能
+ * 以及武器给予等实用工具
+ */
 function registerCommand() {
     cmd('components', '管理组件', 1).setup(register => {
         register('add <pl:player> <name:string> [args:json]', (_, __, output, args) => {
@@ -10471,24 +11006,31 @@ function registerCommand() {
     });
 }
 
+/** 调度器组件 - 按周期执行任务 */
 class Scheduler extends BaseComponent {
     period;
     offset = 0;
+    /** 是否更新标志 */
     update = false;
-    constructor(period = 1) {
+    constructor(
+    /** 调度周期 */
+    period = 1) {
         super();
         this.period = period;
         this.allowTick = true;
     }
+    /** 组件附加时初始化 */
     onAttach() {
         this.offset = Tick.tick;
     }
+    /** 每tick检查是否需要更新 */
     onTick() {
         this.update = (Tick.tick - this.offset) % this.period === 0;
     }
 }
 
 var HealthModifier_1;
+/** 生命值修正组件 - 随时间调整生命值 */
 let HealthModifier = HealthModifier_1 = class HealthModifier extends RequireComponents([Scheduler, 20], Timer) {
     delta;
     duration;
@@ -10507,6 +11049,7 @@ let HealthModifier = HealthModifier_1 = class HealthModifier extends RequireComp
         this.timer = this.getComponent(Timer);
         this.timer.rest = duration;
     }
+    /** 每tick更新生命值 */
     onTick(manager, pl) {
         if (!this.scheduler.update) {
             return;
@@ -10540,6 +11083,7 @@ let HealthModifier = HealthModifier_1 = class HealthModifier extends RequireComp
             }
         }
     }
+    /** 创建生命值修正组件 */
     static create({ delta, duration }) {
         return new HealthModifier_1(delta, duration);
     }
@@ -10549,11 +11093,15 @@ HealthModifier = HealthModifier_1 = __decorate([
     Fields(['remain'], ['delta', 'duration'])
 ], HealthModifier);
 
+/** 比赛规则枚举 */
 var MatchRules;
 (function (MatchRules) {
+    /** 三局两胜制 */
     MatchRules[MatchRules["BestOf"] = 0] = "BestOf";
+    /** 固定回合制 */
     MatchRules[MatchRules["FixedRounds"] = 1] = "FixedRounds";
 })(MatchRules || (MatchRules = {}));
+/** 比赛管理类 */
 class Match {
     team1;
     team2;
@@ -10561,6 +11109,7 @@ class Match {
     rounds;
     wins;
     currentRound;
+    /** 所有比赛映射表 */
     static matches = new Map();
     constructor(team1, team2, rule = MatchRules.BestOf, rounds = 5, wins = [0, 0], currentRound = 1) {
         this.team1 = team1;
@@ -10572,16 +11121,20 @@ class Match {
         Match.matches.set(team1, this);
         Match.matches.set(team2, this);
     }
+    /** 查找队伍的比赛 */
     static findMatch(team) {
         return Match.matches.get(team);
     }
+    /** 销毁比赛 */
     destroy() {
         Match.matches.delete(this.team1);
         Match.matches.delete(this.team2);
     }
+    /** 获取领先分数 */
     lead() {
         return Math.max(...this.wins);
     }
+    /** 检查比赛是否结束 */
     finished() {
         if (this.rule === MatchRules.BestOf) {
             return this.lead() > Math.floor(this.rounds / 2);
@@ -10591,6 +11144,7 @@ class Match {
         }
         return false;
     }
+    /** 队伍获胜 */
     win(team) {
         const won = this.team1 === team ? 0 :
             this.team2 === team ? 1 : -1;
@@ -10600,6 +11154,7 @@ class Match {
         this.wins[won]++;
         this.currentRound++;
     }
+    /** 队伍失败 */
     lose(team) {
         const won = this.team1 === team ? 1 :
             this.team2 === team ? 0 : -1;
@@ -10609,6 +11164,7 @@ class Match {
         this.wins[won]++;
         this.currentRound++;
     }
+    /** 获取比赛结果 */
     result() {
         if (this.wins[0] > this.wins[1]) {
             return [this.team1, this.team2];
@@ -10676,37 +11232,55 @@ cmd('match', '开启对局', CommandPermission.Everyone).setup(register => {
 
 requireEvents();
 
+/**
+ * 事件输入流类 - 用于过滤和转发事件
+ */
 class EventInputStream {
+    /** 静态映射表，存储事件发射器到输入流的映射 */
     static #ends = new Map()
-    /**@type {(em: EventEmitter) => EventInputStream}*/
+    
+    /**
+     * 获取或创建事件输入流实例
+     * @param {EventEmitter} end 事件发射器
+     * @returns {EventInputStream} 事件输入流实例
+     */
     static get(end) {
         return this.#ends.get(end) || new EventInputStream(end)
     }
 
+    /** 过滤器集合 */
     #filters = new Set()
-    /**@type {EventEmitter}*/
+    /** 目标事件发射器 */
     #end = null
 
+    /**
+     * 构造函数
+     * @param {EventEmitter} end 事件发射器
+     */
     constructor(end) {
         this.setEnd(end);
     }
 
     /**
-     * @param {(val: {type: string; args: any[]}) => boolean} filter 
+     * 添加事件过滤器
+     * @param {(val: {type: string; args: any[]}) => boolean} filter 过滤器函数
      */
     addFilter(filter) {
         this.#filters.add(filter);
     }
 
     /**
-     * @param {(val: {type: string; args: any[]}) => boolean} filter 
+     * 移除事件过滤器
+     * @param {(val: {type: string; args: any[]}) => boolean} filter 过滤器函数
      */
     removeFilter(filter) {
         this.#filters.delete(filter);
     }
 
     /**
-     * @param {{type: string; args: any[]}} input 
+     * 过滤事件（私有方法）
+     * @param {{type: string; args: any[]}} input 输入事件
+     * @returns {boolean} 是否通过过滤
      */
     #filter(input) {
         let nextVal = input;
@@ -10723,11 +11297,20 @@ class EventInputStream {
         return true
     }
 
+    /**
+     * 设置目标事件发射器
+     * @param {EventEmitter} end 事件发射器
+     */
     setEnd(end) {
         this.#end = end;
         EventInputStream.#ends.set(end, this);
     }
 
+    /**
+     * 推送事件到输入流
+     * @param {string} type 事件类型
+     * @param {any[]} args 事件参数
+     */
     put(type, args) {
         if (!this.#filter({ type, args })) {
             return
@@ -10787,7 +11370,7 @@ class OrnateTwoHanderMoves extends DefaultMoves$4 {
         cast: 27,
         onEnter(pl, ctx) {
             ctx.lookAtTarget(pl);
-            playAnimCompatibility(pl, 'animation.weapon.ai.guard.attack.left');
+            playAnimCompatibility$1(pl, 'animation.weapon.ai.guard.attack.left');
             ctx.status.hegemony = true;
         },
         onLeave(pl, ctx) {
@@ -10839,7 +11422,7 @@ class OrnateTwoHanderMoves extends DefaultMoves$4 {
         cast: 27,
         onEnter(pl, ctx) {
             ctx.lookAtTarget(pl);
-            playAnimCompatibility(pl, 'animation.weapon.ai.guard.attack.top');
+            playAnimCompatibility$1(pl, 'animation.weapon.ai.guard.attack.top');
         },
         timeline: {
             2: (pl, ctx) => {
@@ -10888,7 +11471,7 @@ class OrnateTwoHanderMoves extends DefaultMoves$4 {
         cast: 27,
         onEnter(pl, ctx) {
             ctx.lookAtTarget(pl);
-            playAnimCompatibility(pl, 'animation.weapon.ai.guard.attack.right');
+            playAnimCompatibility$1(pl, 'animation.weapon.ai.guard.attack.right');
         },
         onLeave(pl, ctx) {
             ctx.status.hegemony = false;
@@ -10941,7 +11524,7 @@ class OrnateTwoHanderMoves extends DefaultMoves$4 {
         cast: 30,
         onEnter(pl, ctx) {
             ctx.lookAtTarget(pl);
-            playAnimCompatibility(pl, 'animation.weapon.ai.guard.attack.left2', 'left2');
+            playAnimCompatibility$1(pl, 'animation.weapon.ai.guard.attack.left2', 'left2');
             ctx.status.hegemony = true;
         },
         onLeave(pl, ctx) {
@@ -10984,7 +11567,7 @@ class OrnateTwoHanderMoves extends DefaultMoves$4 {
         cast: 28,
         onEnter(pl, ctx) {
             ctx.lookAtTarget(pl);
-            playAnimCompatibility(pl, 'animation.weapon.ai.guard.attack.right2', 'left2');
+            playAnimCompatibility$1(pl, 'animation.weapon.ai.guard.attack.right2', 'left2');
             ctx.status.hegemony = true;
         },
         onLeave(pl, ctx) {
@@ -11035,80 +11618,138 @@ class OrnateTwoHander extends DefaultTrickModule$4 {
 }
 const tricks$1 = new OrnateTwoHander();
 
+/** AI听觉组件 - 管理AI的听觉检测功能 */
 class AiHearing extends CustomComponent {
     conf;
+    /** 音频源映射表，按角色存储音频源 */
     static aiHearingChannels = new Map();
+    /**
+     * 添加音频源
+     * @param soundSource 音频源信息
+     */
     static addSoundSource(soundSource) {
         const sources = AiHearing.aiHearingChannels.get(soundSource.sourceActor) ?? [];
         sources.push(soundSource);
         AiHearing.aiHearingChannels.set(soundSource.sourceActor, sources);
         AiHearing._tryNotifyHearing(soundSource);
     }
+    /**
+     * 尝试通知听觉组件
+     * @param source 音频源信息
+     */
     static _tryNotifyHearing(source) {
         const { pos, volumn, sourceActor, channel } = source;
+        // 计算音频传播半径
         const spreadRadius = Math.min(32, Math.max(volumn * 16, 16));
         const entities = mc.getEntities(pos, spreadRadius);
+        // 通知范围内的所有听觉组件
         entities.forEach(entity => Optional.some(Status.get(entity.uniqueId)?.componentManager.getComponent(AiHearing)).use(hearing => {
+            // 计算距离
             const dist = sourceActor.match(Infinity, actor => actor.distanceTo(entity));
             const minVolumn = hearing.conf.minVolumn ?? 0;
             const maxVolumn = hearing.conf.maxVolumn ?? 2;
+            // 计算剩余音量（随距离衰减）
             const volumnRemain = Math.max(volumn - 0.0625 * dist, 0);
+            // 检查是否满足触发条件
             if (hearing.conf.channels.includes(channel) && volumnRemain >= minVolumn && volumnRemain <= maxVolumn) {
                 hearing.onHeard.call(source);
                 hearing.heardActors.add(sourceActor.unwrap());
             }
         }));
     }
+    /** 已听到的角色集合 */
     heardActors = new Set();
+    /**
+     * 构造函数
+     * @param conf AI听觉配置
+     */
     constructor(conf) {
         super();
         this.conf = conf;
     }
+    /** 当听到音频时触发的事件 */
     onHeard = new Delegate();
 }
 
+/** AI视觉组件 - 管理AI的视野检测功能 */
 class AiVision extends CustomComponent {
     config;
+    /**
+     * 获取视野范围内的角色
+     * @param config 视觉配置
+     * @param actor 源角色
+     * @returns 视野范围内的角色数组
+     */
     static getActorsInSight(config, actor) {
         const { fov, range } = config;
         const maybeSeenActors = mc.getEntities(actor.pos, range);
         return maybeSeenActors.filter(maybeSeenActor => {
             const direction = yawToVec2(actor.direction.yaw);
             const actorOffset = vec.vec2(actor.pos.x, actor.pos.y, maybeSeenActor.pos.x, maybeSeenActor.pos.y);
-            // dot product
+            // 使用点积计算角色是否在视野范围内
             return (direction.x * actorOffset.dx + direction.y * actorOffset.dy) / actorOffset.m > Math.cos(fov / 2);
         });
     }
+    /** 组件附加时间 */
     #attachTime = Tick.tick;
+    /**
+     * 构造函数
+     * @param config AI视觉配置
+     */
     constructor(config) {
         super();
         this.config = config;
         this.allowTick = true;
     }
+    /** 当角色进入视野时触发的事件 */
     onSeen = new Delegate();
+    /** 当角色离开视野时触发的事件 */
     onUnseen = new Delegate();
+    /** 当前视野中可见的角色集合 */
     seenActors = new Set();
+    /** 每tick更新视野检测 */
     onTick() {
+        // 按配置间隔进行视野检测
         if ((Tick.tick - this.#attachTime) % this.config.interval === 0) {
             this.getActor().use(actor => {
+                // 获取当前视野中的角色
                 const actorsInSight = new Set(AiVision.getActorsInSight(this.config, actor));
+                // 计算离开视野的角色
                 const unseenActors = this.seenActors.difference(actorsInSight);
+                // 计算进入视野的角色
                 const seenActors = actorsInSight.difference(this.seenActors);
+                // 触发离开视野事件
                 unseenActors.forEach(actor => this.onUnseen.call(actor));
+                // 触发进入视野事件
                 seenActors.forEach(actor => this.onSeen.call(actor));
             });
         }
     }
 }
 
+/**
+ * 简易AI感知类 - 提供AI目标感知和状态检测功能
+ */
 class EasyAISensing {
     ai;
+    /**
+     * 构造函数
+     * @param ai AI实例
+     */
     constructor(ai) {
         this.ai = ai;
     }
+    /**
+     * 获取组件管理器
+     * @returns 组件管理器实例
+     */
     get components() {
         return this.ai.status.componentManager;
     }
+    /**
+     * 检查是否有有效目标
+     * @returns 是否有有效目标
+     */
     hasTarget() {
         const target = this.components.getComponent(TargetLock);
         if (target.isEmpty()) {
@@ -11116,15 +11757,33 @@ class EasyAISensing {
         }
         return target.match(false, targetLock => targetLock.target.match(false, target => target.health > 0));
     }
+    /**
+     * 获取当前目标
+     * @returns 目标角色的Optional对象
+     */
     getTarget() {
         return this.components.getComponent(TargetLock).match(Optional.none(), targetLock => targetLock.target);
     }
+    /**
+     * 检查目标是否在指定范围内
+     * @param range 检测范围
+     * @returns 目标是否在范围内
+     */
     targetInRange(range) {
         return this.getTarget().match(false, actor => this.ai.actor.match(false, aiActor => actor.distanceTo(aiActor) <= range));
     }
+    /**
+     * 获取目标的状态
+     * @returns 目标状态的Optional对象
+     */
     targetStatus() {
         return this.getTarget().match(Optional.none(), actor => Optional.some(Status.getOrCreate(actor.uniqueId)));
     }
+    /**
+     * 检查目标是否输入了指定类型的输入
+     * @param inputTypes 输入类型数组
+     * @returns 目标是否输入了指定类型
+     */
     hasTargetInputed(...inputTypes) {
         return this.targetStatus().match(false, status => {
             if (!status.preInput) {
@@ -11133,64 +11792,144 @@ class EasyAISensing {
             return inputTypes.includes(status.preInput);
         });
     }
+    /**
+     * 检查是否能听到目标
+     * @param hearingCtor 听觉组件构造函数，默认为AiHearing
+     * @returns 是否能听到目标
+     */
     canHearTarget(hearingCtor = AiHearing) {
         return this.getTarget().match(false, actor => this.components.getComponent(hearingCtor).match(false, hearing => hearing.heardActors.has(actor)));
     }
+    /**
+     * 检查是否能看见目标
+     * @param visionCtor 视觉组件构造函数，默认为AiVision
+     * @returns 是否能看见目标
+     */
     canSeeTarget(visionCtor = AiVision) {
         return this.getTarget().match(false, actor => this.components.getComponent(visionCtor).match(false, vision => vision.seenActors.has(actor)));
     }
+    /**
+     * 检查目标是否正在格挡
+     * @returns 目标是否正在格挡
+     */
     targetIsBlocking() {
         return this.targetStatus().match(false, actor => actor.isBlocking);
     }
+    /**
+     * 检查AI是否处于被中断状态
+     * @param iterapted 中断状态数组，默认为['blocked', 'parried', 'hurt']
+     * @returns AI是否处于被中断状态
+     */
     actorIterapted(iterapted = ['blocked', 'parried', 'hurt']) {
         const stateName = this.ai.status.status;
         return iterapted.includes(stateName);
     }
 }
 
+/**
+ * 全局输入模拟器 - 用于模拟玩家输入事件
+ */
 class GlobalInputSimulator {
+    /**
+     * 模拟输入事件
+     * @param input 输入事件类型
+     * @param actor 目标角色
+     * @param extraArgs 额外参数
+     */
     simulate(input, actor, ...extraArgs) {
         extraArgs.unshift(actor);
         es.put(input, [actor, Function.prototype, extraArgs]);
     }
+    /**
+     * 模拟跳跃输入
+     * @param actor 目标角色
+     */
     jump(actor) {
         this.simulate('onJump', actor);
     }
+    /**
+     * 模拟潜行输入
+     * @param actor 目标角色
+     * @param isSneaking 是否潜行，默认为true
+     */
     sneak(actor, isSneaking = true) {
         this.simulate('onSneak', actor, isSneaking);
     }
+    /**
+     * 模拟释放潜行输入
+     * @param actor 目标角色
+     * @param isSneaking 是否潜行，默认为false
+     */
     releaseSneak(actor, isSneaking = false) {
         this.simulate('onReleaseSneak', actor, isSneaking);
     }
+    /**
+     * 模拟使用物品输入
+     * @param actor 目标角色
+     * @param item 物品对象，可选
+     */
     useItem(actor, item) {
         this.simulate('onUseItem', actor, item);
     }
+    /**
+     * 模拟切换疾跑输入
+     * @param actor 目标角色
+     * @param isSprinting 是否疾跑，默认为true
+     */
     changeSprinting(actor, isSprinting = true) {
         this.simulate('onChangeSprinting', actor, isSprinting);
     }
+    /**
+     * 模拟攻击输入
+     * @param actor 目标角色
+     */
     attack(actor) {
         this.simulate('onAttack', actor);
     }
+    /**
+     * 模拟假动作输入
+     * @param actor 目标角色
+     */
     feint(actor) {
         this.simulate('onFeint', actor);
     }
+    /**
+     * 模拟闪避输入
+     * @param actor 目标角色
+     */
     dodge(actor) {
         this.simulate('onDodge', actor);
     }
 }
 const inputSimulator = new GlobalInputSimulator();
+/**
+ * 等待函数 - 创建延迟Promise
+ * @param timeout 延迟时间（毫秒），默认为0
+ * @returns Promise对象
+ */
 function wait(timeout = 0) {
     const resolvers = Promise.withResolvers();
     setTimeout(resolvers.resolve, timeout);
     return resolvers.promise;
 }
+/**
+ * AI输入模拟器 - 为AI角色提供输入模拟功能
+ */
 class InputSimulator {
     ai;
     actor;
+    /**
+     * 构造函数
+     * @param ai AI实例
+     */
     constructor(ai) {
         this.ai = ai;
         this.actor = ai.actor;
     }
+    /**
+     * 模拟跳跃输入
+     * @param timeout 跳跃持续时间（毫秒），默认为300ms
+     */
     async jump(timeout = 300) {
         if (this.actor.isEmpty()) {
             return;
@@ -11203,6 +11942,9 @@ class InputSimulator {
             input.performRelease(actor.uniqueId, 'jump');
         });
     }
+    /**
+     * 模拟潜行输入
+     */
     sneak() {
         if (this.actor.isEmpty()) {
             return;
@@ -11211,6 +11953,9 @@ class InputSimulator {
         input.performPress(actor.uniqueId, 'sneak');
         inputSimulator.sneak(actor);
     }
+    /**
+     * 模拟释放潜行输入
+     */
     releaseSneak() {
         if (this.actor.isEmpty()) {
             return;
@@ -11219,6 +11964,10 @@ class InputSimulator {
         input.performRelease(actor.uniqueId, 'sneak');
         inputSimulator.releaseSneak(actor);
     }
+    /**
+     * 模拟使用物品输入
+     * @param item 物品对象，可选
+     */
     useItem(item) {
         if (this.actor.isEmpty()) {
             return;
@@ -11226,6 +11975,10 @@ class InputSimulator {
         const actor = this.actor.unwrap();
         inputSimulator.useItem(actor, item);
     }
+    /**
+     * 模拟切换疾跑输入
+     * @param isSprinting 是否疾跑，默认为true
+     */
     changeSprinting(isSprinting = true) {
         if (this.actor.isEmpty()) {
             return;
@@ -11235,6 +11988,9 @@ class InputSimulator {
             inputSimulator.changeSprinting(actor, isSprinting);
         });
     }
+    /**
+     * 模拟攻击输入
+     */
     attack() {
         if (this.actor.isEmpty()) {
             return;
@@ -11242,6 +11998,9 @@ class InputSimulator {
         const actor = this.actor.unwrap();
         inputSimulator.attack(actor);
     }
+    /**
+     * 模拟假动作输入
+     */
     feint() {
         if (this.actor.isEmpty()) {
             return;
@@ -11249,6 +12008,9 @@ class InputSimulator {
         const actor = this.actor.unwrap();
         inputSimulator.feint(actor);
     }
+    /**
+     * 模拟闪避输入
+     */
     dodge() {
         if (this.actor.isEmpty()) {
             return;
@@ -11258,7 +12020,15 @@ class InputSimulator {
     }
 }
 
+/**
+ * AI动作类 - 扩展输入模拟器，提供AI特定的动作功能
+ * 包括目标设置、视线追踪、事件触发等
+ */
 class AiActions extends InputSimulator {
+    /**
+     * 设置AI的目标
+     * @param target 目标角色
+     */
     setTarget(target) {
         this.actor.use(actor => {
             const targetLock = new TargetLock(this.actor, Optional.some(target));
@@ -11266,9 +12036,17 @@ class AiActions extends InputSimulator {
             components?.attachComponent(targetLock);
         });
     }
+    /**
+     * 移除AI的目标
+     */
     removeTarget() {
         this.actor.use(actor => Status.get(actor.uniqueId)?.componentManager?.detachComponent(TargetLock));
     }
+    /**
+     * 看向最近的实体
+     * @param radius 搜索半径，默认为10
+     * @param family 实体类型数组，默认为['mob']
+     */
     lookAtNearest(radius = 10, family = ['mob']) {
         this.actor.use(actor => {
             const selector = actorSelector(actor);
@@ -11276,6 +12054,11 @@ class AiActions extends InputSimulator {
             mc.runcmdEx(`execute at ${selector} as ${selector} run tp @s ~~~ facing @e[c=1,r=${radius}${typeFamiliy ? `,${typeFamiliy}` : ''}]`);
         });
     }
+    /**
+     * 将前方实体设置为目标
+     * @param length 视线距离，默认为8
+     * @returns 是否成功设置目标
+     */
     setForwardActorAsTarget(length = 8) {
         if (this.actor.isEmpty()) {
             return false;
@@ -11295,20 +12078,36 @@ class AiActions extends InputSimulator {
         }
         return true;
     }
+    /**
+     * 触发预定义的事件
+     * @param event 事件名称
+     */
     triggerDefinedEvent(event) {
         this.actor.use(actor => mc.runcmdEx(`event entity ${actorSelector(actor)} ${event}`));
     }
 }
 
+/**
+ * 守卫AI类 - 实现守卫角色的AI行为
+ * 包含多种策略：默认策略、疯狂策略、左连击策略
+ */
 class Guard extends MeisterhauAI {
     target = null;
     actions = new AiActions(this);
     sensing = new EasyAISensing(this);
+    /**
+     * AI启动时初始化战斗组件
+     */
     async onStart() {
         this.actor.use(actor => {
             initCombatComponent(actor, tricks$1, this.status);
         });
     }
+    /**
+     * 获取指定策略的状态机
+     * @param strategy 策略名称
+     * @returns 策略状态机生成器
+     */
     getStrategy(strategy) {
         switch (strategy) {
             case 'default':
@@ -11321,6 +12120,10 @@ class Guard extends MeisterhauAI {
                 return;
         }
     }
+    /**
+     * 尝试获取目标
+     * @returns 是否成功获取目标
+     */
     async tryAcquireTarget() {
         if (!this.sensing.hasTarget()) {
             this.actions.lookAtNearest(8, ['player']);
@@ -11329,11 +12132,18 @@ class Guard extends MeisterhauAI {
         }
         return true;
     }
+    /**
+     * 尝试释放目标（当目标离开范围时）
+     */
     async tryReleaseTarget() {
         if (this.sensing.hasTarget() && !this.sensing.targetInRange(10)) {
             this.actions.removeTarget();
         }
     }
+    /**
+     * 获取疯狂策略 - 随机执行攻击、使用物品、潜行动作
+     * @returns 疯狂策略状态机生成器
+     */
     getCrazyStrategy() {
         const self = this;
         async function* moves() {
@@ -11368,6 +12178,11 @@ class Guard extends MeisterhauAI {
         }
         return moves();
     }
+    /**
+     * 获取默认策略 - 根据玩家行为智能响应
+     * 包含闪避惩罚、攻击响应、格挡破防等逻辑
+     * @returns 默认策略状态机生成器
+     */
     getDefaultStrategy() {
         const self = this;
         // 60 ticks 后进入要是玩家还不操作就自动攻击
@@ -11458,6 +12273,10 @@ class Guard extends MeisterhauAI {
         }
         return moves();
     }
+    /**
+     * 获取左连击策略 - 简单的两连击组合
+     * @returns 左连击策略状态机生成器
+     */
     getLeftComboStrategy() {
         const ai = this;
         async function* moves() {
@@ -11496,7 +12315,7 @@ class KokorowatariMoves extends DefaultMoves$4 {
         cast: Infinity,
         // 在这个状态时每一刻执行的代码
         onEnter(actor, ctx) {
-            playAnimCompatibility(actor, 'animation.shinobu.ai.hold', 'animation.shinobu.ai.hold');
+            playAnimCompatibility$1(actor, 'animation.shinobu.ai.hold', 'animation.shinobu.ai.hold');
         },
         onTick(actor, ctx) {
             // 让npc面向玩家
@@ -11521,7 +12340,7 @@ class KokorowatariMoves extends DefaultMoves$4 {
         cast: 14,
         backswing: 6,
         onEnter(actor, ctx) {
-            playAnimCompatibility(actor, 'animation.shinobu.ai.attack1', 'animation.shinobu.ai.hold');
+            playAnimCompatibility$1(actor, 'animation.shinobu.ai.attack1', 'animation.shinobu.ai.hold');
             ctx.lookAtTarget(actor);
             ctx.status.isBlocking = true;
         },
@@ -11529,7 +12348,7 @@ class KokorowatariMoves extends DefaultMoves$4 {
             ctx.status.isBlocking = false;
         },
         timeline: {
-            5: actor => playSoundAll$4('weapon.whoosh.thick.2', actor.pos),
+            5: actor => playSoundAll$3('weapon.whoosh.thick.2', actor.pos),
             8: (actor, ctx) => ctx.selectFromSector(actor, {
                 radius: 4,
             }).forEach(en => {
@@ -11569,12 +12388,12 @@ class KokorowatariMoves extends DefaultMoves$4 {
     attack2 = {
         cast: 23,
         onEnter(actor, ctx) {
-            playAnimCompatibility(actor, 'animation.shinobu.ai.attack2', 'animation.shinobu.ai.hold');
+            playAnimCompatibility$1(actor, 'animation.shinobu.ai.attack2', 'animation.shinobu.ai.hold');
             ctx.lookAtTarget(actor);
         },
         timeline: {
             3: (actor, ctx) => ctx.adsorbOrSetVelocity(actor, 2),
-            4: actor => playSoundAll$4('weapon.whoosh.thick.1', actor.pos),
+            4: actor => playSoundAll$3('weapon.whoosh.thick.1', actor.pos),
             7: (actor, ctx) => ctx.selectFromSector(actor, {
                 angle: 30,
                 radius: 3.5,
@@ -11611,12 +12430,12 @@ class KokorowatariMoves extends DefaultMoves$4 {
     attack3 = {
         cast: 30,
         onEnter(actor, ctx) {
-            playAnimCompatibility(actor, 'animation.shinobu.ai.attack3', 'animation.shinobu.ai.hold');
+            playAnimCompatibility$1(actor, 'animation.shinobu.ai.attack3', 'animation.shinobu.ai.hold');
             ctx.lookAtTarget(actor);
         },
         timeline: {
             3: (actor, ctx) => ctx.adsorbOrSetVelocity(actor, 2),
-            7: actor => playSoundAll$4('weapon.whoosh.thick.4', actor.pos),
+            7: actor => playSoundAll$3('weapon.whoosh.thick.4', actor.pos),
             11: (actor, ctx) => ctx.selectFromSector(actor, {
                 angle: 30,
                 radius: 3,
@@ -11647,7 +12466,7 @@ class KokorowatariMoves extends DefaultMoves$4 {
         cast: 7,
         backswing: 17,
         onEnter(actor, ctx) {
-            playAnimCompatibility(actor, 'animation.shinobu.ai.hilt', 'animation.shinobu.ai.hold');
+            playAnimCompatibility$1(actor, 'animation.shinobu.ai.hilt', 'animation.shinobu.ai.hold');
             ctx.lookAtTarget(actor);
         },
         timeline: {
@@ -11683,7 +12502,7 @@ class KokorowatariMoves extends DefaultMoves$4 {
     blockHilt = {
         cast: 21,
         onEnter(actor, ctx) {
-            playAnimCompatibility(actor, 'animation.shinobu.ai.counter.hilt', 'animation.shinobu.ai.hold');
+            playAnimCompatibility$1(actor, 'animation.shinobu.ai.counter.hilt', 'animation.shinobu.ai.hold');
             ctx.lookAtTarget(actor);
         },
         timeline: {
@@ -11719,13 +12538,13 @@ class KokorowatariMoves extends DefaultMoves$4 {
     hiltCounter = {
         cast: 16,
         onEnter(actor, ctx) {
-            playAnimCompatibility(actor, 'animation.shinobu.ai.hilt.counter', 'animation.shinobu.ai.hold');
+            playAnimCompatibility$1(actor, 'animation.shinobu.ai.hilt.counter', 'animation.shinobu.ai.hold');
             ctx.lookAtTarget(actor);
         },
         timeline: {
             1: (actor, ctx) => {
                 ctx.adsorbOrSetVelocity(actor, 1.2);
-                playSoundAll$4('weapon.whoosh.thick.1', actor.pos);
+                playSoundAll$3('weapon.whoosh.thick.1', actor.pos);
             },
             3: (actor, ctx) => ctx.selectFromSector(actor, {
                 radius: 3.2,
@@ -11763,9 +12582,18 @@ class Kokorowatari extends DefaultTrickModule$4 {
 }
 const tricks = new Kokorowatari();
 
+/**
+ * 忍野忍AI类 - 实现忍野忍角色的AI行为
+ * 包含温和策略和守卫策略
+ */
 class Shinobu extends MeisterhauAI {
     actions = new AiActions(this);
     sensing = new EasyAISensing(this);
+    /**
+     * 获取指定策略的状态机
+     * @param strategy 策略名称
+     * @returns 策略状态机生成器
+     */
     getStrategy(strategy) {
         // 优先实现 default 策略
         if (strategy === 'default') {
@@ -11776,7 +12604,10 @@ class Shinobu extends MeisterhauAI {
         }
         return undefined;
     }
-    // 处理 ai 选择/放弃目标的逻辑
+    /**
+     * 处理AI选择/放弃目标的逻辑
+     * 自动寻找目标并在目标离开范围时放弃
+     */
     async tryAcquireOrReleaseTarget() {
         // 获取 sensing 和 actions
         if (!this.sensing.hasTarget()) {
@@ -11784,7 +12615,7 @@ class Shinobu extends MeisterhauAI {
             this.actions.lookAtNearest(15, ['player']);
             await this.waitTick();
             // 如果正前方有玩家，则设置目标
-            // 如果有别的需求（比如“看到”或“听到”），可以手动调用 setTarget
+            // 如果有别的需求（比如"看到"或"听到"），可以手动调用 setTarget
             this.actions.setForwardActorAsTarget(8);
         }
         // 如果目标不在10格内，则放弃目标
@@ -11792,6 +12623,10 @@ class Shinobu extends MeisterhauAI {
             this.actions.removeTarget();
         }
     }
+    /**
+     * 连招1 - 三连击组合
+     * 包含攻击-攻击-攻击的连段，可被中断
+     */
     combo1 = async () => {
         this.actions.attack();
         await this.wait(600);
@@ -11806,6 +12641,10 @@ class Shinobu extends MeisterhauAI {
         this.actions.attack();
         await this.wait(1600);
     };
+    /**
+     * 连招2 - 物品使用+攻击组合
+     * 使用物品后接攻击，可被中断
+     */
     combo2 = async () => {
         this.actions.useItem();
         await this.wait(600);
@@ -11815,6 +12654,10 @@ class Shinobu extends MeisterhauAI {
         this.actions.attack();
         await this.wait(600);
     };
+    /**
+     * 被攻击时的响应处理
+     * @param incomingAttack 受到的攻击信息
+     */
     async onAttack(incomingAttack) {
         this.actions.attack();
         if (this.strategy === 'default') {
@@ -11825,6 +12668,11 @@ class Shinobu extends MeisterhauAI {
             });
         }
     }
+    /**
+     * 温和策略 - 根据目标距离和状态智能选择连招
+     * 近距离优先使用连招2，中距离优先使用连招1
+     * @returns 温和策略状态机生成器
+     */
     async *mildStrategy() {
         // 使用循环可以让 ai 一直执行
         // 一定要在循环中使用 MeisterhauAI.stopped
@@ -11858,6 +12706,11 @@ class Shinobu extends MeisterhauAI {
             }
         }
     }
+    /**
+     * 守卫策略 - 仅保持目标锁定，不主动攻击
+     * 用于防御性行为
+     * @returns 守卫策略状态机生成器
+     */
     async *guardStrategy() {
         // 使用循环可以让 ai 一直执行
         // 一定要在循环中使用 MeisterhauAI.stopped
@@ -12003,17 +12856,21 @@ function rawtext(seqs, ...args) {
     });
 }
 
+/** 攻击方向本地化映射 */
 const lang = {
     left: '左侧',
     right: '右侧',
     middle: '刺击',
     vertical: '上侧',
 };
+/** 伤害显示组件 - 显示伤害信息 */
 class HurtDisplay extends CustomComponent {
+    /** 通知伤害事件 */
     static notifyHurt(instigator, victim, damageOpt) {
         ActorHelper.getComponent(instigator, HurtDisplay).use(display => display.onDamage(instigator, victim, damageOpt));
         ActorHelper.getComponent(victim, HurtDisplay).use(display => display.onHurt(instigator, victim, damageOpt));
     }
+    /** 处理受到伤害事件 */
     onHurt(instigator, victim, damageOpt) {
         if (!ActorHelper.isPlayer(victim)) {
             return;
@@ -12026,6 +12883,7 @@ class HurtDisplay extends CustomComponent {
         const damage = targetLock.unwrap().targetIsActor ? damageOpt.damage * 5 : damageOpt.damage;
         self.sendText(rawtext `受到来自 ${r.t(instigator.name)} 的 ${lang[damageOpt.direction]} §c${damage.toFixed(1)}§r 点伤害`, 9);
     }
+    /** 处理造成伤害事件 */
     onDamage(instigator, victim, damageOpt) {
         if (!ActorHelper.isPlayer(instigator)) {
             return;
@@ -12056,10 +12914,24 @@ function registerHudCommands() {
 }
 
 const { damage: _damage, _damageLL } = func.combat;
+/**
+ * 检查是否为实体（非玩家）
+ * @param actor 演员对象
+ * @returns 是否为实体
+ */
 function isEntity(actor) {
     // @ts-ignore
     return Boolean(actor?.type);
 }
+/**
+ * 造成伤害并触发相机淡入淡出效果
+ * @param victim 受害者
+ * @param damage 伤害值
+ * @param cause 伤害原因，默认为'entityAttack'
+ * @param abuser 攻击者
+ * @param projectile 投射物
+ * @param damageOpt 伤害选项
+ */
 function damageWithCameraFading(victim, damage, cause = 'entityAttack', abuser, projectile, damageOpt) {
     HurtDisplay.notifyHurt(abuser, victim, damageOpt);
     if (!isEntity(abuser)) {
@@ -12080,9 +12952,20 @@ function damageWithCameraFading(victim, damage, cause = 'entityAttack', abuser, 
         dimid: victimPos.dimid
     });
 }
+/**
+ * 触发击倒事件
+ * @param abuser 攻击者
+ * @param victim 受害者
+ * @param knockback 击退强度，默认为2
+ */
 function knockdown(abuser, victim, knockback = 2) {
     em.emitNone('knockdown', abuser, victim, knockback);
 }
+/**
+ * 触发陷阱事件
+ * @param pl 玩家
+ * @param data 陷阱数据
+ */
 function trap(pl, data) {
     em.emitNone('trap', pl, data);
 }
@@ -12094,6 +12977,12 @@ em.connectWatcher({
 //     console.log(arg.type)
 // }
 });
+/**
+ * 触发攻击事件
+ * @param abuser 攻击者
+ * @param victim 受害者
+ * @param damageOpt 伤害选项
+ */
 function attack(abuser, victim, damageOpt) {
     em.emitNone('attack', abuser, victim, damageOpt);
 }
@@ -12106,15 +12995,28 @@ const mobEvents = [
     'onProjectileHitEntity',
 ];
 const _status = (pl) => Status.getOrCreate(pl.uniqueId);
+/**
+ * 冻结玩家 - 禁用移动和相机控制
+ * @param pl 玩家实体
+ */
 function freeze(pl) {
     generic.movement(pl, false);
     generic.camera(pl, false);
 }
+/**
+ * 解冻玩家 - 启用移动和相机控制
+ * @param pl 玩家实体
+ */
 function unfreeze(pl) {
     generic.movement(pl);
     // movementInput(pl, true)
     generic.camera(pl);
 }
+/**
+ * 获取玩家移动方向
+ * @param pl 玩家实体
+ * @returns 移动方向（1-前，2-右，3-后，4-左）
+ */
 function getMoveDir(pl) {
     // const previusPos = {
     //     x: pl.feetPos.x,
@@ -12138,6 +13040,12 @@ function getMoveDir(pl) {
     // })
     return input.moveDir(pl);
 }
+/**
+ * 创建移动上下文对象
+ * @param pl 玩家实体
+ * @param mixins 额外的上下文属性
+ * @returns 移动上下文对象
+ */
 function _ctx(pl, mixins = {}) {
     const status = _status(pl);
     return {
@@ -12171,12 +13079,23 @@ function _ctx(pl, mixins = {}) {
         ...mixins
     };
 }
+/**
+ * 监听玩家主手物品变化并更新状态
+ * @param pl 玩家实体
+ * @returns 更新后的状态对象
+ */
 function watchMainhandChange(pl) {
     const status = Status.getOrCreate(pl.uniqueId);
     const hand = pl?.getHand()?.type ?? 'minecraft:air';
     status.hand = hand;
     return status;
 }
+/**
+ * 从对象中挑选指定属性
+ * @param obj 源对象
+ * @param arr 属性列表
+ * @returns 包含指定属性的新对象
+ */
 const pick = (obj, arr) => arr.reduce((iter, val) => (val in obj && (iter[val] = obj[val]), iter), {});
 const playerAttrPickList = [
     'inAir', 'inWater', 'inLava', 'inRain', 'inSnow', 'inWall', 'inWaterOrRain', 'isInvisible', 'isHungry',
@@ -12277,6 +13196,7 @@ const defaultTransitionCondition = {
     prevent: false,
     allowedState: 'both',
 };
+/** 初始化战斗组件 */
 function initCombatComponent(pl, bind, status) {
     if (!bind) {
         return;
@@ -12289,6 +13209,7 @@ function initCombatComponent(pl, bind, status) {
         move?.onEnter?.(pl, _ctx(pl));
     }
 }
+/** 状态转换 - 处理战斗状态转换逻辑 */
 function transition(pl, bind, status, eventName, prevent, args) {
     if (!bind) {
         return;
@@ -12376,7 +13297,7 @@ function clearStatus(pl, s, hand, hasBind) {
     s.reset();
     s.hand = hand;
     if (!hasBind) {
-        playAnim$4(pl, 'animation.general.stand');
+        playAnimCompatibility$1(pl, 'animation.general.stand');
     }
 }
 function listenPlayerItemChange(mods) {
@@ -12712,6 +13633,7 @@ function listenAllCustomEvents(mods) {
         transition(pl, bind, status, 'onTrap', Function.prototype, [pl, data]);
     });
 }
+/** 监听所有Minecraft事件 - 设置战斗系统的事件监听器 */
 function listenAllMcEvents(collection) {
     const mods = new Map();
     function getMod(hand) {
@@ -12983,7 +13905,7 @@ var init = /*#__PURE__*/Object.freeze({
 
 var require$$2 = /*@__PURE__*/getAugmentedNamespace(init);
 
-const { load } = loadModule$1;
+const { load } = require$$0$1;
 
 mc.listen('onServerStarted',() => [
     requireSetup(),

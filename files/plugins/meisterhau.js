@@ -1,4 +1,4 @@
-const { load } = require('./loader')
+const { load } = require('./loadModule')
 
 mc.listen('onServerStarted',() => [
     require('./Components/scripts-rpc/setup'),

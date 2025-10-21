@@ -26,7 +26,7 @@ export function playAnim(pl: Player, anim: string, nextAnim?: string, time?: num
  */
 export function playAnimCompatibility(actor: Actor, anim: string, nextAnim?: string, time?: number, stopExp?: string, controller?: string) {
     if ('xuid' in actor) {
-        playAnimCompatibility(actor, anim, nextAnim, time, stopExp, controller)
+        playAnim(actor, anim, nextAnim, time, stopExp, controller)
         return
     }
 

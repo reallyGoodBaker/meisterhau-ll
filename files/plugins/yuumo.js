@@ -1,20 +1,20 @@
-const { load } = require('./loadModule.js')
+const { load } = require('./loadModule')
 
 const modules = [
-    require('./Components/whoami.js'),
-    require('./Components/speed.js'),
+    require('./Components/whoami'),
+    require('./Components/speed'),
     require('./Components/simulate-player'),
-    require('./Components/over-shoulder.js'),
-    require('./Components/notification.js'),
-    require('./Components/motd.js'),
-    require('./Components/tpc/setup.js'),
-    require('./Components/shell/index.js'),
-    require('./Components/order/setup.js'),
-    require('./Components/kinematics/index.js'),
-    require('./Components/credit/setup.js'),
-    require('./Components/affair/index.js'),
-    require('./Components/testui.js'),
-    require('./Components/marriage/setup.js'),
+    require('./Components/over-shoulder'),
+    require('./Components/notification'),
+    require('./Components/motd'),
+    require('./Components/tpc/setup'),
+    require('./Components/shell/index'),
+    require('./Components/order/setup'),
+    require('./Components/kinematics/index'),
+    require('./Components/credit/setup'),
+    require('./Components/affair/index'),
+    require('./Components/testui'),
+    require('./Components/marriage/setup'),
     require('./Components/account'),
 ]
 

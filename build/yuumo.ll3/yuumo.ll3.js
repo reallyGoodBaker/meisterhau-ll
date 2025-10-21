@@ -50,24 +50,26 @@ var loaderConfig = {
     ]
 };
 
-const { loadEntries } = loaderConfig;
-
 function load$1(m) {
     if (typeof m === 'function') {
         return m()
     }
 
-    for (const k of loadEntries) {
+    for (const k of loaderConfig.loadEntries) {
         if (typeof m[k] === 'function') {
             return m[k]()
         }
     }
 }
 
-var loadModule = {
-    load: load$1
-};
+var loadModule = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	load: load$1
+});
 
+var require$$0$1 = /*@__PURE__*/getAugmentedNamespace(loadModule);
+
+/** 字符串参数类型映射 */
 const stringParamTypeMap = {
     bool: ParamType.Bool,
     int: ParamType.Int,
@@ -92,15 +94,18 @@ const stringParamTypeMap = {
     command: ParamType.Command,
     selector: ParamType.WildcardSelector,
 };
+/** 命令参数匹配器 */
 const matchers = {
     required: /^<([\w:]+)>$/,
     optional: /^\[([\w:]+)\]$/,
 };
+/** 创建令牌对象 */
 function tk(index, type, id, isOptional = true) {
     return {
         index, type, id, isOptional
     };
 }
+/** 解析命令字符串 */
 function parseCmdStr(str) {
     const frags = str.trim().split(/ +/);
     const tokens = [];
@@ -122,6 +127,7 @@ function parseCmdStr(str) {
     });
     return tokens;
 }
+/** 解析命令数组 */
 function parseCmdArr(arr) {
     const tokens = [];
     arr.forEach((el, i) => {
@@ -135,6 +141,7 @@ function parseCmdArr(arr) {
     });
     return tokens;
 }
+/** 命令注册器 */
 class Registry {
     _cmd;
     _tokenListCollection = new Set();
@@ -142,9 +149,11 @@ class Registry {
     constructor(cmd) {
         this._cmd = cmd;
     }
+    /** 获取指定长度的处理器集合 */
     getCollection(len) {
         return this._handlerCollection[len] ?? (this._handlerCollection[len] = []);
     }
+    /** 注册命令 */
     register(cmd, handler) {
         if (!cmd || !handler) {
             return this;
@@ -165,12 +174,14 @@ class Registry {
             .push([finalList.map(l => l.id), handler]);
         return this;
     }
+    /** 比较两个数组是否相同 */
     sameArr(arr1, arr2) {
         if (arr1.length !== arr2.length) {
             return false;
         }
         return new Set(arr1.concat(arr2)).size === arr1.length;
     }
+    /** 设置命令回调 */
     setCallback() {
         this._cmd.setCallback((cmd, origin, out, args) => {
             const argv = Object
@@ -184,6 +195,7 @@ class Registry {
     }
     registeredArgs = new Set();
     static enumIndex = 0;
+    /** 创建命令参数 */
     createArg(name, type, isOptional) {
         let argId = name;
         if (this.registeredArgs.has(name)) {
@@ -203,6 +215,7 @@ class Registry {
         return argId;
     }
     _submitted = false;
+    /** 提交命令注册 */
     submit() {
         this._tokenListCollection.forEach(tokens => {
             let ids = [];
@@ -215,16 +228,19 @@ class Registry {
         this.setCallback();
         this._submitted = true;
     }
+    /** 检查是否已提交 */
     isSubmitted() {
         return this._submitted;
     }
 }
+/** 命令权限枚举 */
 var CommandPermission;
 (function (CommandPermission) {
     CommandPermission[CommandPermission["Everyone"] = 0] = "Everyone";
     CommandPermission[CommandPermission["OP"] = 1] = "OP";
     CommandPermission[CommandPermission["Console"] = 2] = "Console";
 })(CommandPermission || (CommandPermission = {}));
+/** 服务器启动状态检查 */
 const serverStarted = (function () {
     let serverRunning = false;
     return (() => {
@@ -239,6 +255,7 @@ const serverStarted = (function () {
         return promise;
     });
 })();
+/** 创建命令 */
 function cmd$5(head, desc, perm = CommandPermission.OP) {
     const command = mc.newCommand(head, desc, perm);
     const registry = new Registry(command);
@@ -4598,7 +4615,7 @@ var account = /*#__PURE__*/Object.freeze({
 
 var require$$15 = /*@__PURE__*/getAugmentedNamespace(account);
 
-const { load } = loadModule;
+const { load } = require$$0$1;
 
 const modules = [
     whoami,
