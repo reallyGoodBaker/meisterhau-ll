@@ -34,8 +34,6 @@ export class InputComponent extends BaseComponent {
             clearTimeout(this.#preInputTimer)
         }
 
-        this.#preInputTimer = setTimeout(() => {
-            this.#preInput = null
-        }, 500)
+        this.#preInputTimer = setTimeout(() => this.#preInput = null, 500)
     }
 }

@@ -41,7 +41,7 @@ export class AiVision extends CustomComponent {
 
     onTick(): void {
         if ((Tick.tick - this.#attachTime) % this.config.interval === 0) {
-            this.getEntity().use(actor => {
+            this.getActor().use(actor => {
                 const actorsInSight = new Set(AiVision.getActorsInSight(this.config, actor))
                 const unseenActors = this.seenActors.difference(actorsInSight)
                 const seenActors = actorsInSight.difference(this.seenActors)

@@ -54,7 +54,7 @@ export class IncomingAttack extends BaseComponent {
 
     // 添加此组件时候，通知 AttackSensor
     onAttach() {
-        this.getEntity().use(actor => {
+        this.getActor().use(actor => {
             Status.getComponentManager(actor.uniqueId).use(comps => {
                 comps.getComponent(AttackSensor).use(sensor => {
                     // 只关注自己

@@ -26,6 +26,7 @@ import { setupAiCommands } from './ai'
 import { registerHudCommands } from '../components/hud/command'
 import { yawToVec2 } from '../../../utils/math'
 import { Actor } from '@utils/actor'
+import { HurtDisplay } from '../components/hud/hurtDisplay'
 
 export const emitter = em
 
@@ -38,6 +39,8 @@ function isEntity(actor: Actor) {
 }
 
 function damageWithCameraFading(victim: Actor, damage: number, cause: EntityDamageCause = 'entityAttack', abuser: Actor, projectile: Actor, damageOpt: DamageOption) {
+    HurtDisplay.notifyHurt(abuser, victim, damageOpt as any)
+
     if (!isEntity(abuser)) {
         CameraFading.fadeFromAttackDirection(abuser, damageOpt)
     }

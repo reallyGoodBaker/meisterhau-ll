@@ -2,6 +2,7 @@ import { Optional } from '@utils/optional'
 import { CameraComponent } from '../components/camera'
 import { Stamina } from '../components/core/stamina'
 import { ComponentManager } from './component'
+import { ActorHelper } from '@utils/actor'
 
 export const defaultAcceptableInputs = [
     'onJump', 'onSneak', 'onAttack', 'onUseItem',
@@ -103,8 +104,7 @@ export class Status {
     ) {
         Status.status.set(uniqueId, this)
         this.componentManager = new ComponentManager(
-            // @ts-ignore
-            Optional.some(mc.getEntity(+uniqueId))
+            ActorHelper.getActor(uniqueId)
         )
 
         this.reset()

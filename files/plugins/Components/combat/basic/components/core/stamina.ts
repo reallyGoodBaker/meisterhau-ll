@@ -32,7 +32,7 @@ export class Stamina extends CustomComponent {
     }
 
     async resetRestore(manager: ComponentManager) {
-        this.cooldown = await manager.getOrCreate(Timer, this.restoreCooldown)
+        this.cooldown = manager.getOrCreate(Timer, this.restoreCooldown)
 
         const cooldown = this.cooldown.unwrap()
         cooldown.rest = this.restoreCooldown

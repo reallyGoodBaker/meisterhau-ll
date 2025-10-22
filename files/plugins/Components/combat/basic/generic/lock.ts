@@ -1,17 +1,19 @@
-const { selectFromSector } = require('./range')
-const { battleCamera, cameraInput, clearCamera } = require('./camera')
-const { knockback } = require('../../../scripts-rpc/func/kinematics')
-const { setVelocity } = require('./kinematic')
-const { DEFAULT_POSTURE_SPEED, DEFAULT_SPEED } = require('../index')
-const { Status } = require('../core/status')
-const { TargetLock } = require('../components/core/target-lock')
-const { Optional } = require('@utils/optional')
-const { StatusHud } = require('../components/hud/statushud')
+import { selectFromSector } from './range'
+import { battleCamera, cameraInput, clearCamera } from './camera'
+import { knockback } from '../../../scripts-rpc/func/kinematics'
+import { setVelocity } from './kinematic'
+import { DEFAULT_POSTURE_SPEED, DEFAULT_SPEED } from '../index'
+import { Status } from '../core/status'
+import { TargetLock } from '../components/core/target-lock'
+import { Optional } from '@utils/optional'
+import { StatusHud } from '../components/hud/statushud'
+import { Actor } from '@utils/actor'
+import { EventEmitter } from '../../../events'
 
-const locks = new Map()
-const cooldowns = new Set()
+const locks = new Map<string, Actor>()
+const cooldowns = new Set<string>()
 
-function lockTarget(src, target) {
+export function lockTarget(src: string, target: Actor) {
     const pl = mc.getPlayer(src)
 
     if (cooldowns.has(pl.uniqueId)) {
@@ -19,11 +21,13 @@ function lockTarget(src, target) {
     }
 
     if (target) {
-        // cameraInput(pl, false)
         locks.set(src, target)
         pl.setMovementSpeed(DEFAULT_POSTURE_SPEED)
         Status.getOrCreate(src).componentManager.attachComponent(
-            new TargetLock(Optional.some(pl), Optional.some(target)),
+            new TargetLock(
+                Optional.some(pl),
+                Optional.some(target)
+            ),
             new StatusHud(),
         )
     } else {
@@ -31,7 +35,7 @@ function lockTarget(src, target) {
     }
 }
 
-function releaseTarget(src) {
+export function releaseTarget(src: string) {
     const pl = mc.getPlayer(src)
     const manager = Status.getOrCreate(src).componentManager
     manager.detachComponent(StatusHud)
@@ -44,7 +48,7 @@ function releaseTarget(src) {
     setTimeout(() => cooldowns.delete(pl.uniqueId), 500)
 }
 
-function toggleLock(src) {
+export function toggleLock(src: string) {
     if (locks.has(src)) {
         releaseTarget(src)
         return null
@@ -61,9 +65,9 @@ function toggleLock(src) {
     return target
 }
 
-function getAngle(a, b) {
-    a = a.pos
-    b = b.pos
+export function getAngle(actor: Actor, actor2: Actor) {
+    const a = actor.pos
+    const b = actor2.pos
     const dx = b.x - a.x
     const dy = b.y - a.y
     const dz = b.z - a.z
@@ -72,43 +76,17 @@ function getAngle(a, b) {
     return [angleXZ - 90, -angleY]
 }
 
-/**
- * @param {import('../core/inputSimulator').Actor} actor 
- * @param {import('../core/inputSimulator').Actor} target 
- * @returns 
- */
-function lookAt(actor, target) {
+export function lookAt(actor: Actor, target: Actor) {
     if (!target) {
-        return releaseTarget(actor)
+        return releaseTarget(actor.uniqueId)
     }
 
     const [ yaw, pitch ] = getAngle(actor, target)
 
     actor.teleport(actor.feetPos, new DirectionAngle(0, yaw))
-
-    // setRotation(actor, yaw, pitch)
-
-    // const bs = new BinaryStream()
-    // bs.writeVarInt64(+pl.uniqueId)
-    // bs.writeVec3(pl.pos)
-    // bs.writeVec3(new FloatPos(
-    //     pitch, yaw, yaw,
-    //     pl.pos.dimid
-    // ))
-    // bs.writeByte(3)
-    // bs.writeBool(true)
-    // bs.writeFloat(0)
-    // bs.writeVarInt64(0)
-    // const pack = bs.createPacket(0x13)
-
-    // mc.getOnlinePlayers().forEach(pl => {
-    //     pl.sendPacket(pack)
-    // })
-    // mc.runcmdEx(`execute as "${pl.name}" at @s run tp @s ~~~ ${yaw} 0 false`)
-    // faceTo(actor, target)
 }
 
-function getTargetFromLock(actor) {
+export function getTargetFromLock(actor: Actor): Optional<Actor> {
     return Status.getComponentManager(actor.uniqueId).match(
         Optional.none(),
         comps => comps.getComponent(TargetLock).match(
@@ -118,11 +96,7 @@ function getTargetFromLock(actor) {
     )
 }
 
-function lookAtTarget(pl) {
-    // const en = locks.get(pl.uniqueId)
-    // if (!en) {
-    //     return
-    // }
+export function lookAtTarget(pl: Actor) {
     const targetEntity = getTargetFromLock(pl)
 
     if (targetEntity.isEmpty()) {
@@ -132,12 +106,11 @@ function lookAtTarget(pl) {
     lookAt(pl, targetEntity.unwrap())
 }
 
-function hasLock(pl) {
-    // return locks.has(pl.uniqueId)
+export function hasLock(pl: Actor) {
     return !getTargetFromLock(pl).isEmpty()
 }
 
-function adsorbTo(pl, en, max, offset=2) {
+export function adsorbTo(pl: Actor, en: Actor, max: number, offset=2) {
     const dist = en.distanceTo(pl.pos) - offset
 
     knockback(
@@ -149,7 +122,7 @@ function adsorbTo(pl, en, max, offset=2) {
     )
 }
 
-function adsorbToTarget(pl, max, offset) {
+export function adsorbToTarget(pl: Actor, max: number, offset: number) {
     const en = getTargetFromLock(pl)
     if (en.isEmpty()) {
         return
@@ -158,10 +131,9 @@ function adsorbToTarget(pl, max, offset) {
     adsorbTo(pl, en.unwrap(), max, offset)
 }
 
-function adsorbOrSetVelocity(pl, max, velocityRot=90, offset=1.5) {
+export function adsorbOrSetVelocity(pl: Actor, max: number, velocityRot=90, offset=1.5) {
     const en = getTargetFromLock(pl)
     if (!en.isEmpty()) {
-        // lookAtTarget(pl)
         adsorbToTarget(pl, max, offset)
         return
     }
@@ -169,8 +141,7 @@ function adsorbOrSetVelocity(pl, max, velocityRot=90, offset=1.5) {
     setVelocity(pl, velocityRot, max, -1)
 }
 
-function distanceToTarget(pl) {
-    // const en = locks.get(pl.uniqueId)
+export function distanceToTarget(pl: Actor) {
     const en = getTargetFromLock(pl)
 
     if (en.isEmpty()) {
@@ -180,7 +151,7 @@ function distanceToTarget(pl) {
     return en.unwrap().distanceTo(pl.pos)
 }
 
-const onTick = em => () => {
+export const onTick = (em: EventEmitter) => () => {
     locks.forEach(async (t, s) => {
         const _s = mc.getPlayer(s)
 
@@ -198,16 +169,16 @@ const ignoreEntities = [
     'minecraft:xp_orb',
 ]
 
-function getClosedEntity(en) {
-    let closed = null
+export function getClosedEntity(en: Actor) {
+    let closed: Actor | null = null
         ,dist = Infinity
 
     selectFromSector(en, {
         radius: 10,
         angle: 46,
-        rotate: -23,
+        rotation: -23,
     }).forEach(e => {
-        if (ignoreEntities.includes(e.type)) {
+        if (ignoreEntities.includes((e as Entity).type)) {
             return
         }
 
@@ -224,10 +195,4 @@ function getClosedEntity(en) {
     })
 
     return closed
-}
-
-module.exports = {
-    onTick, getClosedEntity, lockTarget, releaseTarget, toggleLock,
-    lookAt, lookAtTarget, distanceToTarget, hasLock, adsorbToTarget,
-    adsorbTo, adsorbOrSetVelocity
 }

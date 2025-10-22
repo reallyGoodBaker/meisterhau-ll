@@ -6,11 +6,10 @@ export function registerHudCommands() {
     cmd('display', '切换 HUD 显示状态').setup(register => {
         register('hurt [enabled:bool]', (cmd, ori, out, res) => {
             const { enabled } = res as { enabled: boolean }
+            const id = ori.player?.uniqueId ?? ori.entity?.uniqueId!
             if (enabled) {
-                const id = ori.player?.uniqueId ?? ori.entity?.uniqueId!
                 Status.getOrCreate(id).componentManager.attachComponent(new HurtDisplay())
             } else {
-                const id = ori.player?.uniqueId ?? ori.entity?.uniqueId!
                 Status.getOrCreate(id).componentManager.detachComponent(HurtDisplay)
             }
         })
