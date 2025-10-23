@@ -108,7 +108,7 @@ export class ComponentManager {
         let init = !this.#components.get(ctor)
 
         if (!init && shouldRebuild) {
-            this.detachComponent(ctor) 
+            this.detachComponent(ctor)
             init = true
         }
 
@@ -125,7 +125,7 @@ export class ComponentManager {
         }
 
         if (init && 'onAttach' in component) {
-            component.onAttach(this)   
+            component.onAttach(this)
         }
 
         this.#components.set(ctor, component)
@@ -226,7 +226,7 @@ export class ComponentManager {
         }
 
         const conponentName = component ? Object.getPrototypeOf(component).constructor.name : ''
-        const profileName = name ? name 
+        const profileName = name ? name
             : conponentName ? (`${conponentName}.${fn.name}`)
                 : fn.name
 
@@ -272,11 +272,11 @@ export function RequireComponents(...params: RequireComponentsParam[]) {
                 this[REQUIRED_COMPONENTS].set(param, Reflect.construct(param, []))
             }
         }
-    
+
         getComponent<T extends Component>(ctor: ComponentCtor): T {
             return this[REQUIRED_COMPONENTS].get(ctor) as T
         }
 
     } as RequiredComponentCtor
-    
+
 }

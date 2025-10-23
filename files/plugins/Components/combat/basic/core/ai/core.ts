@@ -148,7 +148,7 @@ export abstract class MeisterhauAI {
         return resolver.promise
     }
 
-    /** 
+    /**
      * 等待指定毫秒数，可被中止
      * @param ms 等待的毫秒数，默认为0
      * @returns Promise，在等待时间结束或被中止时解析
@@ -159,20 +159,20 @@ export abstract class MeisterhauAI {
                 resolve()
                 return
             }
-            
+
             const timeout = setTimeout(() => {
                 if (!this.abortController.signal.aborted) {
                     resolve()
                 }
             }, ms)
-            
+
             const abortHandler = () => {
                 clearTimeout(timeout)
                 resolve()
             }
-            
+
             this.abortController.signal.addEventListener('abort', abortHandler)
-            
+
             // 确保在Promise完成时清理
             Promise.resolve().then(() => {
                 this.abortController.signal.removeEventListener('abort', abortHandler)
@@ -185,8 +185,8 @@ export abstract class MeisterhauAI {
     /**
      * 当 force 为 true 时，无论当前是否已有任务正在执行，都将执行该任务
      * 否则，只有当当前没有任务正在执行时，才会执行该任务
-     * @param task 
-     * @param force 
+     * @param task
+     * @param force
      */
         /**
          * 执行AI任务
@@ -238,7 +238,7 @@ export abstract class MeisterhauAI {
         onStop(breakVal?: any): void {}
 
     private aiTicker?: MeisterhauAITicker
-    
+
         /** 创建AI循环，在每次tick时执行表达式 */
         loop<T=any>(expr: (value: (val?: T) => void) => T | Promise<T>): T | Promise<T> {
             const context: LoopContext = {
@@ -279,9 +279,9 @@ export abstract class MeisterhauAI {
         // 重置abortController
         this.abortController.abort()
         Object.assign(this.abortController, new SimpleAbortController())
-        
+
         if (cleanStart) {
-            this?.onStart?.()   
+            this?.onStart?.()
         }
 
         const v = await this.loop(async breakVal => {
@@ -338,10 +338,10 @@ export abstract class MeisterhauAI {
             // 重置abortController
             this.abortController.abort()
             Object.assign(this.abortController, new SimpleAbortController())
-            
+
             if (this.setStrategy(strategy)) {
                 this._start()
-                return true   
+                return true
             }
 
             return false

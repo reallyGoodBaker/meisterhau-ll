@@ -12,7 +12,7 @@ export const defaultAcceptableInputs = [
 export class Status {
     /** 存储所有状态的映射表 */
     static readonly status = new Map<string, Status>()
-    
+
     /**
      * 根据唯一ID获取状态
      * @param uniqueId 实体的唯一ID

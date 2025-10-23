@@ -55,7 +55,7 @@ export class AiHearing extends CustomComponent {
         // 计算音频传播半径
         const spreadRadius = Math.min(32, Math.max(volumn * 16, 16))
         const entities = mc.getEntities(pos, spreadRadius)
-        
+
         // 通知范围内的所有听觉组件
         entities.forEach(entity => Optional.some(Status.get(entity.uniqueId)?.componentManager.getComponent(AiHearing)).use(hearing => {
             // 计算距离
@@ -67,7 +67,7 @@ export class AiHearing extends CustomComponent {
             const maxVolumn = hearing.conf.maxVolumn ?? 2
             // 计算剩余音量（随距离衰减）
             const volumnRemain = Math.max(volumn - 0.0625 * dist, 0)
-            
+
             // 检查是否满足触发条件
             if (hearing.conf.channels.includes(channel) && volumnRemain >= minVolumn && volumnRemain <= maxVolumn) {
                 hearing.onHeard.call(source)

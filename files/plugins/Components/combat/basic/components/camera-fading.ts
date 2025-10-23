@@ -139,11 +139,11 @@ export class CameraFading extends BaseComponent {
             case 'left':
                 to = [ ...CameraComponent.defaultOffset, 15, 0 ]
                 break
-            
+
             case 'vertical':
                 to = [ ...CameraComponent.defaultOffset, 0, -5 ]
                 break
-        
+
             default:
                 to = [ 1.5, 0, 0.5, 0, 0 ]
                 break

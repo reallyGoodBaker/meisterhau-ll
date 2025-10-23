@@ -81,11 +81,11 @@ function vec2ToAngle(v) {
     if (v.dx < 0) {
         angle = -angle
     }
-    
+
     return angle
 }
 
 module.exports = {
     vec2, getAngleFromVector2, rotate2, multiply2, minus,
-    vec2ToAngle, 
+    vec2ToAngle,
 }

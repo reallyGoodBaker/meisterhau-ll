@@ -141,7 +141,7 @@ cmd('match', '开启对局', CommandPermission.Everyone).setup(register => {
     register('<pl:player> best_of <rounds:int>', (cmd, ori, out, res) => {
         const source = ori.player as Player
         const { pl, rounds } = res as { pl: Player[], rounds: number }
-        
+
         const sourceTeamOpt = Status.getOrCreate(source.uniqueId).componentManager.getComponent(Team)
         const targetTeamOpt = Status.getOrCreate(pl[0].uniqueId).componentManager.getComponent(Team)
 

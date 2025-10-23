@@ -35,7 +35,7 @@ const camera = (pl: Player, easeTime: number, easeType: string, pos: Vector, loo
  * @param rotY Y轴旋转角度
  */
 const cameraRot = (pl: Player, easeTime: number, easeType: string, pos: Vector, rotX: number, rotY: number) => {
-    mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} rot ${rotX} ${rotY}`) 
+    mc.runcmdEx(`camera "${pl.name}" set minecraft:free ease ${easeTime} ${easeType} pos ${pos.x} ${pos.y} ${pos.z} rot ${rotX} ${rotY}`)
 }
 
 /**
@@ -62,7 +62,7 @@ export const battleCameraMiddlePoint = (pl: Player, en: Actor) => {
     const offsetZ = 1.5
     const offsetX = 5
     const moduloScale = offsetZ / initVec.m
-    
+
     const middlePoint = {
         x: (plPos.x + enPos.x) / 2,
         y: (plPos.y + enPos.y) / 2,
@@ -78,7 +78,7 @@ export const battleCameraMiddlePoint = (pl: Player, en: Actor) => {
         ),
         moduloScale
     )
-    
+
     const crossPos = {
         x: plPos.x - cameraVec.dx,
         z: plPos.z - cameraVec.dy,

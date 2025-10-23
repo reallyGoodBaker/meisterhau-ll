@@ -92,7 +92,7 @@ export class EasyAISensing {
             false,
             status => {
                 if (!status.preInput) {
-                    return false   
+                    return false
                 }
 
                 return inputTypes.includes(status.preInput as any)

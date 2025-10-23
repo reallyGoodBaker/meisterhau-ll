@@ -25,7 +25,7 @@ export function registerCommand() {
                 for (const target of targets) {
                     Status.getOrCreate(target.uniqueId).componentManager.attachComponent(component)
                 }
-    
+
                 output.success(`已为 ${targets.length} 个玩家添加组件 '${args.name}'`)
             } catch (_) {
                 output.error('无效的组件参数')
@@ -48,7 +48,7 @@ export function registerCommand() {
         register('list <pl:player> [detail:bool]', async (_, ori, output, args) => {
             const pl = args.pl
             const useDetail = args.detail ?? false
-            
+
             for (const p of pl) {
                 const status = Status.get(p.uniqueId)
 

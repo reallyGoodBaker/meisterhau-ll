@@ -34,7 +34,7 @@ function isCollide(pl) {
     switch (mayCollide) {
         default:
             return false
-    
+
         case 1: // 左侧碰撞检测
             const nx = mc.getBlock(bPos.x - 1, bPos.y, bPos.z, bPos.dimid)
             return !nx.isAir && !nx.thickness
@@ -42,14 +42,14 @@ function isCollide(pl) {
         case 2: // 右侧碰撞检测
             const px = mc.getBlock(bPos.x + 1, bPos.y, bPos.z, bPos.dimid)
             return !px.isAir && !px.thickness
-        
+
         case 3: // 前方碰撞检测
             const nz = mc.getBlock(bPos.x, bPos.y, bPos.z - 1, bPos.dimid)
             return !nz.isAir && !nz.thickness
-        
+
         case 4: // 后方碰撞检测
             const pz = mc.getBlock(bPos.x, bPos.y, bPos.z + 1, bPos.dimid)
-            return !pz.isAir && !pz.thickness 
+            return !pz.isAir && !pz.thickness
     }
 }
 

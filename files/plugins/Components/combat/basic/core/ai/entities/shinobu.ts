@@ -125,7 +125,7 @@ export class Shinobu extends MeisterhauAI {
 
             // 如果没有目标，则跳过
             if (!this.sensing.hasTarget()) {
-                continue   
+                continue
             }
 
             // 如果目标尝试格挡，则使用剑柄打击

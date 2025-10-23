@@ -6,7 +6,7 @@ const { EventEmitter } = require("../../../events")
 class EventInputStream {
     /** 静态映射表，存储事件发射器到输入流的映射 */
     static #ends = new Map()
-    
+
     /**
      * 获取或创建事件输入流实例
      * @param {EventEmitter} end 事件发射器

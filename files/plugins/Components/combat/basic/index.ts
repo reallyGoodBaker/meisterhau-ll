@@ -117,7 +117,7 @@ export function playParticle(particle: string, pos: Pos3) {
  * @returns 总是返回undefined（函数待实现）
  */
 export function movable() {
-    
+
 }
 
 /** 默认移动速度 */

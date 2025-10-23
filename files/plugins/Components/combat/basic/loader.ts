@@ -22,4 +22,3 @@ function loadModule(mod: TrickModule, flags: [number, number]) {
 
     flags[1]++
 }
-

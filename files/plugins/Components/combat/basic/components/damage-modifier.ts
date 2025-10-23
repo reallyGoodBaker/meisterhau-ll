@@ -9,7 +9,7 @@ export class DamageModifier extends BaseComponent {
     static defaultModifier = 0.2
     /** 默认伤害修正选项 */
     static defaultModifierOpt = new DamageModifier(DamageModifier.defaultModifier)
-    
+
     /** 创建伤害修正组件 */
     static create({ modifier }: { modifier: number }) {
         return new DamageModifier(modifier)

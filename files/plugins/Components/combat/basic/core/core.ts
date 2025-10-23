@@ -171,7 +171,7 @@ function getMoveDir(pl: Player) {
     //                 : rot < -45 ? 4
     //                     : rot < 45 ? 1
     //                         : rot < 135 ? 2 : 3
-            
+
     //         res(direct)
     //     }, 50);
     // })
@@ -227,7 +227,7 @@ function _ctx(pl: Actor, mixins: Partial<MovementContext> = {}): MovementContext
 function watchMainhandChange(pl: Player) {
     const status = Status.getOrCreate(pl.uniqueId)
     const hand = pl?.getHand()?.type ?? 'minecraft:air'
-    
+
     status.hand = hand
     return status
 }
@@ -446,7 +446,7 @@ export function transition(pl: Actor, bind: TrickModule, status: Status, eventNa
             previousStatus,
             previousMoveState: -1
         }))
-        
+
         // return em.once('onTick', () => transition(pl, bind, status, 'onEndOfLife', prevent, args))
         transition(pl, bind, status, 'onEndOfLife', prevent, args)
         return
@@ -534,7 +534,7 @@ function listenPlayerItemChange(mods: Map<string, TrickModule>) {
                 move.onLeave(pl, _ctx(pl))
             }
         }
-        
+
         const bind = getMod(hand)
         clearStatus(pl, status, hand, bind)
         if (!bind) {
@@ -719,7 +719,7 @@ function listenAllCustomEvents(mods: Map<string, TrickModule>) {
 
             em.emitNone('hurt', abuser, victim, {
                 ...damageOpt,
-                damage: actualDamage, 
+                damage: actualDamage,
                 damageType: 'override',
             })
         }
@@ -998,7 +998,7 @@ function listenAllCustomEvents(mods: Map<string, TrickModule>) {
             const aPos = abuser.pos
             const vPos = victim.pos
 
-            transition(victim, vMod, vStatus, 'onKnockdown', Function.prototype as any, [ victim, abuser, time ])            
+            transition(victim, vMod, vStatus, 'onKnockdown', Function.prototype as any, [ victim, abuser, time ])
             knockback(victim, vPos.x - aPos.x, vPos.z - aPos.z, knockbackStrength, 0)
         }
     })
@@ -1077,7 +1077,7 @@ export function listenAllMcEvents(collection: TrickModule[]) {
     })
 
     listenPlayerItemChange(mods)
-    
+
     es.addFilter(({ type, args }) => {
         if (!defaultAcceptableInputs.includes(type)) {
             return true
@@ -1097,7 +1097,7 @@ export function listenAllMcEvents(collection: TrickModule[]) {
         (pl: Actor, prevent: () => void, args: any[]) => {
             if (!isEntity(pl)) {
                 const status = watchMainhandChange(pl as Player)
-        
+
                 if (!mods.has(status.hand)) {
                     return
                 }
@@ -1186,7 +1186,7 @@ export function listenAllMcEvents(collection: TrickModule[]) {
             es.put('onAttack', [pl, Function.prototype, [ pl ]])
         }
     })
-    
+
     em.on('input.jump', (pl: Actor, press: boolean) => {
         if (press) {
             es.put('onDodge', [ pl, Function.prototype, [ pl ] ])
@@ -1202,7 +1202,7 @@ export function listenAllMcEvents(collection: TrickModule[]) {
         mc.listen(n as any, (...args) => {
             let cancelEvent = false,
                 prevent = () => cancelEvent = true
-            
+
             let pl = args[0]
 
             if (mobEvents.includes(n)) {
@@ -1214,7 +1214,7 @@ export function listenAllMcEvents(collection: TrickModule[]) {
             }
 
             const status = watchMainhandChange(pl)
-            
+
             if (!mods.has(status.hand)) {
                 return
             }
@@ -1276,7 +1276,7 @@ export function listenAllMcEvents(collection: TrickModule[]) {
             prevent = () => {
                 flag = false
             }
-        
+
         const damageOpt = {
             damage,
             damageType

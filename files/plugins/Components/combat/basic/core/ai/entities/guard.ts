@@ -98,12 +98,12 @@ export class Guard extends MeisterhauAI {
                         yield (() => self.actions.attack()) as any
                         await self.wait(800)
                         break
-                
+
                     case 2:
                         yield () => self.actions.useItem()
                         await self.wait(800)
                         break
-                
+
                     case 3:
                         yield () => self.actions.sneak()
                         await self.wait(800)
