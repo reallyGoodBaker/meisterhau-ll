@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "pnpm run build && node ./scripts/start-dev-server",
+    "dev": "npm run build && node ./scripts/start-dev-server",
     "build": "rollup -c --bundleConfigAsCjs && node ./scripts/js-define",
     "env": "node ./server/reset-dev",
     "doc": "typedoc"

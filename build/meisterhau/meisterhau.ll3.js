@@ -9642,13 +9642,13 @@ function vec2ToAngle(v) {
     if (v.dx < 0) {
         angle = -angle;
     }
-    
+
     return angle
 }
 
 var vec = {
     vec2, getAngleFromVector2, rotate2, multiply2, minus,
-    vec2ToAngle, 
+    vec2ToAngle,
 };
 
 /** 默认攻击范围配置 */
@@ -9818,7 +9818,7 @@ function isCollide(pl) {
     switch (mayCollide) {
         default:
             return false
-    
+
         case 1: // 左侧碰撞检测
             const nx = mc.getBlock(bPos.x - 1, bPos.y, bPos.z, bPos.dimid);
             return !nx.isAir && !nx.thickness
@@ -9826,14 +9826,14 @@ function isCollide(pl) {
         case 2: // 右侧碰撞检测
             const px = mc.getBlock(bPos.x + 1, bPos.y, bPos.z, bPos.dimid);
             return !px.isAir && !px.thickness
-        
+
         case 3: // 前方碰撞检测
             const nz = mc.getBlock(bPos.x, bPos.y, bPos.z - 1, bPos.dimid);
             return !nz.isAir && !nz.thickness
-        
+
         case 4: // 后方碰撞检测
             const pz = mc.getBlock(bPos.x, bPos.y, bPos.z + 1, bPos.dimid);
-            return !pz.isAir && !pz.thickness 
+            return !pz.isAir && !pz.thickness
     }
 }
 
@@ -11228,7 +11228,7 @@ requireEvents();
 class EventInputStream {
     /** 静态映射表，存储事件发射器到输入流的映射 */
     static #ends = new Map()
-    
+
     /**
      * 获取或创建事件输入流实例
      * @param {EventEmitter} end 事件发射器

@@ -2,7 +2,14 @@ import { BaseComponent } from "../../core/component"
 import { Fields, PublicComponent } from "../../core/config"
 
 /** 输入类型定义 */
-export type InputTypes = 'jump' | 'sneak' | 'sprint' | 'attack' | 'use' | 'feint'
+export enum InputTypes {
+    Jump,
+    Sneak,
+    Sprint,
+    Attack,
+    Use,
+    Feint
+}
 
 /** 输入组件 - 管理玩家输入控制 */
 @PublicComponent('player-input')
@@ -12,14 +19,9 @@ export type InputTypes = 'jump' | 'sneak' | 'sprint' | 'attack' | 'use' | 'feint
 ])
 export class InputComponent extends BaseComponent {
     /** 允许的输入类型 */
-    allowedInputs: { [key in InputTypes]: boolean } = {
-        jump: true,
-        sneak: true,
-        sprint: true,
-        attack: true,
-        use: true,
-        feint: true
-    }
+    allowedInputs: boolean[] = [
+        false, false, false, false, false, false
+    ]
 
     /** 预输入 */
     #preInput: null | InputTypes = null
