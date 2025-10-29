@@ -1,12 +1,13 @@
 {
-  "name": "ym-server",
+  "name": "meisterhau-ll",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "pnpm run build && node ./scripts/start-dev-server",
+    "dev": "npm run build && node ./scripts/start-dev-server",
     "build": "rollup -c --bundleConfigAsCjs && node ./scripts/js-define",
-    "env": "node ./server/reset-dev"
+    "env": "node ./server/reset-dev",
+    "doc": "typedoc"
   },
   "repository": {
     "type": "git",
@@ -15,8 +16,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/targz": "^1.0.5",
     "node-watch": "^0.7.3",
-    "npm": "^11.0.0",
+    "npm": "11.6.2",
+    "targz": "^1.0.1",
     "unzipper": "^0.12.3"
   },
   "devDependencies": {
@@ -32,6 +35,8 @@
     "rollup-plugin-typescript-paths": "^1.5.0",
     "rollup-plugin-typescript2": "^0.36.0",
     "shelljs": "^0.9.2",
-    "tslib": "^2.6.3"
+    "tslib": "^2.6.3",
+    "typedoc": "^0.28.14",
+    "typedoc-github-theme": "^0.3.1"
   }
 }

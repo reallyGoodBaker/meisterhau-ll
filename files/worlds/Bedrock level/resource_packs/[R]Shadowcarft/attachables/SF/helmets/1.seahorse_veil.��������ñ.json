@@ -1,0 +1,27 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:attachable": {
+		"description": {
+			"identifier": "sf:seahorse_veil",
+			"materials": {
+				"default": "armor",
+				"enchanted": "armor_enchanted",
+				"dyed": "entity_alphatest_change_color"
+			},
+			"textures": {
+				"default": "textures/models/helmets/seahorse_veil_default",
+				"dyed": "textures/models/helmets/seahorse_veil_dyeable",
+				"undyed": "textures/models/helmets/seahorse_veil_top",
+				"enchanted": "textures/misc/enchanted_item_glint"
+			},
+			"geometry": {
+				"default": "geometry.seahorse_veil"
+			},
+			"scripts": {},
+			"render_controllers": [
+				"controller.render.dyeable1",
+				"controller.render.dyeable2"
+			]
+		}
+	}
+}

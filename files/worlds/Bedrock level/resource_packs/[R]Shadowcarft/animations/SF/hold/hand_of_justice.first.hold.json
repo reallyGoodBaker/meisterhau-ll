@@ -1,0 +1,18 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.player.hand_of_justice.first.hold": {
+			"loop": true,
+			"bones": {
+				"a2200": {
+					"rotation": [67.02995, -55.78487, -93.28785],
+					"position": [12.34617, -14.19184, 11.79678]
+				},
+				"weapon": {
+					"rotation": [-72.9879, 45.12884, 78.38365],
+					"position": [-15.31956, -35.89386, 25.62913]
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,65 @@
+{
+    "version": 11,
+    "economySystem": {
+        "enabled": false,
+        "kit": "LegacyMoney",
+        "scoreboardName": "Scoreboard",
+        "economyName": "金币"
+    },
+    "modules": {
+        "tpa": {
+            "enable": true,
+            "createRequestCalculate": "random_num_range(0, 1)",
+            "cooldownTime": 10,
+            "expirationTime": 120,
+            "disallowedDimensions": []
+        },
+        "home": {
+            "enable": true,
+            "createHomeCalculate": "random_num_range(10, 188)",
+            "goHomeCalculate": "random_num_range(10, 188)",
+            "nameLength": 20,
+            "maxHome": 20,
+            "cooldownTime": 10,
+            "disallowedDimensions": []
+        },
+        "warp": {
+            "enable": true,
+            "cooldownTime": 10,
+            "goWarpCalculate": "random_num_range(10, 60)",
+            "disallowedDimensions": []
+        },
+        "death": {
+            "enable": true,
+            "registerBackCommand": true,
+            "goDeathCalculate": "random_num_range(10, 60)",
+            "maxDeathInfos": 5,
+            "disallowedDimensions": []
+        },
+        "tpr": {
+            "enable": true,
+            "cooldownTime": 10,
+            "calculate": "random_num_range(40, 80)",
+            "randomRange": {
+                "min": -10000,
+                "max": 10000
+            },
+            "dangerousBlocks": [
+                "minecraft:water",
+                "minecraft:lava",
+                "minecraft:fire"
+            ],
+            "restrictedAreas": {
+                "enable": false,
+                "isCircle": true,
+                "center": {
+                    "x": 0,
+                    "z": 0,
+                    "radius": 100,
+                    "usePlayerPositionCenter": false
+                }
+            },
+            "disallowedDimensions": []
+        }
+    }
+}

@@ -1,0 +1,14 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.player.rebel_nunchaku.first.hold": {
+			"loop": true,
+			"bones": {
+				"weapon": {
+					"rotation": [-102.68191, 66.45856, -124.5811],
+					"position": [7.01122, -9.33402, 8.644]
+				}
+			}
+		}
+	}
+}

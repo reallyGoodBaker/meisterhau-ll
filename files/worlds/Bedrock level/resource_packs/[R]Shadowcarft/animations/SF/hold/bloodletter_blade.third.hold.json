@@ -1,0 +1,17 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.bloodletter_blade.third.hold": {
+			"loop": true,
+			"bones": {
+				"weapon": {
+					"position": [
+						6,
+						8.58975,
+						-0.71826
+					]
+				}
+			}
+		}
+	}
+}

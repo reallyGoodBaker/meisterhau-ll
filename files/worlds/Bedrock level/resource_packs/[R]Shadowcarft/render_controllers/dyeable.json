@@ -1,0 +1,27 @@
+{
+	"format_version": "1.8.0",
+	"render_controllers": {
+		"controller.render.dyeable1": {
+			"geometry": "geometry.default",
+			"materials": [
+				{
+					"*": "material.default"
+				}
+			],
+			"textures": [
+				"texture.undyed"
+			]
+		},
+		"controller.render.dyeable2": {
+			"geometry": "geometry.default",
+			"materials": [
+				{
+					"*": "material.dyed"
+				}
+			],
+			"textures": [
+				"texture.dyed"
+			]
+		}
+	}
+}

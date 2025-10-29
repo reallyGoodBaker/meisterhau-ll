@@ -1,0 +1,17 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.solid_hatchets.third.hold": {
+			"loop": true,
+			"bones": {
+				"weapon": {
+					"position": [
+						5.6,
+						5.42305,
+						-0.62488
+					]
+				}
+			}
+		}
+	}
+}

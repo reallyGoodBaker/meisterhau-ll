@@ -1,0 +1,14 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.player.gilded_staff.first.hold": {
+			"loop": true,
+			"bones": {
+				"weapon": {
+					"rotation": [55.20841, 65.94926, 6.99699],
+					"position": [6.97738, -14.93471, 7.36685]
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,149 @@
+entity.npc:npc_man.name=Male NPC
+item.spawn_egg.entity.npc:npc_man.name=Male NPC Spawn Egg
+entity.npc:npc_woman.name=Female NPC
+item.spawn_egg.entity.npc:npc_woman.name=Female NPC Spawn Egg
+entity.npc:npc_villagers.name=Villager NPC
+item.spawn_egg.entity.npc:npc_villagers.name=Villager NPC Spawn Egg
+entity.sf:man.name=Replica Y
+item.spawn_egg.entity.sf:man.name=Replica Y Spawn Egg
+entity.sf:woman.name=Replica X
+item.spawn_egg.entity.sf:woman.name=Replica X Spawn Egg
+entity.sf:man_archer.name=Replica Y Archer
+item.spawn_egg.entity.sf:man_archer.name=Replica Y Archer Spawn Egg
+entity.sf:woman_archer.name=Replica X Archer
+item.spawn_egg.entity.sf:woman_archer.name=Replica X Archer Spawn Egg
+entity.sf:legion_armor_wandering_trader_desert.name=Legion Armor Wandering Trader
+item.spawn_egg.entity.sf:legion_armor_wandering_trader_desert.name=Legion Armor Wandering Trader Spawn Egg
+entity.sf:legion_weapon_wandering_trader_forest.name=Legion Weapon Wandering Trader
+item.spawn_egg.entity.sf:legion_weapon_wandering_trader_forest.name=Legion Weapon Wandering Trader Spawn Egg
+
+item.sf:shadow_stone_essence=Shadow Stone Essence
+item.sf:shadow_iron_essence=Shadow Iron Essence
+item.sf:shadow_gold_essence=Shadow Gold Essence
+item.sf:shadow_diamond_essence=Shadow Diamond Essence
+item.sf:shadow_netherite_essence=Shadow Netherite Essence
+item.sf:skin_editor=Skin Editor
+item.sf:shadow_energy=Shadow Energy
+item.sf:shadow_book=Shadow Tome
+item.sf:copper_coin=Copper Coin
+
+tile.sf:shadow_ore.name=Shadow Ore
+
+bedrock_helm=§fBedrock Helm
+courage=§fCourage 
+epiphany_kasa=§fEpiphany Kasa
+golden_fang_crown=§fGolden Fang Crown
+higher_calling=§fHigher Calling
+leather_casque=§fLeather Casque
+nomads_cap=§fNomads Cap
+rag=§fRag
+rigid_barbute=§fRigid Barbute
+sea_devils_mask=§fSea Devils Mask
+seahorse_veil=§fSeahorse Veil
+swampers_headgear=§fSwampers Headgear
+visored_casque=§fVisored Casque
+
+LCH=§7[Legion] Common Helm
+LRH=§3[Legion] Rare Helm
+LEH=§6[Legion] Epic Helm
+LLH=§e[Legion] Legendary Helm
+
+DCH=§7[Dynasty] Common Helm
+DRH=§3[Dynasty] Rare Helm
+DEH=§6[Dynasty] Epic Helm
+DLH=§e[Dynasty] Legendary Helm
+
+HCH=§7[Herald] Common Helm
+
+bedrock_armor=§fBedrock Armor
+compression_suit=§fCompression Suit
+divine_retribution=§fDivine Retribution
+embroidered_suit=§fEmbroidered Robe
+fur_lined_armor=§fFur Lined Armor
+gilded_vest=§fGilded Vest
+gladiator_armor=§fGladiator Armor
+laminar_cuirass=§fLaminar Cuirass
+plain_waistcoat=§fPlain Waistcoat
+prefects_robe=§fPrefects Robe
+reinforced_coat=§fReinforced Coat
+swampers_camouflage=§fSwampers Camouflage
+three_arrows_glory=§fThree Arrows Glory
+training_uniform=§fTraining Uniform
+
+LCA=§7[Legion] Common Armor
+LRA=§3[Legion] Rare Armor
+LEA=§6[Legion] Epic Armor
+LLA=§e[Legion] Legendary Armor
+DCA=§7[Dynasty] Common Armor
+DRA=§3[Dynasty] Rare Armor
+DEA=§6[Dynasty] Epic Armor
+DLA=§e[Dynasty] Legendary Armor
+HCA=§7[Herald] Common Armor
+
+aerial_lotus=§fAerial Lotus 
+arbitrator=§fArbitrator 
+bloodletter_blade=§fBloodletter Blade
+common_staff=§fCommon Staff
+double_scimitars=§fDouble Scimitars
+gilded_staff=§fGilded Staff
+hand_of_justice=§fHand Of Justice
+hermit_katana=§fHermit Katana
+keen_katana=§fKeen Katana
+labryses=§fLabryses
+lightweight_sabers=§fLightweight Sabers
+metal_sting=§fMetal Sting
+nightbanes=§fNightbane
+old_timer=§fOld Timer
+ornate_two_hander=§fOrnate Two Hander
+rebel_nunchaku=§fRebel Nunchaku
+riffle_hammers=§fRiffle Hammers
+sai=§fSteel Sai
+sentrys_guandao=§fSentrys Guandao
+silver_squall=§fSilver Squall 
+solid_hatchets=§fSolid Hatchets
+swampers_grinders=§fSwampers GrinderS
+weightened_nunchaku=§fWeightened Nunchaku
+wicked_twins=§fWicked Twin 
+wooden_staff=§fWooden Staff
+
+LCDSJ=§7[Legion] Common One-Handed Sword
+LCC=§7[Legion] Common Hammers
+LCF=§7[Legion] Common Axes
+LRF=§3[Legion] Rare Axes
+LRM=§3[Legion] Rare Spear
+LRSSJ=§3[Legion] Rare Two-Handed Sword
+LEF=§6[Legion] Epic Axes
+LEJS=§6[Legion] Epic Giant Sword
+LESSJ=§6[Legion] Epic Two-Handed Sword
+LELYB=§6[Legion] Epic Maces
+LEC=§6[Legion] Epic Hammers
+LLSSJ=§e[Legion] Legendary Two-Handed Sword
+
+DCMB=§7[Dynasty] Common Staff
+DCPD=§7[Dynasty] Common Sabers
+DRPD=§3[Dynasty] Rare Sabers
+DRSJG=§3[Dynasty] Rare Nunchaku
+DRGD=§3[Dynasty] Rare Guandao
+DRMB=§3[Dynasty] Rare Staff
+DELD=§6[Dynasty] Epic Chain Knife
+DEMB=§6[Dynasty] Epic Staff
+DESJG=§6[Dynasty] Epic Nunchaku
+DLLD=§e[Dynasty] Legendary Chain Knife
+
+HCJH=§7[Herald] Common Iaido Katana
+HCWSD=§7[Herald] Common Katana
+HCTC=§7[Herald] Common Sai
+
+iron_crosses=§fIron Crosses
+
+LRFD=§3[Legion] Rare Throwing Knives
+
+
+item.bridge:whdsinj_helmet=qdikkp Helmet
+item.bridge:whdsinj_chestplate=qdikkp Chestplate
+item.bridge:whdsinj_leggings=qdikkp Leggings
+item.bridge:whdsinj_boots=qdikkp Boots
+item.bridge:sjmsk_helmet=sss Helmet
+item.bridge:sjmsk_chestplate=sss Chestplate
+item.bridge:sjmsk_leggings=sss Leggings
+item.bridge:sjmsk_boots=sss Boots

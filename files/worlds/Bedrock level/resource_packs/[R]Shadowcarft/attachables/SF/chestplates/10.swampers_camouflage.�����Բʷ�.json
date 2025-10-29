@@ -1,0 +1,27 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "sf:swampers_camouflage",
+      "materials": {
+        "default": "armor",
+        "enchanted": "armor_enchanted",
+        "dyed": "entity_alphatest_change_color"
+      },
+      "textures": {
+        "default": "textures/models/chestplates/swampers_camouflage_default",
+        "dyed": "textures/models/chestplates/swampers_camouflage_dyeable",
+        "undyed": "textures/models/chestplates/swampers_camouflage_top",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.swampers_camouflage"
+      },
+      "scripts": {},
+      "render_controllers": [
+        "controller.render.dyeable1",
+        "controller.render.dyeable2"
+      ]
+    }
+  }
+}

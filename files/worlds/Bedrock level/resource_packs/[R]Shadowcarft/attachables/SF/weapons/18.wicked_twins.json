@@ -1,0 +1,36 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:attachable": {
+		"description": {
+			"identifier": "sf:wicked_twins",
+			"materials": {
+				"default": "armor",
+				"enchanted": "armor_enchanted",
+				"dyed": "entity_alphatest_change_color"
+			},
+			"textures": {
+				"default": "textures/models/weapons/wicked_twins_default",
+				"dyed": "textures/models/weapons/wicked_twins_dyeable",
+				"undyed": "textures/models/weapons/wicked_twins_top",
+				"enchanted": "textures/misc/enchanted_item_glint"
+			},
+			"animations": {
+				"first_hold": "animation.labryses.first.hold"
+			},
+			"scripts": {
+				"animate": [
+					{
+						"first_hold": "c.is_first_person"
+					}
+				]
+			},
+			"geometry": {
+				"default": "geometry.wicked_twins"
+			},
+			"render_controllers": [
+				"controller.render.dyeable1",
+				"controller.render.dyeable2"
+			]
+		}
+	}
+}

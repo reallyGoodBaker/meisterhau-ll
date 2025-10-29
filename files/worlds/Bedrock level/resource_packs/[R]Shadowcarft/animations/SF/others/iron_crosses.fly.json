@@ -1,0 +1,25 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.iron_crosses.fly": {
+			"loop": true,
+			"animation_length": 0.25,
+			"bones": {
+				"body": {
+					"position": {
+						"0.0": [
+							0,
+							0,
+							0
+						],
+						"0.25": [
+							0,
+							0,
+							-22
+						]
+					}
+				}
+			}
+		}
+	}
+}

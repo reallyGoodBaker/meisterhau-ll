@@ -1,0 +1,124 @@
+{
+    "pools": [
+        {
+            "rolls": 1,
+            "entries": [
+                {
+                    "type": "item",
+                    "name": "sf:swampers_headgear",
+                    "weight": 1,
+                    "functions": [
+                        {
+                            "function": "enchant_random_gear",
+                            "chance": 0.16
+                        },
+                        {
+                            "function": "random_dye"
+                        }
+                    ]
+                },
+                {
+                    "type": "item",
+                    "name": "sf:rigid_barbute",
+                    "weight": 1,
+                    "functions": [
+                        {
+                            "function": "enchant_random_gear",
+                            "chance": 0.16
+                        },
+                        {
+                            "function": "random_dye"
+                        }
+                    ]
+                },
+                {
+                    "type": "item",
+                    "name": "sf:courage",
+                    "weight": 1,
+                    "functions": [
+                        {
+                            "function": "enchant_random_gear",
+                            "chance": 0.16
+                        },
+                        {
+                            "function": "random_dye"
+                        }
+                    ]
+                },
+                {
+                    "type": "loot_table",
+                    "name": "loot_tables/empty.json",
+                    "weight": 5
+                }
+            ]
+        },
+        {
+            "rolls": 1,
+            "entries": [
+                {
+                    "type": "item",
+                    "name": "sf:laminar_cuirass",
+                    "weight": 1,
+                    "functions": [
+                        {
+                            "function": "enchant_random_gear",
+                            "chance": 0.16
+                        },
+                        {
+                            "function": "random_dye"
+                        }
+                    ]
+                },
+                {
+                    "type": "item",
+                    "name": "sf:swampers_camouflage",
+                    "weight": 1,
+                    "functions": [
+                        {
+                            "function": "enchant_random_gear",
+                            "chance": 0.16
+                        },
+                        {
+                            "function": "random_dye"
+                        }
+                    ]
+                },
+                {
+                    "type": "item",
+                    "name": "sf:prefects_robe",
+                    "weight": 1,
+                    "functions": [
+                        {
+                            "function": "enchant_random_gear",
+                            "chance": 0.16
+                        },
+                        {
+                            "function": "random_dye"
+                        }
+                    ]
+                },
+                {
+                    "type": "loot_table",
+                    "name": "loot_tables/empty.json",
+                    "weight": 5
+                }
+            ]
+        },
+        {
+            "rolls": 1,
+            "entries": [
+                {
+                    "type": "item",
+                    "name": "minecraft:bow",
+                    "weight": 100,
+                    "functions": [
+                        {
+                            "function": "enchant_random_gear",
+                            "chance": 0.2
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

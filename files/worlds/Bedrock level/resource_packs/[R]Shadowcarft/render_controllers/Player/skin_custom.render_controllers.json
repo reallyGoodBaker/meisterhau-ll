@@ -1,0 +1,567 @@
+{
+	"format_version": "1.20.50",
+	"render_controllers": {
+		"controller.render.skin_hero.first_person": {
+			"arrays": {
+				"geometries": {
+					"Array.geo_sf": [
+						"Geometry.emoting",
+						"Geometry.emoting_slim"
+					]
+				},
+				"textures": {
+					"Array.tex_sf": [
+						"Texture.sarge",
+						"Texture.galen",
+						"Texture.gizmo",
+						"Texture.june",
+						"Texture.xiangtzu",
+						"Texture.itu",
+						"Texture.xiangtzu2",
+						"Texture.marcus",
+						"Texture.kitsune1",
+						"Texture.stranger",
+						"Texture.invisible"
+					]
+				}
+			},
+			"textures": [
+				"array.tex_sf[query.property('skin_custom:hero')]"
+			],
+			"geometry": "array.geo_sf[v.skin_gender]",
+			"materials": [
+				{
+					"*": "material.default"
+				}
+			],
+			"part_visibility": [
+				{
+					"*": false
+				},
+				{
+					"rightArm": "query.get_equipped_item_name(0, 1) == '' || query.get_equipped_item_name(0, 1) == 'map'"
+				},
+				{
+					"rightSleeve": "query.get_equipped_item_name(0, 1) == '' || query.get_equipped_item_name(0, 1) == 'map'"
+				},
+				{
+					"leftArm": "(query.get_equipped_item_name(0, 1) == 'map' && query.get_equipped_item_name('off_hand') != 'shield') || (query.get_equipped_item_name('off_hand') == 'map' && !query.item_is_charged) || (!query.item_is_charged && (variable.item_use_normalized > 0 && variable.item_use_normalized < 1.0))"
+				},
+				{
+					"leftSleeve": "(query.get_equipped_item_name(0, 1) == 'map' && query.get_equipped_item_name('off_hand') != 'shield') || (query.get_equipped_item_name('off_hand') == 'map' && !query.item_is_charged) || (!query.item_is_charged && (variable.item_use_normalized > 0 && variable.item_use_normalized < 1.0))"
+				}
+			]
+		},
+		"controller.render.skin_custom.face.first_person": {
+			"arrays": {
+				"geometries": {
+					"Array.geometry": [
+						"Geometry.emoting",
+						"Geometry.emoting_slim"
+					]
+				},
+				"textures": {
+					"Array.face_man": [
+						"Texture.invisible",
+						"Texture.face_man_1",
+						"Texture.face_man_2",
+						"Texture.face_man_3",
+						"Texture.face_woman_1",
+						"Texture.face_woman_2",
+						"Texture.face_woman_3"
+					]
+				}
+			},
+			"textures": [
+				"array.face_man[(v.is_property_skin?1+v.skin_face+(v.skin_gender*3):0)]"
+			],
+			"geometry": "array.geometry[(v.skin_gender)]",
+			"materials": [
+				{
+					"*": "material.default"
+				}
+			],
+			"part_visibility": [
+				{
+					"*": false
+				},
+				{
+					"rightArm": "query.get_equipped_item_name(0, 1) == '' || query.get_equipped_item_name(0, 1) == 'map'"
+				},
+				{
+					"rightSleeve": "query.get_equipped_item_name(0, 1) == '' || query.get_equipped_item_name(0, 1) == 'map'"
+				},
+				{
+					"leftArm": "(query.get_equipped_item_name(0, 1) == 'map' && query.get_equipped_item_name('off_hand') != 'shield') || (query.get_equipped_item_name('off_hand') == 'map' && !query.item_is_charged) || (!query.item_is_charged && (variable.item_use_normalized > 0 && variable.item_use_normalized < 1.0))"
+				},
+				{
+					"leftSleeve": "(query.get_equipped_item_name(0, 1) == 'map' && query.get_equipped_item_name('off_hand') != 'shield') || (query.get_equipped_item_name('off_hand') == 'map' && !query.item_is_charged) || (!query.item_is_charged && (variable.item_use_normalized > 0 && variable.item_use_normalized < 1.0))"
+				}
+			]
+		},
+		"controller.render.skin_custom.hair.first_person": {
+			"arrays": {
+				"geometries": {
+					"Array.geometry": [
+						"Geometry.emoting",
+						"Geometry.emoting_slim"
+					]
+				},
+				"textures": {
+					"Array.hair_man": [
+						"Texture.invisible",
+						"Texture.hair_man_black_1",
+						"Texture.hair_man_black_2",
+						"Texture.hair_man_black_3",
+						"Texture.hair_man_black_4",
+						"Texture.hair_man_brown_1",
+						"Texture.hair_man_brown_2",
+						"Texture.hair_man_brown_3",
+						"Texture.hair_man_brown_4",
+						"Texture.hair_man_golden_1",
+						"Texture.hair_man_golden_2",
+						"Texture.hair_man_golden_3",
+						"Texture.hair_man_golden_4",
+						"Texture.hair_woman_black_1",
+						"Texture.hair_woman_black_2",
+						"Texture.hair_woman_black_3",
+						"Texture.hair_woman_black_4",
+						"Texture.hair_woman_brown_1",
+						"Texture.hair_woman_brown_2",
+						"Texture.hair_woman_brown_3",
+						"Texture.hair_woman_brown_4",
+						"Texture.hair_woman_golden_1",
+						"Texture.hair_woman_golden_2",
+						"Texture.hair_woman_golden_3",
+						"Texture.hair_woman_golden_4"
+					]
+				}
+			},
+			"textures": [
+				"array.hair_man[(v.is_property_skin?1+v.skin_hair+(v.skin_hair_color*4)+(v.skin_gender*12):0)]"
+			],
+			"geometry": "array.geometry[(v.skin_gender)]",
+			"materials": [
+				{
+					"*": "material.default"
+				}
+			],
+			"part_visibility": [
+				{
+					"*": false
+				},
+				{
+					"rightArm": "query.get_equipped_item_name(0, 1) == '' || query.get_equipped_item_name(0, 1) == 'map'"
+				},
+				{
+					"rightSleeve": "query.get_equipped_item_name(0, 1) == '' || query.get_equipped_item_name(0, 1) == 'map'"
+				},
+				{
+					"leftArm": "(query.get_equipped_item_name(0, 1) == 'map' && query.get_equipped_item_name('off_hand') != 'shield') || (query.get_equipped_item_name('off_hand') == 'map' && !query.item_is_charged) || (!query.item_is_charged && (variable.item_use_normalized > 0 && variable.item_use_normalized < 1.0))"
+				},
+				{
+					"leftSleeve": "(query.get_equipped_item_name(0, 1) == 'map' && query.get_equipped_item_name('off_hand') != 'shield') || (query.get_equipped_item_name('off_hand') == 'map' && !query.item_is_charged) || (!query.item_is_charged && (variable.item_use_normalized > 0 && variable.item_use_normalized < 1.0))"
+				}
+			]
+		},
+		"controller.render.skin_hero.third_person": {
+			"arrays": {
+				"geometries": {
+					"Array.geo_sf": [
+						"Geometry.custom",
+						"Geometry.custom_slim"
+					]
+				},
+				"textures": {
+					"Array.tex_sf": [
+						"Texture.sarge",
+						"Texture.galen",
+						"Texture.gizmo",
+						"Texture.june",
+						"Texture.xiangtzu",
+						"Texture.itu",
+						"Texture.xiangtzu2",
+						"Texture.marcus",
+						"Texture.kitsune1",
+						"Texture.stranger",
+						"Texture.invisible"
+					]
+				}
+			},
+			"textures": [
+				"array.tex_sf[query.property('skin_custom:hero')]"
+			],
+			"geometry": "array.geo_sf[v.skin_gender]",
+			"materials": [
+				{
+					"*": "material.default"
+				}
+			],
+			"part_visibility": [
+				{
+					"*": true
+				},
+				{
+					"head": true
+				}
+			]
+		},
+		"controller.render.skin_custom.face.third_person": {
+			"arrays": {
+				"geometries": {
+					"Array.geometry": [
+						"Geometry.custom",
+						"Geometry.custom_slim"
+					]
+				},
+				"textures": {
+					"Array.face_man": [
+						"Texture.invisible",
+						"Texture.face_man_1",
+						"Texture.face_man_2",
+						"Texture.face_man_3",
+						"Texture.face_woman_1",
+						"Texture.face_woman_2",
+						"Texture.face_woman_3"
+					]
+				}
+			},
+			"textures": [
+				"array.face_man[(v.is_property_skin?1+v.skin_face+(v.skin_gender*3):0)]"
+			],
+			"geometry": "array.geometry[(v.skin_gender)]",
+			"materials": [
+				{
+					"*": "material.default"
+				}
+			],
+			"part_visibility": [
+				{
+					"*": true
+				},
+				{
+					"head": true
+				}
+			]
+		},
+		"controller.render.skin_custom.hair.third_person": {
+			"arrays": {
+				"geometries": {
+					"Array.geometry": [
+						"Geometry.custom",
+						"Geometry.custom_slim"
+					]
+				},
+				"textures": {
+					"Array.hair_man": [
+						"Texture.invisible",
+						"Texture.hair_man_black_1",
+						"Texture.hair_man_black_2",
+						"Texture.hair_man_black_3",
+						"Texture.hair_man_black_4",
+						"Texture.hair_man_brown_1",
+						"Texture.hair_man_brown_2",
+						"Texture.hair_man_brown_3",
+						"Texture.hair_man_brown_4",
+						"Texture.hair_man_golden_1",
+						"Texture.hair_man_golden_2",
+						"Texture.hair_man_golden_3",
+						"Texture.hair_man_golden_4",
+						"Texture.hair_woman_black_1",
+						"Texture.hair_woman_black_2",
+						"Texture.hair_woman_black_3",
+						"Texture.hair_woman_black_4",
+						"Texture.hair_woman_brown_1",
+						"Texture.hair_woman_brown_2",
+						"Texture.hair_woman_brown_3",
+						"Texture.hair_woman_brown_4",
+						"Texture.hair_woman_golden_1",
+						"Texture.hair_woman_golden_2",
+						"Texture.hair_woman_golden_3",
+						"Texture.hair_woman_golden_4"
+					]
+				}
+			},
+			"textures": [
+				"array.hair_man[(v.is_property_skin?1+v.skin_hair+(v.skin_hair_color*4)+(v.skin_gender*12):0)]"
+			],
+			"geometry": "array.geometry[(v.skin_gender)]",
+			"materials": [
+				{
+					"*": "material.default"
+				}
+			],
+			"part_visibility": [
+				{
+					"*": true
+				},
+				{
+					"head": true
+				}
+			]
+		},
+		"controller.render.skin_hero.map": {
+			"arrays": {
+				"textures": {
+					"Array.tex_sf": [
+						"Texture.sarge",
+						"Texture.galen",
+						"Texture.gizmo",
+						"Texture.june",
+						"Texture.xiangtzu",
+						"Texture.itu",
+						"Texture.xiangtzu2",
+						"Texture.marcus",
+						"Texture.kitsune1",
+						"Texture.stranger",
+						"Texture.invisible"
+					]
+				}
+			},
+			"textures": [
+				"array.tex_sf[query.property('skin_custom:hero')]"
+			],
+			"geometry": "geometry.default",
+			"materials": [
+				{
+					"*": "material.default"
+				}
+			],
+			"part_visibility": [
+				{
+					"*": false
+				},
+				{
+					"head": true
+				},
+				{
+					"hat": true
+				},
+				{
+					"helmet": true
+				}
+			]
+		},
+		"controller.render.skin_custom.face.map": {
+			"arrays": {
+				"textures": {
+					"Array.face_man": [
+						"Texture.invisible",
+						"Texture.face_man_1",
+						"Texture.face_man_2",
+						"Texture.face_man_3",
+						"Texture.face_woman_1",
+						"Texture.face_woman_2",
+						"Texture.face_woman_3"
+					]
+				}
+			},
+			"textures": [
+				"array.face_man[(v.is_property_skin?1+v.skin_face+(v.skin_gender*3):0)]"
+			],
+			"geometry": "geometry.default",
+			"materials": [
+				{
+					"*": "material.default"
+				}
+			],
+			"part_visibility": [
+				{
+					"*": false
+				},
+				{
+					"head": true
+				},
+				{
+					"hat": true
+				},
+				{
+					"helmet": true
+				}
+			]
+		},
+		"controller.render.skin_custom.hair.map": {
+			"arrays": {
+				"textures": {
+					"Array.hair_man": [
+						"Texture.invisible",
+						"Texture.hair_man_black_1",
+						"Texture.hair_man_black_2",
+						"Texture.hair_man_black_3",
+						"Texture.hair_man_black_4",
+						"Texture.hair_man_brown_1",
+						"Texture.hair_man_brown_2",
+						"Texture.hair_man_brown_3",
+						"Texture.hair_man_brown_4",
+						"Texture.hair_man_golden_1",
+						"Texture.hair_man_golden_2",
+						"Texture.hair_man_golden_3",
+						"Texture.hair_man_golden_4",
+						"Texture.hair_woman_black_1",
+						"Texture.hair_woman_black_2",
+						"Texture.hair_woman_black_3",
+						"Texture.hair_woman_black_4",
+						"Texture.hair_woman_brown_1",
+						"Texture.hair_woman_brown_2",
+						"Texture.hair_woman_brown_3",
+						"Texture.hair_woman_brown_4",
+						"Texture.hair_woman_golden_1",
+						"Texture.hair_woman_golden_2",
+						"Texture.hair_woman_golden_3",
+						"Texture.hair_woman_golden_4"
+					]
+				}
+			},
+			"textures": [
+				"array.hair_man[(v.is_property_skin?1+v.skin_hair+(v.skin_hair_color*4)+(v.skin_gender*12):0)]"
+			],
+			"geometry": "geometry.default",
+			"materials": [
+				{
+					"*": "material.default"
+				}
+			],
+			"part_visibility": [
+				{
+					"*": false
+				},
+				{
+					"head": true
+				},
+				{
+					"hat": true
+				},
+				{
+					"helmet": true
+				}
+			]
+		},
+		"controller.render.skin_hero.emoting": {
+			"arrays": {
+				"geometries": {
+					"Array.geo_sf": [
+						"Geometry.emoting",
+						"Geometry.emoting_slim"
+					]
+				},
+				"textures": {
+					"Array.tex_sf": [
+						"Texture.sarge",
+						"Texture.galen",
+						"Texture.gizmo",
+						"Texture.june",
+						"Texture.xiangtzu",
+						"Texture.itu",
+						"Texture.xiangtzu2",
+						"Texture.marcus",
+						"Texture.kitsune1",
+						"Texture.stranger",
+						"Texture.invisible"
+					]
+				}
+			},
+			"textures": [
+				"array.tex_sf[query.property('skin_custom:hero')]"
+			],
+			"geometry": "array.geo_sf[v.skin_gender]",
+			"materials": [
+				{
+					"*": "material.default"
+				}
+			],
+			"part_visibility": [
+				{
+					"*": true
+				}
+			]
+		},
+		"controller.render.skin_custom.face.emoting": {
+			"arrays": {
+				"geometries": {
+					"Array.geometry": [
+						"Geometry.emoting",
+						"Geometry.emoting_slim"
+					]
+				},
+				"textures": {
+					"Array.face_man": [
+						"Texture.invisible",
+						"Texture.face_man_1",
+						"Texture.face_man_2",
+						"Texture.face_man_3",
+						"Texture.face_woman_1",
+						"Texture.face_woman_2",
+						"Texture.face_woman_3"
+					]
+				}
+			},
+			"textures": [
+				"array.face_man[(v.is_property_skin?1+v.skin_face+(v.skin_gender*3):0)]"
+			],
+			"geometry": "array.geometry[(v.skin_gender)]",
+			"materials": [
+				{
+					"*": "material.default"
+				}
+			],
+			"part_visibility": [
+				{
+					"*": true
+				}
+			]
+		},
+		"controller.render.skin_custom.hair.emoting": {
+			"arrays": {
+				"geometries": {
+					"Array.geometry": [
+						"Geometry.emoting",
+						"Geometry.emoting_slim"
+					]
+				},
+				"textures": {
+					"Array.hair_man": [
+						"Texture.invisible",
+						"Texture.hair_man_black_1",
+						"Texture.hair_man_black_2",
+						"Texture.hair_man_black_3",
+						"Texture.hair_man_black_4",
+						"Texture.hair_man_brown_1",
+						"Texture.hair_man_brown_2",
+						"Texture.hair_man_brown_3",
+						"Texture.hair_man_brown_4",
+						"Texture.hair_man_golden_1",
+						"Texture.hair_man_golden_2",
+						"Texture.hair_man_golden_3",
+						"Texture.hair_man_golden_4",
+						"Texture.hair_woman_black_1",
+						"Texture.hair_woman_black_2",
+						"Texture.hair_woman_black_3",
+						"Texture.hair_woman_black_4",
+						"Texture.hair_woman_brown_1",
+						"Texture.hair_woman_brown_2",
+						"Texture.hair_woman_brown_3",
+						"Texture.hair_woman_brown_4",
+						"Texture.hair_woman_golden_1",
+						"Texture.hair_woman_golden_2",
+						"Texture.hair_woman_golden_3",
+						"Texture.hair_woman_golden_4"
+					]
+				}
+			},
+			"textures": [
+				"array.hair_man[(v.is_property_skin?1+v.skin_hair+(v.skin_hair_color*4)+(v.skin_gender*12):0)]"
+			],
+			"geometry": "array.geometry[(v.skin_gender)]",
+			"materials": [
+				{
+					"*": "material.default"
+				}
+			],
+			"part_visibility": [
+				{
+					"*": true
+				}
+			]
+		}
+	}
+}

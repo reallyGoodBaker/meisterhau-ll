@@ -1,0 +1,17 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.fates_end.first.hold": {
+			"loop": true,
+			"bones": {
+				"100": {
+					"rotation": [-250.47853, -150.43273, -299.56094],
+					"position": [7.61961, -8.84322, 11.44818]
+				},
+				"200": {
+					"position": [0, 64, 27]
+				}
+			}
+		}
+	}
+}

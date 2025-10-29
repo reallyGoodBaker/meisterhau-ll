@@ -1,0 +1,22 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.player.riffle_hammers.first.hold": {
+			"loop": true,
+			"bones": {
+				"rightItem": {
+					"rotation": [
+						-52.32891,
+						65.95179,
+						-92.68372
+					],
+					"position": [
+						9.58399,
+						-12.68017,
+						11.5048
+					]
+				}
+			}
+		}
+	}
+}

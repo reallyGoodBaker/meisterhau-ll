@@ -1,0 +1,58 @@
+{
+	"format_version": "1.21.60",
+	"minecraft:item": {
+		"description": {
+			"identifier": "sf:epiphany_kasa",
+			"menu_category": {
+				"category": "equipment",
+				"group": "minecraft:itemGroup.name.helmet"
+			}
+		},
+		"components": {
+			"minecraft:repairable": {
+				"repair_items": [
+					{
+						"items": [
+							"sf:shadow_energy"
+						],
+						"repair_amount": "query.max_durability * 0.25"
+					},
+					{
+						"items": [
+							"sf:epiphany_kasa"
+						],
+						"repair_amount": "context.other->query.remaining_durability + 0.12 * context.other->query.max_durability"
+					}
+				]
+			},
+			"minecraft:display_name": {
+				"value": "%epiphany_kasa\n%DCH"
+			},
+			"minecraft:max_stack_size": 1,
+			"minecraft:enchantable": {
+				"value": 15,
+				"slot": "armor_head"
+			},
+			"minecraft:durability": {
+				"max_durability": 100,
+				"damage_chance": {
+					"min": 60,
+					"max": 100
+				}
+			},
+			"minecraft:icon": {
+				"textures": {
+					"default": "epiphany_kasa",
+					"dyed": "epiphany_kasa"
+				}
+			},
+			"minecraft:dyeable": {
+				"default_color": "#a39288"
+			},
+			"minecraft:wearable": {
+				"protection": 1,
+				"slot": "slot.armor.head"
+			}
+		}
+	}
+}

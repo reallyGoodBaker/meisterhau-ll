@@ -8,6 +8,7 @@ import { Status } from '../../core/status'
 import { HardmodeComponent } from "../hardmode"
 import { ActorHelper } from "@utils/actor"
 
+/** 状态HUD组件 - 显示目标状态信息 */
 @PublicComponent('status-hud')
 @Fields([ 'content', 'type', 'fadeIn', 'fadeOut', 'stay' ])
 export class StatusHud extends HudComponent {
@@ -22,6 +23,7 @@ export class StatusHud extends HudComponent {
         this.allowTick = true
     }
 
+    /** 创建状态HUD组件 */
     static create({ content, type, fadeIn, fadeOut, stay }: HudComponentParams = {}): StatusHud {
         return new StatusHud(content, type as any, fadeIn, fadeOut, stay)
     }
@@ -30,6 +32,7 @@ export class StatusHud extends HudComponent {
     private targetStamina: Optional<Stamina> = Optional.none()
     private stamina: Optional<Stamina> = Optional.none()
 
+    /** 组件附加时初始化 */
     onAttach(manager: ComponentManager) {
         this.targetLock = manager.getComponent(TargetLock)
         this.stamina = manager.getComponent(Stamina)
@@ -47,6 +50,7 @@ export class StatusHud extends HudComponent {
         )
     }
 
+    /** 渲染状态信息 */
     renderStatus() {
         if (this.targetLock.isEmpty())
             return
@@ -84,11 +88,13 @@ export class StatusHud extends HudComponent {
         this.content = contents.join('\n')
     }
 
+    /** 整数进度显示 */
     private intProgress(val: number, total: number) {
         return String(Math.round(val)).padStart(3, ' ') + '/'
             + String(Math.round(total)).padEnd(3, ' ')
     }
 
+    /** 每tick更新状态HUD */
     onTick(manager: ComponentManager, pl: Optional<Player>): void {
         if (!manager.has(HardmodeComponent)) {
             this.renderStatus()

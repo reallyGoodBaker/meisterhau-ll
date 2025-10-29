@@ -1,0 +1,49 @@
+{
+    "tasks": [
+        {
+            "id": 1,
+            "type": "kill",
+            "target": "sf:man",
+            "name": "剿灭复制人Y",
+            "need": 5,
+            "reward": 500,
+            "resetDaily": true
+        },
+        {
+            "id": 2,
+            "type": "kill",
+            "target": "sf:woman",
+            "name": "剿灭复制人X",
+            "need": 5,
+            "reward": 500,
+            "resetDaily": true
+        },
+        {
+            "id": 3,
+            "type": "kill",
+            "target": "sf:man_archer",
+            "name": "剿灭复制人Y弓箭手",
+            "need": 10,
+            "reward": 1000,
+            "resetDaily": true
+        },
+        {
+            "id": 4,
+            "type": "kill",
+            "target": "sf:woman_archer",
+            "name": "剿灭复制人X弓箭手",
+            "need": 10,
+            "reward": 1000,
+            "resetDaily": true
+        },
+        {
+            "id": 5,
+            "type": "kill",
+            "target": "minecraft:creeper",
+            "name": "拆除炸弹",
+            "need": 5,
+            "reward": 1000,
+            "resetDaily": true
+        }
+    ]
+}

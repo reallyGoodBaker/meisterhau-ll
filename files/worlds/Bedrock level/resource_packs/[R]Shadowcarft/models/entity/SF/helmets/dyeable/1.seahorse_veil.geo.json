@@ -1,0 +1,138 @@
+{
+	"format_version": "1.12.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.seahorse_veil",
+				"texture_width": 128,
+				"texture_height": 128,
+				"visible_bounds_width": 3,
+				"visible_bounds_height": 3,
+				"visible_bounds_offset": [
+					0,
+					1.5,
+					0
+				]
+			},
+			"bones": [
+				{
+					"name": "root0",
+					"pivot": [
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"name": "root2",
+					"parent": "root0",
+					"pivot": [
+						0,
+						10,
+						0
+					]
+				},
+				{
+					"name": "root1",
+					"parent": "root2",
+					"pivot": [
+						0,
+						30,
+						0
+					]
+				},
+				{
+					"name": "Kroot",
+					"parent": "root1",
+					"pivot": [
+						0,
+						20,
+						0
+					]
+				},
+				{
+					"name": "Kwaist",
+					"parent": "Kroot",
+					"pivot": [
+						0,
+						12,
+						0
+					]
+				},
+				{
+					"name": "body0",
+					"parent": "Kwaist",
+					"pivot": [
+						0,
+						24,
+						0
+					]
+				},
+				{
+					"name": "Kbody",
+					"parent": "body0",
+					"pivot": [
+						0,
+						12,
+						0
+					]
+				},
+				{
+					"name": "head",
+					"parent": "Kbody",
+					"pivot": [
+						0,
+						24,
+						0
+					],
+					"cubes": [
+						{
+							"origin": [
+								-2.5,
+								33.04337,
+								-4.29025
+							],
+							"size": [
+								5,
+								3,
+								4
+							],
+							"inflate": 0.2,
+							"pivot": [
+								0,
+								0.54337,
+								-4.29025
+							],
+							"rotation": [
+								-7.5,
+								0,
+								0
+							],
+							"uv": [
+								0,
+								121
+							]
+						},
+						{
+							"origin": [
+								-4,
+								24,
+								-4
+							],
+							"size": [
+								8,
+								8,
+								8
+							],
+							"inflate": 0.51,
+							"uv": [
+								0,
+								0
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

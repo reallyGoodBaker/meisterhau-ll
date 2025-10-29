@@ -1,0 +1,27 @@
+{
+	"format_version": "1.12",
+	"minecraft:recipe_shaped": {
+		"description": {
+			"identifier": "sf:shadow_iron_essence"
+		},
+		"tags": [
+			"crafting_table"
+		],
+		"pattern": [
+			"///",
+			"/A/",
+			"///"
+		],
+		"key": {
+			"/": {
+				"item": "sf:shadow_energy"
+			},
+			"A": {
+				"item": "minecraft:iron_ingot"
+			}
+		},
+		"result": {
+			"item": "sf:shadow_iron_essence"
+		}
+	}
+}

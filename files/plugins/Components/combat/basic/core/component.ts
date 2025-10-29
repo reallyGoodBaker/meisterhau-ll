@@ -1,22 +1,34 @@
 import { Actor } from '@utils/actor'
 import { Optional } from '@utils/optional'
 
+/** 组件基础接口 */
 export interface Component {
+    /** 是否允许tick更新 */
     allowTick: boolean
+    /** tick更新方法 */
     onTick(manager: ComponentManager, en: Optional<Actor>): void
+    /** 分离组件 */
     detach(manager: ComponentManager): void
+    /** 获取组件管理器 */
     getManager(): ComponentManager
+    /** 获取所属演员 */
     getActor(): Optional<Actor>
 }
 
+/** 基础组件接口 - 包含附加和分离生命周期 */
 export interface BasicComponent extends Component {
+    /** 组件附加时调用 */
     onAttach(manager: ComponentManager): boolean | void | Promise<boolean|void>
+    /** 组件分离时调用 */
     onDetach(manager: ComponentManager): void | Promise<void>
 }
 
+/** 反射管理器符号 */
 export const REFLECT_MANAGER: unique symbol = Symbol('reflect-manager')
+/** 反射实体符号 */
 export const REFLECT_ENTITY: unique symbol = Symbol('reflect-entity')
 
+/** 自定义组件基类 */
 export class CustomComponent implements Component {
     [REFLECT_MANAGER]?: ComponentManager
     [REFLECT_ENTITY]: Optional<Actor> = Optional.none()
@@ -39,15 +51,18 @@ export class CustomComponent implements Component {
     }
 }
 
+/** 基础组件实现类 */
 export class BaseComponent extends CustomComponent implements BasicComponent {
     onAttach(manager: ComponentManager): boolean | void | Promise<boolean|void> {}
     onDetach(manager: ComponentManager): void | Promise<void> {}
 }
 
+/** 组件构造函数接口 */
 export interface ComponentCtor<T extends Component | BasicComponent = Component> {
     new(...args: any[]): T
 }
 
+/** 组件管理器 - 管理组件的生命周期和更新 */
 export class ComponentManager {
     constructor(
         readonly owner: Optional<Actor>
@@ -60,10 +75,19 @@ export class ComponentManager {
     #prependTicks: Function[] = []
     #nextTicks: Function[] = []
 
+    /**
+     * 获取指定类型的组件
+     * @param ctor 组件构造函数
+     * @returns 包含组件的Optional对象
+     */
     getComponent<T extends Component>(ctor: ComponentCtor<T>): Optional<T> {
         return Optional.some(this.#components.get(ctor)) as Optional<T>
     }
 
+    /**
+     * 获取组件管理器的所有者
+     * @returns 所有者实体
+     */
     getOwner() {
         return this.owner.match(
             null,
@@ -71,6 +95,11 @@ export class ComponentManager {
         )
     }
 
+    /**
+     * 获取多个指定类型的组件
+     * @param ctor 组件构造函数数组
+     * @returns 组件数组，不存在的组件返回undefined
+     */
     getComponents(...ctor: ComponentCtor[]): (Component|undefined)[] {
         return ctor.map(c => this.#components.get(c))
     }
@@ -79,7 +108,7 @@ export class ComponentManager {
         let init = !this.#components.get(ctor)
 
         if (!init && shouldRebuild) {
-            this.detachComponent(ctor) 
+            this.detachComponent(ctor)
             init = true
         }
 
@@ -96,7 +125,7 @@ export class ComponentManager {
         }
 
         if (init && 'onAttach' in component) {
-            component.onAttach(this)   
+            component.onAttach(this)
         }
 
         this.#components.set(ctor, component)
@@ -197,7 +226,7 @@ export class ComponentManager {
         }
 
         const conponentName = component ? Object.getPrototypeOf(component).constructor.name : ''
-        const profileName = name ? name 
+        const profileName = name ? name
             : conponentName ? (`${conponentName}.${fn.name}`)
                 : fn.name
 
@@ -208,15 +237,21 @@ export class ComponentManager {
     }
 }
 
+/** 必需组件参数类型 */
 type RequireComponentsParam = ComponentCtor | [ComponentCtor, ...any[]]
+/** 必需组件符号 */
 export const REQUIRED_COMPONENTS: unique symbol = Symbol('REQUIRED_COMPONENTS')
 
+/** 必需组件接口 */
 export interface RequiredComponent extends BasicComponent {
+    /** 获取必需组件 */
     getComponent<T extends Component>(ctor: ComponentCtor): T
 }
 
+/** 必需组件构造函数类型 */
 export type RequiredComponentCtor = ConstructorOf<RequiredComponent>
 
+/** 创建必需组件装饰器 */
 export function RequireComponents(...params: RequireComponentsParam[]) {
     return class CRequiredComponent extends BaseComponent implements RequiredComponent {
         [REQUIRED_COMPONENTS] = new Map<ComponentCtor, Component>()
@@ -237,11 +272,11 @@ export function RequireComponents(...params: RequireComponentsParam[]) {
                 this[REQUIRED_COMPONENTS].set(param, Reflect.construct(param, []))
             }
         }
-    
+
         getComponent<T extends Component>(ctor: ComponentCtor): T {
             return this[REQUIRED_COMPONENTS].get(ctor) as T
         }
 
     } as RequiredComponentCtor
-    
+
 }

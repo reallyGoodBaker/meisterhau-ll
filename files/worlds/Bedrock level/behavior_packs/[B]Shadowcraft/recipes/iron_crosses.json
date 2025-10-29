@@ -1,0 +1,27 @@
+{
+	"format_version": "1.12",
+	"minecraft:recipe_shaped": {
+		"description": {
+			"identifier": "sf:iron_crosses"
+		},
+		"tags": [
+			"crafting_table"
+		],
+		"pattern": [
+			" //",
+			" A/",
+			"/  "
+		],
+		"key": {
+			"/": {
+				"item": "minecraft:cobblestone"
+			},
+			"A": {
+				"item": "minecraft:iron_ingot"
+			}
+		},
+		"result": {
+			"item": "sf:iron_crosses"
+		}
+	}
+}

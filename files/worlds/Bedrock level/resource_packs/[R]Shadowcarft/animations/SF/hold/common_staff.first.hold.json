@@ -1,0 +1,15 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.common_staff.first.hold": {
+			"loop": true,
+			"override_previous_animation": true,
+			"bones": {
+				"weapon": {
+					"rotation": [179.11721, 74.46629, -43.83823],
+					"position": [6.97821, -14.98276, 7.32423]
+				}
+			}
+		}
+	}
+}

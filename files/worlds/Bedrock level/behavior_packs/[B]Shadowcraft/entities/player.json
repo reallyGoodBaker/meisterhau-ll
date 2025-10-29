@@ -1,0 +1,432 @@
+{
+	"format_version": "1.21.50",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "minecraft:player",
+			"spawn_category": "creature",
+			"is_spawnable": false,
+			"is_summonable": false,
+			"properties": {
+				"skin_custom:hero": {
+					"type": "int",
+					"range": [
+						0,
+						10
+					],
+					"default": 10,
+					"client_sync": true
+				},
+				"skin_custom:property_skin": {
+					"type": "int",
+					"range": [
+						0,
+						1
+					],
+					"default": 1,
+					"client_sync": true
+				},
+				"skin_custom:gender": {
+					"type": "int",
+					"range": [
+						0,
+						1
+					],
+					"default": 0,
+					"client_sync": true
+				},
+				"skin_custom:hair_color": {
+					"type": "int",
+					"range": [
+						0,
+						1000
+					],
+					"default": 0,
+					"client_sync": true
+				},
+				"skin_custom:face": {
+					"type": "int",
+					"range": [
+						0,
+						1000
+					],
+					"default": 0,
+					"client_sync": true
+				},
+				"skin_custom:hair": {
+					"type": "int",
+					"range": [
+						0,
+						1000
+					],
+					"default": 0,
+					"client_sync": true
+				}
+			}
+		},
+		"component_groups": {
+			"minecraft:add_raid_omen": {
+				"minecraft:spell_effects": {
+					"add_effects": [
+						{
+							"effect": "raid_omen",
+							"duration": 30,
+							"display_on_screen_animation": true
+						}
+					],
+					"remove_effects": "bad_omen"
+				},
+				"minecraft:timer": {
+					"time": [
+						0,
+						0
+					],
+					"looping": false,
+					"time_down_event": {
+						"event": "minecraft:clear_add_raid_omen",
+						"target": "self"
+					}
+				}
+			},
+			"minecraft:clear_raid_omen_spell_effect": {
+				"minecraft:spell_effects": {}
+			},
+			"minecraft:raid_trigger": {
+				"minecraft:raid_trigger": {
+					"triggered_event": {
+						"event": "minecraft:remove_raid_trigger",
+						"target": "self"
+					}
+				}
+			}
+		},
+		"components": {
+			"minecraft:health": {
+				"value": 50,
+				"max": 50
+			},
+			"minecraft:experience_reward": {
+				"on_death": "math.min(query.player_level*7,100)"
+			},
+			"minecraft:type_family": {
+				"family": [
+					"player"
+				]
+			},
+			"minecraft:is_hidden_when_invisible": {},
+			"minecraft:loot": {
+				"table": "loot_tables/empty.json"
+			},
+			"minecraft:collision_box": {
+				"width": 0.6,
+				"height": 1.8
+			},
+			"minecraft:can_climb": {},
+			"minecraft:movement": {
+				"value": 0.1
+			},
+			"minecraft:hurt_on_condition": {
+				"damage_conditions": [
+					{
+						"filters": {
+							"test": "in_lava",
+							"subject": "self",
+							"operator": "==",
+							"value": true
+						},
+						"cause": "lava",
+						"damage_per_tick": 4
+					}
+				]
+			},
+			"minecraft:attack": {
+				"damage": 3
+			},
+			"minecraft:exhaustion_values": {
+				"heal": 6,
+				"jump": 0.05,
+				"sprint_jump": 0.2,
+				"mine": 0.005,
+				"attack": 0.1,
+				"damage": 0.1,
+				"walk": 0,
+				"sprint": 0.1,
+				"swim": 0.01
+			},
+			"minecraft:player.saturation": {
+				"value": 5,
+				"max": 20
+			},
+			"minecraft:player.exhaustion": {
+				"value": 0,
+				"max": 20
+			},
+			"minecraft:player.level": {
+				"value": 0,
+				"max": 24791
+			},
+			"minecraft:player.experience": {
+				"value": 0,
+				"max": 1
+			},
+			"minecraft:breathable": {
+				"total_supply": 15,
+				"suffocate_time": -1,
+				"inhale_time": 3.75,
+				"generates_bubbles": false
+			},
+			"minecraft:nameable": {
+				"always_show": true,
+				"allow_name_tag_renaming": false
+			},
+			"minecraft:physics": {},
+			"minecraft:pushable": {
+				"is_pushable": false,
+				"is_pushable_by_piston": true
+			},
+			"minecraft:insomnia": {
+				"days_until_insomnia": 3
+			},
+			"minecraft:rideable": {
+				"seat_count": 2,
+				"family_types": [
+					"parrot_tame"
+				],
+				"pull_in_entities": true,
+				"seats": [
+					{
+						"position": [
+							0.4,
+							-0.2,
+							-0.1
+						],
+						"min_rider_count": 0,
+						"max_rider_count": 0,
+						"lock_rider_rotation": 0
+					},
+					{
+						"position": [
+							-0.4,
+							-0.2,
+							-0.1
+						],
+						"min_rider_count": 1,
+						"max_rider_count": 2,
+						"lock_rider_rotation": 0
+					}
+				]
+			},
+			"minecraft:conditional_bandwidth_optimization": {},
+			"minecraft:block_climber": {},
+			"minecraft:environment_sensor": {
+				"triggers": {
+					"filters": {
+						"all_of": [
+							{
+								"test": "has_mob_effect",
+								"subject": "self",
+								"value": "bad_omen"
+							},
+							{
+								"test": "is_in_village",
+								"subject": "self",
+								"value": true
+							}
+						]
+					},
+					"event": "minecraft:gain_raid_omen"
+				}
+			}
+		},
+		"events": {
+			"skin_custom:custom_skin": {
+				"set_property": {
+					"skin_custom:property_skin": 1,
+					"skin_custom:hero": 10
+				}
+			},
+			"skin_custom:sarge": {
+				"set_property": {
+					"skin_custom:property_skin": 0,
+					"skin_custom:hero": 0,
+					"skin_custom:gender": 0
+				}
+			},
+			"skin_custom:galen": {
+				"set_property": {
+					"skin_custom:property_skin": 0,
+					"skin_custom:hero": 1,
+					"skin_custom:gender": 0
+				}
+			},
+			"skin_custom:gizmo": {
+				"set_property": {
+					"skin_custom:property_skin": 0,
+					"skin_custom:hero": 2,
+					"skin_custom:gender": 0
+				}
+			},
+			"skin_custom:june": {
+				"set_property": {
+					"skin_custom:property_skin": 0,
+					"skin_custom:hero": 3,
+					"skin_custom:gender": 1
+				}
+			},
+			"skin_custom:xiang_tzu": {
+				"set_property": {
+					"skin_custom:property_skin": 0,
+					"skin_custom:hero": 4,
+					"skin_custom:gender": 0
+				}
+			},
+			"skin_custom:itu": {
+				"set_property": {
+					"skin_custom:property_skin": 0,
+					"skin_custom:hero": 5,
+					"skin_custom:gender": 0
+				}
+			},
+			"skin_custom:xiang_tzu2": {
+				"set_property": {
+					"skin_custom:property_skin": 0,
+					"skin_custom:hero": 6,
+					"skin_custom:gender": 0
+				}
+			},
+			"skin_custom:marcus": {
+				"set_property": {
+					"skin_custom:property_skin": 0,
+					"skin_custom:hero": 7,
+					"skin_custom:gender": 0
+				}
+			},
+			"skin_custom:kitsune1": {
+				"set_property": {
+					"skin_custom:property_skin": 0,
+					"skin_custom:hero": 8,
+					"skin_custom:gender": 1
+				}
+			},
+			"skin_custom:stranger": {
+				"set_property": {
+					"skin_custom:property_skin": 0,
+					"skin_custom:hero": 9,
+					"skin_custom:gender": 0
+				}
+			},
+			"skin_custom:gender_random": {
+				"set_property": {
+					"skin_custom:gender": "( math.random_integer(0.0, 1.0) )"
+				}
+			},
+			"skin_custom:gender_set_man": {
+				"set_property": {
+					"skin_custom:gender": 0
+				}
+			},
+			"skin_custom:gender_set_woman": {
+				"set_property": {
+					"skin_custom:gender": 1
+				}
+			},
+			"skin_custom:hair_color_random": {
+				"set_property": {
+					"skin_custom:hair_color": "( math.random_integer(0.0, 2.0) )"
+				}
+			},
+			"skin_custom:hair_color_1": {
+				"set_property": {
+					"skin_custom:hair_color": 0
+				}
+			},
+			"skin_custom:hair_color_2": {
+				"set_property": {
+					"skin_custom:hair_color": 1
+				}
+			},
+			"skin_custom:hair_color_3": {
+				"set_property": {
+					"skin_custom:hair_color": 2
+				}
+			},
+			"skin_custom:face_random": {
+				"set_property": {
+					"skin_custom:face": "( math.random_integer(0.0, 2.0) )"
+				}
+			},
+			"skin_custom:face_1": {
+				"set_property": {
+					"skin_custom:face": 0
+				}
+			},
+			"skin_custom:face_2": {
+				"set_property": {
+					"skin_custom:face": 1
+				}
+			},
+			"skin_custom:face_3": {
+				"set_property": {
+					"skin_custom:face": 2
+				}
+			},
+			"skin_custom:hair_random": {
+				"set_property": {
+					"skin_custom:hair": "( math.random_integer(0.0, 3.0) )"
+				}
+			},
+			"skin_custom:hair_1": {
+				"set_property": {
+					"skin_custom:hair": 0
+				}
+			},
+			"skin_custom:hair_2": {
+				"set_property": {
+					"skin_custom:hair": 1
+				}
+			},
+			"skin_custom:hair_3": {
+				"set_property": {
+					"skin_custom:hair": 2
+				}
+			},
+			"skin_custom:hair_4": {
+				"set_property": {
+					"skin_custom:hair": 3
+				}
+			},
+			"minecraft:gain_raid_omen": {
+				"add": {
+					"component_groups": [
+						"minecraft:add_raid_omen"
+					]
+				}
+			},
+			"minecraft:clear_add_raid_omen": {
+				"remove": {
+					"component_groups": [
+						"minecraft:add_raid_omen"
+					]
+				},
+				"add": {
+					"component_groups": [
+						"minecraft:clear_raid_omen_spell_effect"
+					]
+				}
+			},
+			"minecraft:trigger_raid": {
+				"add": {
+					"component_groups": [
+						"minecraft:raid_trigger"
+					]
+				}
+			},
+			"minecraft:remove_raid_trigger": {
+				"remove": {
+					"component_groups": [
+						"minecraft:raid_trigger"
+					]
+				}
+			}
+		}
+	}
+}

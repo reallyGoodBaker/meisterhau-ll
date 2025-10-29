@@ -1,0 +1,65 @@
+{
+	"format_version": "1.21.90",
+	"minecraft:item": {
+		"description": {
+			"identifier": "sf:silver_squall",
+			"menu_category": {
+				"category": "equipment",
+				"group": "minecraft:itemGroup.name.sword"
+			}
+		},
+		"components": {
+			"xxr:durability_event": {
+				"onMineBlock": 1
+			},
+			"minecraft:repairable": {
+				"repair_items": [
+					{
+						"items": [
+							"sf:shadow_energy"
+						],
+						"repair_amount": "query.max_durability * 0.25"
+					},
+					{
+						"items": [
+							"sf:silver_squall"
+						],
+						"repair_amount": "context.other->query.remaining_durability + 0.12 * context.other->query.max_durability"
+					}
+				]
+			},
+			"minecraft:display_name": {
+				"value": "%silver_squall\n%LRSSJ"
+			},
+			"minecraft:max_stack_size": 1,
+			"minecraft:enchantable": {
+				"value": 14,
+				"slot": "sword"
+			},
+			"minecraft:hand_equipped": true,
+			"minecraft:mining_speed": 2,
+			"minecraft:damage": 12,
+			"minecraft:durability": {
+				"max_durability": 600,
+				"damage_chance": {
+					"min": 60,
+					"max": 100
+				}
+			},
+			"minecraft:icon": {
+				"textures": {
+					"default": "silver_squall",
+					"dyed": "silver_squall"
+				}
+			},
+			"minecraft:weapon": {
+				"on_hurt_entity": {
+					"event": "score"
+				}
+			},
+			"minecraft:dyeable": {
+				"default_color": "#8b6f4f"
+			}
+		}
+	}
+}

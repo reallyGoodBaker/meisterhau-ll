@@ -1,3 +1,4 @@
+/** 字符串参数类型映射 */
 const stringParamTypeMap = {
     bool: ParamType.Bool,
     int: ParamType.Int,
@@ -27,11 +28,13 @@ type TypeStr = keyof typeof stringParamTypeMap
 type CommandTypeStr = `?${TypeStr}` | TypeStr
 type CommandArr = { [key: string]: CommandTypeStr }[]
 
+/** 命令参数匹配器 */
 const matchers = {
     required: /^<([\w:]+)>$/,
     optional: /^\[([\w:]+)\]$/,
 }
 
+/** 命令令牌接口 */
 interface IToken {
     index: number
     type: TypeStr
@@ -39,12 +42,14 @@ interface IToken {
     isOptional: boolean
 }
 
+/** 创建令牌对象 */
 function tk(index: number, type: string, id: string, isOptional=true) {
     return {
         index, type, id, isOptional
     }
 }
 
+/** 解析命令字符串 */
 function parseCmdStr(str: string) {
     const frags = str.trim().split(/ +/)
     const tokens: IToken[] = []
@@ -74,6 +79,7 @@ function parseCmdStr(str: string) {
     return tokens
 }
 
+/** 解析命令数组 */
 function parseCmdArr(arr: CommandArr) {
     const tokens: IToken[] = []
 
@@ -95,8 +101,10 @@ function parseCmdArr(arr: CommandArr) {
     return tokens
 }
 
+/** 命令处理器类型 */
 type Handler<T=any> = (cmd: Command, origin: CommandOrigin, output: CommandOutput, result: T) => void
 
+/** 命令注册器 */
 export class Registry {
     private _cmd: Command
     private _tokenListCollection = new Set<IToken[]>()
@@ -106,10 +114,12 @@ export class Registry {
         this._cmd = cmd
     }
 
+    /** 获取指定长度的处理器集合 */
     private getCollection(len: number) {
         return this._handlerCollection[len] ?? (this._handlerCollection[len] = [])
     }
 
+    /** 注册命令 */
     register(cmd: string, handler: Handler) {
         if (!cmd || !handler) {
             return this
@@ -137,6 +147,7 @@ export class Registry {
         return this
     }
 
+    /** 比较两个数组是否相同 */
     private sameArr(arr1: any[], arr2: any[]) {
         if (arr1.length !== arr2.length) {
             return false
@@ -145,6 +156,7 @@ export class Registry {
         return new Set(arr1.concat(arr2)).size === arr1.length 
     }
 
+    /** 设置命令回调 */
     private setCallback() {
         this._cmd.setCallback((cmd, origin, out, args) => {
             const argv = Object
@@ -163,6 +175,7 @@ export class Registry {
 
     static enumIndex = 0
 
+    /** 创建命令参数 */
     private createArg(name: string, type: TypeStr, isOptional: boolean) {
         let argId = name
 
@@ -190,6 +203,7 @@ export class Registry {
 
     private _submitted = false
 
+    /** 提交命令注册 */
     submit() {
         this._tokenListCollection.forEach(tokens => {
             let ids = []
@@ -206,17 +220,20 @@ export class Registry {
         this._submitted = true
     }
 
+    /** 检查是否已提交 */
     isSubmitted() {
         return this._submitted
     }
 }
 
+/** 命令权限枚举 */
 export enum CommandPermission {
     Everyone,
     OP,
     Console,
 }
 
+/** 服务器启动状态检查 */
 export const serverStarted = (function() {
     let serverRunning = false
     return (() => {
@@ -232,8 +249,10 @@ export const serverStarted = (function() {
     }) as (() => Promise<void>)
 })()
 
+/** 配置处理器类型 */
 export type ConfigHandler<T> = (args: T, origin: Player | Entity) => string | string[]
 
+/** 创建命令 */
 export function cmd(head: string, desc: string, perm: 0|1|2 = CommandPermission.OP) {
     const command = mc.newCommand(head, desc, perm)
     const registry = new Registry(command)

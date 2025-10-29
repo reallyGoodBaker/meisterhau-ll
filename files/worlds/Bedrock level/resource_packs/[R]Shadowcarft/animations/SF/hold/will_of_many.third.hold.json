@@ -1,0 +1,17 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.will_of_many.third.hold": {
+			"loop": true,
+			"bones": {
+				"100": {
+					"position": [
+						0,
+						22.3,
+						0
+					]
+				}
+			}
+		}
+	}
+}

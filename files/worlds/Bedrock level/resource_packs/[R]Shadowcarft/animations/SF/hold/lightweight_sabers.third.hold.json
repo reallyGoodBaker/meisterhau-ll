@@ -1,0 +1,17 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.lightweight_sabers.third.hold": {
+			"loop": true,
+			"bones": {
+				"weapon": {
+					"position": [
+						5.5,
+						8.5,
+						-1.1
+					]
+				}
+			}
+		}
+	}
+}

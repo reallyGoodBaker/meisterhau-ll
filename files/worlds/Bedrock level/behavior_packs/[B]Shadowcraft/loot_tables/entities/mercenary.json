@@ -1,0 +1,168 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "name": "sf:divine_retribution",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.5
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:three_arrows_glory",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "name": "sf:arbitrator",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.5
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:swampers_grinders",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.5
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:hand_of_justice",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.5
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:fates_end",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.5
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:branches_of_pain",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.5
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:will_of_many",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.5
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:battle_of_laws",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.5
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:blade_of_timelessness",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.5
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:ravens_talon",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.5
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:cyan_talons",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.5
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:shadow_slayer",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.5
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:world_slicer",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

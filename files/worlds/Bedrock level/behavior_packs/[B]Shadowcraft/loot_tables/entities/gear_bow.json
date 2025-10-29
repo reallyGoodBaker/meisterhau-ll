@@ -1,0 +1,34 @@
+{
+    "pools": [
+        {
+            "rolls": 1,
+            "entries": [
+                {
+                    "type": "loot_table",
+                    "name": "loot_tables/entities/common_bow.json",
+                    "weight": 1
+                },
+                {
+                    "type": "loot_table",
+                    "name": "loot_tables/entities/rare_bow.json",
+                    "weight": 1
+                },
+                {
+                    "type": "loot_table",
+                    "name": "loot_tables/entities/epic_bow.json",
+                    "weight": 1
+                },
+                {
+                    "type": "loot_table",
+                    "name": "loot_tables/entities/legendary_bow.json",
+                    "weight": 1
+                },
+                {
+                    "type": "loot_table",
+                    "name": "loot_tables/entities/empty_bow.json",
+                    "weight": 1
+                }
+            ]
+        }
+    ]
+}

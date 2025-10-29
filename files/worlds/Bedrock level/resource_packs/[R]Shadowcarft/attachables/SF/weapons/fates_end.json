@@ -1,0 +1,36 @@
+{
+    "format_version": "1.10.0",
+    "minecraft:attachable": {
+        "description": {
+            "identifier": "sf:fates_end",
+            "materials": {
+                "default": "armor",
+                "enchanted": "armor_enchanted",
+                "dyed": "entity_alphatest_change_color"
+            },
+            "textures": {
+                "default": "textures/models/weapons/fates_end",
+                "dyed": "textures/models/weapons/fates_end_dyeable",
+                "undyed": "textures/models/weapons/fates_end_top",
+                "enchanted": "textures/misc/enchanted_item_glint"
+            },
+            "animations": {
+                "first_hold": "animation.fates_end.first.hold"
+            },
+            "scripts": {
+                "animate": [
+                    {
+                        "first_hold": "c.is_first_person"
+                    }
+                ]
+            },
+            "geometry": {
+                "default": "geometry.fates_end"
+            },
+            "render_controllers": [
+                "controller.render.dyeable1",
+                "controller.render.dyeable2"
+            ]
+        }
+    }
+}

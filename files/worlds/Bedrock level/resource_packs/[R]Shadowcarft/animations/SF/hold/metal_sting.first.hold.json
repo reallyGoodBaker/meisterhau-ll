@@ -1,0 +1,22 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.player.metal_sting.first.hold": {
+			"loop": true,
+			"bones": {
+				"rightItem": {
+					"rotation": [
+						-60.74094,
+						61.19008,
+						-113.06625
+					],
+					"position": [
+						10.71309,
+						-9.86742,
+						8.53603
+					]
+				}
+			}
+		}
+	}
+}

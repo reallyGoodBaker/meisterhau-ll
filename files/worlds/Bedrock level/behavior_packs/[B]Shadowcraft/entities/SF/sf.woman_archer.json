@@ -1,0 +1,386 @@
+{
+	"format_version": "1.21.50",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "sf:woman_archer",
+			"is_spawnable": true,
+			"is_summonable": true,
+			"properties": {
+				"skin_custom:hero": {
+					"type": "int",
+					"range": [
+						0,
+						10
+					],
+					"default": 10,
+					"client_sync": true
+				},
+				"skin_custom:property_skin": {
+					"type": "int",
+					"range": [
+						0,
+						1
+					],
+					"default": 1,
+					"client_sync": true
+				},
+				"skin_custom:gender": {
+					"type": "int",
+					"range": [
+						0,
+						1
+					],
+					"default": 1,
+					"client_sync": true
+				},
+				"skin_custom:hair_color": {
+					"type": "int",
+					"range": [
+						0,
+						1000
+					],
+					"default": 0,
+					"client_sync": true
+				},
+				"skin_custom:face": {
+					"type": "int",
+					"range": [
+						0,
+						1000
+					],
+					"default": 0,
+					"client_sync": true
+				},
+				"skin_custom:hair": {
+					"type": "int",
+					"range": [
+						0,
+						1000
+					],
+					"default": 0,
+					"client_sync": true
+				}
+			}
+		},
+		"component_groups": {
+			"minecraft:lightning_immune": {
+				"minecraft:damage_sensor": {
+					"triggers": {
+						"on_damage": {
+							"filters": {
+								"other_with_families": "lightning"
+							}
+						},
+						"deals_damage": false
+					}
+				}
+			},
+			"minecraft:ranged_attack": {
+				"minecraft:behavior.ranged_attack": {
+					"priority": 0,
+					"attack_interval_min": 1.0,
+					"attack_interval_max": 3.0,
+					"attack_radius": 15.0
+				},
+				"minecraft:shooter": {
+					"def": "minecraft:arrow",
+					"sound": "bow"
+				},
+				"minecraft:environment_sensor": {
+					"triggers": {
+						"filters": {
+							"test": "is_underwater",
+							"subject": "self",
+							"operator": "==",
+							"value": true
+						},
+						"event": "minecraft:melee_mode"
+					}
+				}
+			},
+			"minecraft:melee_attack": {
+				"minecraft:behavior.melee_attack": {
+					"priority": 4,
+					"speed_multiplier": 1.25,
+					"track_target": true
+				},
+				"minecraft:attack": {
+					"damage": 2
+				},
+				"minecraft:environment_sensor": {
+					"triggers": {
+						"filters": {
+							"test": "in_water",
+							"subject": "self",
+							"operator": "==",
+							"value": false
+						},
+						"event": "minecraft:ranged_mode"
+					}
+				}
+			}
+		},
+		"components": {
+			"minecraft:experience_reward": {
+				"on_death": "query.last_hit_by_player ? 5+(query.equipment_count*math.random(1,3)) : 0"
+			},
+			"minecraft:collision_box": {
+				"width": 0.6,
+				"height": 1.9
+			},
+			"minecraft:type_family": {
+				"family": [
+					"skeleton",
+					"mob",
+					"shadow"
+				]
+			},
+			"minecraft:breathable": {
+				"total_supply": 15,
+				"suffocate_time": 0,
+				"breathes_water": true
+			},
+			"minecraft:health": {
+				"value": 50,
+				"max": 50
+			},
+			"minecraft:hurt_on_condition": {
+				"damage_conditions": [
+					{
+						"filters": {
+							"test": "in_lava",
+							"subject": "self",
+							"operator": "==",
+							"value": true
+						},
+						"cause": "lava",
+						"damage_per_tick": 4
+					}
+				]
+			},
+			"minecraft:loot": {
+				"table": "loot_tables/entities/archer.json"
+			},
+			"minecraft:movement": {
+				"value": 0.25
+			},
+			"minecraft:navigation.walk": {
+				"is_amphibious": true,
+				"avoid_sun": true,
+				"avoid_water": true
+			},
+			"minecraft:movement.basic": {},
+			"minecraft:jump.static": {},
+			"minecraft:can_climb": {},
+			"minecraft:nameable": {},
+			"minecraft:equipment": {
+				"table": "loot_tables/entities/gear_bow.json"
+			},
+			"minecraft:shooter": {
+				"def": "minecraft:arrow"
+			},
+			"minecraft:environment_sensor": {
+				"triggers": {
+					"filters": {
+						"test": "is_underwater",
+						"subject": "self",
+						"operator": "==",
+						"value": true
+					},
+					"event": "minecraft:melee_mode"
+				}
+			},
+			"minecraft:behavior.ranged_attack": {
+				"attack_interval_min": 1,
+				"attack_interval_max": 3,
+				"attack_radius": 15
+			},
+			"minecraft:behavior.hurt_by_target": {
+				"priority": 1
+			},
+			"minecraft:behavior.nearest_attackable_target": {
+				"priority": 2,
+				"reselect_targets": true,
+				"entity_types": [
+					{
+						"filters": {
+							"test": "is_family",
+							"subject": "other",
+							"value": "player"
+						},
+						"max_dist": 16
+					},
+					{
+						"filters": {
+							"test": "is_family",
+							"subject": "other",
+							"value": "irongolem"
+						},
+						"max_dist": 16
+					},
+					{
+						"filters": {
+							"all_of": [
+								{
+									"test": "is_family",
+									"subject": "other",
+									"value": "baby_turtle"
+								},
+								{
+									"test": "in_water",
+									"subject": "other",
+									"operator": "!=",
+									"value": true
+								}
+							]
+						},
+						"max_dist": 16
+					}
+				],
+				"must_see": true
+			},
+			"minecraft:behavior.flee_sun": {
+				"priority": 2,
+				"speed_multiplier": 1
+			},
+			"minecraft:behavior.avoid_mob_type": {
+				"priority": 4,
+				"entity_types": [
+					{
+						"filters": {
+							"test": "is_family",
+							"subject": "other",
+							"value": "wolf"
+						},
+						"max_dist": 6,
+						"walk_speed_multiplier": 1.2,
+						"sprint_speed_multiplier": 1.2
+					}
+				]
+			},
+			"minecraft:behavior.random_stroll": {
+				"priority": 5,
+				"speed_multiplier": 1
+			},
+			"minecraft:behavior.look_at_player": {
+				"priority": 6,
+				"look_distance": 8
+			},
+			"minecraft:behavior.random_look_around": {
+				"priority": 6
+			},
+			"minecraft:physics": {},
+			"minecraft:pushable": {
+				"is_pushable": true,
+				"is_pushable_by_piston": true
+			}
+		},
+		"events": {
+			"skin_custom:hair_color_random": {
+				"set_property": {
+					"skin_custom:hair_color": "( math.random_integer(0.0, 2.0) )"
+				}
+			},
+			"skin_custom:hair_color_add": {
+				"set_property": {
+					"skin_custom:hair_color": "( math.mod( q.property('skin_custom:hair_color') + 1.0, 3.0 ) )"
+				}
+			},
+			"skin_custom:hair_color_remove": {
+				"set_property": {
+					"skin_custom:hair_color": "( !q.property('skin_custom:hair_color') ? 2.0 : q.property('skin_custom:hair_color') - 1.0 )"
+				}
+			},
+			"skin_custom:face_random": {
+				"set_property": {
+					"skin_custom:face": "( math.random_integer(0.0, 2.0) )"
+				}
+			},
+			"skin_custom:face_add": {
+				"set_property": {
+					"skin_custom:face": "( math.mod( q.property('skin_custom:face') + 1.0, 3.0 ) )"
+				}
+			},
+			"skin_custom:face_remove": {
+				"set_property": {
+					"skin_custom:face": "( !q.property('skin_custom:face') ? 2.0 : (q.property('skin_custom:face') - 1.0) )"
+				}
+			},
+			"skin_custom:hair_random": {
+				"set_property": {
+					"skin_custom:hair": "( math.random_integer(0.0, 3.0) )"
+				}
+			},
+			"skin_custom:hair_add": {
+				"set_property": {
+					"skin_custom:hair": "( math.mod( q.property('skin_custom:hair') + 1.0, 4.0 ) )"
+				}
+			},
+			"skin_custom:hair_remove": {
+				"set_property": {
+					"skin_custom:hair": "( !q.property('skin_custom:hair') ? 3.0 : (q.property('skin_custom:hair') - 1.0) )"
+				}
+			},
+			"minecraft:entity_spawned": {
+				"sequence": [
+					{
+						"trigger": "skin_custom:hair_color_random"
+					},
+					{
+						"trigger": "skin_custom:face_random"
+					},
+					{
+						"trigger": {
+							"event": "skin_custom:hair_random",
+							"target": "self"
+						}
+					},
+					{
+						"randomize": [
+							{
+								"weight": 1,
+								"remove": {},
+								"add": {
+									"component_groups": [
+										"minecraft:ranged_attack"
+									]
+								}
+							}
+						]
+					}
+				]
+			},
+			"minecraft:spring_trap": {
+				"add": {
+					"component_groups": [
+						"minecraft:lightning_immune"
+					]
+				}
+			},
+			"minecraft:melee_mode": {
+				"remove": {
+					"component_groups": [
+						"minecraft:ranged_attack"
+					]
+				},
+				"add": {
+					"component_groups": [
+						"minecraft:melee_attack"
+					]
+				}
+			},
+			"minecraft:ranged_mode": {
+				"remove": {
+					"component_groups": [
+						"minecraft:melee_attack"
+					]
+				},
+				"add": {
+					"component_groups": [
+						"minecraft:ranged_attack"
+					]
+				}
+			}
+		}
+	}
+}

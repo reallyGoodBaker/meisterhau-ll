@@ -1,0 +1,281 @@
+{
+  "tiers": [
+    {
+      "groups": [
+        {
+          "num_to_select": 0,
+          "trades": [
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_stone_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 3
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:nomads_cap"
+                    },
+                    {
+                      "item": "sf:epiphany_kasa"
+                    },
+                    {
+                      "item": "sf:rag"
+                    },
+                    {
+                      "item": "sf:seahorse_veil"
+                    },
+                    {
+                      "item": "sf:leather_casque"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_stone_essence",
+                  "quantity": 3
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 6
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:training_uniform"
+                    },
+                    {
+                      "item": "sf:embroidered_suit"
+                    },
+                    {
+                      "item": "sf:plain_waistcoat"
+                    },
+                    {
+                      "item": "sf:compression_suit"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_iron_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 3
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:bedrock_helm"
+                    },
+                    {
+                      "item": "sf:visored_casque"
+                    },
+                    {
+                      "item": "sf:sea_devils_mask"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_iron_essence",
+                  "quantity": 3
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 6
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:bedrock_armor"
+                    },
+                    {
+                      "item": "sf:reinforced_coat"
+                    },
+                    {
+                      "item": "sf:fur_lined_armor"
+                    },
+                    {
+                      "item": "sf:gilded_vest"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_gold_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 3
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:rigid_barbute"
+                    },
+                    {
+                      "item": "sf:courage"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_gold_essence",
+                  "quantity": 3
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 6
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:laminar_cuirass"
+                    },
+                    {
+                      "item": "sf:prefects_robe"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_diamond_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 3
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:higher_calling"
+                    },
+                    {
+                      "item": "sf:golden_fang_crown"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_diamond_essence",
+                  "quantity": 3
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 6
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:divine_retribution"
+                    },
+                    {
+                      "item": "sf:three_arrows_glory"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_netherite_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 3
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:swampers_headgear"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_netherite_essence",
+                  "quantity": 3
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 6
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:swampers_camouflage"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

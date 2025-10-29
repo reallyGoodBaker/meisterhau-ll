@@ -72,7 +72,7 @@ interface Move {
      * @example
      * ```js
      * function killAllInRange(pl, ctx) {
-     *      const mobs = ctx.selectFromRange(pl, {
+     *      const mobs = ctx.selectFromSector(pl, {
      *          radius: 5,     //半径
      *          angle: 90,     //扇形区域角度
      *          rotation: -45  //扇形区域相对目标视线旋转角进行旋转的角度
@@ -93,7 +93,7 @@ interface Move {
      * @example
      * ```js
      * function flyup(pl, ctx) {
-     *      const mobs = ctx.selectFromRange(pl, {
+     *      const mobs = ctx.selectFromSector(pl, {
      *          radius: 5,     //半径
      *          angle: 90,     //扇形区域角度
      *          rotation: -45  //扇形区域相对目标视线旋转角进行旋转的角度
@@ -224,14 +224,14 @@ type TransitionTypeOption = {
 
 type TransitionCondition = Omit<TransitionTypeOption[keyof TransitionTypeOption], null | undefined>
 
-type MovementCallback = (source: Player|Entity, context: MovementContext) => any | Promise<any>
+type MovementCallback = (source: Actor, context: MovementContext) => any | Promise<any>
 
 interface DefaultRawArgs extends Array<any> {
     0: Player
 }
 
 interface AttackRawArgs extends DefaultRawArgs {
-    1: Player | Entity
+    1: Actor
     2: Readonly<DamageOption>
 }
 
@@ -368,32 +368,32 @@ interface MovementContext<RawArgs = Array> {
      * @param damage 
      * @param damageType 
      */
-    attack(abuser: Player|Entity, victim: Player|Entity, damageOpt?: DamageOption): void
-    freeze(player: any): void
-    unfreeze(player: any): void
-    knockback(en: any, x: number, z: number, horizontal: number, vertical: number): Promise<void>
-    clearVelocity(en: any): Promise<void>
-    impulse(en: any, x: number, y: number, z: number): Promise<void>
-    setVelocity(pl: any, rotation: number, h: number, v?: number): void
+    attack(abuser: Actor, victim: Actor, damageOpt?: DamageOption): void
+    freeze(actor: Actor): void
+    unfreeze(actor: Actor): void
+    knockback(actor: Actor, x: number, z: number, horizontal: number, vertical: number): Promise<void>
+    clearVelocity(actor: Actor): Promise<void>
+    impulse(actor: Actor, x: number, y: number, z: number): Promise<void>
+    setVelocity(actor: Actor, rotation: number, h: number, v?: number): void
     yawToVec2(yaw: number): {x: number, y: number}
-    applyKnockbackAtVelocityDirection(en: any, h: number, v: number): Promise<void>
+    applyKnockbackAtVelocityDirection(actor: Actor, h: number, v: number): Promise<void>
     readonly status: Status
     readonly components: ComponentManager
-    camera(pl: any, enable?: boolean): void
-    movement(pl: any, enable?: boolean): void
-    movementInput(pl: any, enable?: boolean): void
+    camera(pl: Player, enable?: boolean): void
+    movement(actor: Actor, enable?: boolean): void
+    movementInput(actor: Actor, enable?: boolean): void
     readonly task: Task
-    lookAt(pl: any, en: any): void
-    lookAtTarget(pl: any): void
-    distanceToTarget(pl: any): number
-    adsorbToTarget(pl: any, max: number, offset?: number): void
-    adsorbTo(pl: any, en: any, max: number, offset?: number): void
-    knockdown(abuser: any, victim: any, knockback?: number): void
+    lookAt(from: Actor, to: Actor): void
+    lookAtTarget(actor: Actor): void
+    distanceToTarget(actor: Actor): number
+    adsorbToTarget(actor: Actor, max: number, offset?: number): void
+    adsorbTo(instigator: Actor, target: Actor, max: number, offset?: number): void
+    knockdown(instigator: Actor, target: Actor, knockback?: number): void
     releaseTarget(uid: string): void
-    adsorbOrSetVelocity(pl: any, max: number, velocityRot?: number, offset?: number): void
-    getMoveDir(pl: any): number
-    trap(pl: any, data?: any): void
-    setSpeed(pl: any, speed?: number): void
+    adsorbOrSetVelocity(actor: Actor, max: number, velocityRot?: number, offset?: number): void
+    getMoveDir(actor: Actor): number
+    trap(actor: Actor, data?: any): void
+    setSpeed(actor: Actor, speed?: number): void
 }
 
 type TaskList = {

@@ -1,0 +1,22 @@
+{
+	"format_version": "1.10.0",
+	"animations": {
+		"animation.player.old_timer.third.hold": {
+			"loop": true,
+			"bones": {
+				"old_timer": {
+					"rotation": [
+						0.50409,
+						14.47751,
+						3.96713
+					],
+					"position": [
+						6,
+						9.72861,
+						1.53434
+					]
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,387 @@
+{
+    "version": 5,
+    "economy": {
+        "enabled": true,
+        "kit": "LegacyMoney",
+        "scoreboardName": "Scoreboard",
+        "economyName": "金币"
+    },
+    "blocks": {
+        "minecraft:spruce_log": {
+            "name": "云杉木原木",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [
+                "minecraft:netherite_axe",
+                "minecraft:iron_axe",
+                "minecraft:wooden_axe",
+                "minecraft:stone_axe",
+                "minecraft:diamond_axe",
+                "minecraft:golden_axe"
+            ],
+            "similarBlock": []
+        },
+        "minecraft:crimson_stem": {
+            "name": "绯红菌柄",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [
+                "minecraft:netherite_axe",
+                "minecraft:iron_axe",
+                "minecraft:wooden_axe",
+                "minecraft:stone_axe",
+                "minecraft:diamond_axe",
+                "minecraft:golden_axe"
+            ],
+            "similarBlock": []
+        },
+        "minecraft:acacia_log": {
+            "name": "金合欢木原木",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Cube",
+            "silkTouchMode": "Unlimited",
+            "tools": [
+                "minecraft:netherite_axe",
+                "minecraft:iron_axe",
+                "minecraft:wooden_axe",
+                "minecraft:stone_axe",
+                "minecraft:diamond_axe",
+                "minecraft:golden_axe"
+            ],
+            "similarBlock": []
+        },
+        "minecraft:birch_log": {
+            "name": "白桦木原木",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [
+                "minecraft:netherite_axe",
+                "minecraft:iron_axe",
+                "minecraft:wooden_axe",
+                "minecraft:stone_axe",
+                "minecraft:diamond_axe",
+                "minecraft:golden_axe"
+            ],
+            "similarBlock": []
+        },
+        "minecraft:oak_log": {
+            "name": "橡木原木",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [
+                "minecraft:netherite_axe",
+                "minecraft:iron_axe",
+                "minecraft:wooden_axe",
+                "minecraft:stone_axe",
+                "minecraft:diamond_axe",
+                "minecraft:golden_axe"
+            ],
+            "similarBlock": []
+        },
+        "minecraft:cherry_log": {
+            "name": "樱花原木",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Cube",
+            "silkTouchMode": "Unlimited",
+            "tools": [
+                "minecraft:netherite_axe",
+                "minecraft:iron_axe",
+                "minecraft:wooden_axe",
+                "minecraft:stone_axe",
+                "minecraft:diamond_axe",
+                "minecraft:golden_axe"
+            ],
+            "similarBlock": []
+        },
+        "minecraft:deepslate_emerald_ore": {
+            "name": "深层绿宝石矿石",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": [
+                "minecraft:emerald_ore"
+            ]
+        },
+        "minecraft:dark_oak_log": {
+            "name": "深色橡木原木",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [
+                "minecraft:netherite_axe",
+                "minecraft:iron_axe",
+                "minecraft:wooden_axe",
+                "minecraft:stone_axe",
+                "minecraft:diamond_axe",
+                "minecraft:golden_axe"
+            ],
+            "similarBlock": []
+        },
+        "minecraft:jungle_log": {
+            "name": "云杉木原木",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [
+                "minecraft:netherite_axe",
+                "minecraft:iron_axe",
+                "minecraft:wooden_axe",
+                "minecraft:stone_axe",
+                "minecraft:diamond_axe",
+                "minecraft:golden_axe"
+            ],
+            "similarBlock": []
+        },
+        "minecraft:mangrove_log": {
+            "name": "红树原木",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [
+                "minecraft:netherite_axe",
+                "minecraft:iron_axe",
+                "minecraft:wooden_axe",
+                "minecraft:stone_axe",
+                "minecraft:diamond_axe",
+                "minecraft:golden_axe"
+            ],
+            "similarBlock": []
+        },
+        "minecraft:deepslate_gold_ore": {
+            "name": "深层金矿石",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": [
+                "minecraft:gold_ore"
+            ]
+        },
+        "minecraft:warped_stem": {
+            "name": "诡异菌柄",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [
+                "minecraft:netherite_axe",
+                "minecraft:iron_axe",
+                "minecraft:wooden_axe",
+                "minecraft:stone_axe",
+                "minecraft:diamond_axe",
+                "minecraft:golden_axe"
+            ],
+            "similarBlock": []
+        },
+        "minecraft:ancient_debris": {
+            "name": "远古残骸",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": []
+        },
+        "minecraft:coal_ore": {
+            "name": "煤矿石",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": [
+                "minecraft:deepslate_coal_ore"
+            ]
+        },
+        "minecraft:copper_ore": {
+            "name": "铜矿石",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": [
+                "minecraft:deepslate_copper_ore"
+            ]
+        },
+        "minecraft:diamond_ore": {
+            "name": "钻石矿石",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": [
+                "minecraft:deepslate_diamond_ore"
+            ]
+        },
+        "minecraft:emerald_ore": {
+            "name": "绿宝石矿石",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": [
+                "minecraft:deepslate_emerald_ore"
+            ]
+        },
+        "minecraft:gold_ore": {
+            "name": "金矿石",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": [
+                "minecraft:deepslate_gold_ore"
+            ]
+        },
+        "minecraft:iron_ore": {
+            "name": "铁矿石",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": [
+                "minecraft:deepslate_iron_ore"
+            ]
+        },
+        "minecraft:lapis_ore": {
+            "name": "青金石矿石",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": [
+                "minecraft:deepslate_lapis_ore"
+            ]
+        },
+        "minecraft:lit_redstone_ore": {
+            "name": "红石矿石",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": [
+                "minecraft:lit_deepslate_redstone_ore",
+                "minecraft:redstone_ore",
+                "minecraft:deepslate_redstone_ore"
+            ]
+        },
+        "minecraft:nether_gold_ore": {
+            "name": "下界金矿石",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": []
+        },
+        "minecraft:quartz_ore": {
+            "name": "下界石英矿石",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": []
+        },
+        "minecraft:deepslate_coal_ore": {
+            "name": "深层煤矿石",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": [
+                "minecraft:coal_ore"
+            ]
+        },
+        "minecraft:deepslate_copper_ore": {
+            "name": "深层铜矿石",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": [
+                "minecraft:copper_ore"
+            ]
+        },
+        "minecraft:deepslate_diamond_ore": {
+            "name": "深层钻石矿石",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": [
+                "minecraft:diamond_ore"
+            ]
+        },
+        "minecraft:deepslate_iron_ore": {
+            "name": "深层铁矿石",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": [
+                "minecraft:iron_ore"
+            ]
+        },
+        "minecraft:deepslate_lapis_ore": {
+            "name": "深层青金石矿石",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": [
+                "minecraft:lapis_ore"
+            ]
+        },
+        "minecraft:lit_deepslate_redstone_ore": {
+            "name": "深层红石矿石",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": [
+                "minecraft:lit_redstone_ore",
+                "minecraft:redstone_ore",
+                "minecraft:deepslate_redstone_ore"
+            ]
+        },
+        "sf:shadow_ore": {
+            "name": "tile.sf:shadow_ore.name",
+            "cost": 0,
+            "limit": 256,
+            "destroyMode": "Default",
+            "silkTouchMode": "Unlimited",
+            "tools": [],
+            "similarBlock": []
+        }
+    }
+}

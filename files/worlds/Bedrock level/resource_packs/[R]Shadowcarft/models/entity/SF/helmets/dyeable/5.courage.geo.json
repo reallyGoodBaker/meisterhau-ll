@@ -1,0 +1,205 @@
+{
+	"format_version": "1.10.0",
+	"geometry.courage": {
+		"texturewidth": 128,
+		"textureheight": 128,
+		"visible_bounds_width": 3,
+		"visible_bounds_height": 3,
+		"visible_bounds_offset": [
+			0,
+			1.5,
+			0
+		],
+		"bones": [
+			{
+				"name": "root0",
+				"pivot": [
+					0,
+					0,
+					0
+				]
+			},
+			{
+				"name": "root2",
+				"parent": "root0",
+				"pivot": [
+					0,
+					10,
+					0
+				]
+			},
+			{
+				"name": "root1",
+				"parent": "root2",
+				"pivot": [
+					0,
+					30,
+					0
+				]
+			},
+			{
+				"name": "Kroot",
+				"parent": "root1",
+				"pivot": [
+					0,
+					20,
+					0
+				]
+			},
+			{
+				"name": "Kwaist",
+				"parent": "Kroot",
+				"pivot": [
+					0,
+					12,
+					0
+				]
+			},
+			{
+				"name": "body0",
+				"parent": "Kwaist",
+				"pivot": [
+					0,
+					24,
+					0
+				]
+			},
+			{
+				"name": "Kbody",
+				"parent": "body0",
+				"pivot": [
+					0,
+					12,
+					0
+				]
+			},
+			{
+				"name": "head",
+				"parent": "Kbody",
+				"pivot": [
+					0,
+					24,
+					0
+				],
+				"cubes": [
+					{
+						"origin": [
+							-4,
+							24,
+							-4
+						],
+						"size": [
+							8,
+							8,
+							8
+						],
+						"uv": [
+							0,
+							0
+						],
+						"inflate": 0.65
+					},
+					{
+						"origin": [
+							-5,
+							34,
+							2
+						],
+						"size": [
+							2,
+							1,
+							1
+						],
+						"uv": [
+							0,
+							98
+						]
+					},
+					{
+						"origin": [
+							-3,
+							34,
+							1
+						],
+						"size": [
+							2,
+							1,
+							1
+						],
+						"uv": [
+							0,
+							98
+						],
+						"inflate": 0.2
+					},
+					{
+						"origin": [
+							-0.5,
+							35,
+							-0.5
+						],
+						"size": [
+							1,
+							4,
+							1
+						],
+						"uv": [
+							9,
+							121
+						]
+					},
+					{
+						"origin": [
+							-1,
+							34,
+							-1
+						],
+						"size": [
+							2,
+							1,
+							2
+						],
+						"uv": [
+							0,
+							123
+						],
+						"inflate": 0.5
+					},
+					{
+						"origin": [
+							-4,
+							31,
+							-4
+						],
+						"size": [
+							8,
+							3,
+							8
+						],
+						"uv": [
+							0,
+							101
+						],
+						"inflate": 0.505
+					},
+					{
+						"origin": [
+							-7,
+							30,
+							-7
+						],
+						"size": [
+							14,
+							1,
+							14
+						],
+						"uv": [
+							0,
+							113
+						]
+					}
+				]
+			}
+		]
+	}
+}

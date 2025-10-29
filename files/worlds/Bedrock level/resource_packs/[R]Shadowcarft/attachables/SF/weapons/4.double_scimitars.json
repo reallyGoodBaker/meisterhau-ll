@@ -1,0 +1,36 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:attachable": {
+		"description": {
+			"identifier": "sf:double_scimitars",
+			"materials": {
+				"default": "armor",
+				"enchanted": "armor_enchanted",
+				"dyed": "entity_alphatest_change_color"
+			},
+			"textures": {
+				"default": "textures/models/weapons/double_scimitars_default",
+				"dyed": "textures/models/weapons/double_scimitars_dyeable",
+				"undyed": "textures/models/weapons/double_scimitars_top",
+				"enchanted": "textures/misc/enchanted_item_glint"
+			},
+			"geometry": {
+				"default": "geometry.double_scimitars"
+			},
+			"animations": {
+				"first_hold": "animation.player.lightweight_sabers.first.hold"
+			},
+			"scripts": {
+				"animate": [
+					{
+						"first_hold": "c.is_first_person"
+					}
+				]
+			},
+			"render_controllers": [
+				"controller.render.dyeable1",
+				"controller.render.dyeable2"
+			]
+		}
+	}
+}

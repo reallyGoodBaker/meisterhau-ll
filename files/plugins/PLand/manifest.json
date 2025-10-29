@@ -1,0 +1,22 @@
+{
+    "name": "PLand",
+    "entry": "PLand.dll",
+    "version": "0.15.0",
+    "type": "native",
+    "dependencies": [
+        {
+            "name": "iListenAttentively"
+        }
+    ],
+    "optionalDependencies": [
+        {
+            "name": "LegacyMoney"
+        },
+        {
+            "name": "BedrockServerClientInterface"
+        },
+        {
+            "name": "DebugShape"
+        }
+    ]
+}

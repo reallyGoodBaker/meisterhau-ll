@@ -1,0 +1,17 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.katana.first.hold": {
+			"loop": true,
+			"bones": {
+				"100": {
+					"rotation": [-62.24794, 48.72346, -103.24389],
+					"position": [7.27848, -8.20805, 11.90413]
+				},
+				"200": {
+					"position": [-37, 41, 0]
+				}
+			}
+		}
+	}
+}

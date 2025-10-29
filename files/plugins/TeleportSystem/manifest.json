@@ -1,0 +1,11 @@
+{
+    "name": "TeleportSystem",
+    "entry": "TeleportSystem.dll",
+    "version": "0.14.0",
+    "type": "native",
+    "dependencies": [
+        {
+            "name": "LegacyMoney"
+        }
+    ]
+}

@@ -1,0 +1,17 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.will_of_many.first.hold": {
+			"loop": true,
+			"bones": {
+				"2": {
+					"position": [227, 0, 0]
+				},
+				"100": {
+					"rotation": [-51.6562, 47.71434, -95.5022],
+					"position": [8.34096, -6.81157, 12.25499]
+				}
+			}
+		}
+	}
+}

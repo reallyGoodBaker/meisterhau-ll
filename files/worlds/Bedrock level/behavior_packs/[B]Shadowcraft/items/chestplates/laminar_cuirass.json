@@ -1,0 +1,63 @@
+{
+	"format_version": "1.21.60",
+	"minecraft:item": {
+		"description": {
+			"identifier": "sf:laminar_cuirass",
+			"menu_category": {
+				"category": "equipment",
+				"group": "minecraft:itemGroup.name.chestplate"
+			}
+		},
+		"components": {
+			"minecraft:tags": {
+				"tags": [
+					"sf:is_dyeable"
+				]
+			},
+			"minecraft:repairable": {
+				"repair_items": [
+					{
+						"items": [
+							"sf:shadow_energy"
+						],
+						"repair_amount": "query.max_durability * 0.25"
+					},
+					{
+						"items": [
+							"sf:laminar_cuirass"
+						],
+						"repair_amount": "context.other->query.remaining_durability + 0.12 * context.other->query.max_durability"
+					}
+				]
+			},
+			"minecraft:display_name": {
+				"value": "%laminar_cuirass\n%LEA"
+			},
+			"minecraft:max_stack_size": 1,
+			"minecraft:enchantable": {
+				"value": 19,
+				"slot": "armor_torso"
+			},
+			"minecraft:durability": {
+				"max_durability": 1000,
+				"damage_chance": {
+					"min": 60,
+					"max": 100
+				}
+			},
+			"minecraft:icon": {
+				"textures": {
+					"default": "laminar_cuirass",
+					"dyed": "laminar_cuirass"
+				}
+			},
+			"minecraft:dyeable": {
+				"default_color": "#a7a9ad"
+			},
+			"minecraft:wearable": {
+				"protection": 11,
+				"slot": "slot.armor.chest"
+			}
+		}
+	}
+}

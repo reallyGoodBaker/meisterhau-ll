@@ -1,0 +1,61 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "npc:npc_villagers",
+			"materials": {
+				"default": "entity_alphatest"
+			},
+			"textures": {
+				"base": "textures/entity/villager2/villager",
+				"villager0": "textures/entity/villager2/biomes/biome_desert",
+				"villager1": "textures/entity/villager2/biomes/biome_jungle",
+				"villager2": "textures/entity/villager2/biomes/biome_plains",
+				"villager3": "textures/entity/villager2/biomes/biome_savanna",
+				"villager4": "textures/entity/villager2/biomes/biome_snow",
+				"villager5": "textures/entity/villager2/biomes/biome_swamp",
+				"villager6": "textures/entity/villager2/biomes/biome_taiga",
+				"armorer": "textures/entity/villager2/professions/armorer",
+				"butcher": "textures/entity/villager2/professions/butcher",
+				"cartographer": "textures/entity/villager2/professions/cartographer",
+				"cleric": "textures/entity/villager2/professions/cleric",
+				"farmer": "textures/entity/villager2/professions/farmer",
+				"fisherman": "textures/entity/villager2/professions/fisherman",
+				"fletcher": "textures/entity/villager2/professions/fletcher",
+				"leatherworker": "textures/entity/villager2/professions/leatherworker",
+				"librarian": "textures/entity/villager2/professions/librarian",
+				"shepherd": "textures/entity/villager2/professions/shepherd",
+				"tool_smith": "textures/entity/villager2/professions/toolsmith",
+				"weapon_smith": "textures/entity/villager2/professions/weaponsmith",
+				"stonemason": "textures/entity/villager2/professions/stonemason",
+				"nitwit": "textures/entity/villager2/professions/nitwit",
+				"unskilled": "textures/entity/villager2/professions/unskilled"
+			},
+			"geometry": {
+				"villager": "geometry.villager_v2"
+			},
+			"scripts": {
+				"animate": [
+					"setup",
+					"look_at_target",
+					{
+						"move": "query.is_moving"
+					}
+				]
+			},
+			"animations": {
+				"setup": "animation.villager.general",
+				"look_at_target": "animation.common.look_at_target",
+				"move": "animation.villager.move"
+			},
+			"render_controllers": [
+				"controller.render.npc_villagers",
+				"controller.render.npc.base"
+			],
+			"spawn_egg": {
+				"texture": "spawn_egg",
+				"texture_index": 35
+			}
+		}
+	}
+}

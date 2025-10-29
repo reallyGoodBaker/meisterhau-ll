@@ -1,6 +1,6 @@
-const { loadEntries } = require('./ServerConfig/loaderConfig.js')
+import { loadEntries } from './ServerConfig/loaderConfig'
 
-function load(m) {
+export function load(m) {
     if (typeof m === 'function') {
         return m()
     }
@@ -10,8 +10,4 @@ function load(m) {
             return m[k]()
         }
     }
-}
-
-module.exports = {
-    load
 }

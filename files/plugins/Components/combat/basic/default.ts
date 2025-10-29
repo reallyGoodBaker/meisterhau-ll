@@ -7,8 +7,9 @@ import { input } from "scripts-rpc/func/input"
 import { Status } from "./core/status"
 import { AttackSensor } from "./components/attackSensor"
 import { Team } from "./components/team"
-import { Actor } from "@utils/actor"
+import { Actor, ActorHelper } from "@utils/actor"
 
+/** 获取近似攻击方向 */
 export function getApproximatelyDir(direction: AttackDirection) {
     return direction === 'right' ? 'right'
             : direction === 'middle' ? 'right'
@@ -21,7 +22,7 @@ function getAnim(animCategory: any, direction: string) {
     if (!anim) {
         switch (direction) {
             case 'middle':
-                return animCategory.right ?? animCategory.left
+                return animCategory.right || animCategory.left
 
             default:
                 return animCategory.left
@@ -31,8 +32,10 @@ function getAnim(animCategory: any, direction: string) {
     return anim
 }
 
-type StateKey<T> = ObjKeyType<T, Move>
+/** 状态键类型 */
+export type StateKey<T> = ObjKeyType<T, Move>
 
+/** 来袭攻击组件 */
 export class IncomingAttack extends BaseComponent {
     public cancel: boolean = false
 
@@ -48,11 +51,12 @@ export class IncomingAttack extends BaseComponent {
         super()
     }
 
+    /** 获取近似攻击方向 */
     approximateAttackDirection() {
         return getApproximatelyDir(this.direction)
     }
 
-    // 添加此组件时候，通知 AttackSensor
+    /** 添加此组件时，通知 AttackSensor */
     onAttach() {
         this.getActor().use(actor => {
             Status.getComponentManager(actor.uniqueId).use(comps => {
@@ -99,6 +103,7 @@ export class IncomingAttack extends BaseComponent {
     }
 }
 
+/** 根据朝向设置速度 */
 export function setVelocityByOrientation(pl: Player, ctx: MovementContext, max: number, offset?: number) {
     const ori = input.approximateOrientation(pl)
     if (ori === input.Orientation.Backward) {
@@ -108,16 +113,19 @@ export function setVelocityByOrientation(pl: Player, ctx: MovementContext, max: 
     }
 }
 
+/** 默认动作集合 */
 export class DefaultMoves implements Moves {
+    /** 获取指定名称的动作 */
     getMove(name: string): Move {
         if (!this.hasMove(name)) {
             console.log(Error().stack)
-            throw new Error(`Move ${name} not found`)
+            throw new Error(`Move ${name} not found in ${this.constructor.name}`)
         }
 
         return this[name as keyof this] as Move
     }
 
+    /** 检查是否存在指定名称的动作 */
     hasMove(name: string): boolean {
         return name in this
     }
@@ -262,9 +270,12 @@ export class DefaultMoves implements Moves {
             }
 
             playAnimCompatibility(pl, hurtAnim)
-            ctx.task.queue(() => {
-                ctx.trap(pl, { tag: 'recover' })
-            }, stiffness).run()
+            const uid = pl.uniqueId
+            ctx.task.queue(
+                () => ActorHelper.getActor(uid)
+                    .use(actor => ctx.trap(actor, { tag: 'recover' })),
+                stiffness
+            ).run()
         },
         onLeave(pl, ctx) {
             ctx.task.cancel()
@@ -453,6 +464,7 @@ export class DefaultMoves implements Moves {
         transitions: { }
     }
 
+    /** 设置状态转换 */
     setup<T extends DefaultMoves>(init: StateKey<T>) {
         this.hitWall.transitions = {
             hurt: {
@@ -539,11 +551,13 @@ export class DefaultMoves implements Moves {
         }
     }
 
+    /** 混合状态属性 */
     mixin<T extends DefaultMoves>(state: StateKey<T>, obj: any): void {
         //@ts-ignore
         this[state] = Object.assign(this[state], obj)
     }
 
+    /** 设置状态转换 */
     setTransition<T extends DefaultMoves>(state: StateKey<T>, transitionName: StateKey<T>, transition: TransitionTypeOption) {
         //@ts-ignore
         const _state = this[state]
@@ -555,6 +569,7 @@ export class DefaultMoves implements Moves {
     }
 }
 
+/** 默认技巧模块 */
 export class DefaultTrickModule implements TrickModule {
     constructor(
         public sid: string,
