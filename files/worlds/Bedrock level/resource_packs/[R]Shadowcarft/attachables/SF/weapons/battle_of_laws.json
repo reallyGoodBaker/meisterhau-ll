@@ -1,0 +1,36 @@
+{
+    "format_version": "1.10.0",
+    "minecraft:attachable": {
+        "description": {
+            "identifier": "sf:battle_of_laws",
+            "materials": {
+                "default": "armor",
+                "enchanted": "armor_enchanted",
+                "dyed": "entity_alphatest_change_color"
+            },
+            "textures": {
+                "default": "textures/models/weapons/battle_of_laws",
+                "dyed": "textures/models/weapons/battle_of_laws_dyeable",
+                "undyed": "textures/models/weapons/battle_of_laws_top",
+                "enchanted": "textures/misc/enchanted_item_glint"
+            },
+            "animations": {
+                "first_hold": "animation.katana.first.hold"
+            },
+            "scripts": {
+                "animate": [
+                    {
+                        "first_hold": "c.is_first_person"
+                    }
+                ]
+            },
+            "geometry": {
+                "default": "geometry.battle_of_laws"
+            },
+            "render_controllers": [
+                "controller.render.dyeable1",
+                "controller.render.dyeable2"
+            ]
+        }
+    }
+}

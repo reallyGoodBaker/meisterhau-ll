@@ -1,0 +1,17 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.swampers_grinders.third.hold": {
+			"loop": true,
+			"bones": {
+				"weapon": {
+					"position": [
+						5.5,
+						5.31259,
+						-1.4235
+					]
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,13 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.sai.third.hold": {
+			"loop": true,
+			"bones": {
+				"weapon": {
+					"position": [0, 21.5, -1.5]
+				}
+			}
+		}
+	}
+}

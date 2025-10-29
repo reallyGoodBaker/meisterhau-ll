@@ -1,0 +1,17 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.metal_sting.third.hold": {
+			"loop": true,
+			"bones": {
+				"weapon": {
+					"position": [
+						6,
+						9,
+						4.11831
+					]
+				}
+			}
+		}
+	}
+}

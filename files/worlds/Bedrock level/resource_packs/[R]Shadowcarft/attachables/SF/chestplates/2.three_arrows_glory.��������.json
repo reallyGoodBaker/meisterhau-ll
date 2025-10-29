@@ -1,0 +1,27 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:attachable": {
+		"description": {
+			"identifier": "sf:three_arrows_glory",
+			"materials": {
+				"default": "armor",
+				"enchanted": "armor_enchanted",
+				"dyed": "entity_alphatest_change_color"
+			},
+			"textures": {
+				"default": "textures/models/chestplates/three_arrows_glory_default",
+				"dyed": "textures/models/chestplates/three_arrows_glory_dyeable",
+				"undyed": "textures/models/chestplates/three_arrows_glory_top",
+				"enchanted": "textures/misc/enchanted_item_glint"
+			},
+			"geometry": {
+				"default": "geometry.three_arrows_glory"
+			},
+			"scripts": {},
+			"render_controllers": [
+				"controller.render.dyeable1",
+				"controller.render.dyeable2"
+			]
+		}
+	}
+}

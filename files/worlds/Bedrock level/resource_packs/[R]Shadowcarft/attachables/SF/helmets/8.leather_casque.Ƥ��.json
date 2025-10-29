@@ -1,0 +1,27 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "sf:leather_casque",
+      "materials": {
+        "default": "armor",
+        "enchanted": "armor_enchanted",
+        "dyed": "entity_alphatest_change_color"
+      },
+      "textures": {
+        "default": "textures/models/helmets/leather_casque_default",
+        "dyed": "textures/models/helmets/leather_casque_dyeable",
+        "undyed": "textures/models/helmets/leather_casque_top",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.leather_casque"
+      },
+      "scripts": {},
+      "render_controllers": [
+        "controller.render.dyeable1",
+        "controller.render.dyeable2"
+      ]
+    }
+  }
+}

@@ -1,0 +1,229 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "minecraft:player",
+			"materials": {
+				"default": "entity_alphatest",
+				"animated": "player_animated",
+				"cape": "entity_alphatest"
+			},
+			"textures": {
+				"default": "textures/entity/steve",
+				"cape": "textures/entity/cape_invisible",
+				"sarge": "textures/boy1",
+				"galen": "textures/boy2",
+				"gizmo": "textures/boy3",
+				"june": "textures/boy4",
+				"xiangtzu": "textures/boy5",
+				"itu": "textures/girl1",
+				"xiangtzu2": "textures/girl2",
+				"marcus": "textures/girl3",
+				"kitsune1": "textures/girl4",
+				"stranger": "textures/girl5",
+				//skin_edit
+				"invisible": "textures/entity/invisible",
+				"face_man_1": "textures/entity/face/face_man_1",
+				"face_man_2": "textures/entity/face/face_man_2",
+				"face_man_3": "textures/entity/face/face_man_3",
+				"hair_man_black_1": "textures/entity/hair/hair_man_black_1",
+				"hair_man_black_2": "textures/entity/hair/hair_man_black_2",
+				"hair_man_black_3": "textures/entity/hair/hair_man_black_3",
+				"hair_man_black_4": "textures/entity/hair/hair_man_black_4",
+				"hair_man_brown_1": "textures/entity/hair/hair_man_brown_1",
+				"hair_man_brown_2": "textures/entity/hair/hair_man_brown_2",
+				"hair_man_brown_3": "textures/entity/hair/hair_man_brown_3",
+				"hair_man_brown_4": "textures/entity/hair/hair_man_brown_4",
+				"hair_man_golden_1": "textures/entity/hair/hair_man_golden_1",
+				"hair_man_golden_2": "textures/entity/hair/hair_man_golden_2",
+				"hair_man_golden_3": "textures/entity/hair/hair_man_golden_3",
+				"hair_man_golden_4": "textures/entity/hair/hair_man_golden_4",
+				"face_woman_1": "textures/entity/face/face_woman_1",
+				"face_woman_2": "textures/entity/face/face_woman_2",
+				"face_woman_3": "textures/entity/face/face_woman_3",
+				"hair_woman_black_1": "textures/entity/hair/hair_woman_black_1",
+				"hair_woman_black_2": "textures/entity/hair/hair_woman_black_2",
+				"hair_woman_black_3": "textures/entity/hair/hair_woman_black_3",
+				"hair_woman_black_4": "textures/entity/hair/hair_woman_black_4",
+				"hair_woman_brown_1": "textures/entity/hair/hair_woman_brown_1",
+				"hair_woman_brown_2": "textures/entity/hair/hair_woman_brown_2",
+				"hair_woman_brown_3": "textures/entity/hair/hair_woman_brown_3",
+				"hair_woman_brown_4": "textures/entity/hair/hair_woman_brown_4",
+				"hair_woman_golden_1": "textures/entity/hair/hair_woman_golden_1",
+				"hair_woman_golden_2": "textures/entity/hair/hair_woman_golden_2",
+				"hair_woman_golden_3": "textures/entity/hair/hair_woman_golden_3",
+				"hair_woman_golden_4": "textures/entity/hair/hair_woman_golden_4"
+			},
+			"geometry": {
+				"default": "geometry.humanoid.custom",
+				"custom": "geometry.zombie.new",
+				"custom_slim": "geometry.zombie.new.woman",
+				"cape": "geometry.cape"
+			},
+			"scripts": {
+				"scale": "0.9375",
+				"initialize": [
+					"variable.is_holding_right = 0.0;",
+					"variable.is_blinking = 0.0;",
+					"variable.last_blink_time = 0.0;",
+					"variable.hand_bob = 0.0;",
+					"v.skin_hero = 0.0;",
+					"v.is_property_skin = 0.0;",
+					"v.skin_gender = 0.0;",
+					"v.skin_hair_color = 0.0;",
+					"v.skin_face = 0.0;",
+					"v.skin_hair = 0.0;",
+					"v.controller = math.random_integer(1,2);"
+				],
+				"pre_animation": [
+					"variable.health = math.round(query.health / query.max_health * 100);",
+					"variable.helmet_layer_visible = 1.0;",
+					"variable.leg_layer_visible = 1.0;",
+					"variable.boot_layer_visible = 1.0;",
+					"variable.chest_layer_visible = 1.0;",
+					"variable.attack_body_rot_y = Math.sin(360*Math.sqrt(variable.attack_time)) * 5.0;",
+					"variable.tcos0 = (math.cos(query.modified_distance_moved * 38.17) * query.modified_move_speed / variable.gliding_speed_value) * 57.3;",
+					"variable.first_person_rotation_factor = math.sin((1 - variable.attack_time) * 180.0);",
+					"variable.hand_bob = query.life_time < 0.01 ? 0.0 : variable.hand_bob + ((query.is_on_ground && query.is_alive ? math.clamp(math.sqrt(math.pow(query.position_delta(0), 2.0) + math.pow(query.position_delta(2), 2.0)), 0.0, 0.1) : 0.0) - variable.hand_bob) * 0.02;",
+					"v.is_property_skin = ( !q.is_on_screen ? 0.0 : q.property('skin_custom:property_skin') );",
+					"v.skin_gender = ( !q.is_on_screen ? 0.0 : q.property('skin_custom:gender') );",
+					"v.skin_hair_color = ( !q.is_on_screen ? 0.0 : q.property('skin_custom:hair_color') );",
+					"v.skin_face = ( !q.is_on_screen ? 0.0 : q.property('skin_custom:face') );",
+					"v.skin_hair = ( !q.is_on_screen ? 0.0 : q.property('skin_custom:hair') );",
+					"variable.sabers = query.get_equipped_item_name == 'lightweight_sabers' || query.get_equipped_item_name == 'double_scimitars';",
+					"variable.katana = query.get_equipped_item_name == 'keen_katana';",
+					"variable.katana2 = query.get_equipped_item_name == 'hermit_katana';",
+					"variable.axes = query.get_equipped_item_name == 'labryses' || query.get_equipped_item_name == 'nightbanes' || query.get_equipped_item_name == 'solid_hatchets';",
+					"variable.hammers = query.get_equipped_item_name == 'riffle_hammers' || query.get_equipped_item_name == 'wicked_twins';",
+					"variable.maces = query.get_equipped_item_name == 'swampers_grinders';",
+					"variable.sais = query.get_equipped_item_name == 'sai';",
+					"variable.double_weapon = variable.sabers || variable.axes || variable.hammers || variable.maces || variable.sais;",
+					"variable.ahm = variable.axes || variable.hammers || variable.maces;"
+				],
+				"animate": [
+					"root",
+					{
+						"weapon_color_controller": "q.is_on_screen"
+					},
+					{
+						"helmet_color_controller": "q.is_on_screen"
+					},
+					{
+						"chestplate_color_controller": "q.is_on_screen"
+					},
+					"c.sabers",
+					"c.katana",
+					{
+						"c.ahm1": "v.controller == 1"
+					},
+					{
+						"c.ahm2": "v.controller == 2"
+					},
+					"c.eqip.helmet",
+					"c.eqip.armor",
+					{
+						"a.left.invisible": "!v.attack && variable.katana"
+					},
+					{
+						"a.hold.double_weapon": "!v.is_first_person && v.double_weapon && !v.fly_sprint_npa"
+					}
+				]
+			},
+			"animations": {
+				"c.sabers": "controller.animation.player.attack.sabers",
+				"sabers1": "animation.player.attack.sabers1",
+				"sabers2": "animation.player.attack.sabers2",
+				"sabers3": "animation.player.attack.sabers3",
+				"sabers4": "animation.player.attack.sabers4",
+				"c.katana": "controller.animation.player.attack.katana",
+				"katana1": "animation.player.attack.katana1",
+				"katana2": "animation.player.attack.katana2",
+				"c.eqip.helmet": "controller.animation.player.eqip.helmet",
+				"c.eqip.armor": "controller.animation.player.eqip.armor",
+				"eqip.helmet": "animation.player.eqip.helmet",
+				"eqip.armor": "animation.player.eqip.armor",
+				"a.hold.double_weapon": "animation.player.hold.double_weapon",
+				"a.left.invisible": "animation.left.invisible",
+				"a.head.visible": "animation.head.visible",
+				"c.ahm1": "controller.animation.player.attack.ahm1",
+				"c.ahm2": "controller.animation.player.attack.ahm2",
+				"ahm1": "animation.player.attack.ahm1",
+				"ahm2": "animation.player.attack.ahm2",
+				"ahm3": "animation.player.attack.ahm3",
+				"ahm4": "animation.player.attack.ahm4",
+				"a.first_hold": "animation.player.weapon.first.hold",
+				"c.first_hold_weapon": "controller.animation.player.first_hold_weapon"
+			},
+			"render_controllers": [
+				// 第三人称
+				{
+					"controller.render.skin_hero.third_person": "!v.is_first_person && !v.map_face_icon && !q.is_emoting && q.is_on_screen && !q.is_spectator"
+				},
+				{
+					"controller.render.custom.model": "!v.is_first_person && !v.map_face_icon && !q.is_emoting && q.is_on_screen && !q.is_spectator"
+				},
+				{
+					"controller.render.custom_slim.model": "!v.is_first_person && !v.map_face_icon && !q.is_emoting && q.is_on_screen && !q.is_spectator"
+				},
+				{
+					"controller.render.skin_custom.hair.third_person": "!v.is_first_person && !v.map_face_icon && !q.is_emoting && q.is_on_screen && !q.is_spectator"
+				},
+				{
+					"controller.render.skin_custom.face.third_person": "!v.is_first_person && !v.map_face_icon && !q.is_emoting && q.is_on_screen && !q.is_spectator"
+				},
+				// 播放表情时
+				{
+					"controller.render.skin_hero.emoting": "((!v.is_first_person && !v.map_face_icon && q.is_emoting) || (!q.is_on_screen)) && !q.is_spectator"
+				},
+				{
+					"controller.render.emoting": "((!v.is_first_person && !v.map_face_icon && q.is_emoting) || (!q.is_on_screen)) && !q.is_spectator"
+				},
+				{
+					"controller.render.emoting_slim": "((!v.is_first_person && !v.map_face_icon && q.is_emoting) || (!q.is_on_screen)) && !q.is_spectator"
+				},
+				{
+					"controller.render.skin_custom.hair.emoting": "((!v.is_first_person && !v.map_face_icon && q.is_emoting) || (!q.is_on_screen)) && !q.is_spectator"
+				},
+				{
+					"controller.render.skin_custom.face.emoting": "((!v.is_first_person && !v.map_face_icon && q.is_emoting) || (!q.is_on_screen)) && !q.is_spectator"
+				},
+				{
+					"controller.render.player.first_person_spectator": "v.is_first_person && q.is_spectator"
+				},
+				{
+					"controller.render.player.third_person_spectator": "!v.is_first_person && !v.map_face_icon && q.is_spectator"
+				},
+				// 第一人称
+				{
+					"controller.render.skin_hero.first_person": "v.is_first_person && !q.is_spectator"
+				},
+				{
+					"controller.render.player.first_person": "v.is_first_person && !q.is_spectator"
+				},
+				{
+					"controller.render.skin_custom.hair.first_person": "v.is_first_person && !q.is_spectator"
+				},
+				{
+					"controller.render.skin_custom.face.first_person": "v.is_first_person && !q.is_spectator"
+				},
+				{
+					"controller.render.player.third_person": "!v.is_first_person && !v.map_face_icon && !q.is_spectator"
+				},
+				// 地图中的头像
+				{
+					"controller.render.skin_hero.map": "v.map_face_icon"
+				},
+				{
+					"controller.render.player.map": "v.map_face_icon"
+				},
+				{
+					"controller.render.skin_custom.hair.map": "v.map_face_icon"
+				},
+				{
+					"controller.render.skin_custom.face.map": "v.map_face_icon"
+				}
+			],
+			"enable_attachables": true
+		}
+	}
+}

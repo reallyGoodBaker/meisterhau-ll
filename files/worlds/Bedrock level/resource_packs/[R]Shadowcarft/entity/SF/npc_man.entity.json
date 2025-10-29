@@ -1,0 +1,96 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "npc:npc_man",
+			"materials": {
+				"default": "entity_alphatest"
+			},
+			"textures": {
+				"human0": "textures/entity/steve",
+				"human1": "textures/entity/alex",
+				"human2": "textures/...",
+				"human3": "textures/boy1",
+				"human4": "textures/boy2",
+				"human5": "textures/boy3",
+				"human6": "textures/boy4",
+				"human7": "textures/boy5",
+				"human8": "textures/girl1",
+				"human9": "textures/girl2",
+				"human10": "textures/girl3",
+				"human11": "textures/girl4",
+				"human12": "textures/girl5",
+				"human13": "textures/student1",
+				"human14": "textures/student2",
+				"human15": "textures/teacher1",
+				"human16": "textures/teacher2",
+				"human17": "textures/student2",
+				"human18": "textures/ianite",
+				"human19": "textures/mianite",
+				"human20": "textures/dianite",
+				"human21": "textures/dewdimpple",
+				"human22": "textures/captainsparklez",
+				"human23": "textures/karacorvus",
+				"human24": "textures/ssundee",
+				"human25": "textures/crainer",
+				"human26": "textures/bajancanadian",
+				"human27": "textures/dantdm",
+				"human28": "textures/fundy",
+				"human29": "textures/popularmmos",
+				"human30": "textures/prestonplays",
+				"human31": "textures/skydoesminecraft",
+				"human32": "textures/stampylonghead",
+				"human33": "textures/technoblade",
+				"human34": "textures/dream",
+				"human35": "textures/unspeakablegaming"
+			},
+			"geometry": {
+				"default": "geometry.humanoid.custom"
+			},
+			"scripts": {
+				"scale": "0.9375",
+				"initialize": [
+					"variable.is_holding_right = 0.0;",
+					"variable.is_blinking = 0.0;",
+					"variable.last_blink_time = 0.0;",
+					"variable.hand_bob = 0.0;"
+				],
+				"pre_animation": [
+					"variable.helmet_layer_visible = 1.0;",
+					"variable.leg_layer_visible = 1.0;",
+					"variable.boot_layer_visible = 1.0;",
+					"variable.chest_layer_visible = 1.0;",
+					"variable.attack_body_rot_y = Math.sin(360*Math.sqrt(variable.attack_time)) * 5.0;",
+					"variable.tcos0 = (math.cos(query.modified_distance_moved * 38.17) * query.modified_move_speed / variable.gliding_speed_value) * 57.3;",
+					"variable.first_person_rotation_factor = math.sin((1 - variable.attack_time) * 180.0);",
+					"variable.hand_bob = query.life_time < 0.01 ? 0.0 : variable.hand_bob + ((query.is_on_ground && query.is_alive ? math.clamp(math.sqrt(math.pow(query.position_delta(0), 2.0) + math.pow(query.position_delta(2), 2.0)), 0.0, 0.1) : 0.0) - variable.hand_bob) * 0.02;",
+					"variable.map_angle = math.clamp(1 - variable.player_x_rotation / 45.1, 0.0, 1.0);",
+					"variable.item_use_normalized = query.main_hand_item_use_duration / query.main_hand_item_max_duration;"
+				],
+				"animate": [
+					{
+						"look_at_target": 1
+					},
+					{
+						"move.arms": 1
+					},
+					{
+						"move.legs": 1
+					}
+				]
+			},
+			"animations": {
+				"look_at_target": "controller.animation.humanoid.look_at_target",
+				"move.arms": "animation.player.move.arms",
+				"move.legs": "animation.player.move.legs"
+			},
+			"render_controllers": [
+				"controller.render.npc_humans"
+			],
+			"spawn_egg": {
+				"texture": "spawn_egg",
+				"texture_index": 35
+			}
+		}
+	}
+}

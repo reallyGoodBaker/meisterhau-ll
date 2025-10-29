@@ -1,0 +1,27 @@
+{
+	"format_version": "1.12",
+	"minecraft:recipe_shaped": {
+		"description": {
+			"identifier": "sf:shadow_stone_essence"
+		},
+		"tags": [
+			"crafting_table"
+		],
+		"pattern": [
+			"///",
+			"/A/",
+			"///"
+		],
+		"key": {
+			"/": {
+				"item": "sf:shadow_energy"
+			},
+			"A": {
+				"item": "minecraft:smooth_stone"
+			}
+		},
+		"result": {
+			"item": "sf:shadow_stone_essence"
+		}
+	}
+}

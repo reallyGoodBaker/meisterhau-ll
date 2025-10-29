@@ -1,0 +1,59 @@
+{
+	"format_version": 2,
+	"header": {
+		"description": "by DN Studios",
+		"name": "[B]ShadowCraft v0.5.5",
+		"uuid": "dc3edde6-3e1a-47fb-a3ba-007a72cc4bd9",
+		"version": [
+			0,
+			5,
+			5
+		],
+		"min_engine_version": [
+			1,
+			21,
+			60
+		]
+	},
+	"modules": [
+		{
+			"description": "",
+			"type": "data",
+			"uuid": "9b03bd10-d25c-4d52-a8ed-61118f116165",
+			"version": [
+				1,
+				0,
+				0
+			]
+		},
+		{
+			"type": "script",
+			"language": "javascript",
+			"uuid": "898afbe3-8444-43f9-8e4c-1a31fd9dc1ea",
+			"version": [
+				0,
+				0,
+				1
+			],
+			"entry": "scripts/main.js"
+		}
+	],
+	"dependencies": [
+		{
+			"uuid": "8d0e5fee-7d07-4e1a-bcf9-beb5705a26cf",
+			"version": [
+				0,
+				5,
+				5
+			]
+		},
+		{
+			"module_name": "@minecraft/server-ui",
+			"version": "2.1.0-beta"
+		},
+		{
+			"module_name": "@minecraft/server",
+			"version": "2.3.0-beta"
+		}
+	]
+}

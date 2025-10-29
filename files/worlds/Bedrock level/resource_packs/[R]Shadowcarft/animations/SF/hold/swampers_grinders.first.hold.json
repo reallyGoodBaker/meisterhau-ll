@@ -1,0 +1,22 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.player.swampers_grinders.first.hold": {
+			"loop": true,
+			"bones": {
+				"rightItem": {
+					"rotation": [
+						73.33528,
+						49.18271,
+						28.65787
+					],
+					"position": [
+						18.11246,
+						-21.28496,
+						12.99575
+					]
+				}
+			}
+		}
+	}
+}

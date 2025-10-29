@@ -1,0 +1,22 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.player.nightbanes.first.hold": {
+			"loop": true,
+			"bones": {
+				"rightItem": {
+					"rotation": [
+						-64.69098,
+						62.7177,
+						-109.50978
+					],
+					"position": [
+						5.38454,
+						-8.60547,
+						14.10506
+					]
+				}
+			}
+		}
+	}
+}

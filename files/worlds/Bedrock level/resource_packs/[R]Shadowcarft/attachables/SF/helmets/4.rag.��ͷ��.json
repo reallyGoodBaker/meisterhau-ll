@@ -1,0 +1,27 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "sf:rag",
+      "materials": {
+        "default": "armor",
+        "enchanted": "armor_enchanted",
+        "dyed": "entity_alphatest_change_color"
+      },
+      "textures": {
+        "default": "textures/models/helmets/rag_default",
+        "dyed": "textures/models/helmets/rag_dyeable",
+        "undyed": "textures/models/helmets/rag_top",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.rag"
+      },
+      "scripts": {},
+      "render_controllers": [
+        "controller.render.dyeable1",
+        "controller.render.dyeable2"
+      ]
+    }
+  }
+}

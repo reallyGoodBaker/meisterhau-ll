@@ -1,0 +1,31 @@
+execute as @a[hasitem=[{item=sf:nomads_cap,location=slot.armor.head},{item=sf:training_uniform,location=slot.armor.chest}]] run effect @s strength 1 0 true
+execute as @a[hasitem=[{item=sf:nomads_cap,location=slot.armor.head},{item=sf:training_uniform,location=slot.armor.chest}]] run effect @s resistance 1 0 true
+execute as @a[hasitem=[{item=sf:bedrock_helm,location=slot.armor.head},{item=sf:bedrock_armor,location=slot.armor.chest}]] run effect @s strength 1 0 true
+execute as @a[hasitem=[{item=sf:bedrock_helm,location=slot.armor.head},{item=sf:bedrock_armor,location=slot.armor.chest}]] run effect @s resistance 1 0 true
+execute as @a[hasitem=[{item=sf:visored_casque,location=slot.armor.head},{item=sf:reinforced_coat,location=slot.armor.chest}]] run effect @s strength 1 0 true
+execute as @a[hasitem=[{item=sf:visored_casque,location=slot.armor.head},{item=sf:reinforced_coat,location=slot.armor.chest}]] run effect @s resistance 1 0 true
+execute as @a[hasitem=[{item=sf:rigid_barbute,location=slot.armor.head},{item=sf:laminar_cuirass,location=slot.armor.chest}]] run effect @s strength 1 0 true
+execute as @a[hasitem=[{item=sf:rigid_barbute,location=slot.armor.head},{item=sf:laminar_cuirass,location=slot.armor.chest}]] run effect @s resistance 1 0 true
+execute as @a[hasitem=[{item=sf:higher_calling,location=slot.armor.head},{item=sf:divine_retribution,location=slot.armor.chest}]] run effect @s strength 1 0 true
+execute as @a[hasitem=[{item=sf:higher_calling,location=slot.armor.head},{item=sf:divine_retribution,location=slot.armor.chest}]] run effect @s resistance 1 0 true
+execute as @a[hasitem=[{item=sf:swampers_headgear,location=slot.armor.head},{item=sf:swampers_camouflage,location=slot.armor.chest}]] run effect @s strength 1 0 true
+execute as @a[hasitem=[{item=sf:swampers_headgear,location=slot.armor.head},{item=sf:swampers_camouflage,location=slot.armor.chest}]] run effect @s resistance 1 0 true
+execute as @a[hasitem=[{item=sf:epiphany_kasa,location=slot.armor.head},{item=sf:gilded_vest,location=slot.armor.chest}]] run effect @s jump_boost 1 0 true
+execute as @a[hasitem=[{item=sf:epiphany_kasa,location=slot.armor.head},{item=sf:gilded_vest,location=slot.armor.chest}]] run effect @s slow_falling 1 0 true
+execute as @a[hasitem=[{item=sf:seahorse_veil,location=slot.armor.head},{item=sf:embroidered_suit,location=slot.armor.chest}]] run effect @s jump_boost 1 0 true
+execute as @a[hasitem=[{item=sf:seahorse_veil,location=slot.armor.head},{item=sf:embroidered_suit,location=slot.armor.chest}]] run effect @s slow_falling 1 0 true
+execute as @a[hasitem=[{item=sf:sea_devils_mask,location=slot.armor.head},{item=sf:fur_lined_armor,location=slot.armor.chest}]] run effect @s jump_boost 1 0 true
+execute as @a[hasitem=[{item=sf:sea_devils_mask,location=slot.armor.head},{item=sf:fur_lined_armor,location=slot.armor.chest}]] run effect @s slow_falling 1 0 true
+execute as @a[hasitem=[{item=sf:courage,location=slot.armor.head},{item=sf:prefects_robe,location=slot.armor.chest}]] run effect @s jump_boost 1 0 true
+execute as @a[hasitem=[{item=sf:courage,location=slot.armor.head},{item=sf:prefects_robe,location=slot.armor.chest}]] run effect @s slow_falling 1 0 true
+execute as @a[hasitem=[{item=sf:golden_fang_crown,location=slot.armor.head},{item=sf:three_arrows_glory,location=slot.armor.chest}]] run effect @s jump_boost 1 0 true
+execute as @a[hasitem=[{item=sf:golden_fang_crown,location=slot.armor.head},{item=sf:three_arrows_glory,location=slot.armor.chest}]] run effect @s slow_falling 1 0 true
+execute as @a[hasitem=[{item=sf:rag,location=slot.armor.head},{item=sf:plain_waistcoat,location=slot.armor.chest}]] run effect @s jump_boost 1 0 true
+execute as @a[hasitem=[{item=sf:rag,location=slot.armor.head},{item=sf:plain_waistcoat,location=slot.armor.chest}]] run effect @s slow_falling 1 0 true
+execute as @a[hasitem=[{item=sf:leather_casque,location=slot.armor.head},{item=sf:compression_suit,location=slot.armor.chest}]] run effect @s haste 1 0 true
+execute as @a[hasitem=[{item=sf:leather_casque,location=slot.armor.head},{item=sf:compression_suit,location=slot.armor.chest}]] run effect @s speed 1 0 true
+execute as @a[hasitem=[{item=sf:rag,location=slot.armor.head},{item=sf:gladiator_armor,location=slot.armor.chest}]] run effect @s slow_falling 1 0 true
+execute as @a[hasitem=[{item=sf:rag,location=slot.armor.head},{item=sf:gladiator_armor,location=slot.armor.chest}]] run effect @s strength 1 0 true
+execute as @a[hasitem=[{item=sf:rag,location=slot.armor.head},{item=sf:gladiator_armor,location=slot.armor.chest}]] run effect @s speed 1 0 true
+execute as @e[type=sf:shadowball1] at @s run particle sf:snowball
+execute as @e[type=sf:shadowball2] at @s run particle sf:snowball

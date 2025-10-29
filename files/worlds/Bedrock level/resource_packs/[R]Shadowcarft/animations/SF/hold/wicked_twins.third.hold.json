@@ -1,0 +1,17 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.wicked_twins.third.hold": {
+			"loop": true,
+			"bones": {
+				"weapon": {
+					"position": [
+						5.9,
+						8.05694,
+						-1.2271
+					]
+				}
+			}
+		}
+	}
+}

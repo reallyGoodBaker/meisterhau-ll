@@ -1,0 +1,144 @@
+{
+  "tiers": [
+    {
+      "groups": [
+        {
+          "num_to_select": 0,
+          "trades": [
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_stone_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 5
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:bloodletter_blade"
+                    },
+                    {
+                      "item": "sf:riffle_hammers"
+                    },
+                    {
+                      "item": "sf:solid_hatchets"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_iron_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 5
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:metal_sting"
+                    },
+                    {
+                      "item": "sf:silver_squall"
+                    },
+                    {
+                      "item": "sf:labryses"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_gold_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 5
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:ornate_two_hander"
+                    },
+                    {
+                      "item": "sf:old_timer"
+                    },
+                    {
+                      "item": "sf:nightbanes"
+                    },
+                    {
+                      "item": "sf:wicked_twins"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_diamond_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 5
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:arbitrator"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_netherite_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 5
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:swampers_grinders"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

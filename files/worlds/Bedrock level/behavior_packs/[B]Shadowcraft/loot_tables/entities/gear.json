@@ -1,0 +1,34 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "loot_table",
+          "name": "loot_tables/entities/common.json",
+          "weight": 1
+        },
+        {
+          "type": "loot_table",
+          "name": "loot_tables/entities/rare.json",
+          "weight": 1
+        },
+        {
+          "type": "loot_table",
+          "name": "loot_tables/entities/epic.json",
+          "weight": 1
+        },
+        {
+          "type": "loot_table",
+          "name": "loot_tables/entities/legendary.json",
+          "weight": 1
+        },
+        {
+          "type": "loot_table",
+          "name": "loot_tables/empty.json",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

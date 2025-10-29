@@ -1,0 +1,27 @@
+{
+  "format_version": "1.21.30",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "sf:divine_retribution",
+      "materials": {
+        "default": "armor",
+        "enchanted": "armor_enchanted",
+        "dyed": "entity_alphatest_change_color"
+      },
+      "textures": {
+        "default": "textures/models/chestplates/divine_retribution_default",
+        "dyed": "textures/models/chestplates/divine_retribution_dyeable",
+        "undyed": "textures/models/chestplates/divine_retribution_top",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.divine_retribution"
+      },
+      "scripts": {},
+      "render_controllers": [
+        "controller.render.dyeable1",
+        "controller.render.dyeable2"
+      ]
+    }
+  }
+}

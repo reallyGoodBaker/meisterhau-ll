@@ -1,0 +1,36 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:attachable": {
+		"description": {
+			"identifier": "sf:ornate_two_hander",
+			"materials": {
+				"default": "armor",
+				"enchanted": "armor_enchanted",
+				"dyed": "entity_alphatest_change_color"
+			},
+			"textures": {
+				"default": "textures/models/weapons/ornate_two_hander_default",
+				"dyed": "textures/models/weapons/ornate_two_hander_dyeable",
+				"undyed": "textures/models/weapons/ornate_two_hander_top",
+				"enchanted": "textures/misc/enchanted_item_glint"
+			},
+			"animations": {
+				"first_hold": "animation.player.weapons.first.hold"
+			},
+			"scripts": {
+				"animate": [
+					{
+						"first_hold": "c.is_first_person"
+					}
+				]
+			},
+			"geometry": {
+				"default": "geometry.ornate_two_hander"
+			},
+			"render_controllers": [
+				"controller.render.dyeable1",
+				"controller.render.dyeable2"
+			]
+		}
+	}
+}

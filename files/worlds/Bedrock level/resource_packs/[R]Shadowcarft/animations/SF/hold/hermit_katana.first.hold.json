@@ -1,0 +1,17 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.hermit_katana.first.hold": {
+			"loop": true,
+			"bones": {
+				"100": {
+					"rotation": [68.06794, 27.62248, -43.08748],
+					"position": [17.31102, 3.07165, 1.91842]
+				},
+				"200": {
+					"position": [39, 99, 24]
+				}
+			}
+		}
+	}
+}

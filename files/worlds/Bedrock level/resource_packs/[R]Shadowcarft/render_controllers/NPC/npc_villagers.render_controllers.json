@@ -1,0 +1,40 @@
+{
+	"format_version": "1.8.0",
+	"render_controllers": {
+		"controller.render.npc.base": {
+			"geometry": "geometry.villager",
+			"materials": [
+				{
+					"*": "material.default"
+				}
+			],
+			"textures": [
+				"texture.base"
+			]
+		},
+		"controller.render.npc_villagers": {
+			"arrays": {
+				"textures": {
+					"Array.skins": [
+						"Texture.villager0",
+						"Texture.villager1",
+						"Texture.villager2",
+						"Texture.villager3",
+						"Texture.villager4",
+						"Texture.villager5",
+						"Texture.villager6"
+					]
+				}
+			},
+			"geometry": "geometry.villager",
+			"materials": [
+				{
+					"*": "material.default"
+				}
+			],
+			"textures": [
+				"array.skins[query.variant]"
+			]
+		}
+	}
+}

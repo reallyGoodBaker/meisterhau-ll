@@ -1,0 +1,36 @@
+{
+    "format_version": "1.10.0",
+    "minecraft:attachable": {
+        "description": {
+            "identifier": "sf:shadow_slayer",
+            "materials": {
+                "default": "armor",
+                "enchanted": "armor_enchanted",
+                "dyed": "entity_alphatest_change_color"
+            },
+            "textures": {
+                "default": "textures/models/weapons/shadow_slayer",
+                "dyed": "textures/models/weapons/shadow_slayer_dyeable",
+                "undyed": "textures/models/weapons/shadow_slayer_top",
+                "enchanted": "textures/misc/enchanted_item_glint"
+            },
+            "animations": {
+                "first_hold": "animation.katana.first.hold"
+            },
+            "scripts": {
+                "animate": [
+                    {
+                        "first_hold": "c.is_first_person"
+                    }
+                ]
+            },
+            "geometry": {
+                "default": "geometry.shadow_slayer"
+            },
+            "render_controllers": [
+                "controller.render.dyeable1",
+                "controller.render.dyeable2"
+            ]
+        }
+    }
+}

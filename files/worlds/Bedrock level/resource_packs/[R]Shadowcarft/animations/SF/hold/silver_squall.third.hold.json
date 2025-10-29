@@ -1,0 +1,17 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.silver_squall.third.hold": {
+			"loop": true,
+			"bones": {
+				"weapon": {
+					"position": [
+						5.9,
+						8.58282,
+						-1.13051
+					]
+				}
+			}
+		}
+	}
+}

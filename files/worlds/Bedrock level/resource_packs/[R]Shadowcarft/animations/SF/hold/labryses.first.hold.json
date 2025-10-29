@@ -1,0 +1,18 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.labryses.first.hold": {
+			"loop": true,
+			"bones": {
+				"weapon": {
+					"rotation": [-40.53885, 67.8491, -91.99508],
+					"position": [3.2302, -14.89122, 13.2374]
+				},
+				"weapon2": {
+					"rotation": [34.16371, 37.42036, -6.52882],
+					"position": [48.85769, 50.15613, 36.61473]
+				}
+			}
+		}
+	}
+}

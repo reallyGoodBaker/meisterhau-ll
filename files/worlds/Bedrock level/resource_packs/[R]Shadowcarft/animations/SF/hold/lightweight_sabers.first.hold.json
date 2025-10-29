@@ -1,0 +1,17 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.player.lightweight_sabers.first.hold": {
+			"loop": true,
+			"bones": {
+				"weapon2": {
+					"position": [47, 47, 9]
+				},
+				"weapon": {
+					"rotation": [-57.59682, 53.67835, -99.85104],
+					"position": [11.07522, -8.64011, 14.88919]
+				}
+			}
+		}
+	}
+}

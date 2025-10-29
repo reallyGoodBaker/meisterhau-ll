@@ -1,0 +1,17 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.labryses.third.hold": {
+			"loop": true,
+			"bones": {
+				"weapon": {
+					"position": [
+						5.9,
+						10.33726,
+						-1.21695
+					]
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,36 @@
+{
+    "format_version": "1.10.0",
+    "minecraft:attachable": {
+        "description": {
+            "identifier": "sf:will_of_many",
+            "materials": {
+                "default": "armor",
+                "enchanted": "armor_enchanted",
+                "dyed": "entity_alphatest_change_color"
+            },
+            "textures": {
+                "default": "textures/models/weapons/will_of_many",
+                "dyed": "textures/models/weapons/will_of_many_dyeable",
+                "undyed": "textures/models/weapons/will_of_many_top",
+                "enchanted": "textures/misc/enchanted_item_glint"
+            },
+            "animations": {
+                "first_hold": "animation.will_of_many.first.hold"
+            },
+            "scripts": {
+                "animate": [
+                    {
+                        "first_hold": "c.is_first_person"
+                    }
+                ]
+            },
+            "geometry": {
+                "default": "geometry.will_of_many"
+            },
+            "render_controllers": [
+                "controller.render.dyeable1",
+                "controller.render.dyeable2"
+            ]
+        }
+    }
+}

@@ -1,0 +1,17 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.nightbanes.third.hold": {
+			"loop": true,
+			"bones": {
+				"weapon": {
+					"position": [
+						5.9,
+						7.86375,
+						-1.17534
+					]
+				}
+			}
+		}
+	}
+}

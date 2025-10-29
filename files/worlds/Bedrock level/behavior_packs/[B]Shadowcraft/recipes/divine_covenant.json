@@ -1,0 +1,30 @@
+{
+	"format_version": "1.12",
+	"minecraft:recipe_shaped": {
+		"description": {
+			"identifier": "sf:divine_covenant"
+		},
+		"tags": [
+			"crafting_table"
+		],
+		"pattern": [
+			"/B/",
+			"BAB",
+			"/B/"
+		],
+		"key": {
+			"/": {
+				"item": "sf:copper_coin"
+			},
+			"A": {
+				"item": "minecraft:paper"
+			},
+			"B": {
+				"item": "sf:shadow_energy"
+			}
+		},
+		"result": {
+			"item": "sf:divine_covenant"
+		}
+	}
+}

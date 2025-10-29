@@ -1,0 +1,17 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.riffle_hammers.third.hold": {
+			"loop": true,
+			"bones": {
+				"weapon": {
+					"position": [
+						5.8,
+						8.06387,
+						-0.81485
+					]
+				}
+			}
+		}
+	}
+}

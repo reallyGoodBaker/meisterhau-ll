@@ -1,0 +1,216 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "name": "sf:visored_casque",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.18
+            },
+            {
+              "function": "random_dye"
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:bedrock_helm",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.18
+            },
+            {
+              "function": "random_dye"
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:sea_devils_mask",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.18
+            },
+            {
+              "function": "random_dye"
+            }
+          ]
+        },
+        {
+          "type": "loot_table",
+          "name": "loot_tables/empty.json",
+          "weight": 5
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "name": "sf:bedrock_armor",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.18
+            },
+            {
+              "function": "random_dye"
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:reinforced_coat",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.18
+            },
+            {
+              "function": "random_dye"
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:gilded_vest",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.18
+            },
+            {
+              "function": "random_dye"
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:fur_lined_armor",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.18
+            },
+            {
+              "function": "random_dye"
+            }
+          ]
+        },
+        {
+          "type": "loot_table",
+          "name": "loot_tables/empty.json",
+          "weight": 5
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "name": "sf:labryses",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.18
+            },
+            {
+              "function": "random_dye"
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:wooden_staff",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.18
+            },
+            {
+              "function": "random_dye"
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:lightweight_sabers",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.18
+            },
+            {
+              "function": "random_dye"
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:metal_sting",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.18
+            },
+            {
+              "function": "random_dye"
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:sentrys_guandao",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.18
+            },
+            {
+              "function": "random_dye"
+            }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "sf:silver_squall",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "enchant_random_gear",
+              "chance": 0.18
+            },
+            {
+              "function": "random_dye"
+            }
+          ]
+        },
+        {
+          "type": "loot_table",
+          "name": "loot_tables/empty.json",
+          "weight": 5
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "tiers": [
+    {
+      "groups": [
+        {
+          "num_to_select": 0,
+          "trades": [
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_stone_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 5
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:common_staff"
+                    },
+                    {
+                      "item": "sf:double_scimitars"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_iron_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 5
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:wooden_staff"
+                    },
+                    {
+                      "item": "sf:lightweight_sabers"
+                    },
+                    {
+                      "item": "sf:rebel_nunchaku"
+                    },
+                    {
+                      "item": "sf:sentrys_guandao"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_gold_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 5
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:aerial_lotus"
+                    },
+                    {
+                      "item": "sf:gilded_staff"
+                    },
+                    {
+                      "item": "sf:weightened_nunchaku"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_diamond_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 5
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:hand_of_justice"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

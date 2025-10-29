@@ -1,0 +1,13 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.left.invisible": {
+			"loop": true,
+			"bones": {
+				"LItem": {
+					"scale": 0
+				}
+			}
+		}
+	}
+}

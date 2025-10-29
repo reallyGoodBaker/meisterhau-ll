@@ -1,0 +1,8 @@
+scoreboard objectives add time dummy
+scoreboard players add @a[scores={time=1..}] time -1
+execute @a[scores={time=0}] ~~~ give @s sf:darts
+execute @a[scores={time=0}] ~~~ scoreboard players reset @s time 
+execute @a[scores={time=10}] ~~~ give @s sf:darts
+execute @a[scores={time=20}] ~~~ give @s sf:darts
+
+

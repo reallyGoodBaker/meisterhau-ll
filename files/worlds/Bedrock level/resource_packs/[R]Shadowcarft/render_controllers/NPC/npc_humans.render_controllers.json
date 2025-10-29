@@ -1,0 +1,58 @@
+{
+	"format_version": "1.8.0",
+	"render_controllers": {
+		"controller.render.npc_humans": {
+			"arrays": {
+				"textures": {
+					"Array.skins": [
+						"Texture.human0",
+						"Texture.human1",
+						"Texture.human2",
+						"Texture.human3",
+						"Texture.human4",
+						"Texture.human5",
+						"Texture.human6",
+						"Texture.human7",
+						"Texture.human8",
+						"Texture.human9",
+						"Texture.human10",
+						"Texture.human11",
+						"Texture.human12",
+						"Texture.human13",
+						"Texture.human14",
+						"Texture.human15",
+						"Texture.human16",
+						"Texture.human17",
+						"Texture.human18",
+						"Texture.human19",
+						"Texture.human20",
+						"Texture.human21",
+						"Texture.human22",
+						"Texture.human23",
+						"Texture.human24",
+						"Texture.human25",
+						"Texture.human26",
+						"Texture.human27",
+						"Texture.human28",
+						"Texture.human29",
+						"Texture.human30",
+						"Texture.human31",
+						"Texture.human32",
+						"Texture.human33",
+						"Texture.human34",
+						"Texture.human35"
+					]
+				}
+			},
+			"geometry": "geometry.default",
+			"materials": [
+				{
+					"*": "material.default"
+				}
+			],
+			"textures": [
+				"array.skins[query.variant]"
+			]
+		}
+	}
+}

@@ -1,0 +1,14 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.sai.first.hold": {
+			"loop": true,
+			"bones": {
+				"weapon": {
+					"rotation": [-38.72802, 64.19232, -33.26018],
+					"position": [10.32243, -6.50315, 12.49625]
+				}
+			}
+		}
+	}
+}

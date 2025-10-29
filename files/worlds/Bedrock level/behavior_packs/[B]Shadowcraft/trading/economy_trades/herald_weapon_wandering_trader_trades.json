@@ -1,0 +1,185 @@
+{
+  "tiers": [
+    {
+      "groups": [
+        {
+          "num_to_select": 0,
+          "trades": [
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_stone_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 5
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:hermit_katana"
+                    },
+                    {
+                      "item": "sf:keen_katana"
+                    },
+                    {
+                      "item": "sf:sai"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_gold_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 5
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:purple_peeler"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_diamond_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 5
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:blade_of_timelessness"
+                    },
+                    {
+                      "item": "sf:fates_end"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_diamond_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 5
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:branches_of_pain"
+                    },
+                    {
+                      "item": "sf:shadow_slayer"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_diamond_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 5
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:will_of_many"
+                    },
+                    {
+                      "item": "sf:cyan_talons"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_diamond_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 5
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:battle_of_laws"
+                    },
+                    {
+                      "item": "sf:ravens_talon"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "max_uses": -1,
+              "wants": [
+                {
+                  "item": "sf:shadow_netherite_essence",
+                  "quantity": 1
+                },
+                {
+                  "item": "sf:copper_coin",
+                  "quantity": 5
+                }
+              ],
+              "gives": [
+                {
+                  "choice": [
+                    {
+                      "item": "sf:world_slicer"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

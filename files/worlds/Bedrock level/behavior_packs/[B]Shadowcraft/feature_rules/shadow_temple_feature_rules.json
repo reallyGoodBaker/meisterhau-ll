@@ -1,0 +1,77 @@
+{
+    "format_version": "1.13.0",
+    "minecraft:feature_rules": {
+        "description": {
+            "identifier": "sf:shadow_temple_feature_rules",
+            "places_feature": "sf:shadow_temple_feature"
+        },
+        "conditions": {
+            "placement_pass": "surface_pass",
+            "minecraft:biome_filter": [
+                {
+                    "any_of": [
+                        {
+                            "test": "has_biome_tag",
+                            "operator": "==",
+                            "value": "overworld"
+                        },
+                        {
+                            "test": "has_biome_tag",
+                            "operator": "==",
+                            "value": "overworld_generation"
+                        }
+                    ]
+                },
+                {
+                    "test": "has_biome_tag",
+                    "operator": "!=",
+                    "value": "banboo_jungle_hills"
+                },
+                {
+                    "test": "has_biome_tag",
+                    "operator": "!=",
+                    "value": "banboo_jungle"
+                },
+                {
+                    "test": "has_biome_tag",
+                    "operator": "!=",
+                    "value": "ocean"
+                },
+                {
+                    "test": "has_biome_tag",
+                    "operator": "!=",
+                    "value": "river"
+                },
+                {
+                    "test": "has_biome_tag",
+                    "operator": "!=",
+                    "value": "lakes"
+                },
+                {
+                    "test": "has_biome_tag",
+                    "operator": "!=",
+                    "value": "beach"
+                }
+            ]
+        },
+        "distribution": {
+            "iterations": 50,
+            "x": {
+                "extent": [
+                    0,
+                    16
+                ],
+                "distribution": "uniform"
+            },
+            "y": "q.heightmap(v.worldx, v.worldz)",
+            "z": {
+                "extent": [
+                    0,
+                    16
+                ],
+                "distribution": "uniform"
+            },
+            "scatter_chance": 50
+        }
+    }
+}

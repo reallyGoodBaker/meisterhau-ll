@@ -1,0 +1,33 @@
+{
+	"format_version": "1.8.0",
+	"render_controllers": {
+		"controller.render.experience_orb": {
+			"geometry": "geometry.default",
+			"materials": [
+				{
+					"*": "material.default"
+				}
+			],
+			"textures": [
+				"texture.default"
+			],
+			"overlay_color": {
+				"r": "(math.sin(query.life_time*500)+1)*0.1",
+				"g": "(math.sin(query.life_time*500)*0.25)+0.5",
+				"b": "(math.sin(query.life_time*500)*0.25)+0.5",
+				"a": "0.65"
+			},
+			"ignore_lighting": true,
+			"uv_anim": {
+				"offset": [
+					"variable.u",
+					"variable.v"
+				],
+				"scale": [
+					1,
+					1
+				]
+			}
+		}
+	}
+}

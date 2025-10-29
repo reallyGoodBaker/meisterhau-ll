@@ -1,0 +1,22 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.old_timer.first.hold": {
+			"loop": true,
+			"bones": {
+				"weapon": {
+					"rotation": [
+						-71.44955,
+						-18.52836,
+						-28.87006
+					],
+					"position": [
+						18.0587,
+						-5.7267,
+						16.6807
+					]
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,23 @@
+{
+    "pools": [
+        {
+            "rolls": 1,
+            "entries": [
+                {
+                    "type": "item",
+                    "name": "sf:shadow_energy",
+                    "weight": 1,
+                    "functions": [
+                        {
+                            "function": "minecraft:set_count",
+                            "count": {
+                                "min": 8,
+                                "max": 10
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

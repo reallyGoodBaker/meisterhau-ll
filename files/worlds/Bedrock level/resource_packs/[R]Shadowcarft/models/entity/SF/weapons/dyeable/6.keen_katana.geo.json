@@ -1,0 +1,735 @@
+{
+	"format_version": "1.16.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.keen_katana",
+				"texture_width": 64,
+				"texture_height": 64,
+				"visible_bounds_width": 4,
+				"visible_bounds_height": 3.5,
+				"visible_bounds_offset": [
+					0,
+					1.25,
+					0
+				]
+			},
+			"bones": [
+				{
+					"name": "root0",
+					"pivot": [
+						0,
+						0,
+						0
+					]
+				},
+				{
+					"name": "root2",
+					"parent": "root0",
+					"pivot": [
+						0,
+						10,
+						0
+					]
+				},
+				{
+					"name": "root1",
+					"parent": "root2",
+					"pivot": [
+						0,
+						30,
+						0
+					]
+				},
+				{
+					"name": "Kroot",
+					"parent": "root1",
+					"pivot": [
+						0,
+						20,
+						0
+					]
+				},
+				{
+					"name": "Kwaist",
+					"parent": "Kroot",
+					"pivot": [
+						0,
+						12,
+						0
+					]
+				},
+				{
+					"name": "body0",
+					"parent": "Kwaist",
+					"pivot": [
+						0,
+						24,
+						0
+					]
+				},
+				{
+					"name": "Kbody",
+					"parent": "body0",
+					"pivot": [
+						0,
+						12,
+						0
+					]
+				},
+				{
+					"name": "head",
+					"parent": "Kbody",
+					"pivot": [
+						0,
+						24,
+						0
+					]
+				},
+				{
+					"name": "hat",
+					"parent": "head",
+					"pivot": [
+						0,
+						24,
+						0
+					]
+				},
+				{
+					"name": "jacket",
+					"parent": "Kbody",
+					"pivot": [
+						0,
+						12,
+						0
+					]
+				},
+				{
+					"name": "RightArmUp",
+					"parent": "Kbody",
+					"pivot": [
+						-6,
+						22,
+						0
+					]
+				},
+				{
+					"name": "RightArmDown",
+					"parent": "RightArmUp",
+					"pivot": [
+						-6,
+						18,
+						2
+					]
+				},
+				{
+					"name": "rightItem",
+					"parent": "RightArmDown",
+					"pivot": [
+						-6,
+						15,
+						1
+					]
+				},
+				{
+					"name": "r",
+					"parent": "rightItem",
+					"pivot": [
+						-6,
+						15,
+						1
+					],
+					"cubes": [
+						{
+							"origin": [
+								-6.5,
+								12.78258,
+								-6.897
+							],
+							"size": [
+								1,
+								2,
+								2
+							],
+							"inflate": -0.15,
+							"pivot": [
+								0,
+								-0.21742,
+								-0.697
+							],
+							"rotation": [
+								-3,
+								0,
+								0
+							],
+							"uv": [
+								0,
+								13
+							]
+						},
+						{
+							"origin": [
+								-6.5,
+								12.78258,
+								-18.397
+							],
+							"size": [
+								1,
+								2,
+								12
+							],
+							"inflate": -0.24,
+							"pivot": [
+								0,
+								-0.21742,
+								-0.697
+							],
+							"rotation": [
+								-3,
+								0,
+								0
+							],
+							"uv": [
+								0,
+								13
+							]
+						},
+						{
+							"origin": [
+								-6.5,
+								11.42419,
+								-32.44819
+							],
+							"size": [
+								1,
+								2,
+								7
+							],
+							"inflate": -0.244,
+							"pivot": [
+								0,
+								-1.57581,
+								-1.74819
+							],
+							"rotation": [
+								-7,
+								0,
+								0
+							],
+							"uv": [
+								32,
+								13
+							]
+						},
+						{
+							"origin": [
+								-6.5,
+								-5.43109,
+								-62.80593
+							],
+							"size": [
+								1,
+								1,
+								1
+							],
+							"inflate": -0.25,
+							"pivot": [
+								0,
+								-18.43109,
+								-30.10593
+							],
+							"rotation": [
+								-65,
+								0,
+								0
+							],
+							"uv": [
+								41,
+								25
+							]
+						},
+						{
+							"origin": [
+								-6.5,
+								0.67417,
+								-44.72156
+							],
+							"size": [
+								1,
+								1,
+								2
+							],
+							"inflate": -0.248,
+							"pivot": [
+								0,
+								-12.72583,
+								-12.52156
+							],
+							"rotation": [
+								-34,
+								0,
+								0
+							],
+							"uv": [
+								34,
+								24
+							]
+						},
+						{
+							"origin": [
+								-6.5,
+								0.27417,
+								-44.72156
+							],
+							"size": [
+								1,
+								1,
+								2
+							],
+							"inflate": -0.25,
+							"pivot": [
+								0,
+								-12.72583,
+								-12.52156
+							],
+							"rotation": [
+								-34,
+								0,
+								0
+							],
+							"uv": [
+								27,
+								24
+							]
+						},
+						{
+							"origin": [
+								-6.5,
+								10.97721,
+								-35.04033
+							],
+							"size": [
+								1,
+								1,
+								3
+							],
+							"inflate": -0.246,
+							"pivot": [
+								0,
+								-3.12279,
+								-2.74033
+							],
+							"rotation": [
+								-10,
+								0,
+								0
+							],
+							"uv": [
+								0,
+								18
+							]
+						},
+						{
+							"origin": [
+								-6.5,
+								12.20723,
+								-25.40085
+							],
+							"size": [
+								1,
+								2,
+								7
+							],
+							"inflate": -0.242,
+							"pivot": [
+								0,
+								-0.79277,
+								-1.20085
+							],
+							"rotation": [
+								-5,
+								0,
+								0
+							],
+							"uv": [
+								15,
+								13
+							]
+						},
+						{
+							"origin": [
+								-7.5,
+								12.5,
+								-4.495
+							],
+							"size": [
+								3,
+								3,
+								1
+							],
+							"inflate": -0.105,
+							"uv": [
+								0,
+								0
+							]
+						},
+						{
+							"origin": [
+								-7,
+								12,
+								-4.505
+							],
+							"size": [
+								2,
+								4,
+								1
+							],
+							"inflate": -0.1,
+							"uv": [
+								1,
+								5
+							]
+						},
+						{
+							"origin": [
+								-6.5,
+								13,
+								-4
+							],
+							"size": [
+								1,
+								2,
+								10
+							],
+							"inflate": -0.1,
+							"uv": [
+								0,
+								0
+							]
+						},
+						{
+							"origin": [
+								4.04214,
+								22.96325,
+								-4.485
+							],
+							"size": [
+								1,
+								1,
+								1
+							],
+							"inflate": -0.1,
+							"pivot": [
+								9.54214,
+								7.76325,
+								0
+							],
+							"rotation": [
+								0,
+								0,
+								-45
+							],
+							"uv": [
+								14,
+								2
+							]
+						},
+						{
+							"origin": [
+								-20.55685,
+								14.47797,
+								-4.485
+							],
+							"size": [
+								1,
+								1,
+								1
+							],
+							"inflate": -0.1,
+							"pivot": [
+								-13.05685,
+								-0.72203,
+								0
+							],
+							"rotation": [
+								0,
+								0,
+								45
+							],
+							"uv": [
+								14,
+								2
+							]
+						},
+						{
+							"origin": [
+								2.16224,
+								19.44315,
+								-4.485
+							],
+							"size": [
+								1,
+								1,
+								1
+							],
+							"inflate": -0.1,
+							"pivot": [
+								7.56224,
+								6.94315,
+								0
+							],
+							"rotation": [
+								0,
+								0,
+								-45
+							],
+							"uv": [
+								14,
+								6
+							]
+						},
+						{
+							"origin": [
+								-18.67696,
+								10.95786,
+								-4.485
+							],
+							"size": [
+								1,
+								1,
+								1
+							],
+							"inflate": -0.1,
+							"pivot": [
+								-11.07696,
+								-1.54214,
+								0
+							],
+							"rotation": [
+								0,
+								0,
+								45
+							],
+							"uv": [
+								14,
+								6
+							]
+						}
+					]
+				},
+				{
+					"name": "Item",
+					"parent": "RightArmDown",
+					"pivot": [
+						-6,
+						18,
+						2
+					]
+				},
+				{
+					"name": "cItem",
+					"parent": "RightArmDown",
+					"pivot": [
+						-6,
+						15,
+						1
+					]
+				},
+				{
+					"name": "LeftArmUp",
+					"parent": "Kbody",
+					"pivot": [
+						6,
+						22,
+						0
+					]
+				},
+				{
+					"name": "LeftArmDown",
+					"parent": "LeftArmUp",
+					"pivot": [
+						6,
+						18,
+						2
+					]
+				},
+				{
+					"name": "LeftItem",
+					"parent": "LeftArmDown",
+					"pivot": [
+						6,
+						15,
+						1
+					]
+				},
+				{
+					"name": "b",
+					"parent": "Kbody",
+					"pivot": [
+						4.4,
+						12.09189,
+						13.54747
+					],
+					"rotation": [
+						179.81547,
+						0.39071,
+						179.98386
+					],
+					"cubes": [
+						{
+							"origin": [
+								3.9,
+								10.70458,
+								18.1878
+							],
+							"size": [
+								1,
+								2,
+								14
+							],
+							"inflate": -0.045,
+							"uv": [
+								0,
+								28
+							]
+						},
+						{
+							"origin": [
+								3.9,
+								8.73408,
+								4.13936
+							],
+							"size": [
+								1,
+								2,
+								7
+							],
+							"inflate": -0.055,
+							"pivot": [
+								9.4,
+								-4.26592,
+								36.43936
+							],
+							"rotation": [
+								-5,
+								0,
+								0
+							],
+							"uv": [
+								32,
+								28
+							]
+						},
+						{
+							"origin": [
+								3.9,
+								5.07452,
+								0.08101
+							],
+							"size": [
+								1,
+								2,
+								2
+							],
+							"inflate": -0.05,
+							"pivot": [
+								9.4,
+								-7.92524,
+								34.28449
+							],
+							"rotation": [
+								-12,
+								0,
+								0
+							],
+							"uv": [
+								42,
+								30
+							]
+						},
+						{
+							"origin": [
+								3.9,
+								10.02688,
+								11.81341
+							],
+							"size": [
+								1,
+								2,
+								6
+							],
+							"inflate": -0.05,
+							"pivot": [
+								9.4,
+								-2.97312,
+								37.21341
+							],
+							"rotation": [
+								-2,
+								0,
+								0
+							],
+							"uv": [
+								17,
+								28
+							]
+						}
+					]
+				},
+				{
+					"name": "KLegs",
+					"parent": "Kroot",
+					"pivot": [
+						0,
+						12,
+						0
+					]
+				},
+				{
+					"name": "RightLegUp",
+					"parent": "KLegs",
+					"pivot": [
+						-1.9,
+						12,
+						0
+					]
+				},
+				{
+					"name": "RightLegDown",
+					"parent": "RightLegUp",
+					"pivot": [
+						-1.9,
+						6,
+						-2
+					]
+				},
+				{
+					"name": "LeftLegUp",
+					"parent": "KLegs",
+					"pivot": [
+						1.9,
+						12,
+						0
+					]
+				},
+				{
+					"name": "LeftLegDown",
+					"parent": "LeftLegUp",
+					"pivot": [
+						1.9,
+						6,
+						-2
+					]
+				},
+				{
+					"name": "_kid_move_root",
+					"pivot": [
+						0,
+						0,
+						0
+					]
+				}
+			]
+		}
+	]
+}

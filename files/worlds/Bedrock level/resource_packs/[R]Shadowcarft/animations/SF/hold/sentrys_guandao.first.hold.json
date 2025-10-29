@@ -1,0 +1,14 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.player.sentrys_guandao.first.hold": {
+			"loop": true,
+			"bones": {
+				"weapon": {
+					"rotation": [-61.7679, 56.97128, -102.43788],
+					"position": [19.11982, -9.10531, 15.15011]
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,22 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.player.ornate_two_hander.first.hold": {
+			"loop": true,
+			"bones": {
+				"rightItem": {
+					"rotation": [
+						-4.36863,
+						70.49287,
+						-46.81688
+					],
+					"position": [
+						14.98661,
+						-6.3366,
+						17.21188
+					]
+				}
+			}
+		}
+	}
+}

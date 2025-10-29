@@ -1,0 +1,36 @@
+{
+    "format_version": "1.10.0",
+    "minecraft:attachable": {
+        "description": {
+            "identifier": "sf:common_staff",
+            "materials": {
+                "default": "armor",
+                "enchanted": "armor_enchanted",
+                "dyed": "entity_alphatest_change_color"
+            },
+            "textures": {
+                "default": "textures/models/weapons/common_staff_default",
+                "dyed": "textures/models/weapons/common_staff_dyeable",
+                "undyed": "textures/models/weapons/common_staff_top",
+                "enchanted": "textures/misc/enchanted_item_glint"
+            },
+            "geometry": {
+                "default": "geometry.common_staff"
+            },
+            "animations": {
+                "first_hold": "animation.common_staff.first.hold"
+            },
+            "scripts": {
+                "animate": [
+                    {
+                        "first_hold": "c.is_first_person"
+                    }
+                ]
+            },
+            "render_controllers": [
+                "controller.render.dyeable1",
+                "controller.render.dyeable2"
+            ]
+        }
+    }
+}

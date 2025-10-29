@@ -1,0 +1,22 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.player.solid_hatchets.first.hold": {
+			"loop": true,
+			"bones": {
+				"r": {
+					"rotation": [
+						"c.is_first_person?-67.83104:0",
+						"c.is_first_person?64.74258:0",
+						"c.is_first_person?-112.80713:0"
+					],
+					"position": [
+						"c.is_first_person?16.42887:0",
+						"c.is_first_person?-25.00289:0",
+						"c.is_first_person?19.94863:0"
+					]
+				}
+			}
+		}
+	}
+}

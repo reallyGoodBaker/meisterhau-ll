@@ -1,0 +1,268 @@
+{
+	"resource_pack_name": "vanilla",
+	"texture_name": "atlas.items",
+	"texture_data": {
+		"shadow_stone_essence": {
+			"textures": "textures/items/shadow_stone_essence"
+		},
+		"shadow_gold_essence": {
+			"textures": "textures/items/shadow_gold_essence"
+		},
+		"shadow_iron_essence": {
+			"textures": "textures/items/shadow_iron_essence"
+		},
+		"shadow_diamond_essence": {
+			"textures": "textures/items/shadow_diamond_essence"
+		},
+		"shadow_netherite_essence": {
+			"textures": "textures/items/shadow_netherite_essence"
+		},
+		"shadow_book": {
+			"textures": "textures/items/shadow_book"
+		},
+		"shadow_energy": {
+			"textures": "textures/items/shadow_energy"
+		},
+		"shadow_ability_legion": {
+			"textures": "textures/items/shadow_ability_legion"
+		},
+		"shadow_ability_dynasty": {
+			"textures": "textures/items/shadow_ability_dynasty"
+		},
+		"shadow_ability_herald": {
+			"textures": "textures/items/shadow_ability_herald"
+		},
+		"shadow_faction_legion": {
+			"textures": "textures/ability/legion"
+		},
+		"shadow_faction_dynasty": {
+			"textures": "textures/ability/dynasty"
+		},
+		"shadow_faction_herald": {
+			"textures": "textures/ability/herald"
+		},
+		"copper_coin": {
+			"textures": "textures/items/copper_coin"
+		},
+		"divine_covenant": {
+			"textures": "textures/items/divine_covenant"
+		},
+		//装备
+		"fates_end": {
+			"textures": "textures/items/fates_end"
+		},
+		"branches_of_pain": {
+			"textures": "textures/items/branches_of_pain"
+		},
+		"will_of_many": {
+			"textures": "textures/items/will_of_many"
+		},
+		"battle_of_laws": {
+			"textures": "textures/items/battle_of_laws"
+		},
+		"blade_of_timelessness": {
+			"textures": "textures/items/blade_of_timelessness"
+		},
+		"ravens_talon": {
+			"textures": "textures/items/ravens_talon"
+		},
+		"cyan_talons": {
+			"textures": "textures/items/cyan_talons"
+		},
+		"shadow_slayer": {
+			"textures": "textures/items/shadow_slayer"
+		},
+		"purple_peeler": {
+			"textures": "textures/items/purple_peeler"
+		},
+		"world_slicer": {
+			"textures": "textures/items/world_slicer"
+		},
+		"lightweight_sabers": {
+			"textures": "textures/items/lightweight_sabers"
+		},
+		"wooden_staff": {
+			"textures": "textures/items/wooden_staff"
+		},
+		"gilded_staff": {
+			"textures": "textures/items/gilded_staff"
+		},
+		"labryses": {
+			"textures": "textures/items/labryses"
+		},
+		"higher_calling": {
+			"textures": "textures/items/higher_calling"
+		},
+		"courage": {
+			"textures": "textures/items/courage"
+		},
+		"bedrock_helm": {
+			"textures": "textures/items/bedrock_helm"
+		},
+		"rigid_barbute": {
+			"textures": "textures/items/rigid_barbute"
+		},
+		"visored_casque": {
+			"textures": "textures/items/visored_casque"
+		},
+		"swampers_headgear": {
+			"textures": "textures/items/swampers_headgear"
+		},
+		"rag": {
+			"textures": "textures/items/rag"
+		},
+		"plain_waistcoat": {
+			"textures": "textures/items/plain_waistcoat"
+		},
+		"bedrock_armor": {
+			"textures": "textures/items/bedrock_armor"
+		},
+		"swampers_camouflage": {
+			"textures": "textures/items/swampers_camouflage"
+		},
+		"laminar_cuirass": {
+			"textures": "textures/items/laminar_cuirass"
+		},
+		"reinforced_coat": {
+			"textures": "textures/items/reinforced_coat"
+		},
+		"prefects_robe": {
+			"textures": "textures/items/prefects_robe"
+		},
+		"divine_retribution": {
+			"textures": "textures/items/divine_retribution"
+		},
+		"training_uniform": {
+			"textures": "textures/items/training_uniform"
+		},
+		"compression_suit": {
+			"textures": "textures/items/compression_suit"
+		},
+		"epiphany_kasa": {
+			"textures": "textures/items/epiphany_kasa"
+		},
+		"seahorse_veil": {
+			"textures": "textures/items/seahorse_veil"
+		},
+		"three_arrows_glory": {
+			"textures": "textures/items/three_arrows_glory"
+		},
+		"sea_devils_mask": {
+			"textures": "textures/items/sea_devils_mask"
+		},
+		"fur_lined_armor": {
+			"textures": "textures/items/fur_lined_armor"
+		},
+		"embroidered_suit": {
+			"textures": "textures/items/embroidered_suit"
+		},
+		"gilded_vest": {
+			"textures": "textures/items/gilded_vest"
+		},
+		"nomads_cap": {
+			"textures": "textures/items/nomads_cap"
+		},
+		"leather_casque": {
+			"textures": "textures/items/leather_casque"
+		},
+		"golden_fang_crown": {
+			"textures": "textures/items/golden_fang_crown"
+		},
+		"keen_katana": {
+			"textures": "textures/items/keen_katana"
+		},
+		"rebel_nunchaku": {
+			"textures": "textures/items/rebel_nunchaku"
+		},
+		"ornate_two_hander": {
+			"textures": "textures/items/ornate_two_hander"
+		},
+		"riffle_hammers": {
+			"textures": "textures/items/riffle_hammers"
+		},
+		"solid_hatchets": {
+			"textures": "textures/items/solid_hatchets"
+		},
+		"swampers_grinders": {
+			"textures": "textures/items/swampers_grinders"
+		},
+		"arbitrator": {
+			"textures": "textures/items/arbitrator"
+		},
+		"double_scimitars": {
+			"textures": "textures/items/double_scimitars"
+		},
+		"metal_sting": {
+			"textures": "textures/items/metal_sting"
+		},
+		"sentrys_guandao": {
+			"textures": "textures/items/sentrys_guandao"
+		},
+		"wicked_twins": {
+			"textures": "textures/items/wicked_twins"
+		},
+		"aerial_lotus": {
+			"textures": "textures/items/aerial_lotus"
+		},
+		"nightbanes": {
+			"textures": "textures/items/nightbanes"
+		},
+		"silver_squall": {
+			"textures": "textures/items/silver_squall"
+		},
+		"weightened_nunchaku": {
+			"textures": "textures/items/weightened_nunchaku"
+		},
+		"old_timer": {
+			"textures": "textures/items/old_timer"
+		},
+		"hand_of_justice": {
+			"textures": "textures/items/hand_of_justice"
+		},
+		"hermit_katana": {
+			"textures": "textures/items/hermit_katana"
+		},
+		"sai": {
+			"textures": "textures/items/sai"
+		},
+		"common_staff": {
+			"textures": "textures/items/common_staff"
+		},
+		"bloodletter_blade": {
+			"textures": "textures/items/bloodletter_blade"
+		},
+		"gladiator_armor": {
+			"textures": "textures/items/gladiator_armor"
+		},
+		"june_head": {
+			"textures": "textures/items/june_head"
+		},
+		"galen_head": {
+			"textures": "textures/items/galen_head"
+		},
+		"gizmo_head": {
+			"textures": "textures/items/gizmo_head"
+		},
+		"sarge_head": {
+			"textures": "textures/items/sarge_head"
+		},
+		"xiangtzu_head": {
+			"textures": "textures/items/xiangtzu_head"
+		},
+		"xiangtzu2_head": {
+			"textures": "textures/items/xiangtzu2_head"
+		},
+		"itu_head": {
+			"textures": "textures/items/itu_head"
+		},
+		"markus_head": {
+			"textures": "textures/items/markus_head"
+		},
+		"kitsune1_head": {
+			"textures": "textures/items/kitsune1_head"
+		},
+		"iron_crosses": {
+			"textures": "textures/items/iron_crosses"
+		}
+	}
+}

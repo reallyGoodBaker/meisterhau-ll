@@ -1,0 +1,43 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.player.keen_katana.first.hold": {
+			"loop": true,
+			"bones": {
+				"rightItem": {
+					"rotation": [
+						-37.36714,
+						67.94387,
+						-87.46703
+					],
+					"position": [
+						22.16417,
+						-12.68194,
+						26.05606
+					]
+				},
+				"hermit_katana": {
+					"position": [
+						10.90021,
+						12.45192,
+						-19.87801
+					]
+				},
+				"jianshen": {
+					"position": [
+						4,
+						0,
+						5
+					]
+				},
+				"r": {
+					"position": [
+						-6,
+						-13,
+						-10
+					]
+				}
+			}
+		}
+	}
+}

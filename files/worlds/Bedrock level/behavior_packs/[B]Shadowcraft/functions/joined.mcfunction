@@ -1,0 +1,1 @@
+execute as @a[tag=!joined] run function first_join

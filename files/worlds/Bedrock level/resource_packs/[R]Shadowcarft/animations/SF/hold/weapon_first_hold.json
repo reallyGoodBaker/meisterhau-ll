@@ -1,0 +1,22 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.player.weapons.first.hold": {
+			"loop": true,
+			"bones": {
+				"weapon": {
+					"rotation": [
+						-60.60688,
+						67.09797,
+						-103.18513
+					],
+					"position": [
+						18.25511,
+						-4.68806,
+						13.66026
+					]
+				}
+			}
+		}
+	}
+}

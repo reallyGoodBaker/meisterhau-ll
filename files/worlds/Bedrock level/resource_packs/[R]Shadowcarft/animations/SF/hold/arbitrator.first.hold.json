@@ -1,0 +1,22 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.player.arbitrator.first.hold": {
+			"loop": true,
+			"bones": {
+				"arbitrator": {
+					"rotation": [
+						-14.83496,
+						75.48302,
+						-68.90697
+					],
+					"position": [
+						15.38055,
+						14.43802,
+						11.44475
+					]
+				}
+			}
+		}
+	}
+}

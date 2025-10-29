@@ -1,0 +1,27 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:attachable": {
+		"description": {
+			"identifier": "sf:golden_fang_crown",
+			"materials": {
+				"default": "armor",
+				"enchanted": "armor_enchanted",
+				"dyed": "entity_alphatest_change_color"
+			},
+			"textures": {
+				"default": "textures/models/helmets/golden_fang_crown_default",
+				"dyed": "textures/models/helmets/golden_fang_crown_dyeable",
+				"undyed": "textures/models/helmets/golden_fang_crown_top",
+				"enchanted": "textures/misc/enchanted_item_glint"
+			},
+			"geometry": {
+				"default": "geometry.golden_fang_crown"
+			},
+			"scripts": {},
+			"render_controllers": [
+				"controller.render.dyeable1",
+				"controller.render.dyeable2"
+			]
+		}
+	}
+}

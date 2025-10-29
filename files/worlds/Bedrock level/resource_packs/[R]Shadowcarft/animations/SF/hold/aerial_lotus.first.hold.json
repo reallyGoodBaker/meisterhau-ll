@@ -1,0 +1,14 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.player.aerial_lotus.first.hold": {
+			"loop": true,
+			"bones": {
+				"weapon": {
+					"rotation": [52.97187, 66.58238, 221.76858],
+					"position": [12.81206, 2.65199, -2.86318]
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,78 @@
+{
+	"format_version": "1.12.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.wooden_staff",
+				"texture_width": 64,
+				"texture_height": 64,
+				"visible_bounds_width": 4,
+				"visible_bounds_height": 3.5,
+				"visible_bounds_offset": [0, 1.25, 0]
+			},
+			"bones": [
+				{
+					"name": "root0",
+					"pivot": [0, 0, 0]
+				},
+				{
+					"name": "root2",
+					"parent": "root0",
+					"pivot": [0, 10, 0]
+				},
+				{
+					"name": "root1",
+					"parent": "root2",
+					"pivot": [0, 30, 0]
+				},
+				{
+					"name": "Kroot",
+					"parent": "root1",
+					"pivot": [0, 20, 0]
+				},
+				{
+					"name": "Kwaist",
+					"parent": "Kroot",
+					"pivot": [0, 12, 0]
+				},
+				{
+					"name": "body0",
+					"parent": "Kwaist",
+					"pivot": [0, 24, 0]
+				},
+				{
+					"name": "Kbody",
+					"parent": "body0",
+					"pivot": [0, 12, 0]
+				},
+				{
+					"name": "RightArmUp",
+					"parent": "Kbody",
+					"pivot": [-6, 22, 0]
+				},
+				{
+					"name": "RightArmDown",
+					"parent": "RightArmUp",
+					"pivot": [-6, 18, 2]
+				},
+				{
+					"name": "rightItem",
+					"parent": "RightArmDown",
+					"pivot": [-6, 15, 1]
+				},
+				{
+					"name": "weapon",
+					"parent": "rightItem",
+					"pivot": [-6, 15, 1],
+					"cubes": [
+						{"origin": [-7.1, 5.66942, -60.69971], "size": [1.8, 1.3, 1], "pivot": [0, -8.81829, -37.19371], "rotation": [-90, 0, 0], "uv": [4, 2]},
+						{"origin": [-6.7, 5.66942, -61.09971], "size": [1, 1.3, 1.8], "pivot": [0, -8.81829, -37.19371], "rotation": [-90, 0, 0], "uv": [4, 0]},
+						{"origin": [-7.1, 43.06942, -60.69971], "size": [1.8, 1.3, 1], "pivot": [0, -8.81829, -37.19371], "rotation": [-90, 0, 0], "uv": [4, 4]},
+						{"origin": [-6.7, 43.06942, -61.09971], "size": [1, 1.3, 1.8], "pivot": [0, -8.81829, -37.19371], "rotation": [-90, 0, 0], "uv": [4, 6]},
+						{"origin": [-6.7, 5.36942, -60.69971], "size": [1, 39.4, 1], "pivot": [0, -8.81829, -37.19371], "rotation": [-90, 0, 0], "uv": [0, 0]}
+					]
+				}
+			]
+		}
+	]
+}

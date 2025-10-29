@@ -1,0 +1,196 @@
+entity.npc:npc_man.name=男性NPC
+item.spawn_egg.entity.npc:npc_man.name=男性NPC生成蛋
+entity.npc:npc_woman.name=女性NPC
+item.spawn_egg.entity.npc:npc_woman.name=女性NPC生成蛋
+entity.npc:npc_villagers.name=村民NPC
+item.spawn_egg.entity.npc:npc_villagers.name=村民NPC生成蛋
+entity.sf:man.name=复制人Y
+item.spawn_egg.entity.sf:man.name=复制人Y生成蛋
+entity.sf:woman.name=复制人X
+item.spawn_egg.entity.sf:woman.name=复制人X生成蛋
+entity.sf:man_archer.name=复制人Y弓箭手
+item.spawn_egg.entity.sf:man_archer.name=复制人Y弓箭手生成蛋
+entity.sf:woman_archer.name=复制人X弓箭手
+item.spawn_egg.entity.sf:woman_archer.name=复制人X弓箭手生成蛋
+entity.sf:mercenary_man.name=神圣雇佣兵
+item.spawn_egg.entity.sf:mercenary_man.name=神圣雇佣兵生成蛋
+entity.sf:mercenary_woman.name=神圣女雇佣兵
+item.spawn_egg.entity.sf:mercenary_woman.name=神圣女雇佣兵生成蛋
+entity.sf:legion_armor_wandering_trader_desert.name=军团盔甲行商
+item.spawn_egg.entity.sf:legion_armor_wandering_trader_desert.name=军团盔甲行商生成蛋
+entity.sf:legion_weapon_wandering_trader_forest.name=军团武器行商
+item.spawn_egg.entity.sf:legion_weapon_wandering_trader_forest.name=军团武器行商生成蛋
+entity.sf:dynasty_weapon_wandering_trader_plains.name=王朝武器行商
+item.spawn_egg.entity.sf:dynasty_weapon_wandering_trader_plains.name=王朝武器行商生成蛋
+entity.sf:herald_weapon_wandering_trader_mountain.name=先锋武器行商
+item.spawn_egg.entity.sf:herald_weapon_wandering_trader_mountain.name=先锋武器行商刷怪蛋
+
+item.sf:shadow_stone_essence=暗影石之精华
+item.sf:shadow_iron_essence=暗影铁之精华
+item.sf:shadow_gold_essence=暗影黄金精华
+item.sf:shadow_diamond_essence=暗影钻石精华
+item.sf:shadow_netherite_essence=暗影下界合金精华
+item.sf:shadow_ability_legion=军团暗影技能(潜行使用来选择)
+item.sf:shadow_ability_dynasty=王朝暗影技能(潜行使用来选择)
+item.sf:shadow_ability_herald=先锋暗影技能(潜行使用来选择)
+item.sf:shadow_faction_legion=军团(潜行使用选择派系)
+item.sf:shadow_faction_dynasty=王朝(潜行使用选择派系)
+item.sf:shadow_faction_herald=先锋(潜行使用选择派系)
+item.sf:shadow_energy=暗影能量
+item.sf:shadow_book=暗影大典
+item.sf:copper_coin=铜币
+item.sf:divine_covenant=神圣契约
+
+tile.sf:shadow_ore.name=暗影矿石
+
+bedrock_helm=§f基础头盔
+courage=§f勇气头盔
+epiphany_kasa=§f顿悟帽
+golden_fang_crown=§f金牙圣盔
+higher_calling=§f精致头盔
+leather_casque=§f皮盔
+nomads_cap=§f游牧皮帽
+rag=§f旧头巾
+rigid_barbute=§f刚硬面盔
+sea_devils_mask=§f海上恶魔面具
+seahorse_veil=§f海马环罩帽
+swampers_headgear=§f沼地人护盔
+visored_casque=§f面罩头盔
+
+LCH=§7【军团】普通头盔 §r
+LRH=§3【军团】稀有头盔 §r
+LEH=§6【军团】史诗头盔 §r
+LLH=§e【军团】传奇头盔 §r
+
+DCH=§7【王朝】普通头盔 §r
+DRH=§3【王朝】稀有头盔 §r
+DEH=§6【王朝】史诗头盔 §r
+DLH=§e【王朝】传奇头盔 §r
+
+HCH=§7【先锋】普通头盔 §r
+
+bedrock_armor=§f基础铠甲
+compression_suit=§f压缩上衣
+divine_retribution=§f天谴之铠
+embroidered_suit=§f刺绣长袍
+fur_lined_armor=§f毛皮铠甲
+gilded_vest=§f镀金背心
+gladiator_armor=§f角斗士之铠
+laminar_cuirass=§f铁板胸甲
+plain_waistcoat=§f朴素马甲
+prefects_robe=§f长官制服
+reinforced_coat=§f加固外套
+swampers_camouflage=§f沼地人迷彩服
+three_arrows_glory=§f三箭铠甲
+training_uniform=§f训练服
+
+LCA=§7【军团】普通盔甲 §r
+LRA=§3【军团】稀有盔甲 §r
+LEA=§6【军团】史诗盔甲 §r
+LLA=§e【军团】传奇盔甲 §r
+
+DCA=§7【王朝】普通盔甲 §r
+DRA=§3【王朝】稀有盔甲 §r
+DEA=§6【王朝】史诗盔甲 §r
+DLA=§e【王朝】传奇盔甲 §r
+
+HCA=§7【先锋】普通盔甲 §r
+
+aerial_lotus=§f飞旋莲花链
+arbitrator=§f裁决之剑
+bloodletter_blade=§f放血者之刃
+common_staff=§f普通法棒
+double_scimitars=§f双弯刀
+gilded_staff=§f金头棒
+hand_of_justice=§f正义之手
+hermit_katana=§f隐士武士刀
+keen_katana=§f锋利武士刀
+labryses=§f双刃斧
+lightweight_sabers=§f轻盈佩刀
+metal_sting=§f合金刺刀
+nightbanes=§f夜魇双斧
+old_timer=§f古式大剑
+ornate_two_hander=§f华丽双手剑
+rebel_nunchaku=§f冒险双节棍
+riffle_hammers=§f涟锤
+sai=§f钢钗
+sentrys_guandao=§f哨兵关刀
+silver_squall=§f银色暴风剑
+solid_hatchets=§f坚硬双斧
+swampers_grinders=§f沼地人狼牙棒
+weightened_nunchaku=§f重型双节棍
+wicked_twins=§f双邪锤
+wooden_staff=§f木棒
+
+fates_end=§f宿命终结者
+branches_of_pain=§f痛苦枝桠
+will_of_many=§f多数意愿
+battle_of_laws=§f法则之战
+blade_of_timelessness=§f隽永之刃
+ravens_talon=§f乌鸦利爪
+cyan_talons=§f青爪
+shadow_slayer=§f暗影屠杀者
+purple_peeler=§f紫色削皮刀
+world_slicer=§f世界切割者
+
+LCDSJ=§7【军团】普通单手剑 §r
+LCC=§7【军团】普通锤 §r
+LCF=§7【军团】普通斧 §r
+LRF=§3【军团】稀有斧 §r
+LRM=§3【军团】稀有矛 §r
+LRSSJ=§3【军团】稀有双手剑 §r
+LEF=§6【军团】史诗斧 §r
+LEJS=§6【军团】史诗巨剑 §r
+LESSJ=§6【军团】史诗双手剑 §r
+LELYB=§6【军团】史诗狼牙棒 §r
+LEC=§6【军团】史诗锤 §r
+LLSSJ=§e【军团】传奇双手剑 §r
+
+DCMB=§7【王朝】普通木棒 §r
+DCPD=§7【王朝】普通佩刀 §r
+DRPD=§3【王朝】稀有佩刀 §r
+DRSJG=§3【王朝】稀有双节棍 §r
+DRGD=§3【王朝】稀有关刀 §r
+DRMB=§3【王朝】稀有木棒 §r
+DELD=§6【王朝】史诗链刀 §r
+DEMB=§6【王朝】史诗木棒 §r
+DESJG=§6【王朝】史诗双节棍 §r
+DLLD=§e【王朝】传奇链刀 §r
+
+HCJH=§7【先锋】普通居合道武士刀 §r
+HCWSD=§7【先锋】普通武士刀 §r
+HCTC=§7【先锋】普通铁尺 §r
+HEJH=§6【先锋】史诗居合道武士刀 §r
+HLFHJ=§e【先锋】传奇复合剑 §r
+HLJH=§e【先锋】传奇居合道武士刀 §r
+HLRD=§e【先锋】传奇忍刀 §r
+HLLZ=§e【先锋】传奇利爪 §r
+HLWSD=§e【先锋】传奇武士刀 §r
+HLDL=§e【先锋】传奇短镰 §r
+
+iron_crosses=§f十字飞刀
+
+LRFD=§3【军团】稀有飞刀 §r
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

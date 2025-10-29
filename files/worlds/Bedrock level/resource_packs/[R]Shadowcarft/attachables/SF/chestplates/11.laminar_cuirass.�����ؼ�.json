@@ -1,0 +1,27 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:attachable": {
+    "description": {
+      "identifier": "sf:laminar_cuirass",
+      "materials": {
+        "default": "armor",
+        "enchanted": "armor_enchanted",
+        "dyed": "entity_alphatest_change_color"
+      },
+      "textures": {
+        "default": "textures/models/chestplates/laminar_cuirass_default",
+        "dyed": "textures/models/chestplates/laminar_cuirass_dyeable",
+        "undyed": "textures/models/chestplates/laminar_cuirass_top",
+        "enchanted": "textures/misc/enchanted_item_glint"
+      },
+      "geometry": {
+        "default": "geometry.laminar_cuirass"
+      },
+      "scripts": {},
+      "render_controllers": [
+        "controller.render.dyeable1",
+        "controller.render.dyeable2"
+      ]
+    }
+  }
+}

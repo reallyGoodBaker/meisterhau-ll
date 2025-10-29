@@ -1,0 +1,166 @@
+{
+    "pools": [
+        {
+            "rolls": 1,
+            "entries": [
+                {
+                    "type": "item",
+                    "name": "sf:rag",
+                    "weight": 1,
+                    "functions": [
+                        {
+                            "function": "enchant_random_gear",
+                            "chance": 0.2
+                        },
+                        {
+                            "function": "random_dye"
+                        }
+                    ]
+                },
+                {
+                    "type": "item",
+                    "name": "sf:nomads_cap",
+                    "weight": 1,
+                    "functions": [
+                        {
+                            "function": "enchant_random_gear",
+                            "chance": 0.2
+                        },
+                        {
+                            "function": "random_dye"
+                        }
+                    ]
+                },
+                {
+                    "type": "item",
+                    "name": "sf:seahorse_veil",
+                    "weight": 1,
+                    "functions": [
+                        {
+                            "function": "enchant_random_gear",
+                            "chance": 0.2
+                        },
+                        {
+                            "function": "random_dye"
+                        }
+                    ]
+                },
+                {
+                    "type": "item",
+                    "name": "sf:leather_casque",
+                    "weight": 1,
+                    "functions": [
+                        {
+                            "function": "enchant_random_gear",
+                            "chance": 0.2
+                        },
+                        {
+                            "function": "random_dye"
+                        }
+                    ]
+                },
+                {
+                    "type": "item",
+                    "name": "sf:epiphany_kasa",
+                    "weight": 1,
+                    "functions": [
+                        {
+                            "function": "enchant_random_gear",
+                            "chance": 0.2
+                        },
+                        {
+                            "function": "random_dye"
+                        }
+                    ]
+                },
+                {
+                    "type": "loot_table",
+                    "name": "loot_tables/empty.json",
+                    "weight": 5
+                }
+            ]
+        },
+        {
+            "rolls": 1,
+            "entries": [
+                {
+                    "type": "item",
+                    "name": "sf:plain_waistcoat",
+                    "weight": 1,
+                    "functions": [
+                        {
+                            "function": "enchant_random_gear",
+                            "chance": 0.2
+                        },
+                        {
+                            "function": "random_dye"
+                        }
+                    ]
+                },
+                {
+                    "type": "item",
+                    "name": "sf:training_uniform",
+                    "weight": 1,
+                    "functions": [
+                        {
+                            "function": "enchant_random_gear",
+                            "chance": 0.2
+                        },
+                        {
+                            "function": "random_dye"
+                        }
+                    ]
+                },
+                {
+                    "type": "item",
+                    "name": "sf:embroidered_suit",
+                    "weight": 1,
+                    "functions": [
+                        {
+                            "function": "enchant_random_gear",
+                            "chance": 0.2
+                        },
+                        {
+                            "function": "random_dye"
+                        }
+                    ]
+                },
+                {
+                    "type": "item",
+                    "name": "sf:compression_suit",
+                    "weight": 1,
+                    "functions": [
+                        {
+                            "function": "enchant_random_gear",
+                            "chance": 0.2
+                        },
+                        {
+                            "function": "random_dye"
+                        }
+                    ]
+                },
+                {
+                    "type": "loot_table",
+                    "name": "loot_tables/empty.json",
+                    "weight": 5
+                }
+            ]
+        },
+        {
+            "rolls": 1,
+            "entries": [
+                {
+                    "type": "item",
+                    "name": "minecraft:bow",
+                    "weight": 100,
+                    "functions": [
+                        {
+                            "function": "enchant_random_gear",
+                            "chance": 0.2
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
