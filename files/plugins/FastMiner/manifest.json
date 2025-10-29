@@ -1,6 +1,0 @@
-{
-    "name": "FastMiner",
-    "entry": "FastMiner.dll",
-    "version": "0.12.0",
-    "type": "native"
-}

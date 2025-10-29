@@ -1,8 +1,0 @@
-{
-    "getClockCommand": "getclock",
-    "getClockCommandAlias": "gc",
-    "runCommandOnUseClock": false,
-    "onUseClockRunCommand": "list",
-    "runCommandOnUseClockOn": false,
-    "onUseClockOnRunCommand": "list"
-}
