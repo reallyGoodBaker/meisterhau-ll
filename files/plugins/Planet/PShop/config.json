@@ -1,0 +1,49 @@
+{
+    "money": {
+        "type": "llmoney",
+        "name": "金币",
+        "score": "money"
+    },
+    "commands": {
+        "shop": "shop",
+        "market": "market"
+    },
+    "vip": {
+        "enable": false,
+        "discount": 0.8
+    },
+    "info": {
+        "shop": "§l§b[商店] §r",
+        "market": "§l§b[市场] §r"
+    },
+    "enable": {
+        "shop": true,
+        "market": true,
+        "log": true
+    },
+    "nbt": {
+        "MatchBucketEntityCustomName": true,
+        "MatchBucketEntityFallDistance": false,
+        "MatchBucketEntityFire": true,
+        "MatchBucketEntityStrength": true,
+        "MatchBucketEntitySheared": true,
+        "MatchRepairCost": false
+    },
+    "logo": {
+        "gui.cancel": "",
+        "shop.buy": "",
+        "shop.sell": "",
+        "shop.lastpage": "",
+        "shop.nextpage": "",
+        "market.add": "",
+        "market.add.byitemtype": "",
+        "market.add.byitemnbt": "",
+        "market.buy": "",
+        "market.search": "",
+        "market.search.normal": "",
+        "market.search.better": "",
+        "market.manage": "",
+        "market.reduce": ""
+    },
+    "itemsperpage": 10
+}

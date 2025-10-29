@@ -1,0 +1,12 @@
+{
+    "entry": "LLmlight2.0.js",
+    "name": "LLmlight2.0",
+    "type": "lse-quickjs",
+    "version": "1.0.0",
+    "description": "光啊!",
+    "dependencies": [
+        {
+            "name": "legacy-script-engine-quickjs"
+        }
+    ]
+}

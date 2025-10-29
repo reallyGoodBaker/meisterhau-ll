@@ -1,0 +1,17 @@
+{
+    "entry": "GiveClock.js",
+    "name": "GiveClock",
+    "type": "lse-quickjs",
+    "version": "1.2.0",
+    "author": "XCLHove",
+    "description": "进服检测背包自动给钟，指令获取钟，建议配合钟菜单使用。",
+    "extraInfo": {
+        "github": "https://github.com/xclhove/LiteLoaderPlugins-GiveClock",
+        "gitee": "https://gitee.com/xclhove/LiteLoaderPlugins-GiveClock"
+    },
+    "dependencies": [
+        {
+            "name": "legacy-script-engine-quickjs"
+        }
+    ]
+}

@@ -1,0 +1,67 @@
+{
+    "DisplayMode": {
+        "mode": "gui"
+    },
+    "Max": {
+        "max": 10,
+        "state": true
+    },
+    "Money": {
+        "Name": "经济排行榜",
+        "prefix": " ◆ §l",
+        "state": true
+    },
+    "Hide": [],
+    "CONFIG": {
+        "Destroy": {
+            "Name": "挖掘榜",
+            "prefix": " ◆ §l",
+            "state": true
+        },
+        "Place": {
+            "Name": "放置榜",
+            "prefix": " ◆ §l",
+            "state": true
+        },
+        "MobDie": {
+            "Name": "击杀榜",
+            "prefix": " ◆ §l",
+            "state": true
+        },
+        "PlayerDie": {
+            "Name": "死亡榜",
+            "prefix": " ◆ §l",
+            "state": true
+        },
+        "OnlineTime": {
+            "Name": "在线时长榜",
+            "prefix": " ◆ §l",
+            "state": true
+        },
+        "ConsumeTotem": {
+            "Name": "超越生死",
+            "prefix": " ◆ §l",
+            "state": true
+        },
+        "Chat": {
+            "Name": "发言榜",
+            "prefix": " ◆ §l",
+            "state": true
+        },
+        "Eat": {
+            "Name": "大胃王",
+            "prefix": " ◆ §l",
+            "state": true
+        },
+        "DropItem": {
+            "Name": "乱丢垃圾",
+            "prefix": " ◆ §l",
+            "state": true
+        },
+        "Jump": {
+            "Name": "蹦蹦跳跳",
+            "prefix": " ◆ §l",
+            "state": true
+        }
+    }
+}

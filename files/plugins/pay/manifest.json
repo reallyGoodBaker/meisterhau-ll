@@ -1,0 +1,10 @@
+{
+    "entry": "pay.js",
+    "name": "pay",
+    "type": "lse-quickjs",
+    "dependencies": [
+        {
+            "name": "legacy-script-engine-quickjs"
+        }
+    ]
+}

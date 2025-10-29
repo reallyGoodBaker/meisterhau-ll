@@ -1,0 +1,12 @@
+{
+    "available_world": [
+        true,
+        true,
+        true
+    ],
+    "command": "dmayfly",
+    "command_alias": "dmf",
+    "currencyName": "金币",
+    "economy": "llmoney",
+    "language": "zh_CN"
+}

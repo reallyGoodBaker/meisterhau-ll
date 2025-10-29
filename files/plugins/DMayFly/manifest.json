@@ -1,0 +1,15 @@
+{
+    "entry": "DMayFly.js",
+    "name": "DMayFly",
+    "type": "lse-quickjs",
+    "version": "1.2.3",
+    "description": "BDS飞行插件",
+    "extraInfo": {
+        "作者": "HaiPaya"
+    },
+    "dependencies": [
+        {
+            "name": "legacy-script-engine-quickjs"
+        }
+    ]
+}

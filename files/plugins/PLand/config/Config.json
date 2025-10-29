@@ -1,0 +1,228 @@
+{
+    "version": 30,
+    "logLevel": "Info",
+    "economy": {
+        "enabled": true,
+        "kit": "LegacyMoney",
+        "scoreboardName": "Scoreboard",
+        "economyName": "金币"
+    },
+    "land": {
+        "landTp": true,
+        "maxLand": 20,
+        "minSpacing": 16,
+        "minSpacingIncludeY": true,
+        "refundRate": 0.9,
+        "discountRate": 1.0,
+        "setupDrawCommand": false,
+        "drawRange": 64,
+        "drawHandleBackend": "DefaultParticle",
+        "subLand": {
+            "enabled": false,
+            "maxNested": 5,
+            "minSpacing": 8,
+            "minSpacingIncludeY": 1,
+            "maxSubLand": 6,
+            "calculate": "(square * 8 + height * 20) * 0"
+        },
+        "tip": {
+            "enterTip": true,
+            "bottomContinuedTip": true,
+            "bottomTipFrequency": 1
+        },
+        "bought": {
+            "threeDimensionl": {
+                "enabled": true,
+                "calculate": "square * 8 + height * 20"
+            },
+            "twoDimensionl": {
+                "enabled": true,
+                "calculate": "square * 25"
+            },
+            "squareRange": {
+                "min": 4,
+                "max": 60000,
+                "minHeight": 1
+            },
+            "allowDimensions": [
+                0,
+                1,
+                2
+            ],
+            "forbiddenRanges": [],
+            "dimensionPriceCoefficients": {}
+        }
+    },
+    "selector": {
+        "tool": "minecraft:stick",
+        "alias": "木棍"
+    },
+    "listeners": {
+        "PlayerDestroyBlockEvent": true,
+        "PlayerPlacingBlockEvent": true,
+        "PlayerInteractBlockEvent": true,
+        "FireSpreadEvent": true,
+        "PlayerAttackEvent": true,
+        "PlayerPickUpItemEvent": true,
+        "PlayerAttackBlockBeforeEvent": true,
+        "ArmorStandSwapItemBeforeEvent": true,
+        "PlayerDropItemBeforeEvent": true,
+        "ActorRideBeforeEvent": true,
+        "ExplosionBeforeEvent": true,
+        "FarmDecayBeforeEvent": true,
+        "ActorHurtEvent": true,
+        "MobHurtEffectBeforeEvent": true,
+        "PistonPushBeforeEvent": true,
+        "PlayerOperatedItemFrameBeforeEvent": true,
+        "ActorTriggerPressurePlateBeforeEvent": true,
+        "ProjectileCreateBeforeEvent": true,
+        "RedstoneUpdateBeforeEvent": true,
+        "WitherDestroyBeforeEvent": true,
+        "MossGrowthBeforeEvent": true,
+        "LiquidFlowBeforeEvent": true,
+        "SculkBlockGrowthBeforeEvent": true,
+        "SculkSpreadBeforeEvent": true,
+        "PlayerEditSignBeforeEvent": true,
+        "SpawnedMobEvent": true,
+        "SculkCatalystAbsorbExperienceBeforeEvent": false,
+        "PlayerInteractEntityBeforeEvent": true,
+        "BlockFallBeforeEvent": true,
+        "ActorDestroyBlockEvent": true,
+        "MobPlaceBlockBeforeEvent": true,
+        "MobTakeBlockBeforeEvent": true,
+        "DragonEggBlockTeleportBeforeEvent": true,
+        "PlayerUseItemEvent": true
+    },
+    "hooks": {
+        "registerMobHurtHook": true,
+        "registerFishingHookHitHook": true,
+        "registerLayEggGoalHook": true,
+        "registerFireBlockBurnHook": true
+    },
+    "protection": {
+        "mob": {
+            "hostileMobTypeNames": [
+                "minecraft:enderman",
+                "minecraft:zombie",
+                "minecraft:endermite",
+                "minecraft:witch",
+                "minecraft:zoglin",
+                "minecraft:skeleton",
+                "minecraft:creeper",
+                "minecraft:ghast",
+                "minecraft:spider",
+                "minecraft:blaze",
+                "minecraft:magma_cube",
+                "minecraft:silverfish",
+                "minecraft:pillager",
+                "minecraft:slime",
+                "minecraft:wither",
+                "minecraft:vex",
+                "minecraft:guardian",
+                "minecraft:elder_guardian",
+                "minecraft:wither_skeleton",
+                "minecraft:stray",
+                "minecraft:hoglin",
+                "minecraft:husk",
+                "minecraft:zombie_villager",
+                "minecraft:drowned",
+                "minecraft:phantom",
+                "minecraft:vindicator",
+                "minecraft:ravager",
+                "minecraft:evocation_illager",
+                "minecraft:shulker",
+                "minecraft:cave_spider",
+                "minecraft:piglin_brute",
+                "minecraft:ender_dragon"
+            ],
+            "specialMobTypeNames": [
+                "minecraft:chest_boat",
+                "minecraft:painting",
+                "minecraft:hopper_minecart",
+                "minecraft:armor_stand",
+                "minecraft:leash_knot",
+                "minecraft:minecart",
+                "minecraft:command_block_minecart",
+                "minecraft:boat",
+                "minecraft:ender_crystal"
+            ],
+            "passiveMobTypeNames": [
+                "minecraft:sheep",
+                "minecraft:cow",
+                "minecraft:rabbit",
+                "minecraft:pig",
+                "minecraft:chicken",
+                "minecraft:mooshroom",
+                "minecraft:horse",
+                "minecraft:donkey",
+                "minecraft:mule",
+                "minecraft:ocelot",
+                "minecraft:bat",
+                "minecraft:sniffer",
+                "minecraft:camel",
+                "minecraft:armadillo"
+            ],
+            "customSpecialMobTypeNames": []
+        },
+        "permissionMaps": {
+            "itemSpecific": {
+                "minecraft:skull": "allowPlace",
+                "minecraft:banner": "allowPlace",
+                "minecraft:glow_ink_sac": "allowPlace",
+                "minecraft:end_crystal": "allowPlace",
+                "minecraft:ender_eye": "allowPlace",
+                "minecraft:bone_meal": "useBoneMeal",
+                "minecraft:armor_stand": "allowPlace",
+                "minecraft:flint_and_steel": "useFlintAndSteel"
+            },
+            "blockSpecific": {
+                "minecraft:campfire": "useCampfire",
+                "minecraft:dragon_egg": "allowAttackDragonEgg",
+                "minecraft:bed": "useBed",
+                "minecraft:lectern": "useLectern",
+                "minecraft:noteblock": "useNoteBlock",
+                "minecraft:soul_campfire": "useCampfire",
+                "minecraft:chest": "allowOpenChest",
+                "minecraft:trapped_chest": "allowOpenChest",
+                "minecraft:composter": "useComposter",
+                "minecraft:jukebox": "useJukebox",
+                "minecraft:bell": "useBell",
+                "minecraft:daylight_detector_inverted": "useDaylightDetector",
+                "minecraft:daylight_detector": "useDaylightDetector",
+                "minecraft:cauldron": "useCauldron",
+                "minecraft:respawn_anchor": "useRespawnAnchor",
+                "minecraft:flower_pot": "editFlowerPot",
+                "minecraft:sweet_berry_bush": "allowDestroy"
+            },
+            "blockFunctional": {
+                "minecraft:cartography_table": "useCartographyTable",
+                "minecraft:smithing_table": "useSmithingTable",
+                "minecraft:hopper": "useHopper",
+                "minecraft:grindstone": "useGrindstone",
+                "minecraft:brewing_stand": "useBrewingStand",
+                "minecraft:anvil": "useAnvil",
+                "minecraft:barrel": "useBarrel",
+                "minecraft:enchanting_table": "useEnchantingTable",
+                "minecraft:beacon": "useBeacon",
+                "minecraft:dropper": "useDropper",
+                "minecraft:dispenser": "useDispenser",
+                "minecraft:loom": "useLoom",
+                "minecraft:powered_repeater": "useRepeater",
+                "minecraft:stonecutter_block": "useStonecutter",
+                "minecraft:crafter": "useCrafter",
+                "minecraft:chiseled_bookshelf": "useChiseledBookshelf",
+                "minecraft:bee_nest": "useBeeNest",
+                "minecraft:cake": "useCake",
+                "minecraft:unpowered_comparator": "useComparator",
+                "minecraft:unpowered_repeater": "useRepeater",
+                "minecraft:powered_comparator": "useComparator",
+                "minecraft:beehive": "useBeeNest",
+                "minecraft:vault": "useVault"
+            }
+        }
+    },
+    "internal": {
+        "telemetry": true,
+        "devTools": false
+    }
+}

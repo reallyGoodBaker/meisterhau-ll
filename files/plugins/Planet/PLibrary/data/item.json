@@ -1,0 +1,8 @@
+[
+    {
+        "names": "示范",
+        "name": "test",
+        "type": "minecraft:test",
+        "path": "textures/items/apple.png"
+    }
+]

@@ -1,0 +1,9 @@
+{
+    "openMenuCommand": "xmenu",
+    "openMenuCommandAlias": "xm",
+    "editMenuCommand": "editxmenu",
+    "editMenuCommandAlias": "em",
+    "openMenuByUseItem": "minecraft:clock",
+    "openMenuByUseItemOn": "",
+    "menuName": "暗夜终焉服务器菜单"
+}
