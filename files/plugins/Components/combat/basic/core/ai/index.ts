@@ -1,5 +1,4 @@
 import { cmd, CommandPermission } from '@utils/command'
-import './entities'
 import { transition } from '../core'
 import { ai } from './core'
 import { Status } from '../status'
