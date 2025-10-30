@@ -1,6 +1,6 @@
 import { knockback, clearVelocity, impulse, applyKnockbackAtVelocityDirection } from '../../../scripts-rpc/func/kinematics'
-import { combat } from '../../../scripts-rpc/func/index'
-import { playAnim, playAnimCompatibility, playParticle } from '../index'
+import { damage as _damage, _damageLL } from '../../../scripts-rpc/func/combat'
+import { playAnimCompatibility, playParticle } from '../index'
 import { movement, camera, movementInput } from '../generic/index'
 import { selectFromSector } from '../generic/range'
 import { Status, defaultAcceptableInputs } from './status'
@@ -30,9 +30,6 @@ import { HurtDisplay } from '../components/hud/hurtDisplay'
 
 /** 事件发射器 */
 export const emitter = em
-
-const { damage: _damage, _damageLL } = combat
-
 
 /**
  * 检查是否为实体（非玩家）

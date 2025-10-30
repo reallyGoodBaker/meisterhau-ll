@@ -1,4 +1,4 @@
-import { Actor } from '@utils/actor'
+import type { Actor } from '@utils/actor'
 import { remote } from '../setup'
 
 export async function damage(victim: Actor, damage: number, cause: any, abuser: Actor, projectile: Actor) {
