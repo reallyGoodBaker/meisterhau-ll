@@ -741,6 +741,12 @@
 			"bones": {
 				"rerot": {
 					"rotation": [0, "q.target_y_rotation", 0]
+				},
+				"weapon": {
+					"scale": 0
+				},
+				"weapon2": {
+					"scale": 0
 				}
 			}
 		}

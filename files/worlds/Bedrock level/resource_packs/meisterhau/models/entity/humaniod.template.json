@@ -139,7 +139,7 @@
 					"parent": "leftItem",
 					"pivot": [5.5, 12.5, 0],
 					"locators": {
-						"left_emitter": [0, 0, 0]
+						"left_emitter": [-2, 0, 0]
 					}
 				},
 				{
@@ -346,6 +346,16 @@
 							}
 						}
 					]
+				},
+				{
+					"name": "weapon",
+					"parent": "rerot",
+					"pivot": [0, 0, 0]
+				},
+				{
+					"name": "weapon2",
+					"parent": "rerot",
+					"pivot": [0, 0, 0]
 				}
 			]
 		}

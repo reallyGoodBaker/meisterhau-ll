@@ -555,7 +555,7 @@ function listenAllCustomEvents(mods: Map<string, TrickModule>) {
             return getMod(getHandedItemType(actor as Player))
         }
 
-        return ai.getRegistration((actor as Entity).type).tricks
+        return ai.getRegistration((actor as Entity).type)?.tricks
     }
 
     em.on('onTick', onTick(em))
@@ -1062,7 +1062,7 @@ export function listenAllMcEvents(collection: TrickModule[]) {
             return getMod(getHandedItemType(actor as Player))
         }
 
-        return ai.getRegistration((actor as Entity).type).tricks
+        return ai.getRegistration((actor as Entity).type)?.tricks
     }
 
     collection.forEach((mod: TrickModule) => {
@@ -1112,7 +1112,7 @@ export function listenAllMcEvents(collection: TrickModule[]) {
             }
 
             const status = Status.getOrCreate(pl.uniqueId)
-            const mod = ai.getRegistration((pl as Entity).type).tricks
+            const mod = ai.getRegistration((pl as Entity).type)?.tricks
 
             if (!mod) {
                 return

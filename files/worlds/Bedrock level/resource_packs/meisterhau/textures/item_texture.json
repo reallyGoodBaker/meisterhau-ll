@@ -52,6 +52,9 @@
         },
         "double_diamond_axe": {
             "textures": "textures/items/double_diamond_axe"
+        },
+        "ss:katana": {
+            "textures": "textures/items/ss/katana"
         }
     }
 }
