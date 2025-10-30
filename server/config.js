@@ -11,5 +11,7 @@ module.exports = {
     ],
     builds: [
         'pled',
+        '-meisterhau',
+        '-yuumo.ll3'
     ]
 }
