@@ -1804,7 +1804,7 @@ function playAnimEntity(en, anim, nextAnim, time, stopExp, controller) {
  * @param minVolume - 最小音量（可选）
  */
 function playSound(pl, sound, pos, volume, pitch, minVolume) {
-    mc.runcmdEx(`/playsound ${sound} ${pl.name} ` + [
+    mc.runcmdEx(`/playsound ${sound} "${pl.name}" ` + [
         pos.x, pos.y, pos.z, volume, pitch, minVolume
     ].join(' '));
 }
@@ -10223,8 +10223,8 @@ class TargetLock extends BaseComponent {
     onAttach() {
         if (this.sourceIsPlayer) {
             this.source.use(p => {
-                mc.runcmdEx(`/inputpermission set ${p.name} jump disabled`);
-                mc.runcmdEx(`/inputpermission set ${p.name} sneak disabled`);
+                mc.runcmdEx(`/inputpermission set "${p.name}" jump disabled`);
+                mc.runcmdEx(`/inputpermission set "${p.name}" sneak disabled`);
             });
         }
     }
@@ -10240,8 +10240,8 @@ class TargetLock extends BaseComponent {
         if (this.sourceIsPlayer) {
             this.source.use(p => {
                 this.onLoseLock.call();
-                mc.runcmdEx(`/inputpermission set ${p.name} jump enabled`);
-                mc.runcmdEx(`/inputpermission set ${p.name} sneak enabled`);
+                mc.runcmdEx(`/inputpermission set "${p.name}" jump enabled`);
+                mc.runcmdEx(`/inputpermission set "${p.name}" sneak enabled`);
             });
         }
     }
@@ -12692,31 +12692,26 @@ class Shinobu extends MeisterhauAI {
             if (this.hasAnyExecutingTasks()) {
                 continue;
             }
-            console.log(100);
             // 如果没有目标，则跳过
             if (!this.sensing.hasTarget()) {
                 continue;
             }
-            console.log(101);
             // 如果目标尝试格挡，则使用剑柄打击
             if (this.sensing.targetIsBlocking()) {
                 yield this.combo2;
                 continue;
             }
-            console.log(111);
             // 如果目标在2格内，则更多尝试执行连招2
             if (this.sensing.targetInRange(2) && Math.random() < 0.15) {
                 // 随机挑选连招
                 yield this.randomActions([1, this.combo1], [2, this.combo2]);
                 continue;
             }
-            console.log(222);
             // 如果目标在3格内，则更多尝试执行连招1
             if (this.sensing.targetInRange(3) && Math.random() < 0.15) {
                 // 随机挑选连招
                 yield this.randomActions([2, this.combo1], [1, this.combo2]);
             }
-            console.log(333);
         }
     }
     /**

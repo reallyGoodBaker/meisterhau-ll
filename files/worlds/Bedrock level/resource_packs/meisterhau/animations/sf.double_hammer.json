@@ -1,0 +1,108 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.sf.double_hammer.idle": {
+			"loop": true,
+			"override_previous_animation": true,
+			"bones": {
+				"root": {
+					"rotation": [0, 12.5, 0]
+				},
+				"waist": {
+					"rotation": [-2.5, 0, 0]
+				},
+				"torso": {
+					"rotation": [5, 0, 0]
+				},
+				"body": {
+					"rotation": [0, 0, 0]
+				},
+				"head": {
+					"rotation": [0, -12.5, 0]
+				},
+				"leftArm": {
+					"rotation": [12.5, 20, 0]
+				},
+				"leftForearm": {
+					"rotation": [-22.5, 0, 0]
+				},
+				"leftItem": {
+					"rotation": [25, 0, 0]
+				},
+				"rightArm": {
+					"rotation": [0, 0, 0]
+				},
+				"rightForearm": {
+					"rotation": [-7.5, 0, 0]
+				},
+				"rightItem": {
+					"rotation": [35, 0, 0]
+				},
+				"rightLeg": {
+					"rotation": [2.45708, 7.4713, 4.3426]
+				},
+				"rightShank": {
+					"rotation": [7.5, 0, 0]
+				},
+				"leftLeg": {
+					"rotation": [-7.49067, 0.43399, -5.03793]
+				},
+				"leftShank": {
+					"rotation": [10, 0, 0]
+				}
+			}
+		},
+		"animation.sf.double_hammer.p": {
+			"loop": true,
+			"override_previous_animation": true,
+			"bones": {
+				"root": {
+					"rotation": [0, 12.5, 0]
+				},
+				"waist": {
+					"rotation": [-2.5, 0, 0]
+				},
+				"torso": {
+					"rotation": [5.07673, -9.96156, -0.88045]
+				},
+				"body": {
+					"rotation": [0, 0, 0]
+				},
+				"head": {
+					"rotation": [0, -2.5, 0]
+				},
+				"leftArm": {
+					"rotation": [12.5, 20, 0],
+					"position": [0, 0, -1]
+				},
+				"leftForearm": {
+					"rotation": [-22.5, 0, 0]
+				},
+				"leftItem": {
+					"rotation": [25, 0, 0]
+				},
+				"rightArm": {
+					"rotation": [0, 0, 0]
+				},
+				"rightForearm": {
+					"rotation": [-7.5, 0, 0]
+				},
+				"rightItem": {
+					"rotation": [35, 0, 0]
+				},
+				"rightLeg": {
+					"rotation": [2.45708, 7.4713, 4.3426]
+				},
+				"rightShank": {
+					"rotation": [7.5, 0, 0]
+				},
+				"leftLeg": {
+					"rotation": [-7.49067, 0.43399, -5.03793]
+				},
+				"leftShank": {
+					"rotation": [10, 0, 0]
+				}
+			}
+		}
+	}
+}
