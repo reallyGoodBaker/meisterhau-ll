@@ -138,6 +138,10 @@
 							"post": [0, 0, 0],
 							"lerp_mode": "catmullrom"
 						},
+						"0.3542": {
+							"post": [7.91033, -7.90662, -8.69815],
+							"lerp_mode": "catmullrom"
+						},
 						"0.4167": {
 							"post": [7.61435, -9.91358, -1.31845],
 							"lerp_mode": "catmullrom"
