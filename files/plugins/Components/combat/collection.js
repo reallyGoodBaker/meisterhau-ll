@@ -12,4 +12,5 @@ module.exports = [
     require('./tricks/fantasy_double_tachi'),
     require('./tricks/double_axe'),
     require('./tricks/onehanded'),
+    require('./tricks/great_sword')
 ]

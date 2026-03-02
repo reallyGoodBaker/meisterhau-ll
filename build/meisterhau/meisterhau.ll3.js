@@ -3442,11 +3442,11 @@ class EmptyHandTricks extends DefaultTrickModule$3 {
         super('rgb39.weapon.empty_hand', 'blocking', ['*'], new EmptyHandMoves());
     }
 }
-const tricks$a = new EmptyHandTricks();
+const tricks$b = new EmptyHandTricks();
 
 var emptyHand = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$a
+	tricks: tricks$b
 });
 
 var require$$1$2 = /*@__PURE__*/getAugmentedNamespace(emptyHand);
@@ -5648,11 +5648,11 @@ class OotachiTricks extends DefaultTrickModule$3 {
         super('rgb39.weapon.ootachi', 'idle', ['weapon:ootachi', 'weapon:ootachi_akaoni', 'weapon:ootachi_dragon', 'monogatari:kokorowatari'], new OotachiMoves());
     }
 }
-const tricks$9 = new OotachiTricks();
+const tricks$a = new OotachiTricks();
 
 var ootachi = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$9
+	tricks: tricks$a
 });
 
 var require$$4 = /*@__PURE__*/getAugmentedNamespace(ootachi);
@@ -6249,11 +6249,11 @@ class ShieldSwordMoves extends DefaultMoves$3 {
         }
     };
 }
-const tricks$8 = new ShieldSwordTricks();
+const tricks$9 = new ShieldSwordTricks();
 
 var shield_with_sword = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$8
+	tricks: tricks$9
 });
 
 var require$$5 = /*@__PURE__*/getAugmentedNamespace(shield_with_sword);
@@ -7306,11 +7306,11 @@ class UchigatanaModule extends DefaultTrickModule$3 {
         ], new UchigatanaMoves());
     }
 }
-const tricks$7 = new UchigatanaModule();
+const tricks$8 = new UchigatanaModule();
 
 var uchigatana = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$7
+	tricks: tricks$8
 });
 
 var require$$6 = /*@__PURE__*/getAugmentedNamespace(uchigatana);
@@ -8251,11 +8251,11 @@ class DoubleBlade extends DefaultTrickModule$3 {
         ], new DoubleBladeMoves());
     }
 }
-const tricks$6 = new DoubleBlade();
+const tricks$7 = new DoubleBlade();
 
 var double_blade = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$6
+	tricks: tricks$7
 });
 
 var require$$7 = /*@__PURE__*/getAugmentedNamespace(double_blade);
@@ -8372,11 +8372,11 @@ class StaffModule extends DefaultTrickModule$3 {
         super('rgb:staff', 'idle', ['weapon:staff'], new StaffMoves());
     }
 }
-const tricks$5 = new StaffModule();
+const tricks$6 = new StaffModule();
 
 var staff = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$5
+	tricks: tricks$6
 });
 
 var require$$8 = /*@__PURE__*/getAugmentedNamespace(staff);
@@ -8466,11 +8466,11 @@ class FantasyDoubleTachiTricks extends DefaultTrickModule$3 {
         super('rgb39:fantasy_double_tachi', 'hold', ['weapon:fantasy_double_tachi'], new FantasyDoubleTachi());
     }
 }
-const tricks$4 = new FantasyDoubleTachiTricks();
+const tricks$5 = new FantasyDoubleTachiTricks();
 
 var fantasy_double_tachi = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$4
+	tricks: tricks$5
 });
 
 var require$$9 = /*@__PURE__*/getAugmentedNamespace(fantasy_double_tachi);
@@ -9240,11 +9240,11 @@ class DoubleAxeTrick extends DefaultTrickModule$3 {
         super('rgb39:double_axe', 'idle', ['weapon:double_diamond_axe'], new DoubleAxeMoves());
     }
 }
-const tricks$3 = new DoubleAxeTrick();
+const tricks$4 = new DoubleAxeTrick();
 
 var double_axe = /*#__PURE__*/Object.freeze({
 	__proto__: null,
-	tricks: tricks$3
+	tricks: tricks$4
 });
 
 var require$$10 = /*@__PURE__*/getAugmentedNamespace(double_axe);
@@ -9463,14 +9463,169 @@ class OneHandedSword extends DefaultTrickModule$3 {
         ], new OneHandedMoves());
     }
 }
-const tricks$2 = new OneHandedSword();
+const tricks$3 = new OneHandedSword();
 
 var onehanded = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	tricks: tricks$3
+});
+
+var require$$11 = /*@__PURE__*/getAugmentedNamespace(onehanded);
+
+class GreatSwordMoves extends DefaultMoves$3 {
+    constructor() {
+        super();
+        super.setup('resume');
+    }
+    idle = {
+        cast: Infinity,
+        onEnter(pl, ctx) {
+            playAnimCompatibility$2(pl, 'animation.meisterhau.great_sword.idle', 'animation.meisterhau.great_sword.idle');
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            hold: {
+                onLock: null
+            },
+        }
+    };
+    resume = {
+        transitions: {
+            idle: {
+                onEndOfLife: {
+                    hasTarget: false
+                }
+            },
+            hold: {
+                onEndOfLife: {
+                    hasTarget: true
+                }
+            }
+        }
+    };
+    hold = {
+        cast: Infinity,
+        onEnter(pl, ctx) {
+            playAnimCompatibility$2(pl, 'animation.meisterhau.great_sword.hold', 'animation.meisterhau.great_sword.hold');
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            idle: {
+                onReleaseLock: null
+            },
+            light: {
+                onAttack: null
+            }
+        }
+    };
+    light = {
+        cast: 20,
+        onEnter(pl, ctx) {
+            ctx.freeze(pl);
+            ctx.lookAtTarget(pl);
+            playAnimCompatibility$2(pl, 'animation.meisterhau.great_sword.light', 'animation.meisterhau.great_sword.light');
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl);
+        },
+        timeline: {
+            2: (pl, ctx) => {
+                ctx.adsorbOrSetVelocity(pl, 1);
+            },
+            8: (pl, ctx) => ctx.selectFromSector(pl, {
+                angle: 60,
+                radius: 3,
+                rotation: 30,
+            }).forEach(e => ctx.attack(pl, e, {
+                damage: 14,
+                direction: 'vertical',
+            })),
+            11: (pl, ctx) => {
+                ctx.trap(pl);
+            },
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            blocked: {
+                onBlocked: null
+            },
+            parried: {
+                onParried: null
+            },
+            resume: {
+                onEndOfLife: null
+            },
+            lightHeavy: {
+                onTrap: {
+                    preInput: 'onUseItem'
+                }
+            }
+        }
+    };
+    lightHeavy = {
+        cast: 23,
+        onEnter(pl, ctx) {
+            ctx.freeze(pl);
+            ctx.lookAtTarget(pl);
+            playAnimCompatibility$2(pl, 'animation.meisterhau.great_sword.light.heavy', 'animation.meisterhau.great_sword.light.heavy');
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl);
+        },
+        timeline: {
+            2: (pl, ctx) => {
+                ctx.adsorbOrSetVelocity(pl, 1);
+            },
+            4: (pl, ctx) => {
+                ctx.adsorbOrSetVelocity(pl, 1);
+            },
+            6: (pl, ctx) => {
+                ctx.adsorbOrSetVelocity(pl, 1);
+            },
+            8: (pl, ctx) => {
+                ctx.adsorbOrSetVelocity(pl, 1);
+            },
+            11: (pl, ctx) => ctx.selectFromSector(pl, {
+                angle: 180,
+                radius: 3,
+                rotation: 120,
+            }).forEach(e => ctx.attack(pl, e, {
+                damage: 30,
+                direction: 'left',
+            })),
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            parried: {
+                onParried: null
+            },
+            resume: {
+                onEndOfLife: null
+            }
+        }
+    };
+}
+class GreatSwordTrickModule extends DefaultTrickModule$3 {
+    constructor() {
+        super('rgb39:great_sword', 'idle', ['weapon:highground_greatsword'], new GreatSwordMoves());
+    }
+}
+const tricks$2 = new GreatSwordTrickModule();
+
+var great_sword = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	tricks: tricks$2
 });
 
-var require$$11 = /*@__PURE__*/getAugmentedNamespace(onehanded);
+var require$$12 = /*@__PURE__*/getAugmentedNamespace(great_sword);
 
 var collection = [
     double_dagger,
@@ -9486,6 +9641,7 @@ var collection = [
     require$$9,
     require$$10,
     require$$11,
+    require$$12
 ];
 
 var collection$1 = /*@__PURE__*/getDefaultExportFromCjs(collection);

@@ -28,6 +28,9 @@
 				"rightItem": {
 					"rotation": [53.9276, 8.53726, 12.37961]
 				}
+			},
+			"timeline": {
+				"0.0": ["v.posture = 1;", "v.overlay_color = v.transparent;", "v.arm_status = 0;"]
 			}
 		},
 		"animation.meisterhau.great_sword.idle": {
@@ -38,6 +41,9 @@
 					"rotation": [167.5, 0, 0],
 					"position": [0, 1, -6]
 				}
+			},
+			"timeline": {
+				"0.0": ["v.overlay_color = v.transparent;", "v.posture=0;", "v.item_status=1;", "v.item_scale=1;", "v.waist_item_scale=0;"]
 			}
 		},
 		"animation.meisterhau.great_sword.light": {
