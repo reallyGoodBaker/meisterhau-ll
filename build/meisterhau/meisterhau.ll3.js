@@ -9530,11 +9530,18 @@ class GreatSwordMoves extends DefaultMoves$3 {
             playAnimCompatibility$2(pl, 'animation.meisterhau.great_sword.light', 'animation.meisterhau.great_sword.light');
         },
         onLeave(pl, ctx) {
+            ctx.status.isBlocking = false;
             ctx.unfreeze(pl);
         },
         timeline: {
+            1: (pl, ctx) => {
+                ctx.status.isBlocking = true;
+            },
             2: (pl, ctx) => {
                 ctx.adsorbOrSetVelocity(pl, 1);
+            },
+            5: (pl, ctx) => {
+                ctx.status.isBlocking = false;
             },
             8: (pl, ctx) => ctx.selectFromSector(pl, {
                 angle: 60,
@@ -9565,6 +9572,49 @@ class GreatSwordMoves extends DefaultMoves$3 {
                 onTrap: {
                     preInput: 'onUseItem'
                 }
+            },
+            light2: {
+                onTrap: {
+                    preInput: 'onAttack'
+                }
+            }
+        }
+    };
+    light2 = {
+        cast: 20,
+        onEnter(pl, ctx) {
+            ctx.freeze(pl);
+            ctx.lookAtTarget(pl);
+            playAnimCompatibility$2(pl, 'animation.meisterhau.great_sword.light2', 'animation.meisterhau.great_sword.light2');
+        },
+        onLeave(pl, ctx) {
+            ctx.unfreeze(pl);
+        },
+        timeline: {
+            2: (pl, ctx) => {
+                ctx.adsorbOrSetVelocity(pl, 1);
+            },
+            9: (pl, ctx) => ctx.selectFromSector(pl, {
+                angle: 60,
+                radius: 3,
+                rotation: 30,
+            }).forEach(e => ctx.attack(pl, e, {
+                damage: 16,
+                direction: 'vertical',
+            }))
+        },
+        transitions: {
+            hurt: {
+                onHurt: null
+            },
+            blocked: {
+                onBlocked: null
+            },
+            parried: {
+                onParried: null
+            },
+            resume: {
+                onEndOfLife: null
             }
         }
     };
